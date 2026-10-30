@@ -1,0 +1,31 @@
+.gradle/
+.kotlin/
+.tools/
+**/build/
+local.properties
+.idea/
+*.iml
+.DS_Store
+captures/
+.android-sdk/
+*.jks
+*.keystore
+
+# Local credentials, signing material, and generated/distributed binaries.
+.env
+.env.*
+*.key
+*.p12
+*.pfx
+*.apk
+*.aab
+*.aar
+*.jar
+!gradle/wrapper/gradle-wrapper.jar
+*.log
+
+# Historical device logs/screenshots remain on the originating PC.
+# Share only the explanatory index, never the raw evidence by default.
+docs/evidence/**
+!docs/evidence/**/
+!docs/evidence/**/README.md

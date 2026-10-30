@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">CarScope P0</string>
+    <string name="mock_notice">MOCK · 모의 데이터\n실제 차량 미연결 · 주차 상태 검증용\n시나리오 버튼으로 갱신 · 5초 초과 시 STALE</string>
+    <string name="pleos_notice">PLEOS · SDK 읽기 전용\nROW_1_LEFT만 연결 · 다른 도어 미지원\n5초 초과 시 STALE · 자동 MOCK 대체 없음</string>
+    <string name="source_mock">MOCK 모드</string>
+    <string name="source_pleos">PLEOS 읽기 모드</string>
+    <string name="scenario_closed">모의: 모두 닫힘</string>
+    <string name="scenario_open">모의: 앞 왼쪽 열림</string>
+    <string name="scenario_unavailable">모의: 조회 불가</string>
+    <string name="webview_not_available">WebView 제공자 없음: 텍스트로 표시합니다.</string>
+    <string name="webview_error">WebView 로드 실패: 텍스트로 표시합니다.</string>
+    <string name="webview_provider">WebView: %1$s %2$s · SVG 표시 여부는 육안 검증 필요</string>
+    <string name="webview_loaded">HTML 로드 완료 · SVG 표시 여부는 육안 검증 필요</string>
+    <string name="snapshot_time">화면 갱신 시각 (UTC): %1$s</string>
+    <string name="data_origin">데이터 출처: %1$s</string>
+</resources>
