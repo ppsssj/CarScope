@@ -1,10 +1,36 @@
 # CarScope 검증 보고서
 
-G0 공유본 안내: 개인 작업 경로는 `<repository-root>` 등으로 치환했습니다. 아래 판정과 실행 이력은 유지합니다. 원본 로그·스크린샷·시스템 정보·테스트 XML은 발생 PC에 보존하고 Git에서는 제외합니다. evidence 디렉터리의 공유 README만 업로드합니다. 현재 Door Event는 **NOT_RUN**이며 실제 SDK 수신 성공을 주장하지 않습니다.
+G0 공유본 안내: 개인 작업 경로는 `<repository-root>` 등으로 치환했습니다. 아래 판정과 실행 이력은 유지합니다. 원본 로그·스크린샷·시스템 정보·테스트 XML은 발생 PC에 보존하고 Git에서는 제외합니다. evidence 디렉터리의 공유 README만 업로드합니다.
 
-**최신 결과:** [P1-B 읽기 전용 SDK 연동](#p1-b--pleos-읽기-전용-sdk-연동-2026-10-30)은 **BLOCKED / 미완료**입니다. 구현·단위 테스트・APK 설치까지 확인했으나 OEM/framework ANR 및 시스템 사망으로 SDK 이벤트→SVG는 확인하지 못했습니다. 아래 P0와 P1-A 결과·증거는 당시 기록으로 보존합니다.
+**최신 결과:** [P1-B2 집 PC 런타임 재검증](#p1-b2--집-pc-런타임-재검증-2026-10-30)에서 실제 SDK 초기화·Door capability·현재 값·Console 이벤트→SVG, SDK 모드 Activity 재생성, Mock 전체 회귀(T1~T10)가 PASS입니다. 같은 날 연구실 PC의 [P1-B 결과](#p1-b--pleos-읽기-전용-sdk-연동-2026-10-30)는 OEM/framework ANR 및 시스템 사망으로 **BLOCKED**였으며, 그 기록은 당시 환경의 결과로 보존합니다. 아래 P0와 P1-A 결과·증거도 당시 기록입니다.
+
+## P1-B2 — 집 PC 런타임 재검증 (2026-10-30)
+
+연구실 PC와 다른 호스트에서 같은 소스(`c555c58`), 같은 Pleos 이미지·AVD 설정으로 런타임만 다시 검증했습니다. 앱 코드는 변경하지 않았습니다.
+
+| 항목 | 상태 | 근거 / 제한 |
+| --- | --- | --- |
+| 호스트 가속 | PASS | WHPX usable/working, `-gpu host` GTX 1060. CPU i5-4690은 Android Studio 공식 최소 미만이라 일반 보장 아님 |
+| AVD 부팅·안정성 | PARTIAL | 부팅 44~54초. H1 부팅 직후 SystemUI ANR 1건, boot2에서 OEM 앱 패널 미표시(원인 미확인), 복구 boot3은 세션 전체 ANR 0. 호스트 여유 RAM 최저 0.8GB |
+| SDK / Service 버전 | PASS | 앱 SDK 2.3.2, Service 2.3.22/code 74, CAR_DOORS·VEHICLE_BINDING granted=true |
+| T1 SDK 초기화 | PASS | 초기화 후 capability·read 응답으로 실제 연결 확인 |
+| T2 Door capability | PASS | READ_WRITE, range 0..1 |
+| T3 현재 도어 값 | PASS | `current raw=0` → CLOSED |
+| T4/T6 Console OPEN/CLOSED | PASS | 웹 UI와 같은 HTTP 요청, HTTP 200, Console 상태 변경 확인 |
+| T5/T7 SDK 이벤트→SVG | PASS | `event raw=1` → 빨간색 OPEN, `event raw=0` → 초록색 CLOSED (화면 확인) |
+| T8 SDK 모드 Activity 재생성 | PASS | 설정 변경 재생성 3회, 같은 PID. 이전 세션 해제 → 새 세션 재조회·구독, PLEOS 선택 복원, 이벤트 중복 없음 |
+| T9 구독 해제/release | PASS (앱 측) | 앱 로그 + Service debug 로그로 구독 해제 관측. release의 Service 측 완료는 미관측 |
+| T10 Mock 전체 회귀 | PASS | 시나리오 3종, 5초 STALE, MOCK↔PLEOS 양방향, 출처 표시·SVG 일치 |
+| JVM 테스트 | PASS | 브랜치에서 `--rerun`: core 17 + app 19 = 36, failures/errors/skipped 0 |
+| APK 빌드 | PASS | 런타임 APK SHA-256 `C192F7B7...25B6`(소스 c555c58). 재빌드 APK는 해시가 다름(debug 빌드 비재현성) |
+| STALE 정책 | 설계 위험 | 정상 연결에서도 5초 후 STALE 표시. [검토 문서](stale-policy-review.md), 이번 PR에서는 코드 변경 없음 |
+| 오류 주입·장시간·지연 계측·실차 | NOT_RUN | 범위 밖 |
+
+세부 로그 발췌와 세션 기록은 [P1-B2 evidence](evidence/p1-b2/2026-10-30-home/README.md), 시나리오별 판정은 [연동 문서](pleos-sdk-integration.md#집-pc-재검증-p1-b2-2026-10-30)에 있습니다.
 
 ## P1-B — Pleos 읽기 전용 SDK 연동 (2026-10-30)
+
+아래는 **연구실 PC**에서의 결과이며 당시 판정을 그대로 보존합니다. 같은 항목의 집 PC 결과는 위 P1-B2를 참고하세요.
 
 | 항목 | 상태 | 근거 / 제한 |
 | --- | --- | --- |

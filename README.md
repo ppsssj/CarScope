@@ -2,7 +2,7 @@
 
 차량 상태를 `VehicleDataSource → VehicleSnapshot → VehicleDiagram → SVG → Android WebView`로 표시합니다. Mock과 앱 모듈의 Pleos SDK 2.3.2 읽기 전용 어댑터를 분리했습니다. PLEOS는 ROW_1_LEFT 한 도어만 대상으로 하며 실패 시 Mock으로 자동 대체하지 않습니다. 실제 서비스·이벤트·SVG 판정은 [P1-B 연동 기록](docs/pleos-sdk-integration.md)을 확인하세요.
 
-P1-B는 **BLOCKED / 미완료**입니다. 최종 core 17개 + app 합성 19개 재실행, SDK 포함 APK 빌드·설치는 PASS입니다. 실제 AVD Service 2.3.22는 확인했지만 OEM/framework ANR·VHAL/system 사망으로 SDK 초기화와 도어 이벤트→SVG를 검증하지 못했습니다. P2 진입은 보류합니다.
+P1-B 런타임 T1~T10은 **집 PC에서 PASS**입니다. 실제 SDK 초기화·Door capability·현재 값, Virtual Console 도어 이벤트→SVG OPEN/CLOSED, SDK 모드 Activity 재생성, Mock 전체 회귀를 확인했습니다. 같은 날 연구실 PC에서는 OEM/framework ANR·VHAL/system 사망으로 BLOCKED였고, 그 기록은 보존합니다. 오류 경로 런타임 검증과 [STALE 정책](docs/stale-policy-review.md) 결정이 남아 있어 P2 진입은 보류합니다.
 
 연구실/집 PC 설정과 clone·테스트·빌드·브랜치 운영은 [개발 환경 가이드](docs/development-setup.md)를 따릅니다. 원본 로그·스크린샷·SDK·AVD·APK·개인 설정은 Git에 포함하지 않습니다. [G0 업로드 점검](docs/github-bootstrap.md)과 [현재 검증 상태](docs/validation-report.md)를 확인하세요.
 
@@ -10,9 +10,12 @@ P1-B는 **BLOCKED / 미완료**입니다. 최종 core 17개 + app 합성 19개 �
 | --- | --- |
 | P0 JVM / P1-A APK·Mock UI | PASS (당시 실행 범위) |
 | P1-B JVM / APK build·install | 36 PASS / PASS |
-| SDK initialization / Door capability / Door state | BLOCKED / BLOCKED / BLOCKED |
-| Door event / 실제 SDK SVG | NOT_RUN / BLOCKED |
-| OEM/framework ANR | 발생, CarScope FATAL/ANR은 수집 범위에서 미발견 |
+| SDK initialization / Door capability / Door state (집 PC) | PASS / PASS / PASS |
+| Door event / 실제 SDK SVG (집 PC) | PASS / PASS |
+| SDK 모드 Activity 재생성 / Mock 전체 회귀 (집 PC) | PASS / PASS |
+| 같은 항목 (연구실 PC) | BLOCKED (OEM/framework ANR, 기록 보존) |
+| 오류 경로 런타임 / release Service 측 확인 | NOT_RUN / 미관측 |
+| STALE 정책 | 설계 위험, [검토 문서](docs/stale-policy-review.md) |
 
 ## JVM CI
 
@@ -24,7 +27,7 @@ P1-B는 **BLOCKED / 미완료**입니다. 최종 core 17개 + app 합성 19개 �
 
 단일 job/Gradle worker 최대 1개, 15분 제한, 이전 동일 ref 실행 취소를 적용합니다. 공식 action은 commit SHA로 고정하며 권한은 `contents: read`, 추가 사용자 Secrets는 없습니다. Android SDK 경로 환경변수를 비우고 SDK/Pleos SDK/AVD 설치나 emulator 실행을 하지 않습니다. 의존성은 처음에 공식 Gradle 배포 서버·Google Maven·Maven Central 등의 네트워크 접근이 필요합니다. 다운로드/DNS/TLS/HTTP 실패는 테스트 assertion 실패와 구분해 Actions 로그에서 확인합니다.
 
-**CI PASS의 범위는 순수 JVM 테스트와 Kotlin 로직뿐입니다.** app 합성 테스트 19개·Android APK·Pleos SDK 초기화·Vehicle Service 연결·실제 Door Event·SVG 실시간 갱신은 이 CI의 검증 대상이 아닙니다. **P1-B는 BLOCKED로 유지**합니다. GitHub hosted 이미지에 Android 도구가 미리 존재할 수 있어도 이 job은 이를 요구하거나 사용하지 않습니다.
+**CI PASS의 범위는 순수 JVM 테스트와 Kotlin 로직뿐입니다.** app 합성 테스트 19개·Android APK·Pleos SDK 초기화·Vehicle Service 연결·실제 Door Event·SVG 실시간 갱신은 이 CI의 검증 대상이 아닙니다. P1-B 런타임 결과는 CI가 아니라 로컬 Pleos AVD 수동 검증의 결과입니다. GitHub hosted 이미지에 Android 도구가 미리 존재할 수 있어도 이 job은 이를 요구하거나 사용하지 않습니다.
 
 2026-10-30 P1-A 검증: core JUnit **17개 PASS**, Android debug APK 생성·서명 검증 PASS, Pleos API 34 AVD 설치·부팅 및 Mock UI/SVG 표시 확인. 실제 화면에서 발견한 SVG 잘림을 수정했습니다. 현재 PC의 메모리/GPU 제약으로 cold launch timeout과 SVG 갱신 지연이 있어 성능 검증은 통과하지 못했습니다. 자세한 명령·증거·미검증 범위는 [검증 보고서](docs/validation-report.md#p1-a--android-환경-및-mock-앱-실행-2026-10-30)를 참조하세요.
 
@@ -112,6 +115,7 @@ MOCK 시나리오 버튼은 새 관측값을 만듭니다. 저장된 관측값�
 
 - [아키텍처 및 데이터 계약](docs/architecture.md)
 - [P1-B SDK 구현·실행 결과](docs/pleos-sdk-integration.md)
+- [STALE 표시 정책 검토 (후속)](docs/stale-policy-review.md)
 - [공식 문서 근거와 실현 가능성](docs/feasibility.md)
 - [P1 진입 조건 및 로드맵](docs/roadmap.md)
 - [P0 검증 결과, 복구 내역, 실행 명령](docs/validation-report.md)
