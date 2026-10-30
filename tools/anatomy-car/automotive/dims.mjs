@@ -53,6 +53,7 @@ export const PROFILE = [...TOP.map(([x, z]) => [x, z]), ...[...STATIONS].filter(
 export const SHUT_GAP = 0.5;
 export const DOOR_DEPTH = 6.5; // outer skin to inner trim
 export const NOTCH_R = 44.2; // the rear door clears the flare around the rear arch
+export const REAR_INNER_NOTCH_R = 45.2; // P2-A2.1: relief of inner trim only during the early opening arc
 export const notchZ = archZ(-AXLE, NOTCH_R);
 const notchStart = -AXLE + Math.sqrt(NOTCH_R ** 2 - (ROCKER_TOP - WHEEL_Z) ** 2);
 export const FRONT_DOOR = { id: "door-front-left", hinge: 38, rear: -26.5, open: 64, mirror: true };

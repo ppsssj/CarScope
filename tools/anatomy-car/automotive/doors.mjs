@@ -3,7 +3,7 @@
 // turns about the vertical axis through its outer front corner, so it swings clear of the fender; the
 // open pose adds the hinge knuckles and the dark cabin seen through the window opening.
 import { region, withGeo } from "./geometry.mjs";
-import { HALF, BELT, GH, SHUT_GAP, DOOR_DEPTH, crease, apertureBottom, STATIONS, FRONT_DOOR, REAR_DOOR } from "./dims.mjs";
+import { HALF, BELT, GH, SHUT_GAP, DOOR_DEPTH, crease, apertureBottom, STATIONS, FRONT_DOOR, REAR_DOOR, AXLE, WHEEL_Z, ROCKER_TOP, REAR_INNER_NOTCH_R } from "./dims.mjs";
 import { sideFrame, tOf } from "./greenhouse.mjs";
 
 /** Inset a convex polygon (x, z) by d on every edge. */
@@ -66,7 +66,14 @@ export function buildDoors(ctx, sc) {
     }
     // lower door: inner structure, recessed layer (shows above the shoulder crease), outer skin
     // The inner structure only shows when the door is open; closed, it would sit under the greenhouse.
-    if (variant === "open") part("inner", F, full, -DOOR_DEPTH, -2.4, { palette: "doorInner", tone: "hi" });
+    if (variant === "open") {
+      // Only relieve the inner trim's lower rear corner. The body aperture, outer skin and
+      // recessed backing retain the PoC profile; enlarging the shared aperture intersects the seat.
+      const innerBottom = (x) => def.id !== REAR_DOOR.id ? bottom(x) : Math.max(bottom(x),
+        Math.abs(x + AXLE) < REAR_INNER_NOTCH_R ? WHEEL_Z + Math.sqrt(REAR_INNER_NOTCH_R ** 2 - (x + AXLE) ** 2) + SHUT_GAP : ROCKER_TOP + SHUT_GAP);
+      const inner = region(x0, x1, innerBottom, () => BELT, STATIONS).map(toU);
+      part("inner", F, inner, -DOOR_DEPTH, -2.4, { palette: "doorInner", tone: "hi" });
+    }
     part("recess", F, full, -2.4, -1.2, { palette: "recess", tone: "hi" });
     const handle = [[def.hinge - def.rear - 19, 79.5], [def.hinge - def.rear - 7, 79.5], [def.hinge - def.rear - 7, 82], [def.hinge - def.rear - 19, 82]];
     prims.push(solid(prismPaths(F, skin, -1.2, 0), { palette: "paint", tone: "hi" }));
@@ -91,12 +98,14 @@ export function buildDoors(ctx, sc) {
       part("mirror", TF, [[2.5, 1.2], [14.5, 1.2], [13.5, 10.5], [4, 11]], 4.6, 12.5, { palette: "paint", tone: "hi" });
     }
     if (variant === "open") {
-      // hinge knuckles on the fixed axis just inboard of the door's front corner
-      const hx = def.hinge - 0.95;
-      const hy = HALF + 0.6;
+      // Coaxial with the actual rigid-body pivot. Radius 0.5 is tangent to the door's SHUT_GAP
+      // front edge in every pose, rather than cutting through its skin as the offset PoC did.
+      const hx = def.hinge;
+      const hy = HALF + 0.05;
+      const radius = SHUT_GAP;
       for (const [z0, z1] of [[44, 52], [72, 80]]) {
-        prims.push(solid(withGeo(k.cylinder(hx, hy, 0.85, z0, z1 - z0, P, 16), { kind: "lathe", F: G.frameOf([hx, hy, z0], [0, 0, 1], [1, 0, 0], [0, 1, 0]), meridian: [[0, 0], [0, 0.85], [z1 - z0, 0.85], [z1 - z0, 0]], steps: 16 }), { palette: "trim", tone: "hi" }));
-        shapes.push(record(A.cylinder(hx, hy, 0.85, z0, z1 - z0, { name: `${name}.hinge-${z0}`, owner: def.id })));
+        prims.push(solid(withGeo(k.cylinder(hx, hy, radius, z0, z1 - z0, P, 16), { kind: "lathe", F: G.frameOf([hx, hy, z0], [0, 0, 1], [1, 0, 0], [0, 1, 0]), meridian: [[0, 0], [0, radius], [z1 - z0, radius], [z1 - z0, 0]], steps: 16 }), { palette: "trim", tone: "hi" }));
+        shapes.push(record(A.cylinder(hx, hy, radius, z0, z1 - z0, { name: `${name}.hinge-${z0}`, owner: def.id })));
       }
     }
     const it = item(name, W3(F, -DOOR_DEPTH / 2, [(def.hinge - def.rear) / 2, 70]), prims, shapes, { section: { door: def.id, variant } });

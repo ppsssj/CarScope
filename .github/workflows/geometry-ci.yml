@@ -1,0 +1,63 @@
+name: Geometry CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  geometry:
+    name: SVG and geometry correctness
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      ANATOMY_SHA: 1482e8469b0a9e0d8cc18ea2740a01423d29ae80
+      GRADLE_OPTS: -Dorg.gradle.workers.max=1 -Dorg.gradle.daemon=false
+      ANDROID_HOME: ""
+      ANDROID_SDK_ROOT: ""
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '22.16.0'
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: temurin
+          java-version: '17'
+          overwrite-settings: false
+      - name: Install exact Anatomy commit (no revision bypass)
+        shell: bash
+        run: |
+          ANATOMY_HOME="$RUNNER_TEMP/anatomy"
+          printf 'ANATOMY_HOME=%s\n' "$ANATOMY_HOME" >> "$GITHUB_ENV"
+          git init "$ANATOMY_HOME"
+          git -C "$ANATOMY_HOME" remote add origin https://github.com/wheresryan22/anatomy.git
+          git -C "$ANATOMY_HOME" fetch --depth=1 origin "$ANATOMY_SHA"
+          git -C "$ANATOMY_HOME" checkout --detach FETCH_HEAD
+          test "$(git -C "$ANATOMY_HOME" rev-parse HEAD)" = "$ANATOMY_SHA"
+          test -z "$(git -C "$ANATOMY_HOME" status --porcelain)"
+      - name: Install locked validator
+        run: npm ci --ignore-scripts --prefix tools/anatomy-car
+      - name: Generate SVG and run Anatomy audit
+        run: |
+          npm run build --prefix tools/anatomy-car
+          git diff --exit-code -- vehicle-core/src/main/resources/io/carscope/visualization/anatomy-car.parts
+      - name: Export GLB and geometry reports
+        run: npm run export --prefix tools/anatomy-car
+      - name: Unit and regression tests (including nonzero CLI failure cases)
+        run: npm test --prefix tools/anatomy-car
+      - name: Verify GLB and sampled door collisions
+        run: npm run verify --prefix tools/anatomy-car
+      - name: Kotlin SVG state, ID, inset, accent and bounds contracts
+        run: ./gradlew -PcoreOnly=true :vehicle-core:test --rerun-tasks --console=plain

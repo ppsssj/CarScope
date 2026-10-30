@@ -1,5 +1,11 @@
 # CarScope 검증 보고서
 
+## P2-A2.1 — Geometry Correctness (2026-10-31)
+
+새 실행: Node 자동 테스트 33개, core JVM 24개, app 합성 19개 PASS. Anatomy audit, 선 끝 8개 페이지, GLB 공식 validator(오류·경고 0), debug APK/lint/release manifest, 브라우저·Pleos AVD 화면을 확인했습니다.
+SVG의 화면 기저만 보정하고 세계 좌표·DoorId·SDK·STALE·메인 JS 설정은 유지했습니다. 뒷도어 안쪽 relief와 힌지 동축화 후 기존 0.3cm 초과 간섭은 검사 자세에서 0입니다. 약 0.16cm의 얕은 recess 접촉은 남으며, 샘플링을 연속 회전 전체의 무충돌 증명으로 해석하지 않습니다.
+원인·정책·명령·실패 이력은 [P2-A2.1 보고서](p2-a21-geometry-correctness.md), 원본 구분은 [evidence](evidence/p2-a21/2026-10-31-codex/README.md), GitHub 실행은 PR Checks를 확인하세요.
+
 G0 공유본 안내: 개인 작업 경로는 `<repository-root>` 등으로 치환했습니다. 아래 판정과 실행 이력은 유지합니다. 원본 로그·스크린샷·시스템 정보·테스트 XML은 발생 PC에 보존하고 Git에서는 제외합니다. evidence 디렉터리의 공유 README만 업로드합니다.
 
 **최신 결과:** [P1-B2 집 PC 런타임 재검증](#p1-b2--집-pc-런타임-재검증-2026-10-30)에서 실제 SDK 초기화·Door capability·현재 값·Console 이벤트→SVG, SDK 모드 Activity 재생성, Mock 전체 회귀(T1~T10)가 PASS입니다. 같은 날 연구실 PC의 [P1-B 결과](#p1-b--pleos-읽기-전용-sdk-연동-2026-10-30)는 OEM/framework ANR 및 시스템 사망으로 **BLOCKED**였으며, 그 기록은 당시 환경의 결과로 보존합니다. 아래 P0와 P1-A 결과·증거도 당시 기록입니다.

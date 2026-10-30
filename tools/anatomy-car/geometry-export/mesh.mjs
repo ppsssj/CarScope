@@ -185,6 +185,12 @@ export function rotateZ(p, pivot, angle) {
 
 /** Geometry checks. Topology uses positions welded at 1e-4 units. */
 export function checkMesh(m, { closed }) {
+  if (!m.positions.length || m.positions.some((p) => p.length !== 3 || !p.every(Number.isFinite)) ||
+      m.normals.length !== m.positions.length || m.normals.some((n) => n.length !== 3 || !n.every(Number.isFinite)) ||
+      m.indices.length === 0 || m.indices.length % 3 !== 0 ||
+      m.indices.some((i) => !Number.isInteger(i) || i < 0 || i >= m.positions.length)) {
+    throw new Error("Invalid mesh: finite positions/normals and complete, in-range triangle indices required");
+  }
   const key = (p) => p.map((v) => Math.round(v * 1e4)).join(",");
   const ids = new Map();
   const weld = m.positions.map((p) => { const k = key(p); if (!ids.has(k)) ids.set(k, ids.size); return ids.get(k); });
@@ -232,7 +238,7 @@ export function checkMesh(m, { closed }) {
     boundaryEdges: boundary,
     nonManifoldEdges: nonManifold,
     windingConflicts,
-    signedVolume: Number(volume.toFixed(3)),
+    signedVolume: volume,
     area: Number(area.toFixed(3)),
     closed,
     watertight: closed ? boundary === 0 && nonManifold === 0 : null,

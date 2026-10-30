@@ -43,6 +43,8 @@ Mock은 ALL_CLOSED / FRONT_LEFT_OPEN / UNAVAILABLE 세 시나리오를 제공합
 
 ## SVG 계약
 
+P2-A2.1의 [좌표·검증 정책](p2-a21-geometry-correctness.md)은 차량 세계 좌표와 화면 좌표를 구분합니다. SVG 출력 시 화면 X 기저만 보정하며 `DoorId`, 세계 +Y(차량 좌측), SDK 매핑은 유지합니다. SVG 카메라와 GLB 메타데이터는 `automotive/camera.mjs`의 `VIEW`를 공유합니다. GLB는 debug 실험 경로이며 아래 Kotlin 정적 SVG 파이프라인을 대체하지 않습니다.
+
 P2-A부터 Anatomy kit로 생성한 아이소메트릭 세단과 평면도 inset입니다([Anatomy 시각화](anatomy-visualization.md)). viewBox `0 0 930 330`, SVG namespace, title/desc와 접근성 연결을 사용합니다. 정적 SVG 조각(`anatomy-car.parts`)을 classpath 리소스로 읽어 도어 상태별 자세(열림/닫힘)를 고릅니다. P0의 평면 도식(`0 0 520 300`)은 대체됐습니다.
 
 | DoorId | 안정적인 SVG group id |

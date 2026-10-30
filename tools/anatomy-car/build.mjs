@@ -10,6 +10,7 @@ import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { buildModel } from "./automotive/model.mjs";
 import { writeAsset, writePreviews } from "./automotive/asset.mjs";
+import { writeCoordinateDiagnostics } from "./automotive/coordinates.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO = join(HERE, "..", "..");
@@ -18,6 +19,7 @@ anatomy.A.auditOrExit(sc.R, P, {});
 
 const out = writeAsset(ctx, sc, HALO, { file: join(REPO, "vehicle-core", "src", "main", "resources", "io", "carscope", "visualization", "anatomy-car.parts"), rev: anatomy.rev });
 writePreviews(ctx, sc, HALO, join(HERE, "build"));
+writeCoordinateDiagnostics(ctx.k, join(HERE, "build"));
 if (process.argv.includes("--sizes")) {
   const { flatMarkup } = await import("./automotive/materials.mjs");
   for (const it of [...sc.R.items].sort((a, b) => flatMarkup(ctx, b.prims).length - flatMarkup(ctx, a.prims).length).slice(0, 12)) console.log(`  ${flatMarkup(ctx, it.prims).length}	${it.name}`);
