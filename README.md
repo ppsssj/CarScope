@@ -12,6 +12,7 @@ P1-B 런타임 T1~T10은 **집 PC에서 PASS**입니다. 실제 SDK 초기화·D
 | --- | --- |
 | P0 JVM / P1-A APK·Mock UI | PASS (당시 실행 범위) |
 | P2-A Anatomy 차량 시각화 | PASS (core 24 + app 19, AVD에서 SDK 도어 OPEN/CLOSED 반영) |
+| P2-A2 Anatomy-to-3D PoC | CONDITIONAL GO ([기록](docs/p2-a2-geometry-poc.md)). SVG가 거울상이라는 사실 발견 |
 | P2-A1 자동차 전용 kit 시각 개선 | 기술 PASS / 시각 NEEDS_REFINEMENT ([기록](docs/anatomy-visualization.md#p2-a1--자동차-전용-kit와-시각-개선)) |
 | P1-B JVM / APK build·install | 36 PASS / PASS |
 | SDK initialization / Door capability / Door state (집 PC) | PASS / PASS / PASS |

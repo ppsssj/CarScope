@@ -1,6 +1,15 @@
 // Geometry helpers the Anatomy kit does not provide for car bodies: prisms of concave polygons along
 // any axis, convex polyhedra (a greenhouse with tumblehome), x-monotone side regions and tilted frames.
 
+/**
+ * Attach the 3D definition a path set was projected from, as a non-enumerable property: the SVG
+ * emitters never see it, the geometry exporter reads it. It is the input, never a reconstruction.
+ */
+export function withGeo(paths, geo) {
+  Object.defineProperty(paths, "geo", { value: geo, enumerable: false });
+  return paths;
+}
+
 /** Polygon signed area (positive = counter-clockwise). */
 export const signed = (poly) => poly.reduce((a, [x, y], i) => {
   const [x2, y2] = poly[(i + 1) % poly.length];
@@ -64,7 +73,7 @@ export function geometry({ k, G }, P) {
       buckets[G.toneOf(normals[i], P)].push(k.pathOf(quad, true));
     }
     buckets[G.toneOf(capNear ? F.a : G.mul3(F.a, -1), P)].push(k.pathOf(screenOriented(near), true));
-    return { fill: parts.join(""), outline: outline.join(""), crease: crease.join(""), top: buckets[4].join(""), shades: buckets.slice(0, 4).map((b) => b.join("")) };
+    return withGeo({ fill: parts.join(""), outline: outline.join(""), crease: crease.join(""), top: buckets[4].join(""), shades: buckets.slice(0, 4).map((b) => b.join("")) }, { kind: "prism", F, poly, s0, s1 });
   }
 
   /**
@@ -103,7 +112,7 @@ export function geometry({ k, G }, P) {
       crease.push(k.pathOf([projected[a], projected[b]]));
     }
     const hullPath = k.pathOf(hull, true);
-    return { fill: hullPath, outline: hullPath, crease: crease.join(""), top: buckets[4].join(""), shades: buckets.slice(0, 4).map((b) => b.join("")) };
+    return withGeo({ fill: hullPath, outline: hullPath, crease: crease.join(""), top: buckets[4].join(""), shades: buckets.slice(0, 4).map((b) => b.join("")) }, { kind: "convex", vertices, faces });
   }
 
   /** A frame tilted from F about F.u by `lean` radians: v leans toward -a (inboard). */

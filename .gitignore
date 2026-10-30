@@ -29,3 +29,7 @@ captures/
 docs/evidence/**
 !docs/evidence/**/
 !docs/evidence/**/README.md
+
+# P2-A2 experiment: generated lab assets and the PoC toolchain
+app/src/debug/assets/webgl-lab/
+node_modules/

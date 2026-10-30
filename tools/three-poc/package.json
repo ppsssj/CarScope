@@ -1,0 +1,13 @@
+{
+  "name": "carscope-three-poc",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Three.js proof of concept for the CarScope Anatomy geometry export (P2-A2). Not part of the app.",
+  "type": "module",
+  "scripts": {
+    "serve": "node serve.mjs"
+  },
+  "dependencies": {
+    "three": "0.160.0"
+  }
+}
