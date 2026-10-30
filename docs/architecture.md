@@ -43,7 +43,7 @@ Mock은 ALL_CLOSED / FRONT_LEFT_OPEN / UNAVAILABLE 세 시나리오를 제공합
 
 ## SVG 계약
 
-원본 P0 평면 도식이며 Anatomy 결과물이 아닙니다. 고정 viewBox `0 0 520 300`, SVG namespace, title/desc와 접근성 연결을 사용합니다.
+P2-A부터 Anatomy kit로 생성한 아이소메트릭 세단과 평면도 inset입니다([Anatomy 시각화](anatomy-visualization.md)). viewBox `0 0 930 330`, SVG namespace, title/desc와 접근성 연결을 사용합니다. 정적 SVG 조각(`anatomy-car.parts`)을 classpath 리소스로 읽어 도어 상태별 자세(열림/닫힘)를 고릅니다. P0의 평면 도식(`0 0 520 300`)은 대체됐습니다.
 
 | DoorId | 안정적인 SVG group id |
 | --- | --- |
@@ -52,7 +52,7 @@ Mock은 ALL_CLOSED / FRONT_LEFT_OPEN / UNAVAILABLE 세 시나리오를 제공합
 | REAR_LEFT | door-rear-left |
 | REAR_RIGHT | door-rear-right |
 
-각 group은 `data-state`, 서로 다른 fill, 상태 텍스트를 포함합니다. 색에만 의존하지 않습니다. 누락된 diagram key도 UNAVAILABLE로 렌더링합니다. title/desc는 XML 특수문자 5종을 escape합니다. 공개 입력은 enum으로 제한되어 임의 XML, URL, XML 1.0 금지 제어문자가 들어오는 경로가 없습니다. escape 함수는 범용 외부 SVG sanitizer가 아닙니다.
+문서의 `<g>`는 도어별로 정확히 하나이며, 각 group은 `data-state`, 서로 다른 fill의 상태 칩, 상태 텍스트를 포함합니다. 근거리 도어(FL/RL)는 차량 위에도 그려지고, OPEN이면 열린 형상, 그 외 상태는 닫힌 형상에 상태 accent(색 + 파선/점선)를 씁니다. 우측 도어는 시점상 가려져 inset에만 표시합니다. 색에만 의존하지 않습니다. 누락된 diagram key도 UNAVAILABLE로 렌더링합니다. title/desc는 XML 특수문자 5종을 escape합니다. 공개 입력은 enum으로 제한되어 임의 XML, URL, XML 1.0 금지 제어문자가 들어오는 경로가 없습니다. escape 함수는 범용 외부 SVG sanitizer가 아닙니다.
 
 외부 이미지·폰트·JavaScript·foreignObject·HTML bridge가 필요 없습니다. JVM 검증은 XML 파싱, escaping round trip, ID, 출처, 상태별 텍스트/색 차이까지 확인합니다. 픽셀 표시와 접근성 서비스 동작은 별도 실행 검증입니다.
 

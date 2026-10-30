@@ -4,6 +4,22 @@ G0 공유본 안내: 개인 작업 경로는 `<repository-root>` 등으로 치�
 
 **최신 결과:** [P1-B2 집 PC 런타임 재검증](#p1-b2--집-pc-런타임-재검증-2026-10-30)에서 실제 SDK 초기화·Door capability·현재 값·Console 이벤트→SVG, SDK 모드 Activity 재생성, Mock 전체 회귀(T1~T10)가 PASS입니다. 같은 날 연구실 PC의 [P1-B 결과](#p1-b--pleos-읽기-전용-sdk-연동-2026-10-30)는 OEM/framework ANR 및 시스템 사망으로 **BLOCKED**였으며, 그 기록은 당시 환경의 결과로 보존합니다. 아래 P0와 P1-A 결과·증거도 당시 기록입니다.
 
+## P2-A — Anatomy 기반 차량 시각화 (2026-10-30)
+
+| 항목 | 상태 | 근거 / 제한 |
+| --- | --- | --- |
+| Anatomy 설치·사용 | PASS | git clone 설치(skills CLI는 Node 22.20 요구, 이 PC 22.16), 스킬 호출 후 kit로 생성 |
+| Anatomy audit / 선 끝 검사 | PASS | `audit passed`, 4개 조합 × 2테마 `line ends: 0` |
+| 렌더러 통합 | PASS | `VehicleSvgRenderer`가 생성 자산을 사용, 기존 도어 ID·상태·escape 계약 유지 |
+| JVM 테스트 | PASS | core 17(기존 무수정) + 신규 7 = 24, app 19 |
+| APK 빌드 | PASS | 자산이 APK에 포함됨 |
+| AVD 실제 렌더링 | PASS | MOCK 3종·STALE, PLEOS current, Console OPEN/CLOSE → SDK 이벤트 → 차량 도어 형상 변경 |
+| 우측 도어 차량 위 표시 | 의도적 제외 | 시점상 가려짐, inset으로 표시 |
+| 5초 STALE | 알려진 문제 | PLEOS 값이 변하지 않으면 6초 후 STALE 표시 확인. 정책 미변경 |
+| 성능 비교 | NOT_RUN | 절대값만 기록(PSS 117MB, cold launch 3.7s). 이전 도식과의 정량 비교 없음 |
+
+세부: [Anatomy 시각화](anatomy-visualization.md), [P2-A evidence](evidence/p2-a/2026-10-30-home/README.md).
+
 ## P1-B2 — 집 PC 런타임 재검증 (2026-10-30)
 
 연구실 PC와 다른 호스트에서 같은 소스(`c555c58`), 같은 Pleos 이미지·AVD 설정으로 런타임만 다시 검증했습니다. 앱 코드는 변경하지 않았습니다.
@@ -22,7 +38,7 @@ G0 공유본 안내: 개인 작업 경로는 `<repository-root>` 등으로 치�
 | T9 구독 해제/release | PASS (앱 측) | 앱 로그 + Service debug 로그로 구독 해제 관측. release의 Service 측 완료는 미관측 |
 | T10 Mock 전체 회귀 | PASS | 시나리오 3종, 5초 STALE, MOCK↔PLEOS 양방향, 출처 표시·SVG 일치 |
 | JVM 테스트 | PASS | 브랜치에서 `--rerun`: core 17 + app 19 = 36, failures/errors/skipped 0 |
-| APK 빌드 | PASS | 런타임 APK SHA-256 `C192F7B7...25B6`(소스 c555c58). 재빌드 APK는 해시가 다름(debug 빌드 비재현성) |
+| APK 빌드 | PASS | 런타임 APK SHA-256 `C192F7B7...25B6`(소스 c555c58). 재빌드 APK는 해시가 다름 (정정: 비재현성보다는 다른 debug keystore 서명 가능성이 큼, P2-A 참고) |
 | STALE 정책 | 설계 위험 | 정상 연결에서도 5초 후 STALE 표시. [검토 문서](stale-policy-review.md), 이번 PR에서는 코드 변경 없음 |
 | 오류 주입·장시간·지연 계측·실차 | NOT_RUN | 범위 밖 |
 

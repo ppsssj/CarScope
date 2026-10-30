@@ -63,6 +63,8 @@ $env:ANDROID_HOME      = 'C:\Android\Sdk'
 $env:ANDROID_USER_HOME = 'C:\Android\.android'
 $env:ANDROID_AVD_HOME  = 'C:\Android\.android\avd'   # Emulator는 ANDROID_USER_HOME만으로는 AVD를 찾지 못함
 $env:GRADLE_USER_HOME  = 'C:\gradle-home'
+# Gradle도 같은 ANDROID_USER_HOME으로 실행해야 debug keystore가 바뀌지 않습니다.
+# (다르면 AVD에 설치된 앱과 서명이 달라 INSTALL_FAILED_UPDATE_INCOMPATIBLE)
 & "$env:ANDROID_HOME\cmdline-tools\latest\bin\sdkmanager.bat" --licenses
 & "$env:ANDROID_HOME\cmdline-tools\latest\bin\sdkmanager.bat" "platforms;android-34" "build-tools;35.0.0" "platform-tools" "emulator"
 ``` `local.properties`, `.gradle/config.properties`, `.idea`, OS PATH, `JAVA_HOME`, `ANDROID_HOME`을 복사하거나 commit하지 않습니다.

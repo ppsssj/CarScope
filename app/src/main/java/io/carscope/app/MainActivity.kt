@@ -149,7 +149,8 @@ class MainActivity : Activity() {
                     }
                 }
             }
-            column.addView(view, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(240)))
+            // The Anatomy sedan plus its plan inset is about 2.8:1; 320dp keeps the car legible.
+            column.addView(view, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(320)))
         } catch (_: RuntimeException) {
             diagramView?.let { view ->
                 (view.parent as? ViewGroup)?.removeView(view)
