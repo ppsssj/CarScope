@@ -42,6 +42,8 @@
 
 ## P2 — 자산 및 제품 수준 UI
 
+**P2-A1 (2026-10-30)**: 자동차 전용 kit로 모델을 다시 만들어 옆면·유리·휠·열린 도어를 개선했습니다. 시각 품질 판정은 NEEDS_REFINEMENT입니다(남은 과제: 전면부 곡면, 보닛/트렁크 크라운). [기록](anatomy-visualization.md#p2-a1--자동차-전용-kit와-시각-개선)
+
 **P2-A (2026-10-30)**: Anatomy kit로 만든 아이소메트릭 세단을 `VehicleSvgRenderer`에 통합하고 Pleos AVD에서 SDK 도어 OPEN/CLOSED에 반응하는 것을 확인했습니다([기록](anatomy-visualization.md)). 아래 P1-B 잔여 항목과 STALE 정책 결정은 여전히 남아 있습니다.
 
 현재 **진입 보류**. P1-B T1~T10은 집 PC에서 PASS했지만, 도어 상태를 사용자에게 보여 주기 전에 [STALE 정책](stale-policy-review.md)을 결정하고 오류 경로 런타임 검증을 마치는 것을 권장합니다. 시스템 오류를 우회하려고 도어 값을 조작하거나 Mock으로 성공을 대체하지 않습니다. 나머지 도어·Anatomy·시각화 복잡도 확장은 그 뒤에 판단합니다.

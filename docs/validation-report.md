@@ -4,6 +4,21 @@ G0 공유본 안내: 개인 작업 경로는 `<repository-root>` 등으로 치�
 
 **최신 결과:** [P1-B2 집 PC 런타임 재검증](#p1-b2--집-pc-런타임-재검증-2026-10-30)에서 실제 SDK 초기화·Door capability·현재 값·Console 이벤트→SVG, SDK 모드 Activity 재생성, Mock 전체 회귀(T1~T10)가 PASS입니다. 같은 날 연구실 PC의 [P1-B 결과](#p1-b--pleos-읽기-전용-sdk-연동-2026-10-30)는 OEM/framework ANR 및 시스템 사망으로 **BLOCKED**였으며, 그 기록은 당시 환경의 결과로 보존합니다. 아래 P0와 P1-A 결과·증거도 당시 기록입니다.
 
+## P2-A1 — 자동차 전용 kit 시각 개선 (2026-10-30)
+
+| 항목 | 상태 | 근거 / 제한 |
+| --- | --- | --- |
+| 자동차 전용 kit 분리 | PASS | `tools/anatomy-car/automotive/` 11개 모듈, Anatomy 원본 무수정, 커밋 고정(`1482e84`) 검사 |
+| Anatomy audit / 선 끝 | PASS | `audit passed` (형상 112), 4 조합 × 2 테마 `line ends: 0` |
+| 결정성 | PASS | 연속 실행 SHA-256 동일 |
+| 계약·테스트 | PASS | 자산 형식·렌더러 무변경, core 24 + app 19 |
+| AVD WebView | PASS | 새 모델이 SDK `event raw=1/0`에 따라 열림/닫힘 |
+| 크기 | 증가 | 자산 111KB → 201KB, SVG 101KB → 177KB, 노드 288 → 554 |
+| 렌더링 비용 | 측정 | 호스트 Chrome 파싱+레이아웃 +0.3~1ms, JVM `render()` 차이 없음. AVD 프레임 지표는 비교 불가 |
+| 시각 품질 | NEEDS_REFINEMENT | 옆면·유리·휠·열린 도어는 뚜렷이 개선. 전면부·보닛 크라운 등 제품 수준에는 미달 |
+
+세부: [Anatomy 시각화 P2-A1](anatomy-visualization.md#p2-a1--자동차-전용-kit와-시각-개선), [evidence](evidence/p2-a1/2026-10-30-home/README.md).
+
 ## P2-A — Anatomy 기반 차량 시각화 (2026-10-30)
 
 | 항목 | 상태 | 근거 / 제한 |
