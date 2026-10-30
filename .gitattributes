@@ -5,3 +5,5 @@
 gradlew text eol=lf
 gradlew.bat text eol=crlf
 *.jar binary
+*.parts text eol=lf
+*.mjs text eol=lf

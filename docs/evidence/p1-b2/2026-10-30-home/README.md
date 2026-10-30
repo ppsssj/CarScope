@@ -94,4 +94,4 @@ Virtual Console 조작은 브라우저 클릭 대신 Console 웹 UI와 같은 �
 
 ## JVM 및 빌드
 
-브랜치 `fix/p1-b2-runtime-closure`에서 `:vehicle-core:test --rerun :app:testDebugUnitTest --rerun :app:assembleDebug` 실행: core 17 + app 19 = 36, failures/errors/skipped 0, BUILD SUCCESSFUL. 이 재빌드 APK의 SHA-256은 `EE4F821A2CF6DE51A8EFDAEFF672F3498DCD1F0867451A80F361E5B69EAE3E03`으로 런타임 APK와 다릅니다. 소스는 같고 debug 빌드가 비트 단위로 재현되지 않기 때문이며, 런타임 판정은 위 런타임 APK 기준입니다.
+브랜치 `fix/p1-b2-runtime-closure`에서 `:vehicle-core:test --rerun :app:testDebugUnitTest --rerun :app:assembleDebug` 실행: core 17 + app 19 = 36, failures/errors/skipped 0, BUILD SUCCESSFUL. 이 재빌드 APK의 SHA-256은 `EE4F821A2CF6DE51A8EFDAEFF672F3498DCD1F0867451A80F361E5B69EAE3E03`으로 런타임 APK와 다릅니다. 소스는 같으며, 런타임 판정은 위 런타임 APK 기준입니다. ~~debug 빌드가 비트 단위로 재현되지 않기 때문~~ **정정 (P2-A):** 두 빌드는 서로 다른 debug keystore로 서명됐을 가능성이 큽니다. `ANDROID_USER_HOME` 지정 여부에 따라 AGP가 다른 `.android/debug.keystore`를 사용합니다. [P2-A 증거](../../p2-a/2026-10-30-home/README.md#설치-실패-1회와-원인)

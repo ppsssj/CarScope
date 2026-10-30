@@ -4,11 +4,14 @@
 
 P1-B 런타임 T1~T10은 **집 PC에서 PASS**입니다. 실제 SDK 초기화·Door capability·현재 값, Virtual Console 도어 이벤트→SVG OPEN/CLOSED, SDK 모드 Activity 재생성, Mock 전체 회귀를 확인했습니다. 같은 날 연구실 PC에서는 OEM/framework ANR·VHAL/system 사망으로 BLOCKED였고, 그 기록은 보존합니다. 오류 경로 런타임 검증과 [STALE 정책](docs/stale-policy-review.md) 결정이 남아 있어 P2 진입은 보류합니다.
 
+차량 도식은 [Anatomy](https://github.com/wheresryan22/anatomy) kit로 만든 아이소메트릭 세단입니다(P2-A, [기록](docs/anatomy-visualization.md)). 근거리 도어 2개는 차량 위에서 열림/닫힘으로, 네 도어 모두는 평면도 inset에 표시됩니다.
+
 연구실/집 PC 설정과 clone·테스트·빌드·브랜치 운영은 [개발 환경 가이드](docs/development-setup.md)를 따릅니다. 원본 로그·스크린샷·SDK·AVD·APK·개인 설정은 Git에 포함하지 않습니다. [G0 업로드 점검](docs/github-bootstrap.md)과 [현재 검증 상태](docs/validation-report.md)를 확인하세요.
 
 | 검증 범위 | 현재 상태 |
 | --- | --- |
 | P0 JVM / P1-A APK·Mock UI | PASS (당시 실행 범위) |
+| P2-A Anatomy 차량 시각화 | PASS (core 24 + app 19, AVD에서 SDK 도어 OPEN/CLOSED 반영) |
 | P1-B JVM / APK build·install | 36 PASS / PASS |
 | SDK initialization / Door capability / Door state (집 PC) | PASS / PASS / PASS |
 | Door event / 실제 SDK SVG (집 PC) | PASS / PASS |
@@ -19,7 +22,7 @@ P1-B 런타임 T1~T10은 **집 PC에서 PASS**입니다. 실제 SDK 초기화·D
 
 ## JVM CI
 
-[JVM CI 실행 상태](https://github.com/ppsssj/CarScope/actions/workflows/jvm-ci.yml)는 `main` 대상 PR, `main` push, 수동 실행에서 Ubuntu/JDK 17과 Gradle Wrapper 8.14로 아래 core 테스트 17개를 실행합니다. 이 workflow를 추가하는 PR의 실제 실행 결과를 확인해야 하며, 배지가 없거나 대기 중인 상태를 PASS로 해석하지 않습니다. 수동 실행은 workflow가 기본 브랜치에 반영된 뒤 사용할 수 있습니다.
+[JVM CI 실행 상태](https://github.com/ppsssj/CarScope/actions/workflows/jvm-ci.yml)는 `main` 대상 PR, `main` push, 수동 실행에서 Ubuntu/JDK 17과 Gradle Wrapper 8.14로 아래 core 테스트(P2-A 이후 24개)를 실행합니다. 이 workflow를 추가하는 PR의 실제 실행 결과를 확인해야 하며, 배지가 없거나 대기 중인 상태를 PASS로 해석하지 않습니다. 수동 실행은 workflow가 기본 브랜치에 반영된 뒤 사용할 수 있습니다.
 
 ```sh
 ./gradlew -PcoreOnly=true :vehicle-core:test --rerun-tasks --console=plain
@@ -116,6 +119,7 @@ MOCK 시나리오 버튼은 새 관측값을 만듭니다. 저장된 관측값�
 - [아키텍처 및 데이터 계약](docs/architecture.md)
 - [P1-B SDK 구현·실행 결과](docs/pleos-sdk-integration.md)
 - [STALE 표시 정책 검토 (후속)](docs/stale-policy-review.md)
+- [Anatomy 기반 차량 시각화 (P2-A)](docs/anatomy-visualization.md)
 - [공식 문서 근거와 실현 가능성](docs/feasibility.md)
 - [P1 진입 조건 및 로드맵](docs/roadmap.md)
 - [P0 검증 결과, 복구 내역, 실행 명령](docs/validation-report.md)
