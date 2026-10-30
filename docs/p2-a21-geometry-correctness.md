@@ -134,6 +134,7 @@ npm run verify --prefix tools/anatomy-car
 | core / app 합성 테스트 | PASS | 새 실행 XML: core 24, app 19, 실패·오류·skip 0 |
 | Android debug / lint | PASS | assembleDebug, lintDebug 성공; debug assets 갱신 후 APK 재생성 |
 | release 경계 | PASS | processReleaseMainManifest에서 Lab Activity / INTERNET 없음 |
+| Workflow 정적 검사 | PASS | 공식 checksum 확인한 actionlint 1.7.12로 신규 Geometry·기존 JVM workflow 검사 |
 | SVG 화면 / 선 끝 | PASS | 4 조합×2 테마×1×/4× 캡처; 8개 페이지 line ends 0; 직접 검토 |
 | Three.js 브라우저 | PASS | 정면/후면/좌/우·SVG 카메라·두 도어 열림·RL 0/5/5.5/6/15/30/58° 캡처·검토 |
 | AVD 정적 SVG | PASS | MOCK CLOSED / FRONT_LEFT OPEN의 네이티브 화면·SVG 4개 상태 ID, 기존 STALE 표시 확인 |
@@ -149,6 +150,8 @@ LF/CRLF 회귀 테스트와 실제 AVD 재실행으로 모델 로드·WebGL2·�
 일부 4× 캡처는 100ms 대기로 paint가 완성되지 않아 폐기했고, 도구의 대기를 2000ms로 바꾸어 다시 촬영·검토했다.
 
 GitHub 실행 결과는 게시된 PR의 Checks를 기준으로 확인한다. 위 표는 로컬 새 실행의 결과이며 CI 실행으로 대체한 것이 아니다.
+최초 게시에서 job-level env에 `runner.temp`를 사용해 workflow 등록이 실패했다. actionlint가 해당 위치에서 runner context를 사용할 수 없음을 재현했다.
+runner step에서 `RUNNER_TEMP`로 경로를 정하고 `GITHUB_ENV`로 후속 step에 전달하도록 수정했다. 실패한 실행 기록을 숨기지 않는다.
 
 ## CI와 후속 과제
 

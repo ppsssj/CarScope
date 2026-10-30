@@ -54,3 +54,5 @@ WebView `ai.pleos.android.webview 131.0.6752.0`.
 
 기존 JVM CI를 보존하고 별도 Geometry CI를 추가했다. 실행 SHA와 실제 결론은 PR Checks의 기록을 확인한다.
 로컬 성공을 GitHub CI 성공으로 표시하지 않는다. PR #2 Android CI는 이번 작업에서 병합하지 않는다.
+
+최초 [workflow 등록 실패](https://github.com/ppsssj/CarScope/actions/runs/41083251313): job-level env에서 runner context 사용 불가. 공식 release checksum을 대조한 actionlint 1.7.12로 원인을 재현했고, 경로 초기화를 runner step으로 옮긴 후 신규·기존 YAML 정적 검사를 통과했다.

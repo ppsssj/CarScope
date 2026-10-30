@@ -20,7 +20,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
-      ANATOMY_HOME: ${{ runner.temp }}/anatomy
       ANATOMY_SHA: 1482e8469b0a9e0d8cc18ea2740a01423d29ae80
       GRADLE_OPTS: -Dorg.gradle.workers.max=1 -Dorg.gradle.daemon=false
       ANDROID_HOME: ""
@@ -40,6 +39,8 @@ jobs:
       - name: Install exact Anatomy commit (no revision bypass)
         shell: bash
         run: |
+          ANATOMY_HOME="$RUNNER_TEMP/anatomy"
+          printf 'ANATOMY_HOME=%s\n' "$ANATOMY_HOME" >> "$GITHUB_ENV"
           git init "$ANATOMY_HOME"
           git -C "$ANATOMY_HOME" remote add origin https://github.com/wheresryan22/anatomy.git
           git -C "$ANATOMY_HOME" fetch --depth=1 origin "$ANATOMY_SHA"
