@@ -8,6 +8,8 @@ P1-B 런타임 T1~T10은 **집 PC에서 PASS**입니다. 실제 SDK 초기화·D
 
 [P2-A2.1 Geometry Correctness](docs/p2-a21-geometry-correctness.md)는 SVG/3D 화면 기저를 맞추고 뒷도어·힌지를 수정합니다. Anatomy pin은 유지하며, 별도 Geometry CI에서 SVG 재생성/audit·GLB·메시·좌표·강체성·샘플링 충돌·검증 실패 시 nonzero 종료를 검사합니다. [AGENTS.md](AGENTS.md)에 작업 경계를 기록했습니다.
 
+[P2-A3-0 Vehicle Identity Probe](docs/p2-a3-0-vehicle-identity-probe.md)는 debug 전용 진단과 실제 AVD 반환값을 기록합니다. AAOS metadata는 PARTIAL이며 OEM 3D 차량과의 대응 관계는 UNVERIFIED입니다.
+
 연구실/집 PC 설정과 clone·테스트·빌드·브랜치 운영은 [개발 환경 가이드](docs/development-setup.md)를 따릅니다. 원본 로그·스크린샷·SDK·AVD·APK·개인 설정은 Git에 포함하지 않습니다. [G0 업로드 점검](docs/github-bootstrap.md)과 [현재 검증 상태](docs/validation-report.md)를 확인하세요.
 
 | 검증 범위 | 현재 상태 |

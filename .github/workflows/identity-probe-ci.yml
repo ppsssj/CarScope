@@ -1,0 +1,55 @@
+name: Identity probe CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  debug-boundary:
+    name: Debug identity probe tests and release boundary
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      GRADLE_OPTS: -Dorg.gradle.workers.max=1 -Dorg.gradle.daemon=false
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: temurin
+          java-version: '17'
+          overwrite-settings: false
+      - name: Install public Android 34 stubs and build tools
+        run: |
+          test -x "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" 'platforms;android-34' 'build-tools;35.0.0'
+          test -f "$ANDROID_HOME/platforms/android-34/optional/android.car.jar"
+      - name: Test and build both variants
+        run: ./gradlew :app:testDebugUnitTest :app:assembleDebug :app:assembleRelease :app:lintDebug --rerun-tasks --console=plain --max-workers=1 -Pkotlin.compiler.execution.strategy=in-process
+      - name: Verify debug-only APK and manifest boundary
+        run: python3 tools/identity-probe/check.py build-contract
+      - name: Summarize JVM test evidence
+        run: |
+          python3 - <<'PY'
+          import glob
+          import os
+          import xml.etree.ElementTree as ET
+          reports = glob.glob('app/build/test-results/testDebugUnitTest/TEST-*.xml')
+          assert reports, 'Missing app test results'
+          totals = {key: sum(int(ET.parse(p).getroot().get(key, 0)) for p in reports) for key in ('tests', 'failures', 'errors', 'skipped')}
+          assert any(ET.parse(p).getroot().get('name') == 'io.carscope.app.identity.IdentityProbeTest' for p in reports), 'Missing identity tests'
+          assert totals['tests'] >= 26 and totals['failures'] == totals['errors'] == totals['skipped'] == 0, totals
+          with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as out:
+              out.write(f'App JVM: {totals}\n\nPublic API compilation and debug/release boundary only. Pleos AVD runtime is a separate local gate.\n')
+          PY
