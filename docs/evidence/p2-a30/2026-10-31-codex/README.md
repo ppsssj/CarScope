@@ -40,6 +40,7 @@ AVD `CarScope_Pleos_API34`, Pleos Connect 2.1.0 / image package revision 2, Andr
 
 ## 실패·미실행 기록
 
+- 첫 [Identity probe CI](https://github.com/ppsssj/CarScope/actions/runs/41088849053): FAIL, head `8f35e97`, `sdkmanager: command not found` / exit 127. 빌드·테스트 이전 SDK 설치 단계의 PATH 문제이다. 공식 runner의 `$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager`를 명시하고 public stub 존재까지 검사하도록 후속 커밋에서 수정했다. 새 head의 CI 결과를 이 실패와 구분한다.
 - 첫 host capture: FAIL (120초 timeout). `run-as`가 기본 Android user 0을 보았으나 앱은 user 10에서 실행됐다. probe UI/API read는 성공했지만 파일 회수가 실패했다. 현재 user 조회 + `--user` 수정 후 run2와 final 모두 PASS. 이전 실패를 SDK/API 실패로 분류하지 않는다.
 - 초기 fullscreen/black home 캡처는 부팅·화면 전환 중 frame이어서 OEM 비교 PASS 근거로 사용하지 않는다. 최종 `probe.png`는 OEM 영역과 metadata가 실제 합성된 화면이다.
 - Windows browser access host unavailable. CUA의 Chrome 선택은 현재 URL을 충분히 판별하지 못해 Computer Use가 중단됐다. 이후 Windows/browser 입력 없음; Virtual Console GUI는 NOT_RUN이다. 공식 Console 문서와 현재 AVD config만 확인했다.

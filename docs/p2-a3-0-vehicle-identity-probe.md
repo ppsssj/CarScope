@@ -119,6 +119,8 @@ AVD 부팅은 기존 hardware 설정의 cold boot/WHPX/host GPU를 사용했다.
 
 첫 host capture는 Android user 0을 기본값으로 사용해 120초 timeout이었다. 화면의 프로브 자체는 성공했지만 host가 user 10의 파일을 읽지 못한 문제였다. 현재 사용자 조회와 `run-as --user`로 수정하고 fresh capture를 재실행했다. 이 실패를 API 접근 거부로 보고하지 않는다. 초기 부팅 중 전체 화면/검은 home 프레임은 OEM 비교 증거에서 제외하고 이후 합성된 OEM+probe 화면을 사용한다.
 
+첫 Identity probe CI는 runner PATH에 `sdkmanager`가 없어 설치 단계 exit 127로 실패했다. 공식 runner의 SDK 절대 경로를 참조하도록 수정했다. 앱 테스트 실패로 바꾸어 설명하지 않으며 최초 실패와 후속 head 결과를 분리한다.
+
 원본 화면·로그·SDK/APK는 Git 제외 로컬 경로에 보존하고 [증거 인덱스](evidence/p2-a30/2026-10-31-codex/README.md)에 재현·hash를 기록한다.
 
 다음 단계는 수동으로 선택한 reference를 `manual-reference-v1` 같은 이름과 `source=manual`, `oemVisualMatch=UNVERIFIED`로 관리하는 것이다. 사용 권한이 명확한 자체 제작 geometry/사용자 소유 측정·사진/명시적 재사용 라이선스 자료를 고르고 provenance·차량 연식/trim·치수 출처·축/단위·hinge 위치의 검증 수준을 함께 기록해야 한다. 현재 AAOS 치수를 사용할 경우에도 `Pleos AVD simulated metadata`라는 출처를 유지하고 실제 양산 제원으로 표시하지 않는다. 특정 모델의 공식 제원·법적 사용 가능한 3D reference 조사는 그 모델이 명시적으로 선택되거나 공식 mapping이 확보된 후 별도 진행한다. 이 PR에서는 VehicleGeometryProfile 코드나 전체 차량을 구현하지 않는다.

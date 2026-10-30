@@ -31,7 +31,10 @@ jobs:
           java-version: '17'
           overwrite-settings: false
       - name: Install public Android 34 stubs and build tools
-        run: sdkmanager 'platforms;android-34' 'build-tools;35.0.0'
+        run: |
+          test -x "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" 'platforms;android-34' 'build-tools;35.0.0'
+          test -f "$ANDROID_HOME/platforms/android-34/optional/android.car.jar"
       - name: Test and build both variants
         run: ./gradlew :app:testDebugUnitTest :app:assembleDebug :app:assembleRelease :app:lintDebug --rerun-tasks --console=plain --max-workers=1 -Pkotlin.compiler.execution.strategy=in-process
       - name: Verify debug-only APK and manifest boundary
