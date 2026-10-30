@@ -1,6 +1,8 @@
 # P1-B — Pleos Door 읽기 전용 연동
 
-G0 공유본: 로컬 원본 로그·화면·XML·SDK 바이너리는 Git 제외이며 evidence README만 공유합니다. 아래는 당시 실제 실행 결과로, 업로드 준비가 P1-B 완료를 뜻하지 않습니다. **Door Event NOT_RUN / 실제 SDK 이벤트→SVG BLOCKED**를 유지합니다.
+G0 공유본: 로컬 원본 로그·화면·XML·SDK 바이너리는 Git 제외이며 evidence README만 공유합니다.
+
+**최신 (P1-B2, 집 PC):** 지원 가능한 가속(WHPX + host GPU)을 쓰는 집 PC의 Pleos AVD에서 T1~T10을 실제로 검증했습니다. SDK 초기화·capability·현재 값·Console 이벤트→SVG OPEN/CLOSED, SDK 모드 Activity 재생성, Mock 전체 회귀가 PASS입니다. release의 Service 측 완료 확인은 관측하지 못했습니다. 결과는 [집 PC 재검증](#집-pc-재검증-p1-b2-2026-10-30) 절에 있습니다. 아래 [연구실 PC 런타임 기록](#런타임-검증-기록)의 BLOCKED 판정은 당시 환경의 결과로 그대로 보존합니다.
 
 검증일: 2026-10-30. 범위는 `ROW_1_LEFT → FRONT_LEFT` 한 도어입니다. SDK 조회·변경 알림을 기존 JVM 모델과 SVG에 연결합니다. 실제 차량 제어, 다른 도어, Anatomy 및 성능 최적화는 포함하지 않습니다.
 
@@ -93,7 +95,34 @@ AVD 종료 후 세 task의 최종 offline build는 PASS/43 UP-TO-DATE였으므�
 
 APK: `app/build/outputs/apk/debug/app-debug.apk`, 11,749,170 bytes, SHA-256 `1A7CD16452C1308026B01762D4E546610C2578EC309073141446E268A9E134B1`, debug v2 서명 검증 PASS, `adb install -r` Success. 버전명은 기존 `0.1.0-p0`를 유지했으므로 버전명만으로 이 빌드를 구별하지 말고 hash를 확인합니다.
 
+## 집 PC 재검증 (P1-B2, 2026-10-30)
+
+환경: Windows 10, i5-4690(공식 최소 CPU 미만), RAM 16GB, GTX 1060. Emulator 37.2.13 WHPX `CPU Acceleration: working`, `-gpu host`(NVIDIA). 같은 Pleos 2.1.0 이미지, RAM 4096MB / 2 cores / cold boot. Vehicle Service **2.3.22/code 74**, 앱 SDK **2.3.2**. 런타임 APK는 소스 `c555c58`, SHA-256 `C192F7B75BE832715574AB5E9FF9F74AC8928F6A3F4811E70FB2BC087AB825B6`. 앱 코드는 변경하지 않았습니다. 비식별 로그 발췌와 세션별 안정성 기록은 [P1-B2 evidence](evidence/p1-b2/2026-10-30-home/README.md)에 있습니다.
+
+| 시나리오 | 판정 | 근거 |
+| --- | --- | --- |
+| T1 SDK 초기화 | PASS | Service connect → `initialize returned`, 이어서 T2/T3 실제 응답으로 연결 확인 |
+| T2 Door capability | PASS | `capability access=READ_WRITE range=0..1` |
+| T3 현재 도어 값 | PASS | `current raw=0` → CLOSED |
+| T4 Console OPEN | PASS | Console `PUT door_fl=true` HTTP 200, Console 상태 `front_left:true` |
+| T5 PLEOS OPEN SVG | PASS | `event raw=1`, SVG FRONT_LEFT 빨간색 OPEN |
+| T6 Console CLOSED | PASS | `PUT door_fl=false` HTTP 200 |
+| T7 PLEOS CLOSED SVG | PASS | `event raw=0`, SVG 초록색 CLOSED |
+| T8 SDK 모드 Activity 재생성 | PASS | `cmd uimode night`로 설정 변경 재생성 3회, 같은 PID. 이전 세션 해제 후 새 세션이 capability 재조회·구독·값 수신. PLEOS 선택 복원. 재생성 후 Console OPEN/CLOSE 이벤트가 새 세션에서만 1회씩 수신 |
+| T9 구독 해제/release | PASS (앱 측) | 앱 `unregistered → pending=0 → released`. Service debug 로그로 구독 해제 처리 관측. **release의 Service 측 완료는 미관측** |
+| T10 Mock 전체 회귀 | PASS | ALL_CLOSED / FRONT_LEFT_OPEN / UNAVAILABLE, 5초 STALE, MOCK↔PLEOS 양방향, PLEOS 중 모의 버튼 → MOCK 전환. 출처 표시·SVG 일치 |
+
+Virtual Console은 웹 UI와 같은 HTTP 요청으로 조작했습니다. Console은 브라우저 세션 heartbeat(`POST /browser/session`, 1초 간격)가 있어야 쓰기 요청을 받으며, heartbeat가 없으면 `503 emulator_inactive`를 반환합니다.
+
+관측된 환경 문제:
+
+- H1 첫 부팅에서 부팅 직후 SystemUI ANR 1건. 이후 추가 없음. 에뮬레이터 실행 중 호스트 여유 RAM이 0.8~2.8GB로 낮습니다.
+- P1-B2 첫 부팅(boot2)에서 OEM 홈의 오른쪽 앱 패널이 CarScope와 내비게이션 앱을 모두 표시하지 않았습니다. 앱 창은 그려졌지만(`HAS_DRAWN`) SurfaceFlinger layer가 숨김 처리되어 합성에서 빠졌고, 입력도 전달되지 않았습니다. 앱 결함으로 판단할 근거는 없으며, 같은 설정의 복구 cold boot 1회에서는 재현되지 않았습니다. 원인은 미확인입니다.
+- 정상 연결 상태에서도 이벤트가 없으면 5초 후 FRONT_LEFT가 STALE로 표시됩니다. 설계 문제로 [STALE 정책 검토](stale-policy-review.md)에 정리했습니다.
+
 ## 런타임 검증 기록
+
+아래는 **연구실 PC**에서의 기록이며, 당시 판정을 그대로 보존합니다.
 
 **최종 판정: P1-B BLOCKED, 미완료.** 구현·컴파일·단위 테스트·APK 설치까지 확인했습니다. 실제 SDK 초기화/capability/read/event→SVG 루프는 확인하지 못했습니다. 초기화 성공 문구조차 실제 로그로 확인되지 않았으므로 SDK 연동 PASS로 확대하지 않습니다.
 
@@ -153,4 +182,4 @@ adb -s emulator-5554 emu kill
 
 ## 남은 검증
 
-실차, 서비스 프로세스 강제 종료/권한 거부를 통한 오류 주입, SDK 무응답 시 resource 대기, 장시간 구독/메모리, 다른 encoding/영역, 고사양 환경의 수신·SVG 지연은 별도 검증이 필요합니다. 실제 도어 이벤트→SVG가 확인되기 전에는 P1-B 완료나 P2 진입을 권고하지 않습니다.
+실차, 서비스 프로세스 강제 종료/권한 거부를 통한 오류 주입, SDK 무응답 시 resource 대기, release의 Service 측 완료 확인, 장시간 구독/메모리, 다른 encoding/영역, 수신·SVG 지연 계측은 별도 검증이 필요합니다. 실제 도어 이벤트→SVG는 집 PC에서 확인했습니다(위 P1-B2). 연구실 PC 환경은 여전히 BLOCKED이며, 지원 사양을 만족하는 호스트에서의 재현은 미검증입니다. P2 진입 전에 [STALE 정책](stale-policy-review.md) 결정을 권장합니다.

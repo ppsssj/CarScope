@@ -1,6 +1,6 @@
 # Windows 개발 환경 및 두 PC 작업 절차
 
-연구실/집 PC는 Git의 소스·설정·문서를 공유합니다. JDK, Android Studio/SDK, Gradle 캐시, AVD, 인증 정보, APK와 원본 실행 증거는 각 PC에 따로 준비합니다. 현재 **P1-B BLOCKED**이며 clone/build 성공은 SDK 실연동 완료를 뜻하지 않습니다.
+연구실/집 PC는 Git의 소스·설정·문서를 공유합니다. JDK, Android Studio/SDK, Gradle 캐시, AVD, 인증 정보, APK와 원본 실행 증거는 각 PC에 따로 준비합니다. P1-B 런타임은 연구실 PC에서 BLOCKED, 집 PC에서 T1~T10 PASS입니다 ([검증 보고서](validation-report.md)). clone/build 성공만으로 SDK 실연동이 되는 것은 아니며, PC마다 아래 절차로 직접 확인합니다.
 
 ## 1. Windows 10/11에서 clone
 
@@ -53,7 +53,19 @@ adb version
 git check-ignore local.properties
 ```
 
-다른 위치에 설치했다면 각자 그 위치를 사용합니다. `local.properties`, `.gradle/config.properties`, `.idea`, OS PATH, `JAVA_HOME`, `ANDROID_HOME`을 복사하거나 commit하지 않습니다.
+다른 위치에 설치했다면 각자 그 위치를 사용합니다.
+
+Android Studio 없이 공식 [command-line tools](https://developer.android.com/studio#command-line-tools-only)만으로도 구성할 수 있습니다 (집 PC에서 확인). 공식 페이지의 SHA-256을 대조한 뒤 `<SDK>\cmdline-tools\latest`에 풀고, 라이선스는 개발자가 직접 `sdkmanager --licenses`로 읽고 동의합니다. 사용자 홈 경로에 한글 등 비ASCII 문자가 있으면 Gradle·Emulator가 실패할 수 있으므로 SDK·Gradle 캐시·AVD를 영문 경로에 둡니다.
+
+```powershell
+# 예: 영문 경로 사용 (각 PC에서 사용자 환경변수로 설정)
+$env:ANDROID_HOME      = 'C:\Android\Sdk'
+$env:ANDROID_USER_HOME = 'C:\Android\.android'
+$env:ANDROID_AVD_HOME  = 'C:\Android\.android\avd'   # Emulator는 ANDROID_USER_HOME만으로는 AVD를 찾지 못함
+$env:GRADLE_USER_HOME  = 'C:\gradle-home'
+& "$env:ANDROID_HOME\cmdline-tools\latest\bin\sdkmanager.bat" --licenses
+& "$env:ANDROID_HOME\cmdline-tools\latest\bin\sdkmanager.bat" "platforms;android-34" "build-tools;35.0.0" "platform-tools" "emulator"
+``` `local.properties`, `.gradle/config.properties`, `.idea`, OS PATH, `JAVA_HOME`, `ANDROID_HOME`을 복사하거나 commit하지 않습니다.
 
 ## 4. Gradle Wrapper
 
@@ -90,7 +102,7 @@ APK는 `app/build/outputs/apk/debug/app-debug.apk`입니다. 개발 debug 서명
 https://nexus-playground.pleos.ai/repository/raw-releases/connect-avd/2.x/crp-sys-img.xml
 ```
 
-SDK Manager → SDK Update Sites에 등록하고 API 34 Pleos system image를 설치합니다. Device Manager → Automotive → Pleos Connect v2.1.0 이미지로 AVD를 만들고 공식 가이드의 Cold Boot 요구를 적용합니다. AVD 이름은 PC별로 달라도 되며, 명령에 실제 이름을 사용합니다. 이미지·AVD·다운로드 ZIP·SDK 라이선스를 이 저장소에 복제하지 않습니다.
+SDK Manager → SDK Update Sites에 등록하고 API 34 Pleos system image를 설치합니다. Android Studio 없이 설치할 때는 `sdkmanager`가 읽는 사용자 사이트 목록 `<ANDROID_USER_HOME>\repositories.cfg`에 같은 URL을 등록합니다 (`count=1`, `disp00=Pleos Connect System Image`, `enabled00=true`, `src00=<위 URL, ':'는 '\:'로 이스케이프>`). 이후 `sdkmanager "system-images;android-34;pleos_car_emulator;x86_64"`로 설치하고, Pleos SDK 라이선스도 직접 동의합니다. CLI에서는 `avdmanager create avd -d Pleos_Connect_v2_0 -k "system-images;android-34;pleos_car_emulator;x86_64"`로 만든 뒤 `config.ini`에서 RAM 4096, cores 2, `hw.gpu.mode=host`, `fastboot.forceColdBoot=yes`를 확인합니다. Device Manager → Automotive → Pleos Connect v2.1.0 이미지로 AVD를 만들고 공식 가이드의 Cold Boot 요구를 적용합니다. AVD 이름은 PC별로 달라도 되며, 명령에 실제 이름을 사용합니다. 이미지·AVD·다운로드 ZIP·SDK 라이선스를 이 저장소에 복제하지 않습니다.
 
 GPU/가상화/메모리 조건을 먼저 확인하고 `emulator -accel-check`로 가속기를 점검합니다. BIOS/Windows 기능 활성화·재부팅은 개발자가 따로 결정합니다. 임의 해상도 변경으로 앱 성공을 만들지 않습니다. 연구실 PC의 raw image metadata 보정 절차는 과거 환경 기록이며 새 PC에 자동 복사하지 않습니다. 설치 metadata 문제가 재현되면 공식 repository와 sdkmanager 출력부터 확인합니다.
 
@@ -119,7 +131,9 @@ adb -s emulator-5554 shell am start -W -n io.carscope.app/.MainActivity
 
 MOCK 모드와 출처 표시를 확인하고 ALL_CLOSED / FRONT_LEFT_OPEN / UNAVAILABLE, 5초 초과 STALE, 실제 SVG 픽셀, Activity 재생성을 검증합니다. 기본은 Mock이며 모의 버튼은 명시적으로 Mock으로 전환합니다. PLEOS 버튼은 읽기 전용 ROW_1_LEFT이고 실패 시 Mock을 자동 대체하지 않습니다.
 
-실연동은 [T1~T10](pleos-sdk-integration.md#런타임-검증-기록)을 순서대로 재검증합니다. SDK 초기화 → capability → current → listener 성공을 먼저 확인한 뒤 `adb forward tcp:8088 tcp:8088`, `http://127.0.0.1:8088/` → Convenience → Door Position에서 Front left Open/Close를 검증합니다. 앱에는 차량 SET API가 없습니다. 현재 Door Event는 NOT_RUN이고 SDK 초기화/capability/state/실데이터 SVG는 BLOCKED입니다.
+실연동은 [T1~T10](pleos-sdk-integration.md#런타임-검증-기록)을 순서대로 재검증합니다. SDK 초기화 → capability → current → listener 성공을 먼저 확인한 뒤 `adb forward tcp:8088 tcp:8088`, `http://127.0.0.1:8088/` → Convenience → Door Position에서 Front left Open/Close를 검증합니다. 앱에는 차량 SET API가 없습니다. Console은 열려 있는 브라우저 세션의 heartbeat(`POST /browser/session?client=<id>`, 1초 간격)를 받는 동안에만 값을 바꿉니다. 브라우저 없이 HTTP로 조작하면 heartbeat를 함께 보내야 하며, 없으면 `503 emulator_inactive`가 반환됩니다. 도어 변경은 `PUT /vehicle/body?door_fl=true|false`입니다.
+
+SDK 모드 Activity 재생성(T8)은 force-stop/재실행이 아니라 설정 변경으로 일으킵니다. 예: PLEOS 모드에서 `adb shell cmd uimode night yes` 후 `... night no`로 원복. logcat의 `wm_on_stop_called ... handleRelaunchActivity`와 같은 PID로 재생성을 확인하고, `CarScopeDoor` 로그의 worker TID로 이전/새 SDK 세션을 구분합니다. 판정할 때는 logcat을 지우지 말고 파일로 연속 기록합니다.
 
 ## 10. 문제 해결 및 두 PC 작업 규칙
 
@@ -132,6 +146,10 @@ MOCK 모드와 출처 표시를 확인하고 ALL_CLOSED / FRONT_LEFT_OPEN / UNAV
 | UI와 SVG 갱신 시차 | native 텍스트, SDK callback, WebView 실제 픽셀을 따로 확인. 현재 개선 주장은 없음 |
 | SDK unavailable/null/unknown | 실제 permission·Service·capability·raw 오류 확인. UNKNOWN을 CLOSED로 바꾸지 않음 |
 | 원본 증거 파일 없음 | 연구실 로컬 증거는 업로드 제외. 해당 PC에서 테스트/로그/화면을 새로 수집 |
+| `Unknown AVD name` | `ANDROID_AVD_HOME`이 실제 AVD 폴더를 가리키는지. 비ASCII 홈 경로에서 기본 위치를 찾는 경우가 있음 |
+| 앱이 실행 중인데 오른쪽 패널이 빈 화면 | SurfaceFlinger에서 앱 layer의 VisibleRegion 확인. OEM 홈 패널이 다른 앱도 표시하지 않으면 앱 결함이 아님. 반복 부팅 대신 로그 확보 후 복구 cold boot 1회 |
+| Console 변경이 `503 emulator_inactive` | 브라우저 세션 heartbeat 필요 (§9) |
+| PLEOS 값이 5초 후 STALE | 현재 정책상 정상 동작. 연결 끊김과 구분되지 않음 → [STALE 정책 검토](stale-policy-review.md) |
 
 작업 시작/종료 때 다음 흐름을 사용합니다. 작업 중인 변경이 있으면 먼저 상태를 확인하고 무조건 reset/clean/stash하지 않습니다.
 

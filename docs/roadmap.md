@@ -24,7 +24,11 @@
 
 ## P1-B — Pleos 읽기 전용 어댑터
 
-2026-10-30 현재 **BLOCKED / 미완료**. SDK 2.3.2 typed 어댑터, 한 도어의 매핑·cache·수명주기, 명시적 Mock/Pleos 선택을 구현했습니다. core 17개와 app 합성 19개, APK 빌드·설치는 PASS입니다. AVD Service 2.3.22/code 74 및 최소 요구 2.3.13/code 65를 확인했습니다. OEM/framework ANR·시스템 사망으로 실제 초기화/capability/read/event→SVG를 확인하지 못했습니다. 자세한 명령과 T1~T10은 [P1-B 기록](pleos-sdk-integration.md)에 있습니다.
+2026-10-30 현재 **T1~T10 PASS (집 PC), 완료 조건 일부 미충족**. SDK 2.3.2 typed 어댑터, 한 도어의 매핑·cache·수명주기, 명시적 Mock/Pleos 선택을 구현했습니다. core 17개와 app 합성 19개, APK 빌드·설치는 PASS입니다.
+
+- 연구실 PC: OEM/framework ANR·시스템 사망으로 실제 초기화/capability/read/event→SVG를 확인하지 못했습니다 (BLOCKED, 기록 보존).
+- 집 PC (P1-B2): WHPX + host GPU 환경에서 실제 SDK 초기화·capability·현재 값·Console 이벤트→SVG, SDK 모드 Activity 재생성(재연결), Mock 전체 회귀를 확인했습니다. 자세한 내용은 [P1-B 기록](pleos-sdk-integration.md#집-pc-재검증-p1-b2-2026-10-30)에 있습니다.
+- 아래 완료 조건 중 남은 것: 오류 경로(listener `onFailed`, 권한 거부, 서비스 단절)의 런타임 증거, release의 Service 측 완료 확인, [STALE 정책](stale-policy-review.md) 결정.
 
 진입 조건: P1-A 완료, SDK 사용/저장소 접근 조건 확인, 전용 Pleos AVD 또는 허용된 테스트 차량 확보.
 
@@ -38,6 +42,6 @@
 
 ## P2 — 자산 및 제품 수준 UI
 
-현재 **진입 보류**. 지원 사양 호스트 또는 허용된 Pleos 테스트 기기에서 P1-B T1~T10을 먼저 완료해야 합니다. 현재 환경의 시스템 오류를 우회하기 위해 도어 값을 조작하거나 Mock으로 성공을 대체하지 않습니다. 나머지 도어·Anatomy·시각화 복잡도 확장은 그 뒤에 판단합니다.
+현재 **진입 보류**. P1-B T1~T10은 집 PC에서 PASS했지만, 도어 상태를 사용자에게 보여 주기 전에 [STALE 정책](stale-policy-review.md)을 결정하고 오류 경로 런타임 검증을 마치는 것을 권장합니다. 시스템 오류를 우회하려고 도어 값을 조작하거나 Mock으로 성공을 대체하지 않습니다. 나머지 도어·Anatomy·시각화 복잡도 확장은 그 뒤에 판단합니다.
 
 Anatomy 자산의 라이선스·부품 매핑·sanitize·실제 SVG 호환성/성능을 평가합니다. 전체 Anatomy 통합, 차량 제어, 배포·서명·심사는 별도 범위입니다. 각 단계에서 검증하지 못한 항목은 BLOCKED 또는 NOT_RUN으로 유지합니다.
