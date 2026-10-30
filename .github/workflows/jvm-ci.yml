@@ -1,0 +1,61 @@
+name: JVM CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  core-tests:
+    name: Core JVM tests (JDK 17)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      GRADLE_OPTS: -Dorg.gradle.workers.max=1 -Dorg.gradle.daemon=false
+      ANDROID_HOME: ""
+      ANDROID_SDK_ROOT: ""
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: temurin
+          java-version: '17'
+          overwrite-settings: false
+
+      - name: Run core tests with Gradle Wrapper 8.14
+        run: ./gradlew -PcoreOnly=true :vehicle-core:test --rerun-tasks --console=plain
+
+      - name: Summarize core test results
+        run: |
+          python3 - <<'PY'
+          import glob
+          import os
+          import xml.etree.ElementTree as ET
+
+          reports = glob.glob('vehicle-core/build/test-results/test/TEST-*.xml')
+          if not reports:
+              raise SystemExit('Core JUnit XML reports were not generated')
+          totals = dict.fromkeys(('tests', 'failures', 'errors', 'skipped'), 0)
+          for report in reports:
+              suite = ET.parse(report).getroot()
+              for key in totals:
+                  totals[key] += int(suite.get(key, '0'))
+          result = 'Core JVM: ' + ', '.join(f'{key}={value}' for key, value in totals.items())
+          print(result)
+          with open(os.environ['GITHUB_STEP_SUMMARY'], 'a', encoding='utf-8') as summary:
+              summary.write(result + '\n\nJVM logic only. P1-B remains BLOCKED.\n')
+          PY

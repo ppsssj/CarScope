@@ -14,6 +14,18 @@ P1-B는 **BLOCKED / 미완료**입니다. 최종 core 17개 + app 합성 19개 �
 | Door event / 실제 SDK SVG | NOT_RUN / BLOCKED |
 | OEM/framework ANR | 발생, CarScope FATAL/ANR은 수집 범위에서 미발견 |
 
+## JVM CI
+
+[JVM CI 실행 상태](https://github.com/ppsssj/CarScope/actions/workflows/jvm-ci.yml)는 `main` 대상 PR, `main` push, 수동 실행에서 Ubuntu/JDK 17과 Gradle Wrapper 8.14로 아래 core 테스트 17개를 실행합니다. 이 workflow를 추가하는 PR의 실제 실행 결과를 확인해야 하며, 배지가 없거나 대기 중인 상태를 PASS로 해석하지 않습니다. 수동 실행은 workflow가 기본 브랜치에 반영된 뒤 사용할 수 있습니다.
+
+```sh
+./gradlew -PcoreOnly=true :vehicle-core:test --rerun-tasks --console=plain
+```
+
+단일 job/Gradle worker 최대 1개, 15분 제한, 이전 동일 ref 실행 취소를 적용합니다. 공식 action은 commit SHA로 고정하며 권한은 `contents: read`, 추가 사용자 Secrets는 없습니다. Android SDK 경로 환경변수를 비우고 SDK/Pleos SDK/AVD 설치나 emulator 실행을 하지 않습니다. 의존성은 처음에 공식 Gradle 배포 서버·Google Maven·Maven Central 등의 네트워크 접근이 필요합니다. 다운로드/DNS/TLS/HTTP 실패는 테스트 assertion 실패와 구분해 Actions 로그에서 확인합니다.
+
+**CI PASS의 범위는 순수 JVM 테스트와 Kotlin 로직뿐입니다.** app 합성 테스트 19개·Android APK·Pleos SDK 초기화·Vehicle Service 연결·실제 Door Event·SVG 실시간 갱신은 이 CI의 검증 대상이 아닙니다. **P1-B는 BLOCKED로 유지**합니다. GitHub hosted 이미지에 Android 도구가 미리 존재할 수 있어도 이 job은 이를 요구하거나 사용하지 않습니다.
+
 2026-10-30 P1-A 검증: core JUnit **17개 PASS**, Android debug APK 생성·서명 검증 PASS, Pleos API 34 AVD 설치·부팅 및 Mock UI/SVG 표시 확인. 실제 화면에서 발견한 SVG 잘림을 수정했습니다. 현재 PC의 메모리/GPU 제약으로 cold launch timeout과 SVG 갱신 지연이 있어 성능 검증은 통과하지 못했습니다. 자세한 명령·증거·미검증 범위는 [검증 보고서](docs/validation-report.md#p1-a--android-환경-및-mock-앱-실행-2026-10-30)를 참조하세요.
 
 ## 프로젝트 구조
