@@ -1,0 +1,14 @@
+{
+  "name": "carscope-geometry-checks",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs --audit",
+    "export": "node geometry-export/export.mjs",
+    "test": "node --test test/*.test.mjs",
+    "verify": "node geometry-export/verify.mjs"
+  },
+  "devDependencies": {
+    "gltf-validator": "2.0.0-dev.3.10"
+  }
+}

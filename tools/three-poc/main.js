@@ -54,8 +54,8 @@ loader.load(params.get("model") ?? "./car.glb", (gltf) => {
   applyDoors();
   const tris = state.meshes.reduce((a, m) => a + m.geometry.index.count / 3, 0);
   log("loaded", { ms: Math.round(performance.now() - t0), meshes: state.meshes.length, triangles: tris, doors: Object.keys(state.doors) });
-  if (params.get("mirror")) { document.getElementById("mirror").checked = true; setMirror(true); }
   if (params.get("cam") === "svg") useSvgCamera();
+  if (params.get("landmarks")) addLandmarks(gltf.parser.json.extras?.coordinateLandmarks ?? []);
   for (const [id, key] of [["door-front-left", "fl"], ["door-rear-left", "rl"]]) if (params.get(key)) { const d = state.doors[id]; d.t = d.target = Number(params.get(key)); }
   applyDoors();
   if (params.get("wire")) { document.getElementById("wire").checked = true; for (const m of state.meshes) m.material.wireframe = true; }
@@ -83,23 +83,17 @@ document.getElementById("normals").addEventListener("change", (e) => {
   state.dirty = true;
 });
 
-// The Anatomy kit projects with screen-right x screen-down = toward the viewer, i.e. a reflection of
-// a right-handed world. Mirroring the car across its centre plane (car y, glTF Z) reproduces the SVG.
-function setMirror(on) {
-  state.mirror = on;
-  state.gltf.scene.scale.z = on ? -1 : 1;
-  if (camera === ortho) useSvgCamera();
-  state.dirty = true;
-}
-document.getElementById("mirror").addEventListener("change", (e) => setMirror(e.target.checked));
-function useSvgCamera() {
+function fitOrthographic() {
   const size = state.box.getSize(new THREE.Vector3());
-  const centre = state.box.getCenter(new THREE.Vector3());
   const half = Math.max(size.x, size.z) * 0.62;
   const aspect = innerWidth / innerHeight;
   Object.assign(ortho, { left: -half * aspect, right: half * aspect, top: half, bottom: -half });
+  ortho.updateProjectionMatrix();
+}
+function useSvgCamera() {
+  fitOrthographic();
+  const centre = state.box.getCenter(new THREE.Vector3());
   const dir = state.svgDir.clone();
-  if (state.mirror) dir.z = -dir.z;
   ortho.position.copy(centre).addScaledVector(dir, 20);
   ortho.up.set(0, 1, 0);
   ortho.lookAt(centre);
@@ -110,6 +104,28 @@ function useSvgCamera() {
   state.dirty = true;
 }
 document.getElementById("svgcam").addEventListener("click", useSvgCamera);
+
+const directions = { front: [1, 0.22, 0], rear: [-1, 0.22, 0], left: [0, 0.22, -1], right: [0, 0.22, 1] };
+function useView(name) {
+  useSvgCamera();
+  const centre = state.box.getCenter(new THREE.Vector3());
+  ortho.position.copy(centre).addScaledVector(new THREE.Vector3(...directions[name]).normalize(), 20);
+  ortho.lookAt(centre);
+  controls.update(); state.dirty = true;
+}
+document.querySelectorAll("[data-view]").forEach((b) => b.addEventListener("click", () => useView(b.dataset.view)));
+
+function addLandmarks(landmarks) {
+  for (const l of landmarks) {
+    const dot = new THREE.Mesh(new THREE.SphereGeometry(0.04, 12, 8), new THREE.MeshBasicMaterial({ color: l.color }));
+    dot.position.fromArray(l.gltfMetres); scene.add(dot);
+    const canvas = document.createElement("canvas"); canvas.width = 256; canvas.height = 64;
+    const ctx = canvas.getContext("2d"); ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, 256, 64);
+    ctx.fillStyle = l.color; ctx.font = "bold 32px sans-serif"; ctx.fillText(l.id, 8, 44);
+    const label = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(canvas), depthTest: false }));
+    label.position.copy(dot.position).add(new THREE.Vector3(0, 0.12, 0)); label.scale.set(0.6, 0.15, 1); scene.add(label);
+  }
+}
 document.getElementById("freecam").addEventListener("click", () => { camera = persp; controls.object = persp; state.dirty = true; });
 
 const ray = new THREE.Raycaster();
@@ -126,7 +142,7 @@ renderer.domElement.addEventListener("pointerdown", (e) => {
   } else document.getElementById("info").textContent = "no part selected";
   state.dirty = true;
 });
-addEventListener("resize", () => { renderer.setSize(innerWidth, innerHeight); persp.aspect = innerWidth / innerHeight; persp.updateProjectionMatrix(); if (camera === ortho) useSvgCamera(); state.dirty = true; });
+addEventListener("resize", () => { renderer.setSize(innerWidth, innerHeight); persp.aspect = innerWidth / innerHeight; persp.updateProjectionMatrix(); if (camera === ortho) fitOrthographic(); state.dirty = true; });
 controls.addEventListener("change", () => { state.dirty = true; });
 
 // render on demand: only while something moves (calm when idle)
@@ -201,4 +217,4 @@ async function runAuto() {
   } else log("afterRestore", { skipped: "WEBGL_lose_context unavailable" });
   log("done", { memory: performance.memory ? { usedJSHeapMB: Math.round(performance.memory.usedJSHeapSize / 1048576) } : null });
 }
-window.__lab = { state, useSvgCamera, cam: () => { controls.enabled = false; return camera; }, setDoor: (id, t) => { const d = state.doors[id]; d.t = d.target = t; applyDoors(); }, render: () => { state.dirty = true; } };
+window.__lab = { state, useSvgCamera, useView, cam: () => { controls.enabled = false; return camera; }, setDoor: (id, t) => { const d = state.doors[id]; d.t = d.target = t; applyDoors(); }, render: () => { state.dirty = true; } };
