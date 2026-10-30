@@ -2,7 +2,7 @@
 // a window frame that leans with the greenhouse, recessed glass, handle and (front) mirror. A door
 // turns about the vertical axis through its outer front corner, so it swings clear of the fender; the
 // open pose adds the hinge knuckles and the dark cabin seen through the window opening.
-import { region } from "./geometry.mjs";
+import { region, withGeo } from "./geometry.mjs";
 import { HALF, BELT, GH, SHUT_GAP, DOOR_DEPTH, crease, apertureBottom, STATIONS, FRONT_DOOR, REAR_DOOR } from "./dims.mjs";
 import { sideFrame, tOf } from "./greenhouse.mjs";
 
@@ -95,7 +95,7 @@ export function buildDoors(ctx, sc) {
       const hx = def.hinge - 0.95;
       const hy = HALF + 0.6;
       for (const [z0, z1] of [[44, 52], [72, 80]]) {
-        prims.push(solid(k.cylinder(hx, hy, 0.85, z0, z1 - z0, P, 16), { palette: "trim", tone: "hi" }));
+        prims.push(solid(withGeo(k.cylinder(hx, hy, 0.85, z0, z1 - z0, P, 16), { kind: "lathe", F: G.frameOf([hx, hy, z0], [0, 0, 1], [1, 0, 0], [0, 1, 0]), meridian: [[0, 0], [0, 0.85], [z1 - z0, 0.85], [z1 - z0, 0]], steps: 16 }), { palette: "trim", tone: "hi" }));
         shapes.push(record(A.cylinder(hx, hy, 0.85, z0, z1 - z0, { name: `${name}.hinge-${z0}`, owner: def.id })));
       }
     }

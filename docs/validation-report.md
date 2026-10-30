@@ -4,6 +4,19 @@ G0 공유본 안내: 개인 작업 경로는 `<repository-root>` 등으로 치�
 
 **최신 결과:** [P1-B2 집 PC 런타임 재검증](#p1-b2--집-pc-런타임-재검증-2026-10-30)에서 실제 SDK 초기화·Door capability·현재 값·Console 이벤트→SVG, SDK 모드 Activity 재생성, Mock 전체 회귀(T1~T10)가 PASS입니다. 같은 날 연구실 PC의 [P1-B 결과](#p1-b--pleos-읽기-전용-sdk-연동-2026-10-30)는 OEM/framework ANR 및 시스템 사망으로 **BLOCKED**였으며, 그 기록은 당시 환경의 결과로 보존합니다. 아래 P0와 P1-A 결과·증거도 당시 기록입니다.
 
+## P2-A2 — Anatomy-to-3D Geometry PoC (2026-10-30)
+
+| 항목 | 상태 | 근거 / 제한 |
+| --- | --- | --- |
+| SVG 출력 불변 | PASS | `anatomy-car.parts` SHA-256 `13d2d0d9…` 그대로, Anatomy audit passed |
+| 3D 메시 export | PASS | 91 부품 / 7,573 삼각형. degenerate·뒤집힌 법선·winding 충돌 0. 닫힌 메시 85개 watertight·바깥 방향 |
+| 도어 강체성 | PASS | 열린 자세를 되돌린 결과와 닫힌 자세의 오차 ≤ 3.2e-14 cm |
+| 도어 스윕 충돌 | FAIL (발견) | REAR_LEFT 5~6°에서 뒤 플레어가 도어 안쪽 구조로 3.6mm 침투. SVG 불변 조건 때문에 미수정 |
+| Three.js PoC | PASS | GLB 로드, 회전·확대, 힌지 개폐, 선택, wireframe, 법선, SVG 카메라 |
+| SVG/3D 차이 | 발견 | kit 투영이 반사라 SVG가 거울상. FRONT_LEFT가 그림상 오른쪽 면 |
+| AVD WebGL (실험 화면) | PASS (조건부) | WebGL2 동작, 회전 프레임 중앙값 50~67ms, context loss·복구 정상, PSS 115MB |
+| 판정 | CONDITIONAL GO | [P2-A2 기록](p2-a2-geometry-poc.md#9-판정과-조건) |
+
 ## P2-A1 — 자동차 전용 kit 시각 개선 (2026-10-30)
 
 | 항목 | 상태 | 근거 / 제한 |

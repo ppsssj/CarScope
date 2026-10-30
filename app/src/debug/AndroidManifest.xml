@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Debug builds only: the P2-A2 WebGL experiment. Exported so `adb shell am start` can open it on
+     the test AVD; there is no launcher entry and release builds do not contain it. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application>
+        <activity
+            android:name=".lab.WebGlLabActivity"
+            android:exported="true"
+            android:label="CarScope WebGL lab" />
+    </application>
+</manifest>

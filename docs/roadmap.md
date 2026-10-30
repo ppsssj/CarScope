@@ -42,6 +42,8 @@
 
 ## P2 — 자산 및 제품 수준 UI
 
+**P2-A2 (2026-10-30)**: 3D geometry PoC. 판정 CONDITIONAL GO: SVG 거울상 정정, 360° 모델링, 뒷도어 간섭 수정, 실제 하드웨어 성능 측정, JS 활성 WebView 보안 검토가 조건입니다. [기록](p2-a2-geometry-poc.md)
+
 **P2-A1 (2026-10-30)**: 자동차 전용 kit로 모델을 다시 만들어 옆면·유리·휠·열린 도어를 개선했습니다. 시각 품질 판정은 NEEDS_REFINEMENT입니다(남은 과제: 전면부 곡면, 보닛/트렁크 크라운). [기록](anatomy-visualization.md#p2-a1--자동차-전용-kit와-시각-개선)
 
 **P2-A (2026-10-30)**: Anatomy kit로 만든 아이소메트릭 세단을 `VehicleSvgRenderer`에 통합하고 Pleos AVD에서 SDK 도어 OPEN/CLOSED에 반응하는 것을 확인했습니다([기록](anatomy-visualization.md)). 아래 P1-B 잔여 항목과 STALE 정책 결정은 여전히 남아 있습니다.

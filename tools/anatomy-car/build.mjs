@@ -8,35 +8,13 @@
 // scripts/capture.mjs and scripts/lines.mjs). The kit itself is not vendored: see automotive/anatomy.mjs.
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { loadAnatomy } from "./automotive/anatomy.mjs";
-import { geometry } from "./automotive/geometry.mjs";
-import { camera } from "./automotive/camera.mjs";
-import { scene } from "./automotive/scene.mjs";
-import { buildBody } from "./automotive/body.mjs";
-import { buildGreenhouse } from "./automotive/greenhouse.mjs";
-import { buildWheels } from "./automotive/wheels.mjs";
-import { buildDoors } from "./automotive/doors.mjs";
+import { buildModel } from "./automotive/model.mjs";
 import { writeAsset, writePreviews } from "./automotive/asset.mjs";
-import { HALF, X_REAR, X_FRONT } from "./automotive/dims.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO = join(HERE, "..", "..");
-const anatomy = await loadAnatomy({ allowOtherRevision: process.argv.includes("--any-anatomy") });
-const { k, A } = anatomy;
-const P = camera(k);
-const ctx = { ...anatomy, P, ...geometry(anatomy, P) };
-const sc = scene(ctx);
-
-buildWheels(ctx, sc);
-buildBody(ctx, sc);
-buildGreenhouse(ctx, sc);
-buildDoors(ctx, sc);
-
-// The soft ground shadow is not a part: it is drawn first, outside the sorted items.
-const HALO = [{ kind: "halo", d: k.haloOf({ x: X_REAR + 8, y: -HALF + 6, w: X_FRONT - X_REAR - 14, d: 2 * HALF - 12, r: 40 }, 0, 4, P) }];
-
-sc.settle();
-A.auditOrExit(sc.R, P, {});
+const { anatomy, P, ctx, sc, halo: HALO } = await buildModel({ allowOtherRevision: process.argv.includes("--any-anatomy") });
+anatomy.A.auditOrExit(sc.R, P, {});
 
 const out = writeAsset(ctx, sc, HALO, { file: join(REPO, "vehicle-core", "src", "main", "resources", "io", "carscope", "visualization", "anatomy-car.parts"), rev: anatomy.rev });
 writePreviews(ctx, sc, HALO, join(HERE, "build"));
