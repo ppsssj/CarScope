@@ -1,0 +1,116 @@
+name: Android CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  android-build:
+    name: Android tests and debug APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      GRADLE_OPTS: -Dorg.gradle.workers.max=1 -Dorg.gradle.daemon=false
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: temurin
+          java-version: '17'
+          overwrite-settings: false
+
+      - name: Inspect SDK and install only missing build components
+        shell: bash
+        run: |
+          set -euo pipefail
+          sdk_root="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-}}"
+          if [[ -z "$sdk_root" || ! -d "$sdk_root" ]]; then
+            echo '::error title=Android SDK setup::Runner Android SDK root is unavailable'
+            exit 1
+          fi
+          manager="$sdk_root/cmdline-tools/latest/bin/sdkmanager"
+          if [[ ! -x "$manager" ]]; then
+            manager="$(command -v sdkmanager || true)"
+          fi
+          if [[ -z "$manager" || ! -x "$manager" ]]; then
+            echo '::error title=Android SDK setup::Runner sdkmanager is unavailable'
+            exit 1
+          fi
+          "$manager" --sdk_root="$sdk_root" --list_installed > "$RUNNER_TEMP/android-sdk-installed.txt"
+          missing=()
+          for package in 'platforms;android-34' 'build-tools;35.0.0'; do
+            if ! awk -F '|' -v target="$package" '{gsub(/^[ \t]+|[ \t]+$/, "", $1); if ($1 == target) found=1} END {exit !found}' "$RUNNER_TEMP/android-sdk-installed.txt"; then
+              missing+=("$package")
+            fi
+          done
+          if (( ${#missing[@]} )); then
+            printf 'Installing official SDK package: %s\n' "${missing[@]}"
+            "$manager" --sdk_root="$sdk_root" "${missing[@]}" < <(yes)
+          else
+            echo 'Required Platform 34 and Build Tools 35.0.0 already installed'
+          fi
+          test -f "$sdk_root/platforms/android-34/android.jar"
+          test -x "$sdk_root/build-tools/35.0.0/aapt2"
+          printf 'ANDROID_HOME=%s\nANDROID_SDK_ROOT=%s\n' "$sdk_root" "$sdk_root" >> "$GITHUB_ENV"
+
+      - name: Check official Pleos Maven metadata access
+        shell: bash
+        run: |
+          set -euo pipefail
+          url='https://nexus-playground.pleos.ai/repository/maven-releases/ai/pleos/playground/Vehicle/2.3.2/Vehicle-2.3.2.pom'
+          transport=0
+          http="$(curl --silent --show-error --location --connect-timeout 15 --max-time 60 --output "$RUNNER_TEMP/Vehicle-2.3.2.pom" --write-out '%{http_code}' "$url")" || transport=$?
+          if (( transport )); then
+            case "$transport" in
+              6) reason='DNS lookup failure' ;;
+              7) reason='Connection failure' ;;
+              28) reason='Network timeout' ;;
+              35|60) reason='TLS/certificate failure' ;;
+              *) reason="curl transport failure ($transport)" ;;
+            esac
+            echo "::error title=Pleos Maven network::$reason"
+            exit "$transport"
+          fi
+          if [[ "$http" != 200 ]]; then
+            echo "::error title=Pleos Maven HTTP::Vehicle 2.3.2 metadata returned HTTP $http; check repository access and artifact version"
+            exit 1
+          fi
+          echo 'Pleos Vehicle 2.3.2 POM access: HTTP 200 (AAR resolution is verified by Gradle)'
+
+      - name: Test and build with Gradle Wrapper 8.14
+        run: ./gradlew :vehicle-core:test :app:testDebugUnitTest :app:assembleDebug --rerun-tasks --console=plain
+
+      - name: Verify JUnit totals and record APK SHA-256
+        run: python3 scripts/ci/verify-android-build.py
+
+      - name: Upload test-only debug APK
+        id: apk
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: carscope-test-debug-apk-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            app/build/outputs/apk/debug/app-debug.apk
+            app/build/outputs/apk/debug/app-debug.apk.sha256
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 0
+
+      - name: Record authenticated artifact link
+        env:
+          ARTIFACT_URL: ${{ steps.apk.outputs.artifact-url }}
+        run: printf '\n[Test-only debug APK (7 days)](%s)\n' "$ARTIFACT_URL" >> "$GITHUB_STEP_SUMMARY"
