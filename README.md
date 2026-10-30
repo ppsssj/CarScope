@@ -26,6 +26,18 @@ P1-B는 **BLOCKED / 미완료**입니다. 최종 core 17개 + app 합성 19개 �
 
 **CI PASS의 범위는 순수 JVM 테스트와 Kotlin 로직뿐입니다.** app 합성 테스트 19개·Android APK·Pleos SDK 초기화·Vehicle Service 연결·실제 Door Event·SVG 실시간 갱신은 이 CI의 검증 대상이 아닙니다. **P1-B는 BLOCKED로 유지**합니다. GitHub hosted 이미지에 Android 도구가 미리 존재할 수 있어도 이 job은 이를 요구하거나 사용하지 않습니다.
 
+## Android build CI
+
+[Android CI 상태 및 APK artifact](https://github.com/ppsssj/CarScope/actions/workflows/android-ci.yml)는 main 대상 PR, main push, 수동 실행에 적용합니다. Ubuntu/JDK 17/Wrapper 8.14에서 기존 AGP 8.10.0·Kotlin 2.2.0을 유지하며 Runner SDK를 조회하고 부족한 Platform 34 / Build Tools 35.0.0만 설치합니다. 공식 Pleos Maven의 POM 접근과 실제 Gradle 의존성 해석을 구분해 확인합니다. 네트워크/DNS/TLS/HTTP 실패를 테스트 assertion 실패와 구별합니다.
+
+```sh
+./gradlew :vehicle-core:test :app:testDebugUnitTest :app:assembleDebug --rerun-tasks --console=plain
+```
+
+JUnit XML의 실제 testcase 수와 집계를 확인하고 core **17개**, app **19개**, 실패·오류·skip **0개**가 아니면 실패합니다. 성공한 경우에만 테스트용 debug APK와 APK 자체의 SHA-256 파일을 Private 저장소의 인증된 Actions artifact로 **7일간** 보관합니다. artifact ZIP의 digest와 내부 APK의 SHA-256은 서로 다릅니다. Release·배포용 APK·서명 키를 업로드하지 않습니다. debug 서명은 Runner마다 달라질 수 있으므로 PC 간 APK hash 동일성을 가정하지 않습니다.
+
+단일 Android job, Gradle worker 1개, 30분 timeout, `contents: read`, 추가 사용자 Secrets 없음으로 구성합니다. Pleos AVD·Emulator 설치/부팅과 차량 SDK 제어 API 실행은 없습니다. 기존 JVM CI는 별도로 유지합니다. 이 Android CI의 PASS는 36개 합성/JVM 테스트와 APK 생성만 의미하며 **실제 SDK 초기화·Capability 응답·도어 값/이벤트·SDK 이벤트→SVG는 BLOCKED**입니다. 실제 런타임은 P1-B2에서 따로 검증합니다. 수동 실행과 main push 경로는 workflow 병합 후 확인합니다.
+
 2026-10-30 P1-A 검증: core JUnit **17개 PASS**, Android debug APK 생성·서명 검증 PASS, Pleos API 34 AVD 설치·부팅 및 Mock UI/SVG 표시 확인. 실제 화면에서 발견한 SVG 잘림을 수정했습니다. 현재 PC의 메모리/GPU 제약으로 cold launch timeout과 SVG 갱신 지연이 있어 성능 검증은 통과하지 못했습니다. 자세한 명령·증거·미검증 범위는 [검증 보고서](docs/validation-report.md#p1-a--android-환경-및-mock-앱-실행-2026-10-30)를 참조하세요.
 
 ## 프로젝트 구조
