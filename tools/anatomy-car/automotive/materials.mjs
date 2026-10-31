@@ -42,6 +42,12 @@ export function flatMarkup(ctx, prims) {
     } else if (p.kind === "solid") {
       const pal = PALETTES[p.palette ?? "paint"];
       const paths = p.paths;
+      if(paths.loftFaces) {
+        out.push(`<path${fmt({d:paths.fill,fill:pal.paper})}/>`);
+        for(const face of paths.loftFaces) out.push(`<path${fmt({d:face.d,fill:face.color})}/>`);
+        out.push(`<path${fmt({d:paths.outline,fill:"none",stroke:LINE[p.tone??"hi"],"stroke-width":LINE_W})}/>`);
+        continue;
+      }
       const seam = (colour) => (paths.seamless ? { stroke: colour, "stroke-width": 0.4 } : {});
       out.push(`<path${fmt({ d: paths.fill, fill: pal.paper })}/>`);
       paths.shades.forEach((d, i) => { if (d) out.push(`<path${fmt({ d, fill: pal.shades[i], ...seam(pal.shades[i]) })}/>`); });
@@ -65,7 +71,13 @@ export function kitMarkup(ctx, prims) {
       out.push(k.solidSvg({ fill: d, outline: p.tone === "none" ? "" : d, crease: "", top: "", shades: ["", "", "", ""] }, { tone: p.tone === "none" ? "hi" : p.tone ?? "hi", flat: true, className: `car-${p.palette}` }));
     } else if (p.kind === "line") out.push(k.lineSvg(p.d, { tone: p.tone, free: p.free }));
     else if (p.kind === "dots") out.push(k.dotsSvg(p.points, { size: p.size, tone: p.tone }));
-    else if (p.kind === "solid") out.push(k.solidSvg(p.paths, { tone: p.tone, crease: p.crease, className: `car-${p.palette ?? "paint"}`, inner: p.inner ? kitMarkup(ctx, p.inner) : "" }));
+    else if (p.kind === "solid") {
+      if(p.paths.loftFaces) {
+        out.push(`<path d="${p.paths.fill}" fill="${PALETTES[p.palette??"paint"].paper}"/>`);
+        for(const face of p.paths.loftFaces) out.push(`<path d="${face.d}" fill="${face.color}"/>`);
+        out.push(`<path d="${p.paths.outline}" fill="none" stroke="${LINE[p.tone??"hi"]}" stroke-width="${LINE_W}"/>`);
+      } else out.push(k.solidSvg(p.paths, { tone: p.tone, crease: p.crease, className: `car-${p.palette ?? "paint"}`, inner: p.inner ? kitMarkup(ctx, p.inner) : "" }));
+    }
   }
   return out.join("");
 }

@@ -42,6 +42,23 @@ export function geometry({ k, G }, P) {
   const path3 = (points, closed = false) => k.pathOf(points.map(at), closed);
   const W3 = (F, s, [x, y]) => G.add3(G.add3(G.add3(F.o, G.mul3(F.a, s)), G.mul3(F.u, x)), G.mul3(F.v, y));
 
+  // Render exactly the tessellated loft mesh. No SVG-only curve or inverse path reconstruction.
+  function loftPaths(loft, geo) {
+    const { mesh } = loft, projected = mesh.positions.map(at), hull = G.hullOf(projected);
+    const faces=[];
+    for(let t=0;t<mesh.indices.length;t+=3) {
+      const ids=mesh.indices.slice(t,t+3), p=ids.map(i=>mesh.positions[i]);
+      const n=G.unit3(G.cross3(G.sub3(p[1],p[0]),G.sub3(p[2],p[0])));
+      if(G.dot3(n,V)<=1e-9) continue;
+      const ring=ids.map(i=>projected[i]), oriented=signed(ring)>0?ring:ring.reverse();
+      const light=Math.max(0,Math.min(1,G.dot3(n,G.lightOf(P))));
+      const value=Math.round(216+37*light),color=`rgb(${value},${Math.min(255,value+2)},${Math.min(255,value+5)})`;
+      faces.push({d:k.pathOf(oriented,true),color});
+    }
+    const outline=k.pathOf(hull,true);
+    return withGeo({fill:outline,outline,crease:"",top:"",shades:["","","",""],loftFaces:faces},geo);
+  }
+
   // prismPaths is adapted from Anatomy's examples/arcade-cabinet/build.mjs (MIT, (c) 2026 Ryan; see
   // ../ANATOMY-LICENSE): a concave polygon in a frame's (u, v) plane extruded along F.a, shaded like k.extrude.
   function prismPaths(F, poly, s0, s1) {
@@ -122,7 +139,7 @@ export function geometry({ k, G }, P) {
     return { o: origin, u: F.u, v: G.unit3(G.sub3(G.mul3(F.v, c), G.mul3(F.a, s))), a: G.unit3(G.add3(G.mul3(F.a, c), G.mul3(F.v, s))) };
   }
 
-  return { V, at, path3, W3, prismPaths, convexPaths, tilted };
+  return { V, at, path3, W3, prismPaths, convexPaths, loftPaths, tilted };
 }
 
 /**
