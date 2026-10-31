@@ -68,12 +68,14 @@ flowchart TB
     CAM --> GUIDE["Candidate overlay / manual guide"]
   end
   subgraph Android["Android AAOS / Pleos · separate prototype (app, vehicle-core)"]
+    direction TB
     SDK["Mock / Pleos VehicleDataSource"] --> SNAP["VehicleSnapshot"]
     SNAP --> MAP["VehicleDiagramMapper"]
     MAP --> SVG["VehicleSvgRenderer"]
     SVG --> WV["Android WebView · SVG"]
   end
-  UI -.-|"not connected yet · P3-A5"| WV
+  P35(["P3-A5 · not connected yet"])
+  Browser -.- P35 -.- Android
 ```
 
 브라우저 점검 UI와 Android/Pleos 앱은 **아직 별개의 구현**입니다. 점선은 P3-A5에서 연결할 예정인 경계이며 현재 데이터 흐름이 없습니다. 3D 점검 UI는 Pleos 차량 데이터를 읽지 않고, Android 앱은 3D 점검 UI를 실행하지 않습니다.
