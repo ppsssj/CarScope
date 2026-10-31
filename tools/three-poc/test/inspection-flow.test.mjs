@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { STATES as S, EVENTS as E, INSPECTION_AREAS, initialState, transition, hoodTarget, cameraGoal, HOOD_OPEN_DEG } from '../inspection-flow.mjs';
 import { SERVICE_EVIDENCE } from '../../ioniq5-asset/service-components.mjs';
 import { handoffTarget, HANDOFF_FRAGMENT } from '../inspection-handoff.mjs';
+import { handoffURL, parseHandoff } from '../../mobile-ar-poc/public/handoff.mjs';
 
 const run = (events, ctx = { handoffConfigured: true }, s = initialState()) => events.reduce((st, ev) => transition(st, ev, ctx), s);
 const START = { type: E.START }, HOOD = { type: E.SELECT_AREA, id: 'hood' }, OPENED = { type: E.HOOD_OPENED }, CLOSED = { type: E.HOOD_CLOSED };
@@ -79,7 +80,12 @@ test('handoff uses the QR-AR contract and rejects unsafe origins', () => {
   assert.equal(HANDOFF_FRAGMENT, '#v=1&task=washer-fluid');
   assert.deepEqual(handoffTarget('https://assist.example.test/'), { configured: true, url: 'https://assist.example.test/#v=1&task=washer-fluid', reason: null });
   assert.equal(handoffTarget('https://assist.example.test').url, 'https://assist.example.test/#v=1&task=washer-fluid');
-  for (const bad of [undefined, '', 'not a url', 'http://assist.example.test/', 'https://u:p@assist.example.test/', 'https://assist.example.test/app/', 'https://assist.example.test/?x=1', 'https://assist.example.test/#v=2', 'https://localhost/', 'https://127.0.0.1/']) {
+  // Single source: the same URL the QR-AR server and staging build produce, and it parses as a valid task there.
+  for (const origin of ['https://assist.example.test/', 'https://poc.example:4174/']) {
+    assert.equal(handoffTarget(origin).url, handoffURL(origin));
+    assert.deepEqual(parseHandoff(new URL(handoffTarget(origin).url).hash), { valid: true, source: 'qr-task' });
+  }
+  for (const bad of [undefined, '', 'not a url', 'javascript:alert(1)', 'http://assist.example.test/', 'https://u:p@assist.example.test/', 'https://assist.example.test/app/', 'https://assist.example.test/?x=1', 'https://assist.example.test/#v=2', 'https://localhost/', 'https://test.localhost/', 'https://127.0.0.1/', 'https://127.1.2.3/', 'https://[::1]/']) {
     const r = handoffTarget(bad);
     assert.equal(r.configured, false, String(bad));
     assert.equal(r.url, null);

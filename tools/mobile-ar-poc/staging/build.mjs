@@ -2,14 +2,14 @@ import { mkdir, copyFile, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import QRCode from 'qrcode';
-import { handoffURL } from '../public/handoff.mjs';
+import { handoffURL, isLoopbackHost } from '../public/handoff.mjs';
 
 export const PUBLIC_FILES = ['index.html', 'style.css', 'app.mjs', 'camera.mjs', 'detector.mjs', 'handoff.mjs'];
 
 // Static staging only: the camera/detector code is copied unchanged. No upload API.
 export async function buildStaging({ origin, outputDirectory, revision = 'UNRECORDED' }) {
   const url = handoffURL(origin);
-  if (['localhost', '127.0.0.1', '[::1]'].includes(new URL(url).hostname) || new URL(url).hostname.endsWith('.localhost')) {
+  if (isLoopbackHost(new URL(url).hostname)) {
     throw new Error('Staging requires a reachable HTTPS hostname, not loopback');
   }
   const output = path.resolve(outputDirectory);

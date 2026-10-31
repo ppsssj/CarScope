@@ -5,7 +5,7 @@ import QRCode from 'qrcode';
 import jsQR from 'jsqr';
 import { PNG } from 'pngjs';
 import { detectCandidates, containRect } from '../public/detector.mjs';
-import { handoffURL, parseHandoff, HANDOFF } from '../public/handoff.mjs';
+import { handoffURL, parseHandoff, HANDOFF, isLoopbackHost } from '../public/handoff.mjs';
 import { CameraSession, cameraError } from '../public/camera.mjs';
 import { createHandler } from '../server.mjs';
 
@@ -23,6 +23,11 @@ test('handoff accepts a single versioned task; rejects extras, duplicates, unkno
   for (const hash of ['#v=2&task=washer-fluid', '#v=1&task=brake', '#v=1&task=washer-fluid&vin=x', '#v=1&v=1&task=washer-fluid', '#task=washer-fluid', '#v=1&task=washer-fluid&task=washer-fluid']) assert.equal(parseHandoff(hash).valid, false);
   assert.equal(handoffURL('https://poc.example:4174/'), `https://poc.example:4174/${HANDOFF}`);
   for (const input of ['http://example.com', 'javascript:alert(1)', 'https://u:p@example.com', 'https://example.com/?vin=x', 'https://example.com/#x', 'https://example.com/path']) assert.throws(() => handoffURL(input));
+});
+
+test('loopback rule shared by the staging build and the inspection UI', () => {
+  for (const host of ['localhost', 'test.localhost', '127.0.0.1', '127.1.2.3', '[::1]']) assert.equal(isLoopbackHost(host), true, host);
+  for (const host of ['poc.example', 'carscope-qr-ar-staging.vercel.app', '10.0.0.5', 'localhost.example', '127.example']) assert.equal(isLoopbackHost(host), false, host);
 });
 
 test('synthetic RGBA: localized blue component yields only an unverified proposal', () => {

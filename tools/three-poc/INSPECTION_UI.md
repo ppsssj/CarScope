@@ -15,14 +15,14 @@ npm run serve
 # http://127.0.0.1:8098/inspect.html
 ```
 
-GLB와 파생 자산은 저장소 밖에 둔다. QR origin은 코드에 넣지 않고 서버 실행 시 환경 변수로만 받는다. 서버는 `/inspection-handoff.json`과 `/inspection-qr.svg`를 제공하며, URL은 QR-AR 계약(`tools/mobile-ar-poc`, PR #18)과 같은 `https://origin/#v=1&task=washer-fluid`이다. fragment에는 작업 종류만 있고 차량·계정 정보는 없다.
+GLB와 파생 자산은 저장소 밖에 둔다. QR origin은 코드에 넣지 않고 서버 실행 시 환경 변수로만 받는다. 서버는 `/inspection-handoff.json`과 `/inspection-qr.svg`를 제공하며, URL은 QR-AR 계약(`tools/mobile-ar-poc/public/handoff.mjs`)이 만드는 `https://origin/#v=1&task=washer-fluid`이며, QR-AR 정적 스테이징 빌드와 같은 loopback 거부 규칙을 쓴다. fragment에는 작업 종류만 있고 차량·계정 정보는 없다.
 
 ## 구조
 
 | 파일 | 역할 |
 | --- | --- |
 | `inspection-flow.mjs` | 순수 상태 머신. `IDLE → INSPECTION_OVERVIEW → HOOD_OPENING → COMPONENT_SELECTION → WASHER_SELECTED → MOBILE_HANDOFF_READY`, 닫힘 전이용 `HOOD_CLOSING`. 점검 부위 목록(`INSPECTION_AREAS`)과 상태별 보닛 목표 각도·카메라 목표 |
-| `inspection-handoff.mjs` | QR 대상 URL 검증. HTTPS 루트가 아니거나 계정·경로·쿼리·fragment·loopback이 있으면 비활성 |
+| `inspection-handoff.mjs` | 서버 측 어댑터. 검증은 QR-AR의 `tools/mobile-ar-poc/public/handoff.mjs`(`handoffURL`, `isLoopbackHost`)를 그대로 사용하며, 실패를 예외 대신 “비활성(configured: false)”으로 돌려준다. 브라우저 페이지는 이 모듈을 import하지 않는다 |
 | `inspect.js` | 상태를 화면에 반영: 보닛·카메라 tween, 강조, 워셔액 라벨, 패널, 클릭 판정 |
 | `check-inspection.mjs` | headless Chrome 흐름 검사와 화면 캡처 (외부 폴더에 저장) |
 | `test/inspection-flow.test.mjs` | 상태 전이·중복 입력·취소·종료·QR 계약 단위 테스트 (CI 포함) |
