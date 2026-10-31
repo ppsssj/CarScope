@@ -9,6 +9,8 @@ import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import * as H from "./ioniq5-asset/hood.mjs";
 import { staticScene, meshClearance, baselineContacts } from "./ioniq5-asset/collision.mjs";
 import { attachFrontCompartment } from "./front-compartment-view.js";
+import { attachFrunk } from "./frunk-view.js";
+import { frunkTransition } from "./ioniq5-asset/frunk.mjs";
 
 const params = new URLSearchParams(location.search);
 window.__labLog = [];
@@ -77,6 +79,10 @@ function addOutline(mesh) {
 }
 
 function setAngle(deg) {
+  if (S.frunk) {
+    const tr = frunkTransition({ hood: S.angle, cover: S.frunk.angle }, { hood: deg });
+    if (!tr.accepted) { $("frunkMessage").textContent = tr.reason; $("angle").value = S.angle; return tr; }
+  }
   S.angle = Math.max(0, Math.min(60, deg));
   if (S.angle === 0) S.pivot.matrix.identity(); // exactly the source pose, no round-off
   else {
@@ -113,6 +119,10 @@ function runCheck() {
 
 const ease = (t) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2);
 function animateTo(target, ms = 1400) {
+  if (S.frunk) {
+    const tr = frunkTransition({ hood: S.angle, cover: S.frunk.angle }, { hood: target });
+    if (!tr.accepted) { $("frunkMessage").textContent = tr.reason; return Promise.resolve(tr); }
+  }
   return new Promise((done) => {
     const from = S.angle, t0 = performance.now();
     S.tween = (now) => { const t = Math.min(1, (now - t0) / ms); setAngle(from + (target - from) * ease(t)); if (t >= 1) { S.tween = null; setAngle(target); done(); } };
@@ -120,6 +130,7 @@ function animateTo(target, ms = 1400) {
 }
 
 function useAxis(id) {
+  if (S.frunk?.angle > 0 && !['A', 'C'].includes(id)) { $("axis").value = S.axis.id; $("frunkMessage").textContent = 'Close frunk cover before selecting an unvalidated hood axis'; return; }
   S.axis = S.candidates.find((c) => c.id === id) ?? S.candidates[0];
   $("axis").value = S.axis.id;
   $("axisInfo").textContent = `${S.axis.evidence} · pivot (${S.axis.point.map((v) => v.toFixed(1)).join(", ")}) cm\ndir (${S.axis.direction.map((v) => v.toFixed(3)).join(", ")})\nsource: ${S.axis.source}\n${S.axis.assumptions.map((a) => "· " + a).join("\n")}`;
@@ -207,6 +218,9 @@ loader.load(params.get("model") ?? "./external/ioniq5.glb", async (gltf) => {
   // P3-A2.1 front compartment shell: separate group, never under the hood pivot.
   const bodyMaterial = S.meshes.find((m) => m.userData.part === "Body" && m.material.name === "Body")?.material;
   S.fc = attachFrontCompartment({ scene, bodyMaterial, hood: S.closedCar, others: S.others, camera, dom: document, log });
+  S.frunk = attachFrunk({ scene, shell: S.fc.shell, others: S.others, hood: S.closedCar, camera, canvas: renderer.domElement, dom: document, hoodState: () => ({ angle: S.angle, axis: S.axis }), log });
+  $("frunk").addEventListener("change", (e) => { if (e.target.checked) setShell({ shell: true }); });
+  window.__frunk = S.frunk;
   if (params.get("shell") === "1") setShell({ shell: true });
   useAxis(params.get("axis") ?? "A");
   const gl = renderer.getContext(), dbg = gl.getExtension("WEBGL_debug_renderer_info");
@@ -223,7 +237,7 @@ $("axis").addEventListener("change", (e) => useAxis(e.target.value));
 $("angle").addEventListener("input", (e) => setAngle(Number(e.target.value)));
 $("close").addEventListener("click", () => animateTo(0));
 $("open").addEventListener("click", () => animateTo(Number($("target").value)));
-$("reset").addEventListener("click", () => { S.tween = null; useAxis("A"); setAngle(0); useView("iso"); });
+$("reset").addEventListener("click", () => { S.tween = null; S.frunk?.setAngle(0); useAxis("A"); setAngle(0); useView("iso"); });
 $("outline").addEventListener("change", (e) => S.outline.forEach((l) => (l.visible = e.target.checked)));
 $("xray").addEventListener("change", (e) => setXray(e.target.checked));
 $("placeholder").addEventListener("change", (e) => { if (S.placeholder) S.placeholder.visible = e.target.checked; $("placeholderTag").style.display = e.target.checked ? "block" : "none"; });
@@ -244,7 +258,7 @@ $("zones").addEventListener("change", (e) => setShell({ zones: e.target.checked 
 $("shellPart").addEventListener("change", (e) => setShell({ part: e.target.value || null }));
 let downAt = null;
 renderer.domElement.addEventListener("pointerdown", (e) => { downAt = [e.clientX, e.clientY]; });
-renderer.domElement.addEventListener("pointerup", (e) => { if (downAt && Math.hypot(e.clientX - downAt[0], e.clientY - downAt[1]) < 4) S.fc?.pick(e.clientX, e.clientY, renderer.domElement); });
+renderer.domElement.addEventListener("pointerup", (e) => { if (downAt && Math.hypot(e.clientX - downAt[0], e.clientY - downAt[1]) < 4 && !S.frunk?.pick(e.clientX, e.clientY)) S.fc?.pick(e.clientX, e.clientY, renderer.domElement); });
 document.querySelectorAll("[data-view]").forEach((b) => b.addEventListener("click", () => useView(b.dataset.view)));
 addEventListener("resize", () => { camera.aspect = innerWidth / innerHeight; shiftView(); renderer.setSize(innerWidth, innerHeight); });
 

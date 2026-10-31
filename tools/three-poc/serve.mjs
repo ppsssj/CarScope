@@ -24,6 +24,8 @@ const ROOTS = [
   // P3-A2.1: front compartment shell modules (layout + builder, no model-derived data).
   ["/ioniq5-asset/front-compartment.mjs", join(HERE, "..", "ioniq5-asset", "front-compartment.mjs")],
   ["/ioniq5-asset/front-compartment-layout.mjs", join(HERE, "..", "ioniq5-asset", "front-compartment-layout.mjs")],
+  ["/ioniq5-asset/frunk.mjs", join(HERE, "..", "ioniq5-asset", "frunk.mjs")],
+  ...(process.env.CARSCOPE_P3A22_DIR ? [["/external/p3-a2-2/", resolve(process.env.CARSCOPE_P3A22_DIR)]] : []),
   ...(process.env.CARSCOPE_P3A1_DIR ? [["/external/p3-a1/", resolve(process.env.CARSCOPE_P3A1_DIR)]] : []),
   ...(process.env.CARSCOPE_P3A21_DIR ? [["/external/p3-a2-1/", resolve(process.env.CARSCOPE_P3A21_DIR)]] : []),
   ["/", HERE],
