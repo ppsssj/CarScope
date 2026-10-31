@@ -99,6 +99,19 @@ export function trianglesIntersect(A, B, eps = 1e-6) {
   return false;
 }
 
+/**
+ * A point where two intersecting triangles meet: an edge of one crossing the other, or (coplanar
+ * overlap) the centroid of A. Null when they do not intersect. Used to locate a crossing.
+ */
+export function crossingPoint(A, B) {
+  if (!trianglesIntersect(A, B)) return null;
+  for (let k = 0; k < 3; k++) {
+    const p = segmentTriangle(A[k], A[(k + 1) % 3], B[0], B[1], B[2], 1e-9) ?? segmentTriangle(B[k], B[(k + 1) % 3], A[0], A[1], A[2], 1e-9);
+    if (p) return p;
+  }
+  return [0, 1, 2].map((i) => (A[0][i] + A[1][i] + A[2][i]) / 3);
+}
+
 /** Exact distance between two triangles and the closest points ([0, p, p] when they intersect). */
 export function triangleDistance(A, B) {
   if (trianglesIntersect(A, B)) return { d: 0, p: A[0], q: A[0], intersects: true };
