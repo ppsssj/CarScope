@@ -77,6 +77,8 @@
 
 ## 화면 비교와 재현
 
+이번 HEAD에서 새로 캡처해 Git에 포함한 [Sedan·SUV SVG/GLB 이미지 갤러리](visuals/p2-a3-1/README.md)는 README에서 별도 설치 없이 볼 수 있다. 11개 PNG는 실제 Anatomy headless SVG 및 Three.js GLB 렌더링이며, 각 파일의 출처·해상도·제한은 갤러리에 기록했다. 정면·측면·후면·상면 이미지는 GLB 렌더링으로 표기하며 OEM AVD 화면 원본을 포함하지 않는다.
+
 ```powershell
 npm ci --ignore-scripts --prefix tools/anatomy-car
 npm run build --prefix tools/anatomy-car
