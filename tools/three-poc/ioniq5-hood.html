@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CarScope P3-A1 IONIQ 5 hood hinge PoC</title>
+<style>
+  html,body{margin:0;height:100%;background:#f4f5f7;font:13px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif;color:#233448}
+  #view{position:fixed;inset:0}
+  .card{position:fixed;background:#ffffffeb;border:1px solid #c9d0d8;border-radius:6px;padding:8px 10px}
+  #panel{top:8px;left:8px;width:330px}
+  #panel h1{font-size:13px;margin:0 0 6px}
+  #panel label{display:block;margin:3px 0}
+  #panel button{margin:2px 2px 2px 0}
+  #panel select,#panel input[type=range]{width:100%}
+  .row{display:flex;gap:6px;align-items:center}
+  .muted{color:#57606a;font-size:11px}
+  #check{right:8px;top:8px;width:360px;white-space:pre-wrap;font-family:ui-monospace,Consolas,monospace;font-size:11px}
+  #check .ok{color:#15803d}#check .bad{color:#b91c1c}
+  #credit{left:8px;bottom:8px;max-width:520px;font-size:11px;color:#57606a}
+  #status{right:8px;bottom:8px;font-family:ui-monospace,Consolas,monospace;font-size:11px;white-space:pre}
+  #axisInfo{font-family:ui-monospace,Consolas,monospace;font-size:11px;white-space:pre-wrap;margin-top:4px}
+  #placeholderTag{display:none;position:fixed;left:50%;top:8px;transform:translateX(-50%);background:#fef3c7;border:1px solid #d97706;color:#92400e;font:600 11px ui-monospace,Consolas,monospace;padding:3px 8px;border-radius:4px}
+</style>
+<script type="importmap">
+{ "imports": { "three": "./vendor/three/build/three.module.js", "three/addons/": "./vendor/three/examples/jsm/" } }
+</script>
+</head>
+<body>
+<div id="view"></div>
+<div id="panel" class="card">
+  <h1>IONIQ 5 hood hinge (P3-A1 debug PoC)</h1>
+  <div class="muted">profile hyundai-ioniq5-2022 · source mesh unmodified · only the hood moves</div>
+  <label>Hinge axis candidate
+    <select id="axis"></select>
+  </label>
+  <div id="axisInfo"></div>
+  <label>Angle <b id="angleOut">0.0°</b> <span class="muted">SIMULATION_ONLY · real maximum opening angle UNVERIFIED</span>
+    <input id="angle" type="range" min="0" max="60" step="0.5" value="0">
+  </label>
+  <div class="row" id="samples"></div>
+  <div class="row"><button id="close">Close</button><button id="open">Open to</button><input id="target" type="number" min="1" max="60" value="45" style="width:52px">°<button id="reset">Reset</button></div>
+  <label><input id="outline" type="checkbox" checked> hood outline highlight</label>
+  <label><input id="xray" type="checkbox"> translucent body (see under the hood)</label>
+  <label><input id="placeholder" type="checkbox"> SYNTHETIC_DEBUG_PLACEHOLDER volume</label>
+  <label><input id="live" type="checkbox" checked> live mesh collision check</label>
+  <div><button data-view="front">FRONT</button><button data-view="side">SIDE</button><button data-view="iso">ISO</button><button data-view="top">TOP</button><button data-view="bay">BAY</button></div>
+  <div class="muted" style="margin-top:4px">drag: rotate · wheel: zoom · right-drag: pan</div>
+</div>
+<div id="check" class="card">loading…</div>
+<div id="placeholderTag">SYNTHETIC_DEBUG_PLACEHOLDER: not a real part shape</div>
+<div id="status" class="card">loading…</div>
+<div id="credit" class="card">Model: “Hyundai Ioniq 5” © 2022 andikapratamaw (sketchfab.com/andikapratamaw), CC BY 4.0; modified © 2026 Dogan Ulus, OpenX Assets (MPL-2.0 AND CC-BY-4.0). Converted by CarScope. Community model, not Hyundai data; not endorsed by Hyundai. Hinge axes are candidates, not manufacturer data.</div>
+<script type="module" src="./ioniq5-hood.js"></script>
+</body>
+</html>
