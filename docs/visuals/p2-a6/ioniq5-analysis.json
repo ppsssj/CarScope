@@ -1,0 +1,3483 @@
+{
+  "profileId": "hyundai-ioniq5-2022",
+  "frame": "+X forward, +Y left, +Z up, centimetres; car = (gx, -gz, gy) * 100",
+  "attribution": [
+    "(c) 2026 Dogan Ulus <dogan.ulus@bogazici.edu.tr>",
+    "(c) 2022 andikapratamaw <https://sketchfab.com/andikapratamaw>, licensed under CC-BY-4.0"
+  ],
+  "license": "MPL-2.0 AND CC-BY-4.0",
+  "summary": {
+    "nodes": 101,
+    "meshNodes": 44,
+    "groups": 57,
+    "materials": 30,
+    "gltfVertices": 65953,
+    "triangles": 37350,
+    "textures": 0,
+    "overallBoxCm": {
+      "min": [
+        -232.87,
+        -108.53,
+        0
+      ],
+      "max": [
+        232.87,
+        108.53,
+        162.77
+      ],
+      "size": [
+        465.73,
+        217.05,
+        162.77
+      ],
+      "center": [
+        0,
+        0,
+        81.39
+      ]
+    },
+    "exMirrorsBoxCm": {
+      "min": [
+        -232.87,
+        -95.63,
+        0
+      ],
+      "max": [
+        232.87,
+        95.63,
+        162.77
+      ],
+      "size": [
+        465.73,
+        191.26,
+        162.77
+      ],
+      "center": [
+        0,
+        0,
+        81.39
+      ]
+    }
+  },
+  "measuredCm": {
+    "lengthCm": 465.73,
+    "widthWithMirrorsCm": 217.05,
+    "widthExMirrorsCm": 191.26,
+    "heightCm": 162.77,
+    "wheelbaseCm": 302.24,
+    "frontTrackCm": 154.46,
+    "rearTrackCm": 154.46,
+    "wheelDiameterCm": 75.12,
+    "tyreWidthCm": 25.05,
+    "groundToLowestBodyShellCm": 22.99,
+    "lowestPointCm": 0
+  },
+  "specComparison": {
+    "length": {
+      "measuredMm": 4657.3,
+      "referenceMm": 4635,
+      "deltaMm": 22.3,
+      "deltaPct": 0.48,
+      "referenceSource": "SECONDARY_SPEC_AGGREGATOR",
+      "note": "pre-facelift 2022; facelift is 4655 per OEM India"
+    },
+    "widthExMirrors": {
+      "measuredMm": 1912.6,
+      "referenceMm": 1890,
+      "deltaMm": 22.6,
+      "deltaPct": 1.2,
+      "referenceSource": "OEM_HYUNDAI_INDIA",
+      "note": "unchanged across facelift per Hyundai"
+    },
+    "height": {
+      "measuredMm": 1627.7,
+      "referenceMm": 1605,
+      "deltaMm": 22.7,
+      "deltaPct": 1.42,
+      "referenceSource": "SECONDARY_SPEC_AGGREGATOR",
+      "note": "varies by market/roof rails (1605-1647)"
+    },
+    "wheelbase": {
+      "measuredMm": 3022.4,
+      "referenceMm": 3000,
+      "deltaMm": 22.4,
+      "deltaPct": 0.75,
+      "referenceSource": "OEM_HYUNDAI_INDIA"
+    },
+    "groundClearance": {
+      "measuredMm": 229.9,
+      "referenceMm": 160,
+      "deltaMm": 69.9,
+      "deltaPct": 43.68,
+      "referenceSource": "SECONDARY_SPEC_AGGREGATOR",
+      "note": "model value = lowest vertex of the Body mesh; not a homologated clearance measurement"
+    },
+    "frontTrack": {
+      "measuredMm": 1544.6,
+      "referenceMm": null,
+      "deltaMm": null,
+      "status": "NO_RELIABLE_REFERENCE",
+      "note": "secondary sources report 1552-1638 mm depending on trim and wheel"
+    },
+    "rearTrack": {
+      "measuredMm": 1544.6,
+      "referenceMm": null,
+      "deltaMm": null,
+      "status": "NO_RELIABLE_REFERENCE",
+      "note": "secondary sources report 1564-1647 mm"
+    }
+  },
+  "doors": [
+    {
+      "node": "Door_Left_0",
+      "carscopeDoorId": "FRONT_LEFT",
+      "nameAgrees": true,
+      "pivotGroup": "Grp_Door_Left_0",
+      "pivotCm": [
+        95.44,
+        93.96,
+        91.43
+      ],
+      "hingeAxis": "UNVERIFIED (OpenX defines a local door frame, axis not documented)"
+    },
+    {
+      "node": "Door_Left_1",
+      "carscopeDoorId": "REAR_LEFT",
+      "nameAgrees": true,
+      "pivotGroup": "Grp_Door_Left_1",
+      "pivotCm": [
+        -21.82,
+        94.87,
+        93.57
+      ],
+      "hingeAxis": "UNVERIFIED (OpenX defines a local door frame, axis not documented)"
+    },
+    {
+      "node": "Door_Right_0",
+      "carscopeDoorId": "FRONT_RIGHT",
+      "nameAgrees": true,
+      "pivotGroup": "Grp_Door_Right_0",
+      "pivotCm": [
+        95.44,
+        -93.96,
+        91.43
+      ],
+      "hingeAxis": "UNVERIFIED (OpenX defines a local door frame, axis not documented)"
+    },
+    {
+      "node": "Door_Right_1",
+      "carscopeDoorId": "REAR_RIGHT",
+      "nameAgrees": true,
+      "pivotGroup": "Grp_Door_Right_1",
+      "pivotCm": [
+        -21.82,
+        -94.87,
+        93.57
+      ],
+      "hingeAxis": "UNVERIFIED (OpenX defines a local door frame, axis not documented)"
+    }
+  ],
+  "closures": [
+    {
+      "node": "Door_Front_0",
+      "category": "closure-hood",
+      "pivotGroup": "Grp_Door_Front_0",
+      "pivotCm": [
+        99.51,
+        0,
+        108.16
+      ]
+    },
+    {
+      "node": "Door_Rear_0",
+      "category": "closure-tailgate",
+      "pivotGroup": "Grp_Door_Rear_0",
+      "pivotCm": [
+        -146.28,
+        0,
+        140.12
+      ]
+    }
+  ],
+  "wheels": [
+    {
+      "node": "Wheel_0_0",
+      "position": "FRONT_RIGHT",
+      "centerCm": [
+        145.86,
+        -77.25,
+        37.56
+      ],
+      "diameterCm": 75.12,
+      "widthCm": 25.05
+    },
+    {
+      "node": "Wheel_0_1",
+      "position": "FRONT_LEFT",
+      "centerCm": [
+        145.86,
+        77.21,
+        37.56
+      ],
+      "diameterCm": 75.12,
+      "widthCm": 25.05
+    },
+    {
+      "node": "Wheel_1_0",
+      "position": "REAR_RIGHT",
+      "centerCm": [
+        -156.38,
+        -77.25,
+        37.56
+      ],
+      "diameterCm": 75.12,
+      "widthCm": 25.05
+    },
+    {
+      "node": "Wheel_1_1",
+      "position": "REAR_LEFT",
+      "centerCm": [
+        -156.38,
+        77.21,
+        37.56
+      ],
+      "diameterCm": 75.12,
+      "widthCm": 25.05
+    }
+  ],
+  "serviceParts": [
+    {
+      "id": "hv-battery",
+      "label": "High-voltage battery pack",
+      "status": "NOT_AVAILABLE",
+      "namedNodes": [],
+      "materialRegionIn": []
+    },
+    {
+      "id": "drive-motor",
+      "label": "Drive motor / e-axle",
+      "status": "NOT_AVAILABLE",
+      "namedNodes": [],
+      "materialRegionIn": []
+    },
+    {
+      "id": "suspension",
+      "label": "Suspension (springs, dampers, links)",
+      "status": "NOT_AVAILABLE",
+      "namedNodes": [],
+      "materialRegionIn": []
+    },
+    {
+      "id": "brake-disc",
+      "label": "Brake disc as separate mesh",
+      "status": "MATERIAL_REGION_ONLY",
+      "namedNodes": [],
+      "materialRegionIn": [
+        "Wheel_0_0",
+        "Wheel_0_1",
+        "Wheel_1_0",
+        "Wheel_1_1"
+      ]
+    },
+    {
+      "id": "brake-caliper",
+      "label": "Brake caliper",
+      "status": "PROXY_ONLY",
+      "namedNodes": [
+        "Brake_Caliper_0_0",
+        "Brake_Caliper_0_1",
+        "Brake_Caliper_1_0",
+        "Brake_Caliper_1_1"
+      ],
+      "materialRegionIn": [
+        "Brake_Caliper_0_0",
+        "Brake_Caliper_0_1",
+        "Brake_Caliper_1_0",
+        "Brake_Caliper_1_1"
+      ]
+    },
+    {
+      "id": "seats",
+      "label": "Seats as separate meshes",
+      "status": "MATERIAL_REGION_ONLY",
+      "namedNodes": [],
+      "materialRegionIn": [
+        "Interior_Static"
+      ]
+    },
+    {
+      "id": "charge-port",
+      "label": "Charge port",
+      "status": "NOT_AVAILABLE",
+      "namedNodes": [],
+      "materialRegionIn": []
+    },
+    {
+      "id": "hvac-thermal",
+      "label": "Heat pump / thermal system",
+      "status": "NOT_AVAILABLE",
+      "namedNodes": [],
+      "materialRegionIn": []
+    }
+  ],
+  "checks": [
+    {
+      "id": "x-forward",
+      "status": "PASS",
+      "detail": "headlamps at +X, tail lamps at -X"
+    },
+    {
+      "id": "y-left",
+      "status": "PASS",
+      "detail": "left mirror at +Y"
+    },
+    {
+      "id": "z-up-on-ground",
+      "status": "PASS",
+      "detail": "lowest 0 cm, highest 162.77 cm"
+    },
+    {
+      "id": "no-mirror-or-real-scale",
+      "status": "PASS",
+      "detail": "no matrix nodes; 3 source scales kept as authored, all within 1e-6 of 1 (Grp_License_Plate_0, Grp_Mirror_Side_View_Left_0, Grp_Mirror_Side_View_Right_0)"
+    },
+    {
+      "id": "door-names-match-positions",
+      "status": "PASS",
+      "detail": "Door_Left_0->FRONT_LEFT, Door_Left_1->REAR_LEFT, Door_Right_0->FRONT_RIGHT, Door_Right_1->REAR_RIGHT"
+    },
+    {
+      "id": "unique-mesh-node-names",
+      "status": "PASS",
+      "detail": "44 selectable mesh nodes"
+    },
+    {
+      "id": "xoma-bounding-box",
+      "status": "PASS",
+      "detail": "max deviation 0.04 mm vs .xoma boundingBox"
+    },
+    {
+      "id": "xoma-mesh-count",
+      "status": "PASS",
+      "detail": "44 vs 44"
+    },
+    {
+      "id": "xoma-triangle-count",
+      "status": "PASS",
+      "detail": "37350 vs 37350"
+    },
+    {
+      "id": "xoma-axle-positions",
+      "status": "PASS",
+      "detail": "max 0 mm (wheel mesh bbox centres vs .xoma)"
+    },
+    {
+      "id": "xoma-wheel-diameter",
+      "status": "PASS",
+      "detail": "751.2 mm vs 751.1999999999999 mm"
+    },
+    {
+      "id": "blend-vs-glb-world-bounds",
+      "status": "PASS",
+      "detail": "max 0.00e+0 cm over 44 meshes"
+    }
+  ],
+  "meshes": [
+    {
+      "name": "Body",
+      "category": "body-shell",
+      "parent": "Grp_Exterior_Static",
+      "path": [
+        "Grp_Root",
+        "Grp_Exterior",
+        "Grp_Exterior_Static"
+      ],
+      "gltfVertices": 4790,
+      "triangles": 4031,
+      "primitives": 5,
+      "materials": [
+        "Body",
+        "Black_Plastic",
+        "Trim_Grey",
+        "Black_Gloss",
+        "Lens_Smoked"
+      ],
+      "fidelity": {
+        "level": "DETAILED_MESH",
+        "reason": "4031 triangles, 111.4 per m² of bounding-box surface"
+      },
+      "boxCm": {
+        "min": [
+          -232.87,
+          -95.63,
+          22.99
+        ],
+        "max": [
+          232.87,
+          95.63,
+          162.77
+        ],
+        "size": [
+          465.73,
+          191.26,
+          139.79
+        ],
+        "center": [
+          0,
+          0,
+          92.88
+        ]
+      }
+    },
+    {
+      "name": "Body_Glass",
+      "category": "glazing",
+      "parent": "Grp_Exterior_Static",
+      "path": [
+        "Grp_Root",
+        "Grp_Exterior",
+        "Grp_Exterior_Static"
+      ],
+      "gltfVertices": 86,
+      "triangles": 124,
+      "primitives": 1,
+      "materials": [
+        "Body_Glass"
+      ],
+      "fidelity": {
+        "level": "COARSE_PLACEHOLDER",
+        "reason": "124 triangles, 34.4 per m² of bounding-box surface (< 50): coarse or largely planar shapes"
+      },
+      "boxCm": {
+        "min": [
+          34.69,
+          -71.49,
+          109.73
+        ],
+        "max": [
+          106.79,
+          71.49,
+          145.69
+        ],
+        "size": [
+          72.1,
+          142.98,
+          35.96
+        ],
+        "center": [
+          70.74,
+          0,
+          127.71
+        ]
+      }
+    },
+    {
+      "name": "Brake_Caliper_0_0",
+      "category": "brake-caliper",
+      "parent": "Grp_Wheel_Steering_0_0",
+      "path": [
+        "Grp_Root",
+        "Grp_Exterior",
+        "Grp_Exterior_Dynamic",
+        "Grp_Wheel_0_0",
+        "Grp_Wheel_Steering_0_0"
+      ],
+      "gltfVertices": 104,
+      "triangles": 52,
+      "primitives": 1,
+      "materials": [
+        "Brake_Caliper"
+      ],
+      "fidelity": {
+        "level": "PROXY",
+        "reason": "52 triangles across 7.9 x 8.2 x 10.2 cm: simplified stand-in shape"
+      },
+      "boxCm": {
+        "min": [
+          126.36,
+          -82.45,
+          37.31
+        ],
+        "max": [
+          134.26,
+          -74.25,
+          47.53
+        ],
+        "size": [
+          7.9,
+          8.2,
+          10.23
+        ],
+        "center": [
+          130.31,
+          -78.35,
+          42.42
+        ]
+      }
+    },
+    {
+      "name": "Brake_Caliper_0_1",
+      "category": "brake-caliper",
+      "parent": "Grp_Wheel_Steering_0_1",
+      "path": [
+        "Grp_Root",
+        "Grp_Exterior",
+        "Grp_Exterior_Dynamic",
+        "Grp_Wheel_0_1",
+        "Grp_Wheel_Steering_0_1"
+      ],
+      "gltfVertices": 104,
+      "triangles": 52,
+      "primitives": 1,
+      "materials": [
+        "Brake_Caliper"
+      ],
+      "fidelity": {
+        "level": "PROXY",
+        "reason": "52 triangles across 7.9 x 8.2 x 10.2 cm: simplified stand-in shape"
+      },
+      "boxCm": {
+        "min": [
+          126.36,
+          74.21,
+          37.31
+        ],
+        "max": [
+          134.26,
+          82.41,
+          47.53
+        ],
+        "size": [
+          7.9,
+          8.2,
+          10.23
+        ],
+        "center": [
+          130.31,
+          78.31,
+          42.42
+        ]
+      }
+    },
+    {
+      "name": "Brake_Caliper_1_0",
+      "category": "brake-caliper",
+      "parent": "Grp_Wheel_Steering_1_0",
+      "path": [
+        "Grp_Root",
+        "Grp_Exterior",
+        "Grp_Exterior_Dynamic",
+        "Grp_Wheel_1_0",
+        "Grp_Wheel_Steering_1_0"
+      ],
+      "gltfVertices": 104,
+      "triangles": 52,
+      "primitives": 1,
+      "materials": [
+        "Brake_Caliper"
+      ],
+      "fidelity": {
+        "level": "PROXY",
+        "reason": "52 triangles across 7.9 x 8.2 x 10.2 cm: simplified stand-in shape"
+      },
+      "boxCm": {
+        "min": [
+          -175.88,
+          -82.45,
+          37.31
+        ],
+        "max": [
+          -167.98,
+          -74.25,
+          47.53
+        ],
+        "size": [
+          7.9,
+          8.2,
+          10.23
+        ],
+        "center": [
+          -171.93,
+          -78.35,
+          42.42
+        ]
+      }
+    },
+    {
+      "name": "Brake_Caliper_1_1",
+      "category": "brake-caliper",
+      "parent": "Grp_Wheel_Steering_1_1",
+      "path": [
+        "Grp_Root",
+        "Grp_Exterior",
+        "Grp_Exterior_Dynamic",
+        "Grp_Wheel_1_1",
+        "Grp_Wheel_Steering_1_1"
+      ],
+      "gltfVertices": 104,
+      "triangles": 52,
+      "primitives": 1,
+      "materials": [
+        "Brake_Caliper"
+      ],
+      "fidelity": {
+        "level": "PROXY",
+        "reason": "52 triangles across 7.9 x 8.2 x 10.2 cm: simplified stand-in shape"
+      },
+      "boxCm": {
+        "min": [
+          -175.88,
+          74.21,
+          37.31
+        ],
+        "max": [
+          -167.98,
+          82.41,
+          47.53
+        ],
+        "size": [
+          7.9,
+          8.2,
+          10.23
+        ],
+        "center": [
+          -171.93,
+          78.31,
+          42.42
+        ]
+      }
+    },
+    {
+      "name": "Door_Front_0",
+      "category": "closure-hood",
+      "parent": "Grp_Door_Front_0",
+      "path": [
+        "Grp_Root",
+        "Grp_Exterior",
+        "Grp_Exterior_Dynamic",
+        "Grp_Door_Front_0"
+      ],
+      "gltfVertices": 2793,
+      "triangles": 1592,
+      "primitives": 2,
+      "materials": [
+        "Body",
+        "Chrome"
+      ],
+      "fidelity": {
+        "level": "DETAILED_MESH",
+        "reason": "1592 triangles, 292.4 per m² of bounding-box surface"
+      },
+      "boxCm": {
+        "min": [
+          99.51,
+          -81.35,
+          83.59
+        ],
+        "max": [
+          223.51,
+          81.35,
+          108.16
+        ],
+        "size": [
+          124,
+          162.7,
+          24.57
+        ],
+        "center": [
+          161.51,
+          0,
+          95.87
+        ]
+      }
+    },
+    {
+      "name": "Door_Left_0",
+      "category": "closure-side-door",
+      "parent": "Grp_Door_Left_0",
+      "path": [
+        "Grp_Root",
+        "Grp_Exterior",
+        "Grp_Exterior_Dynamic",
+        "Grp_Door_Left_0"
+      ],
+      "gltfVertices": 1220,
+      "triangles": 785,
+      "primitives": 7,
+      "materials": [
+        "Body",
+        "Body_Glass",
+        "Black_Gloss",
+        "Trim_Grey",
+        "Black_Plastic",
+        "Chrome_Satin",
+        "Garnish_Silver"
+      ],
+      "fidelity": {
+        "level": "DETAILED_MESH",
+        "reason": "785 triangles, 177.3 per m² of bounding-box surface"
+      },
+      "boxCm": {
+        "min": [
+          -30.1,
+          65.08,
+          31.48
+        ],
+        "max": [
+          95.44,
+          93.93,
+          151.38
+        ],
+        "size": [
+          125.54,
+          28.85,
+          119.91
+        ],
+        "center": [
+          32.67,
+          79.51,
+          91.43
+        ]
+      }
+    },
+    {
+      "name": "Door_Left_1",
+      "category": "closure-side-door",
+      "parent": "Grp_Door_Left_1",
+      "path": [
+        "Grp_Root",
+        "Grp_Exterior",
+        "Grp_Exterior_Dynamic",
+        "Grp_Door_Left_1"
+      ],
+      "gltfVertices": 1027,
+      "triangles": 652,
+      "primitives": 7,
+      "materials": [
+        "Body",
+        "Trim_Grey",
+        "Body_Glass",
+        "Black_Gloss",
+        "Black_Plastic",
+        "Chrome_Satin",
+        "Garnish_Silver"
+      ],
+      "fidelity": {
+        "level": "DETAILED_MESH",
+        "reason": "652 triangles, 141.4 per m² of bounding-box surface"
+      },
+      "boxCm": {
+        "min": [
+          -150.43,
+          61.37,
+          35.76
+        ],
+        "max": [
+          -21.82,
+          94.87,
+          151.38
+        ],
+        "size": [
+          128.6,
+          33.51,
+          115.62
+        ],
+        "center": [
+          -86.12,
+          78.12,
+          93.57
+        ]
+      }
+    },
+    {
+      "name": "Door_Rear_0",
+      "category": "closure-tailgate",
+      "parent": "Grp_Door_Rear_0",
+      "path": [
+        "Grp_Root",
+        "Grp_Exterior",
+        "Grp_Exterior_Dynamic",
+        "Grp_Door_Rear_0"
+      ],
+      "gltfVertices": 13556,
+      "triangles": 7842,
+      "primitives": 8,
+      "materials": [
+        "Body",
+        "Trim_Grey",
+        "Black_Gloss",
+        "Body_Glass",
+        "Black_Plastic",
+        "White_Matte",
+        "Chrome",
+        "Pixel_Trim"
+      ],
+      "fidelity": {
+        "level": "DETAILED_MESH",
+        "reason": "7842 triangles, 1180.1 per m² of bounding-box surface"
+      },
+      "boxCm": {
+        "min": [
+          -230.5,
+          -78.74,
+          70.34
+        ],
+        "max": [
+          -146.28,
+          78.74,
+          152.93
+        ],
+        "size": [
+          84.22,
+          157.49,
+          82.59
+        ],
+        "center": [
+          -188.39,
+          0,
+          111.64
+        ]
+      }
+    },
+    {
+      "name": "Door_Right_0",
+      "category": "closure-side-door",
+      "parent": "Grp_Door_Right_0",
+      "path": [
+        "Grp_Root",
+        "Grp_Exterior",
+        "Grp_Exterior_Dynamic",
+        "Grp_Door_Right_0"
+      ],
+      "gltfVertices": 1259,
+      "triangles": 806,
+      "primitives": 7,
+      "materials": [
+        "Body",
+        "Body_Glass",
+        "Black_Gloss",
+        "Trim_Grey",
+        "Black_Plastic",
+        "Chrome_Satin",
+        "Garnish_Silver"
+      ],
+      "fidelity": {
+        "level": "DETAILED_MESH",
+        "reason": "806 triangles, 182.1 per m² of bounding-box surface"
+      },
+      "boxCm": {
+        "min": [
+          -30.1,
+          -93.93,
+          31.48
+        ],
+        "max": [
+          95.44,
+          -65.08,
+          151.38
+        ],
+        "size": [
+          125.54,
+          28.85,
+          119.91
+        ],
+        "center": [
+          32.67,
+          -79.51,
+          91.43
+        ]
+      }
+    },
+    {
+      "name": "Door_Right_1",
+      "category": "closure-side-door",
+      "parent": "Grp_Door_Right_1",
+      "path": [
+        "Grp_Root",
+        "Grp_Exterior",
+        "Grp_Exterior_Dynamic",
+        "Grp_Door_Right_1"
+      ],
+      "gltfVertices": 1021,
+      "triangles": 649,
+      "primitives": 7,
+      "materials": [
+        "Body",
+        "Trim_Grey",
+        "Body_Glass",
+        "Black_Gloss",
+        "Black_Plastic",
+        "Chrome_Satin",
+        "Garnish_Silver"
+      ],
+      "fidelity": {
+        "level": "DETAILED_MESH",
+        "reason": "649 triangles, 140.8 per m² of bounding-box surface"
+      },
+      "boxCm": {
+        "min": [
+          -150.43,
+          -94.87,
+          35.76
+        ],
+        "max": [
+          -21.82,
+          -61.37,
+          151.38
+        ],
+        "size": [
+          128.6,
+          33.51,
+          115.62
+        ],
+        "center": [
+          -86.12,
+          -78.12,
+          93.57
+        ]
+      }
+    },
+    {
+      "name": "Interior_Static",
+      "category": "interior",
+      "parent": "Grp_Interior_Static",
+      "path": [
+        "Grp_Root",
+        "Grp_Interior",
+        "Grp_Interior_Static"
+      ],
+      "gltfVertices": 1376,
+      "triangles": 636,
+      "primitives": 4,
+      "materials": [
+        "Black_Matte",
+        "Grey_Plastic",
+        "Black_Gloss",
+        "Seat_Fabric"
+      ],
+      "fidelity": {
+        "level": "COARSE_PLACEHOLDER",
+        "reason": "636 triangles, 33.9 per m² of bounding-box surface (< 50): coarse or largely planar shapes"
+      },
+      "boxCm": {
+        "min": [
+          -202,
+          -76,
+          36
+        ],
+        "max": [
+          104,
+          76,
+          139.22
+        ],
+        "size": [
+          306,
+          152,
+          103.22
+        ],
+        "center": [
+          -49,
+          0,
+          87.61
+        ]
+      }
+    },
+    {
+      "name": "Lamp_Housings",
+      "category": "lamp-housing",
+      "parent": "Grp_Exterior_Static",
+      "path": [
+        "Grp_Root",
+        "Grp_Exterior",
+        "Grp_Exterior_Static"
+      ],
+      "gltfVertices": 7434,
+      "triangles": 3638,
+      "primitives": 5,
+      "materials": [
+        "Black_Plastic",
+        "Black_Gloss",
+        "Pixel_Trim",
+        "Reflector_Red",
+        "Pixel_Clear"
+      ],
+      "fidelity": {
+        "level": "DETAILED_MESH",
+        "reason": "3638 triangles, 157 per m² of bounding-box surface"
+      },
+      "boxCm": {
+        "min": [
+          -225.12,
+          -84.78,
+          37.38
+        ],
+        "max": [
+          225.17,
+          84.78,
+          101.06
+        ],
+        "size": [
+          450.29,
+          169.56,
+          63.69
+        ],
+        "center": [
+          0.02,
+          0,
+          69.22
+        ]
+      }
+    },
+    {
+      "name": "License_Plate_0",
+      "category": "license-plate",
+      "parent": "Grp_License_Plate_0",
+      "path": [
+        "Grp_Root",
+        "Grp_Exterior",
+        "Grp_Exterior_Dynamic",
+        "Grp_License_Plate_0"
+      ],
+      "gltfVertices": 550,
+      "triangles": 188,
+      "primitives": 4,
+      "materials": [
+        "Black_Plastic",
+        "License_Plate_Black",
+        "License_Plate_Blue",
+        "License_Plate_White"
+      ],
+      "fidelity": {
+        "level": "DETAILED_MESH",
+        "reason": "188 triangles, 1546.6 per m² of bounding-box surface"
+      },
+      "boxCm": {
+        "min": [
+          230.84,
+          -26,
+          47.52
+        ],
+        "max": [
+          231.41,
+          26,
+          58.51
+        ],
+        "size": [
+          0.57,
+          52,
+          11
+        ],
+        "center": [
+          231.13,
+          0,
+          53.02
+        ]
+      }
+    },
+    {
+      "name": "License_Plate_1",
+      "category": "license-plate",
+      "parent": "Grp_License_Plate_1",
+      "path": [
+        "Grp_Root",
+        "Grp_Exterior",
+        "Grp_Exterior_Dynamic",
+        "Grp_License_Plate_1"
+      ],
+      "gltfVertices": 550,
+      "triangles": 188,
+      "primitives": 4,
+      "materials": [
+        "Black_Plastic",
+        "License_Plate_Black",
+        "License_Plate_Blue",
+        "License_Plate_White"
+      ],
+      "fidelity": {
+        "level": "DETAILED_MESH",
+        "reason": "188 triangles, 1137 per m² of bounding-box surface"
+      },
+      "boxCm": {
+        "min": [
+          -231.73,
+          -26,
+          58.28
+        ],
+        "max": [
+          -226.63,
+          26,
+          68.13
+        ],
+        "size": [
+          5.09,
+          52,
+          9.84
+        ],
+        "center": [
+          -229.18,
+          0,
+          63.2
+        ]
+      }
+    },
+    {
+      "name": "Light_Brake_Center_0",
+      "category": "lamp-emitter",
+      "parent": "Grp_Light_Brake_Center_0",
+      "path": [
+        "Grp_Root",
+        "Grp_Exterior",
+        "Grp_Exterior_Dynamic",
+        "Grp_Light_Brake_Center_0"
+      ],
+      "gltfVertices": 48,
+      "triangles": 24,
+      "primitives": 1,
+      "materials": [
+        "Lamp_Red"
+      ],
+      "fidelity": {
+        "level": "PROXY",
+        "reason": "24 triangles across 0.7 x 44 x 0.9 cm: simplified stand-in shape"
+      },
+      "boxCm": {
+        "min": [
+          -179.1,
+          -22.01,
+          146.42
+        ],
+        "max": [
+          -178.4,
+          22.01,
+          147.3
+        ],
+        "size": [
+          0.7,
+          44.01,
+          0.87
+        ],
+        "center": [
+          -178.75,
+          0,
+          146.86
+        ]
+      }
+    },
+    {
+      "name": "Light_Brake_Left_0",
+      "category": "lamp-emitter",
+      "parent": "Grp_Light_Brake_Left_0",
+      "path": [
+        "Grp_Root",
+        "Grp_Exterior",
+        "Grp_Exterior_Dynamic",
+        "Grp_Light_Brake_Left_0"
+      ],
+      "gltfVertices": 1266,
+      "triangles": 634,
+      "primitives": 1,
+      "materials": [
+        "Lamp_Red"
+      ],
+      "fidelity": {
+        "level": "DETAILED_MESH",
+        "reason": "634 triangles, 6082 per m² of bounding-box surface"
+      },
+      "boxCm": {
+        "min": [
+          -221.63,
+          46.79,
+          97.8
+        ],
+        "max": [
+          -209.07,
+          77.15,
+          101.06
+        ],
+        "size": [
+          12.55,
+          30.37,
+          3.26
+        ],
+        "center": [
+          -215.35,
+          61.97,
+          99.43
+        ]
+      }
+    },
+    {
+      "name": "Light_Brake_Right_0",
+      "category": "lamp-emitter",
+      "parent": "Grp_Light_Brake_Right_0",
+      "path": [
+        "Grp_Root",
+        "Grp_Exterior",
+        "Grp_Exterior_Dynamic",
+        "Grp_Light_Brake_Right_0"
+      ],
+      "gltfVertices": 1266,
+      "triangles": 634,
+      "primitives": 1,
+      "materials": [
+        "Lamp_Red"
+      ],
+      "fidelity": {
+        "level": "DETAILED_MESH",
+        "reason": "634 triangles, 6082 per m² of bounding-box surface"
+      },
+      "boxCm": {
+        "min": [
+          -221.63,
+          -77.15,
+          97.8
+        ],
+        "max": [
+          -209.07,
+          -46.79,
+          101.06
+        ],
+        "size": [
+          12.55,
+          30.37,
+          3.26
+        ],
+        "center": [
+          -215.35,
+          -61.97,
+          99.43
+        ]
+      }
+    },
+    {
+      "name": "Light_Day_Left_0",
+      "category": "lamp-emitter",
+      "parent": "Grp_Light_Day_Left_0",
+      "path": [
+        "Grp_Root",
+        "Grp_Exterior",
+        "Grp_Exterior_Dynamic",
+        "Grp_Light_Day_Left_0"
+      ],
+      "gltfVertices": 168,
+      "triangles": 56,
+      "primitives": 1,
+      "materials": [
+        "Lamp_White"
+      ],
+      "fidelity": {
+        "level": "PROXY",
+        "reason": "56 triangles across 27.3 x 41.7 x 8.4 cm: simplified stand-in shape"
+      },
+      "boxCm": {
+        "min": [
+          189.29,
+          42.96,
+          74.08
+        ],
+        "max": [
+          216.57,
+          84.68,
+          82.52
+        ],
+        "size": [
+          27.28,
+          41.72,
+          8.44
+        ],
+        "center": [
+          202.93,
+          63.82,
+          78.3
+        ]
+      }
+    },
+    {
+      "name": "Light_Day_Right_0",
+      "category": "lamp-emitter",
+      "parent": "Grp_Light_Day_Right_0",
+      "path": [
+        "Grp_Root",
+        "Grp_Exterior",
+        "Grp_Exterior_Dynamic",
+        "Grp_Light_Day_Right_0"
+      ],
+      "gltfVertices": 168,
+      "triangles": 56,
+      "primitives": 1,
+      "materials": [
+        "Lamp_White"
+      ],
+      "fidelity": {
+        "level": "PROXY",
+        "reason": "56 triangles across 27.3 x 41.7 x 8.4 cm: simplified stand-in shape"
+      },
+      "boxCm": {
+        "min": [
+          189.29,
+          -84.68,
+          74.08
+        ],
+        "max": [
+          216.57,
+          -42.96,
+          82.52
+        ],
+        "size": [
+          27.28,
+          41.72,
+          8.44
+        ],
+        "center": [
+          202.93,
+          -63.82,
+          78.3
+        ]
+      }
+    },
+    {
+      "name": "Light_High_Beam_Left_0",
+      "category": "lamp-emitter",
+      "parent": "Grp_Light_High_Beam_Left_0",
+      "path": [
+        "Grp_Root",
+        "Grp_Exterior",
+        "Grp_Exterior_Dynamic",
+        "Grp_Light_High_Beam_Left_0"
+      ],
+      "gltfVertices": 4,
+      "triangles": 2,
+      "primitives": 1,
+      "materials": [
+        "Lamp_Projector"
+      ],
+      "fidelity": {
+        "level": "MARKER_ONLY",
+        "reason": "2 triangles: a flat placeholder for the emitter position"
+      },
+      "boxCm": {
+        "min": [
+          189.7,
+          66.4,
+          78.2
+        ],
+        "max": [
+          189.7,
+          82.7,
+          82.5
+        ],
+        "size": [
+          0,
+          16.3,
+          4.3
+        ],
+        "center": [
+          189.7,
+          74.55,
+          80.35
+        ]
+      }
+    },
+    {
+      "name": "Light_High_Beam_Right_0",
+      "category": "lamp-emitter",
+      "parent": "Grp_Light_High_Beam_Right_0",
+      "path": [
+        "Grp_Root",
+        "Grp_Exterior",
+        "Grp_Exterior_Dynamic",
+        "Grp_Light_High_Beam_Right_0"
+      ],
+      "gltfVertices": 4,
+      "triangles": 2,
+      "primitives": 1,
+      "materials": [
+        "Lamp_Projector"
+      ],
+      "fidelity": {
+        "level": "MARKER_ONLY",
+        "reason": "2 triangles: a flat placeholder for the emitter position"
+      },
+      "boxCm": {
+        "min": [
+          189.7,
+          -82.7,
+          78.2
+        ],
+        "max": [
+          189.7,
+          -66.4,
+          82.5
+        ],
+        "size": [
+          0,
+          16.3,
+          4.3
+        ],
+        "center": [
+          189.7,
+          -74.55,
+          80.35
+        ]
+      }
+    },
+    {
+      "name": "Light_Indicator_Left_0",
+      "category": "lamp-emitter",
+      "parent": "Grp_Light_Indicator_Left_0",
+      "path": [
+        "Grp_Root",
+        "Grp_Exterior",
+        "Grp_Exterior_Dynamic",
+        "Grp_Light_Indicator_Left_0"
+      ],
+      "gltfVertices": 354,
+      "triangles": 172,
+      "primitives": 1,
+      "materials": [
+        "Lamp_Amber"
+      ],
+      "fidelity": {
+        "level": "DETAILED_MESH",
+        "reason": "172 triangles, 943.6 per m² of bounding-box surface"
+      },
+      "boxCm": {
+        "min": [
+          206.89,
+          54.81,
+          37.38
+        ],
+        "max": [
+          225.14,
+          84.75,
+          44.95
+        ],
+        "size": [
+          18.25,
+          29.94,
+          7.57
+        ],
+        "center": [
+          216.02,
+          69.78,
+          41.17
+        ]
+      }
+    },
+    {
+      "name": "Light_Indicator_Left_1",
+      "category": "lamp-emitter",
+      "parent": "Grp_Light_Indicator_Left_1",
+      "path": [
+        "Grp_Root",
+        "Grp_Exterior",
+        "Grp_Exterior_Dynamic",
+        "Grp_Door_Left_0",
+        "Grp_Mirror_Side_Mounting_Left_0",
+        "Grp_Mirror_Side_Joint_Left_0",
+        "Grp_Light_Indicator_Left_1"
+      ],
+      "gltfVertices": 32,
+      "triangles": 16,
+      "primitives": 1,
+      "materials": [
+        "Lamp_Amber"
+      ],
+      "fidelity": {
+        "level": "PROXY",
+        "reason": "16 triangles across 13.2 x 11 x 0.8 cm: simplified stand-in shape"
+      },
+      "boxCm": {
+        "min": [
+          57.36,
+          96.35,
+          114.22
+        ],
+        "max": [
+          70.53,
+          107.4,
+          115.05
+        ],
+        "size": [
+          13.17,
+          11.05,
+          0.83
+        ],
+        "center": [
+          63.95,
+          101.88,
+          114.63
+        ]
+      }
+    },
+    {
+      "name": "Light_Indicator_Left_2",
+      "category": "lamp-emitter",
+      "parent": "Grp_Light_Indicator_Left_2",
+      "path": [
+        "Grp_Root",
+        "Grp_Exterior",
+        "Grp_Exterior_Dynamic",
+        "Grp_Light_Indicator_Left_2"
+      ],
+      "gltfVertices": 521,
+      "triangles": 263,
+      "primitives": 1,
+      "materials": [
+        "Lamp_Amber"
+      ],
+      "fidelity": {
+        "level": "DETAILED_MESH",
+        "reason": "263 triangles, 3195.7 per m² of bounding-box surface"
+      },
+      "boxCm": {
+        "min": [
+          -221.71,
+          46.97,
+          96.86
+        ],
+        "max": [
+          -209.41,
+          77.15,
+          97.81
+        ],
+        "size": [
+          12.3,
+          30.18,
+          0.95
+        ],
+        "center": [
+          -215.56,
+          62.06,
+          97.33
+        ]
+      }
+    },
+    {
+      "name": "Light_Indicator_Right_0",
+      "category": "lamp-emitter",
+      "parent": "Grp_Light_Indicator_Right_0",
+      "path": [
+        "Grp_Root",
+        "Grp_Exterior",
+        "Grp_Exterior_Dynamic",
+        "Grp_Light_Indicator_Right_0"
+      ],
+      "gltfVertices": 354,
+      "triangles": 172,
+      "primitives": 1,
+      "materials": [
+        "Lamp_Amber"
+      ],
+      "fidelity": {
+        "level": "DETAILED_MESH",
+        "reason": "172 triangles, 943.6 per m² of bounding-box surface"
+      },
+      "boxCm": {
+        "min": [
+          206.89,
+          -84.75,
+          37.38
+        ],
+        "max": [
+          225.14,
+          -54.81,
+          44.95
+        ],
+        "size": [
+          18.25,
+          29.94,
+          7.57
+        ],
+        "center": [
+          216.02,
+          -69.78,
+          41.17
+        ]
+      }
+    },
+    {
+      "name": "Light_Indicator_Right_1",
+      "category": "lamp-emitter",
+      "parent": "Grp_Light_Indicator_Right_1",
+      "path": [
+        "Grp_Root",
+        "Grp_Exterior",
+        "Grp_Exterior_Dynamic",
+        "Grp_Door_Right_0",
+        "Grp_Mirror_Side_Mounting_Right_0",
+        "Grp_Mirror_Side_Joint_Right_0",
+        "Grp_Light_Indicator_Right_1"
+      ],
+      "gltfVertices": 32,
+      "triangles": 16,
+      "primitives": 1,
+      "materials": [
+        "Lamp_Amber"
+      ],
+      "fidelity": {
+        "level": "PROXY",
+        "reason": "16 triangles across 13.2 x 11 x 0.8 cm: simplified stand-in shape"
+      },
+      "boxCm": {
+        "min": [
+          57.36,
+          -107.4,
+          114.22
+        ],
+        "max": [
+          70.53,
+          -96.35,
+          115.05
+        ],
+        "size": [
+          13.17,
+          11.05,
+          0.83
+        ],
+        "center": [
+          63.95,
+          -101.88,
+          114.63
+        ]
+      }
+    },
+    {
+      "name": "Light_Indicator_Right_2",
+      "category": "lamp-emitter",
+      "parent": "Grp_Light_Indicator_Right_2",
+      "path": [
+        "Grp_Root",
+        "Grp_Exterior",
+        "Grp_Exterior_Dynamic",
+        "Grp_Light_Indicator_Right_2"
+      ],
+      "gltfVertices": 522,
+      "triangles": 264,
+      "primitives": 1,
+      "materials": [
+        "Lamp_Amber"
+      ],
+      "fidelity": {
+        "level": "DETAILED_MESH",
+        "reason": "264 triangles, 3207.8 per m² of bounding-box surface"
+      },
+      "boxCm": {
+        "min": [
+          -221.71,
+          -77.15,
+          96.86
+        ],
+        "max": [
+          -209.41,
+          -46.97,
+          97.81
+        ],
+        "size": [
+          12.3,
+          30.18,
+          0.95
+        ],
+        "center": [
+          -215.56,
+          -62.06,
+          97.33
+        ]
+      }
+    },
+    {
+      "name": "Light_License_Plate_0",
+      "category": "lamp-emitter",
+      "parent": "Grp_Light_License_Plate_0",
+      "path": [
+        "Grp_Root",
+        "Grp_Exterior",
+        "Grp_Exterior_Dynamic",
+        "Grp_Light_License_Plate_0"
+      ],
+      "gltfVertices": 4,
+      "triangles": 2,
+      "primitives": 1,
+      "materials": [
+        "Lamp_White"
+      ],
+      "fidelity": {
+        "level": "MARKER_ONLY",
+        "reason": "2 triangles: a flat placeholder for the emitter position"
+      },
+      "boxCm": {
+        "min": [
+          -225.7,
+          -13.8,
+          72.13
+        ],
+        "max": [
+          -224.3,
+          -10.2,
+          72.18
+        ],
+        "size": [
+          1.4,
+          3.6,
+          0.05
+        ],
+        "center": [
+          -225,
+          -12,
+          72.16
+        ]
+      }
+    },
+    {
+      "name": "Light_License_Plate_1",
+      "category": "lamp-emitter",
+      "parent": "Grp_Light_License_Plate_1",
+      "path": [
+        "Grp_Root",
+        "Grp_Exterior",
+        "Grp_Exterior_Dynamic",
+        "Grp_Light_License_Plate_1"
+      ],
+      "gltfVertices": 4,
+      "triangles": 2,
+      "primitives": 1,
+      "materials": [
+        "Lamp_White"
+      ],
+      "fidelity": {
+        "level": "MARKER_ONLY",
+        "reason": "2 triangles: a flat placeholder for the emitter position"
+      },
+      "boxCm": {
+        "min": [
+          -225.7,
+          10.2,
+          72.13
+        ],
+        "max": [
+          -224.3,
+          13.8,
+          72.18
+        ],
+        "size": [
+          1.4,
+          3.6,
+          0.05
+        ],
+        "center": [
+          -225,
+          12,
+          72.16
+        ]
+      }
+    },
+    {
+      "name": "Light_Low_Beam_Left_0",
+      "category": "lamp-emitter",
+      "parent": "Grp_Light_Low_Beam_Left_0",
+      "path": [
+        "Grp_Root",
+        "Grp_Exterior",
+        "Grp_Exterior_Dynamic",
+        "Grp_Light_Low_Beam_Left_0"
+      ],
+      "gltfVertices": 4,
+      "triangles": 2,
+      "primitives": 1,
+      "materials": [
+        "Lamp_Projector"
+      ],
+      "fidelity": {
+        "level": "MARKER_ONLY",
+        "reason": "2 triangles: a flat placeholder for the emitter position"
+      },
+      "boxCm": {
+        "min": [
+          212.8,
+          44.9,
+          76.1
+        ],
+        "max": [
+          212.8,
+          61.3,
+          81.7
+        ],
+        "size": [
+          0,
+          16.4,
+          5.6
+        ],
+        "center": [
+          212.8,
+          53.1,
+          78.9
+        ]
+      }
+    },
+    {
+      "name": "Light_Low_Beam_Right_0",
+      "category": "lamp-emitter",
+      "parent": "Grp_Light_Low_Beam_Right_0",
+      "path": [
+        "Grp_Root",
+        "Grp_Exterior",
+        "Grp_Exterior_Dynamic",
+        "Grp_Light_Low_Beam_Right_0"
+      ],
+      "gltfVertices": 4,
+      "triangles": 2,
+      "primitives": 1,
+      "materials": [
+        "Lamp_Projector"
+      ],
+      "fidelity": {
+        "level": "MARKER_ONLY",
+        "reason": "2 triangles: a flat placeholder for the emitter position"
+      },
+      "boxCm": {
+        "min": [
+          212.8,
+          -61.3,
+          76.1
+        ],
+        "max": [
+          212.8,
+          -44.9,
+          81.7
+        ],
+        "size": [
+          0,
+          16.4,
+          5.6
+        ],
+        "center": [
+          212.8,
+          -53.1,
+          78.9
+        ]
+      }
+    },
+    {
+      "name": "Light_Reverse_Left_0",
+      "category": "lamp-emitter",
+      "parent": "Grp_Light_Reverse_Left_0",
+      "path": [
+        "Grp_Root",
+        "Grp_Exterior",
+        "Grp_Exterior_Dynamic",
+        "Grp_Light_Reverse_Left_0"
+      ],
+      "gltfVertices": 307,
+      "triangles": 153,
+      "primitives": 1,
+      "materials": [
+        "Lamp_White"
+      ],
+      "fidelity": {
+        "level": "DETAILED_MESH",
+        "reason": "153 triangles, 22190.1 per m² of bounding-box surface"
+      },
+      "boxCm": {
+        "min": [
+          -222.8,
+          41.82,
+          96.79
+        ],
+        "max": [
+          -221.35,
+          47.02,
+          100.84
+        ],
+        "size": [
+          1.45,
+          5.2,
+          4.05
+        ],
+        "center": [
+          -222.08,
+          44.42,
+          98.82
+        ]
+      }
+    },
+    {
+      "name": "Light_Reverse_Right_0",
+      "category": "lamp-emitter",
+      "parent": "Grp_Light_Reverse_Right_0",
+      "path": [
+        "Grp_Root",
+        "Grp_Exterior",
+        "Grp_Exterior_Dynamic",
+        "Grp_Light_Reverse_Right_0"
+      ],
+      "gltfVertices": 307,
+      "triangles": 153,
+      "primitives": 1,
+      "materials": [
+        "Lamp_White"
+      ],
+      "fidelity": {
+        "level": "DETAILED_MESH",
+        "reason": "153 triangles, 22189.9 per m² of bounding-box surface"
+      },
+      "boxCm": {
+        "min": [
+          -222.8,
+          -47.02,
+          96.79
+        ],
+        "max": [
+          -221.35,
+          -41.82,
+          100.84
+        ],
+        "size": [
+          1.45,
+          5.2,
+          4.05
+        ],
+        "center": [
+          -222.08,
+          -44.42,
+          98.82
+        ]
+      }
+    },
+    {
+      "name": "Light_Tail_Left_0",
+      "category": "lamp-emitter",
+      "parent": "Grp_Light_Tail_Left_0",
+      "path": [
+        "Grp_Root",
+        "Grp_Exterior",
+        "Grp_Exterior_Dynamic",
+        "Grp_Light_Tail_Left_0"
+      ],
+      "gltfVertices": 50,
+      "triangles": 20,
+      "primitives": 1,
+      "materials": [
+        "Lamp_Red"
+      ],
+      "fidelity": {
+        "level": "PROXY",
+        "reason": "20 triangles across 15.8 x 48.8 x 0.4 cm: simplified stand-in shape"
+      },
+      "boxCm": {
+        "min": [
+          -225.47,
+          28.65,
+          94.48
+        ],
+        "max": [
+          -209.69,
+          77.45,
+          94.89
+        ],
+        "size": [
+          15.78,
+          48.8,
+          0.41
+        ],
+        "center": [
+          -217.58,
+          53.05,
+          94.69
+        ]
+      }
+    },
+    {
+      "name": "Light_Tail_Right_0",
+      "category": "lamp-emitter",
+      "parent": "Grp_Light_Tail_Right_0",
+      "path": [
+        "Grp_Root",
+        "Grp_Exterior",
+        "Grp_Exterior_Dynamic",
+        "Grp_Light_Tail_Right_0"
+      ],
+      "gltfVertices": 50,
+      "triangles": 20,
+      "primitives": 1,
+      "materials": [
+        "Lamp_Red"
+      ],
+      "fidelity": {
+        "level": "PROXY",
+        "reason": "20 triangles across 15.8 x 48.8 x 0.4 cm: simplified stand-in shape"
+      },
+      "boxCm": {
+        "min": [
+          -225.47,
+          -77.45,
+          94.48
+        ],
+        "max": [
+          -209.69,
+          -28.65,
+          94.89
+        ],
+        "size": [
+          15.78,
+          48.8,
+          0.41
+        ],
+        "center": [
+          -217.58,
+          -53.05,
+          94.69
+        ]
+      }
+    },
+    {
+      "name": "Mirror_Side_Left_0",
+      "category": "side-mirror",
+      "parent": "Grp_Mirror_Side_Joint_Left_0",
+      "path": [
+        "Grp_Root",
+        "Grp_Exterior",
+        "Grp_Exterior_Dynamic",
+        "Grp_Door_Left_0",
+        "Grp_Mirror_Side_Mounting_Left_0",
+        "Grp_Mirror_Side_Joint_Left_0"
+      ],
+      "gltfVertices": 399,
+      "triangles": 309,
+      "primitives": 3,
+      "materials": [
+        "Body",
+        "Mirror_Glass",
+        "Black_Gloss"
+      ],
+      "fidelity": {
+        "level": "DETAILED_MESH",
+        "reason": "309 triangles, 1037.1 per m² of bounding-box surface"
+      },
+      "boxCm": {
+        "min": [
+          53.72,
+          78.7,
+          107.9
+        ],
+        "max": [
+          77.33,
+          108.53,
+          122.6
+        ],
+        "size": [
+          23.61,
+          29.83,
+          14.7
+        ],
+        "center": [
+          65.52,
+          93.61,
+          115.25
+        ]
+      }
+    },
+    {
+      "name": "Mirror_Side_Right_0",
+      "category": "side-mirror",
+      "parent": "Grp_Mirror_Side_Joint_Right_0",
+      "path": [
+        "Grp_Root",
+        "Grp_Exterior",
+        "Grp_Exterior_Dynamic",
+        "Grp_Door_Right_0",
+        "Grp_Mirror_Side_Mounting_Right_0",
+        "Grp_Mirror_Side_Joint_Right_0"
+      ],
+      "gltfVertices": 399,
+      "triangles": 309,
+      "primitives": 3,
+      "materials": [
+        "Body",
+        "Mirror_Glass",
+        "Black_Gloss"
+      ],
+      "fidelity": {
+        "level": "DETAILED_MESH",
+        "reason": "309 triangles, 1037.1 per m² of bounding-box surface"
+      },
+      "boxCm": {
+        "min": [
+          53.72,
+          -108.53,
+          107.9
+        ],
+        "max": [
+          77.33,
+          -78.7,
+          122.6
+        ],
+        "size": [
+          23.61,
+          29.83,
+          14.7
+        ],
+        "center": [
+          65.52,
+          -93.61,
+          115.25
+        ]
+      }
+    },
+    {
+      "name": "Steering_Wheel",
+      "category": "steering-wheel",
+      "parent": "Grp_Steering_Wheel",
+      "path": [
+        "Grp_Root",
+        "Grp_Interior",
+        "Grp_Interior_Dynamic",
+        "Grp_Steering_Wheel"
+      ],
+      "gltfVertices": 616,
+      "triangles": 692,
+      "primitives": 1,
+      "materials": [
+        "Black_Plastic"
+      ],
+      "fidelity": {
+        "level": "DETAILED_MESH",
+        "reason": "692 triangles, 1245.7 per m² of bounding-box surface"
+      },
+      "boxCm": {
+        "min": [
+          34.06,
+          16.8,
+          79.02
+        ],
+        "max": [
+          49.94,
+          57.2,
+          116.98
+        ],
+        "size": [
+          15.88,
+          40.4,
+          37.95
+        ],
+        "center": [
+          42,
+          37,
+          98
+        ]
+      }
+    },
+    {
+      "name": "Wheel_0_0",
+      "category": "wheel-assembly",
+      "parent": "Grp_Wheel_Steering_Rotating_0_0",
+      "path": [
+        "Grp_Root",
+        "Grp_Exterior",
+        "Grp_Exterior_Dynamic",
+        "Grp_Wheel_0_0",
+        "Grp_Wheel_Steering_Rotating_0_0"
+      ],
+      "gltfVertices": 5748,
+      "triangles": 3009,
+      "primitives": 6,
+      "materials": [
+        "Tire",
+        "Rim_Black",
+        "Rim_Machined",
+        "Rim_Aero",
+        "Brake_Disc",
+        "Chrome"
+      ],
+      "fidelity": {
+        "level": "DETAILED_MESH",
+        "reason": "3009 triangles, 1599 per m² of bounding-box surface"
+      },
+      "boxCm": {
+        "min": [
+          108.29,
+          -89.77,
+          0
+        ],
+        "max": [
+          183.43,
+          -64.72,
+          75.12
+        ],
+        "size": [
+          75.14,
+          25.05,
+          75.12
+        ],
+        "center": [
+          145.86,
+          -77.25,
+          37.56
+        ]
+      }
+    },
+    {
+      "name": "Wheel_0_1",
+      "category": "wheel-assembly",
+      "parent": "Grp_Wheel_Steering_Rotating_0_1",
+      "path": [
+        "Grp_Root",
+        "Grp_Exterior",
+        "Grp_Exterior_Dynamic",
+        "Grp_Wheel_0_1",
+        "Grp_Wheel_Steering_Rotating_0_1"
+      ],
+      "gltfVertices": 5748,
+      "triangles": 3009,
+      "primitives": 6,
+      "materials": [
+        "Tire",
+        "Rim_Black",
+        "Rim_Machined",
+        "Rim_Aero",
+        "Brake_Disc",
+        "Chrome"
+      ],
+      "fidelity": {
+        "level": "DETAILED_MESH",
+        "reason": "3009 triangles, 1599 per m² of bounding-box surface"
+      },
+      "boxCm": {
+        "min": [
+          108.29,
+          64.68,
+          0
+        ],
+        "max": [
+          183.43,
+          89.73,
+          75.12
+        ],
+        "size": [
+          75.14,
+          25.05,
+          75.12
+        ],
+        "center": [
+          145.86,
+          77.21,
+          37.56
+        ]
+      }
+    },
+    {
+      "name": "Wheel_1_0",
+      "category": "wheel-assembly",
+      "parent": "Grp_Wheel_Steering_Rotating_1_0",
+      "path": [
+        "Grp_Root",
+        "Grp_Exterior",
+        "Grp_Exterior_Dynamic",
+        "Grp_Wheel_1_0",
+        "Grp_Wheel_Steering_Rotating_1_0"
+      ],
+      "gltfVertices": 5748,
+      "triangles": 3009,
+      "primitives": 6,
+      "materials": [
+        "Tire",
+        "Rim_Black",
+        "Rim_Machined",
+        "Rim_Aero",
+        "Brake_Disc",
+        "Chrome"
+      ],
+      "fidelity": {
+        "level": "DETAILED_MESH",
+        "reason": "3009 triangles, 1599 per m² of bounding-box surface"
+      },
+      "boxCm": {
+        "min": [
+          -193.95,
+          -89.77,
+          0
+        ],
+        "max": [
+          -118.81,
+          -64.72,
+          75.12
+        ],
+        "size": [
+          75.14,
+          25.05,
+          75.12
+        ],
+        "center": [
+          -156.38,
+          -77.25,
+          37.56
+        ]
+      }
+    },
+    {
+      "name": "Wheel_1_1",
+      "category": "wheel-assembly",
+      "parent": "Grp_Wheel_Steering_Rotating_1_1",
+      "path": [
+        "Grp_Root",
+        "Grp_Exterior",
+        "Grp_Exterior_Dynamic",
+        "Grp_Wheel_1_1",
+        "Grp_Wheel_Steering_Rotating_1_1"
+      ],
+      "gltfVertices": 5748,
+      "triangles": 3009,
+      "primitives": 6,
+      "materials": [
+        "Rim_Black",
+        "Rim_Machined",
+        "Tire",
+        "Rim_Aero",
+        "Brake_Disc",
+        "Chrome"
+      ],
+      "fidelity": {
+        "level": "DETAILED_MESH",
+        "reason": "3009 triangles, 1599 per m² of bounding-box surface"
+      },
+      "boxCm": {
+        "min": [
+          -193.95,
+          64.68,
+          0
+        ],
+        "max": [
+          -118.81,
+          89.73,
+          75.12
+        ],
+        "size": [
+          75.14,
+          25.05,
+          75.12
+        ],
+        "center": [
+          -156.38,
+          77.21,
+          37.56
+        ]
+      }
+    }
+  ],
+  "groups": [
+    {
+      "name": "Grp_Door_Front_0",
+      "parent": "Grp_Exterior_Dynamic",
+      "children": [
+        "Door_Front_0"
+      ],
+      "worldOriginCm": [
+        99.51,
+        0,
+        108.16
+      ]
+    },
+    {
+      "name": "Grp_Door_Left_0",
+      "parent": "Grp_Exterior_Dynamic",
+      "children": [
+        "Door_Left_0",
+        "Grp_Mirror_Side_Mounting_Left_0"
+      ],
+      "worldOriginCm": [
+        95.44,
+        93.96,
+        91.43
+      ]
+    },
+    {
+      "name": "Grp_Door_Left_1",
+      "parent": "Grp_Exterior_Dynamic",
+      "children": [
+        "Door_Left_1"
+      ],
+      "worldOriginCm": [
+        -21.82,
+        94.87,
+        93.57
+      ]
+    },
+    {
+      "name": "Grp_Door_Rear_0",
+      "parent": "Grp_Exterior_Dynamic",
+      "children": [
+        "Door_Rear_0"
+      ],
+      "worldOriginCm": [
+        -146.28,
+        0,
+        140.12
+      ]
+    },
+    {
+      "name": "Grp_Door_Right_0",
+      "parent": "Grp_Exterior_Dynamic",
+      "children": [
+        "Door_Right_0",
+        "Grp_Mirror_Side_Mounting_Right_0"
+      ],
+      "worldOriginCm": [
+        95.44,
+        -93.96,
+        91.43
+      ]
+    },
+    {
+      "name": "Grp_Door_Right_1",
+      "parent": "Grp_Exterior_Dynamic",
+      "children": [
+        "Door_Right_1"
+      ],
+      "worldOriginCm": [
+        -21.82,
+        -94.87,
+        93.57
+      ]
+    },
+    {
+      "name": "Grp_Exterior",
+      "parent": "Grp_Root",
+      "children": [
+        "Grp_Exterior_Dynamic",
+        "Grp_Exterior_Static"
+      ],
+      "worldOriginCm": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "Grp_Exterior_Dynamic",
+      "parent": "Grp_Exterior",
+      "children": [
+        "Grp_Door_Front_0",
+        "Grp_Door_Left_0",
+        "Grp_Door_Left_1",
+        "Grp_Door_Rear_0",
+        "Grp_Door_Right_0",
+        "Grp_Door_Right_1",
+        "Grp_License_Plate_0",
+        "Grp_License_Plate_1",
+        "Grp_Light_Brake_Center_0",
+        "Grp_Light_Brake_Left_0",
+        "Grp_Light_Brake_Right_0",
+        "Grp_Light_Day_Left_0",
+        "Grp_Light_Day_Right_0",
+        "Grp_Light_High_Beam_Left_0",
+        "Grp_Light_High_Beam_Right_0",
+        "Grp_Light_Indicator_Left_0",
+        "Grp_Light_Indicator_Left_2",
+        "Grp_Light_Indicator_Right_0",
+        "Grp_Light_Indicator_Right_2",
+        "Grp_Light_License_Plate_0",
+        "Grp_Light_License_Plate_1",
+        "Grp_Light_Low_Beam_Left_0",
+        "Grp_Light_Low_Beam_Right_0",
+        "Grp_Light_Reverse_Left_0",
+        "Grp_Light_Reverse_Right_0",
+        "Grp_Light_Tail_Left_0",
+        "Grp_Light_Tail_Right_0",
+        "Grp_Rear_Axle_Center",
+        "Grp_Wheel_0_0",
+        "Grp_Wheel_0_1",
+        "Grp_Wheel_1_0",
+        "Grp_Wheel_1_1"
+      ],
+      "worldOriginCm": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "Grp_Exterior_Static",
+      "parent": "Grp_Exterior",
+      "children": [
+        "Body",
+        "Body_Glass",
+        "Lamp_Housings"
+      ],
+      "worldOriginCm": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "Grp_Eyepoint_0",
+      "parent": "Grp_Interior_Dynamic",
+      "children": [],
+      "worldOriginCm": [
+        -12,
+        37,
+        124
+      ]
+    },
+    {
+      "name": "Grp_Interior",
+      "parent": "Grp_Root",
+      "children": [
+        "Grp_Interior_Dynamic",
+        "Grp_Interior_Static"
+      ],
+      "worldOriginCm": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "Grp_Interior_Dynamic",
+      "parent": "Grp_Interior",
+      "children": [
+        "Grp_Eyepoint_0",
+        "Grp_Steering_Wheel"
+      ],
+      "worldOriginCm": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "Grp_Interior_Static",
+      "parent": "Grp_Interior",
+      "children": [
+        "Interior_Static"
+      ],
+      "worldOriginCm": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "Grp_License_Plate_0",
+      "parent": "Grp_Exterior_Dynamic",
+      "children": [
+        "License_Plate_0"
+      ],
+      "worldOriginCm": [
+        231.04,
+        0,
+        53.01
+      ]
+    },
+    {
+      "name": "Grp_License_Plate_1",
+      "parent": "Grp_Exterior_Dynamic",
+      "children": [
+        "License_Plate_1"
+      ],
+      "worldOriginCm": [
+        -229.13,
+        0,
+        63.18
+      ]
+    },
+    {
+      "name": "Grp_Light_Brake_Center_0",
+      "parent": "Grp_Exterior_Dynamic",
+      "children": [
+        "Light_Brake_Center_0"
+      ],
+      "worldOriginCm": [
+        -178.75,
+        0,
+        146.86
+      ]
+    },
+    {
+      "name": "Grp_Light_Brake_Left_0",
+      "parent": "Grp_Exterior_Dynamic",
+      "children": [
+        "Light_Brake_Left_0"
+      ],
+      "worldOriginCm": [
+        -215.35,
+        61.97,
+        99.43
+      ]
+    },
+    {
+      "name": "Grp_Light_Brake_Right_0",
+      "parent": "Grp_Exterior_Dynamic",
+      "children": [
+        "Light_Brake_Right_0"
+      ],
+      "worldOriginCm": [
+        -215.35,
+        -61.97,
+        99.43
+      ]
+    },
+    {
+      "name": "Grp_Light_Day_Left_0",
+      "parent": "Grp_Exterior_Dynamic",
+      "children": [
+        "Light_Day_Left_0"
+      ],
+      "worldOriginCm": [
+        202.93,
+        63.82,
+        78.3
+      ]
+    },
+    {
+      "name": "Grp_Light_Day_Right_0",
+      "parent": "Grp_Exterior_Dynamic",
+      "children": [
+        "Light_Day_Right_0"
+      ],
+      "worldOriginCm": [
+        202.93,
+        -63.82,
+        78.3
+      ]
+    },
+    {
+      "name": "Grp_Light_High_Beam_Left_0",
+      "parent": "Grp_Exterior_Dynamic",
+      "children": [
+        "Light_High_Beam_Left_0"
+      ],
+      "worldOriginCm": [
+        189.7,
+        74.55,
+        80.35
+      ]
+    },
+    {
+      "name": "Grp_Light_High_Beam_Right_0",
+      "parent": "Grp_Exterior_Dynamic",
+      "children": [
+        "Light_High_Beam_Right_0"
+      ],
+      "worldOriginCm": [
+        189.7,
+        -74.55,
+        80.35
+      ]
+    },
+    {
+      "name": "Grp_Light_Indicator_Left_0",
+      "parent": "Grp_Exterior_Dynamic",
+      "children": [
+        "Light_Indicator_Left_0"
+      ],
+      "worldOriginCm": [
+        216.02,
+        69.78,
+        41.17
+      ]
+    },
+    {
+      "name": "Grp_Light_Indicator_Left_1",
+      "parent": "Grp_Mirror_Side_Joint_Left_0",
+      "children": [
+        "Light_Indicator_Left_1"
+      ],
+      "worldOriginCm": [
+        63.95,
+        101.88,
+        114.63
+      ]
+    },
+    {
+      "name": "Grp_Light_Indicator_Left_2",
+      "parent": "Grp_Exterior_Dynamic",
+      "children": [
+        "Light_Indicator_Left_2"
+      ],
+      "worldOriginCm": [
+        -215.56,
+        62.06,
+        97.33
+      ]
+    },
+    {
+      "name": "Grp_Light_Indicator_Right_0",
+      "parent": "Grp_Exterior_Dynamic",
+      "children": [
+        "Light_Indicator_Right_0"
+      ],
+      "worldOriginCm": [
+        216.02,
+        -69.78,
+        41.17
+      ]
+    },
+    {
+      "name": "Grp_Light_Indicator_Right_1",
+      "parent": "Grp_Mirror_Side_Joint_Right_0",
+      "children": [
+        "Light_Indicator_Right_1"
+      ],
+      "worldOriginCm": [
+        63.95,
+        -101.88,
+        114.63
+      ]
+    },
+    {
+      "name": "Grp_Light_Indicator_Right_2",
+      "parent": "Grp_Exterior_Dynamic",
+      "children": [
+        "Light_Indicator_Right_2"
+      ],
+      "worldOriginCm": [
+        -215.56,
+        -62.06,
+        97.33
+      ]
+    },
+    {
+      "name": "Grp_Light_License_Plate_0",
+      "parent": "Grp_Exterior_Dynamic",
+      "children": [
+        "Light_License_Plate_0"
+      ],
+      "worldOriginCm": [
+        -225,
+        -12,
+        72.16
+      ]
+    },
+    {
+      "name": "Grp_Light_License_Plate_1",
+      "parent": "Grp_Exterior_Dynamic",
+      "children": [
+        "Light_License_Plate_1"
+      ],
+      "worldOriginCm": [
+        -225,
+        12,
+        72.16
+      ]
+    },
+    {
+      "name": "Grp_Light_Low_Beam_Left_0",
+      "parent": "Grp_Exterior_Dynamic",
+      "children": [
+        "Light_Low_Beam_Left_0"
+      ],
+      "worldOriginCm": [
+        212.8,
+        53.1,
+        78.9
+      ]
+    },
+    {
+      "name": "Grp_Light_Low_Beam_Right_0",
+      "parent": "Grp_Exterior_Dynamic",
+      "children": [
+        "Light_Low_Beam_Right_0"
+      ],
+      "worldOriginCm": [
+        212.8,
+        -53.1,
+        78.9
+      ]
+    },
+    {
+      "name": "Grp_Light_Reverse_Left_0",
+      "parent": "Grp_Exterior_Dynamic",
+      "children": [
+        "Light_Reverse_Left_0"
+      ],
+      "worldOriginCm": [
+        -222.08,
+        44.42,
+        98.82
+      ]
+    },
+    {
+      "name": "Grp_Light_Reverse_Right_0",
+      "parent": "Grp_Exterior_Dynamic",
+      "children": [
+        "Light_Reverse_Right_0"
+      ],
+      "worldOriginCm": [
+        -222.08,
+        -44.42,
+        98.82
+      ]
+    },
+    {
+      "name": "Grp_Light_Tail_Left_0",
+      "parent": "Grp_Exterior_Dynamic",
+      "children": [
+        "Light_Tail_Left_0"
+      ],
+      "worldOriginCm": [
+        -217.58,
+        53.05,
+        94.69
+      ]
+    },
+    {
+      "name": "Grp_Light_Tail_Right_0",
+      "parent": "Grp_Exterior_Dynamic",
+      "children": [
+        "Light_Tail_Right_0"
+      ],
+      "worldOriginCm": [
+        -217.58,
+        -53.05,
+        94.69
+      ]
+    },
+    {
+      "name": "Grp_Mirror_Side_Joint_Left_0",
+      "parent": "Grp_Mirror_Side_Mounting_Left_0",
+      "children": [
+        "Grp_Light_Indicator_Left_1",
+        "Grp_Mirror_Side_View_Left_0",
+        "Mirror_Side_Left_0"
+      ],
+      "worldOriginCm": [
+        71.37,
+        83,
+        110.84
+      ]
+    },
+    {
+      "name": "Grp_Mirror_Side_Joint_Right_0",
+      "parent": "Grp_Mirror_Side_Mounting_Right_0",
+      "children": [
+        "Grp_Light_Indicator_Right_1",
+        "Grp_Mirror_Side_View_Right_0",
+        "Mirror_Side_Right_0"
+      ],
+      "worldOriginCm": [
+        71.37,
+        -83,
+        110.84
+      ]
+    },
+    {
+      "name": "Grp_Mirror_Side_Mounting_Left_0",
+      "parent": "Grp_Door_Left_0",
+      "children": [
+        "Grp_Mirror_Side_Joint_Left_0"
+      ],
+      "worldOriginCm": [
+        71.37,
+        80,
+        110.84
+      ]
+    },
+    {
+      "name": "Grp_Mirror_Side_Mounting_Right_0",
+      "parent": "Grp_Door_Right_0",
+      "children": [
+        "Grp_Mirror_Side_Joint_Right_0"
+      ],
+      "worldOriginCm": [
+        71.37,
+        -80,
+        110.84
+      ]
+    },
+    {
+      "name": "Grp_Mirror_Side_View_Left_0",
+      "parent": "Grp_Mirror_Side_Joint_Left_0",
+      "children": [],
+      "worldOriginCm": [
+        60.52,
+        93.61,
+        115.25
+      ]
+    },
+    {
+      "name": "Grp_Mirror_Side_View_Right_0",
+      "parent": "Grp_Mirror_Side_Joint_Right_0",
+      "children": [],
+      "worldOriginCm": [
+        60.52,
+        -93.61,
+        115.25
+      ]
+    },
+    {
+      "name": "Grp_Rear_Axle_Center",
+      "parent": "Grp_Exterior_Dynamic",
+      "children": [],
+      "worldOriginCm": [
+        -156.38,
+        0,
+        37.56
+      ]
+    },
+    {
+      "name": "Grp_Root",
+      "parent": null,
+      "children": [
+        "Grp_Exterior",
+        "Grp_Interior"
+      ],
+      "worldOriginCm": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "Grp_Steering_Wheel",
+      "parent": "Grp_Interior_Dynamic",
+      "children": [
+        "Steering_Wheel"
+      ],
+      "worldOriginCm": [
+        42,
+        37,
+        98
+      ]
+    },
+    {
+      "name": "Grp_Wheel_0_0",
+      "parent": "Grp_Exterior_Dynamic",
+      "children": [
+        "Grp_Wheel_Steering_0_0",
+        "Grp_Wheel_Steering_Rotating_0_0"
+      ],
+      "worldOriginCm": [
+        145.86,
+        -77.25,
+        37.56
+      ]
+    },
+    {
+      "name": "Grp_Wheel_0_1",
+      "parent": "Grp_Exterior_Dynamic",
+      "children": [
+        "Grp_Wheel_Steering_0_1",
+        "Grp_Wheel_Steering_Rotating_0_1"
+      ],
+      "worldOriginCm": [
+        145.86,
+        77.21,
+        37.56
+      ]
+    },
+    {
+      "name": "Grp_Wheel_1_0",
+      "parent": "Grp_Exterior_Dynamic",
+      "children": [
+        "Grp_Wheel_Steering_1_0",
+        "Grp_Wheel_Steering_Rotating_1_0"
+      ],
+      "worldOriginCm": [
+        -156.38,
+        -77.25,
+        37.56
+      ]
+    },
+    {
+      "name": "Grp_Wheel_1_1",
+      "parent": "Grp_Exterior_Dynamic",
+      "children": [
+        "Grp_Wheel_Steering_1_1",
+        "Grp_Wheel_Steering_Rotating_1_1"
+      ],
+      "worldOriginCm": [
+        -156.38,
+        77.21,
+        37.56
+      ]
+    },
+    {
+      "name": "Grp_Wheel_Steering_0_0",
+      "parent": "Grp_Wheel_0_0",
+      "children": [
+        "Brake_Caliper_0_0"
+      ],
+      "worldOriginCm": [
+        145.86,
+        -77.25,
+        37.56
+      ]
+    },
+    {
+      "name": "Grp_Wheel_Steering_0_1",
+      "parent": "Grp_Wheel_0_1",
+      "children": [
+        "Brake_Caliper_0_1"
+      ],
+      "worldOriginCm": [
+        145.86,
+        77.21,
+        37.56
+      ]
+    },
+    {
+      "name": "Grp_Wheel_Steering_1_0",
+      "parent": "Grp_Wheel_1_0",
+      "children": [
+        "Brake_Caliper_1_0"
+      ],
+      "worldOriginCm": [
+        -156.38,
+        -77.25,
+        37.56
+      ]
+    },
+    {
+      "name": "Grp_Wheel_Steering_1_1",
+      "parent": "Grp_Wheel_1_1",
+      "children": [
+        "Brake_Caliper_1_1"
+      ],
+      "worldOriginCm": [
+        -156.38,
+        77.21,
+        37.56
+      ]
+    },
+    {
+      "name": "Grp_Wheel_Steering_Rotating_0_0",
+      "parent": "Grp_Wheel_0_0",
+      "children": [
+        "Wheel_0_0"
+      ],
+      "worldOriginCm": [
+        145.86,
+        -77.25,
+        37.56
+      ]
+    },
+    {
+      "name": "Grp_Wheel_Steering_Rotating_0_1",
+      "parent": "Grp_Wheel_0_1",
+      "children": [
+        "Wheel_0_1"
+      ],
+      "worldOriginCm": [
+        145.86,
+        77.21,
+        37.56
+      ]
+    },
+    {
+      "name": "Grp_Wheel_Steering_Rotating_1_0",
+      "parent": "Grp_Wheel_1_0",
+      "children": [
+        "Wheel_1_0"
+      ],
+      "worldOriginCm": [
+        -156.38,
+        -77.25,
+        37.56
+      ]
+    },
+    {
+      "name": "Grp_Wheel_Steering_Rotating_1_1",
+      "parent": "Grp_Wheel_1_1",
+      "children": [
+        "Wheel_1_1"
+      ],
+      "worldOriginCm": [
+        -156.38,
+        77.21,
+        37.56
+      ]
+    }
+  ],
+  "materials": [
+    {
+      "name": "Black_Gloss",
+      "baseColorLinear": [
+        0.01,
+        0.01,
+        0.01,
+        1
+      ],
+      "metallic": 0,
+      "roughness": 0.15,
+      "alphaMode": "OPAQUE",
+      "textures": 0
+    },
+    {
+      "name": "Black_Matte",
+      "baseColorLinear": [
+        0.01,
+        0.01,
+        0.01,
+        1
+      ],
+      "metallic": 0,
+      "roughness": 0.9,
+      "alphaMode": "OPAQUE",
+      "textures": 0
+    },
+    {
+      "name": "Black_Plastic",
+      "baseColorLinear": [
+        0.02,
+        0.02,
+        0.02,
+        1
+      ],
+      "metallic": 0,
+      "roughness": 0.5,
+      "alphaMode": "OPAQUE",
+      "textures": 0
+    },
+    {
+      "name": "Body",
+      "baseColorLinear": [
+        0.571,
+        0.533,
+        0.503,
+        1
+      ],
+      "metallic": 1,
+      "roughness": 0.46,
+      "alphaMode": "OPAQUE",
+      "textures": 0
+    },
+    {
+      "name": "Body_Glass",
+      "baseColorLinear": [
+        0,
+        0,
+        0,
+        0.2
+      ],
+      "metallic": 0,
+      "roughness": 0.05,
+      "alphaMode": "BLEND",
+      "textures": 0
+    },
+    {
+      "name": "Brake_Caliper",
+      "baseColorLinear": [
+        0.03,
+        0.03,
+        0.03,
+        1
+      ],
+      "metallic": 0,
+      "roughness": 0.5,
+      "alphaMode": "OPAQUE",
+      "textures": 0
+    },
+    {
+      "name": "Brake_Disc",
+      "baseColorLinear": [
+        0.315,
+        0.315,
+        0.315,
+        1
+      ],
+      "metallic": 1,
+      "roughness": 0.5,
+      "alphaMode": "OPAQUE",
+      "textures": 0
+    },
+    {
+      "name": "Chrome",
+      "baseColorLinear": [
+        0.9,
+        0.9,
+        0.9,
+        1
+      ],
+      "metallic": 1,
+      "roughness": 0.15,
+      "alphaMode": "OPAQUE",
+      "textures": 0
+    },
+    {
+      "name": "Chrome_Satin",
+      "baseColorLinear": [
+        0.508,
+        0.508,
+        0.508,
+        1
+      ],
+      "metallic": 1,
+      "roughness": 0.3,
+      "alphaMode": "OPAQUE",
+      "textures": 0
+    },
+    {
+      "name": "Garnish_Silver",
+      "baseColorLinear": [
+        0.6,
+        0.6,
+        0.61,
+        1
+      ],
+      "metallic": 0,
+      "roughness": 0.35,
+      "alphaMode": "OPAQUE",
+      "textures": 0
+    },
+    {
+      "name": "Grey_Plastic",
+      "baseColorLinear": [
+        0.06,
+        0.06,
+        0.06,
+        1
+      ],
+      "metallic": 0,
+      "roughness": 0.5,
+      "alphaMode": "OPAQUE",
+      "textures": 0
+    },
+    {
+      "name": "Lamp_Amber",
+      "baseColorLinear": [
+        1,
+        0.25,
+        0,
+        1
+      ],
+      "metallic": 0,
+      "roughness": 0.3,
+      "alphaMode": "OPAQUE",
+      "textures": 0
+    },
+    {
+      "name": "Lamp_Projector",
+      "baseColorLinear": [
+        0.35,
+        0.35,
+        0.37,
+        1
+      ],
+      "metallic": 1,
+      "roughness": 0.25,
+      "alphaMode": "OPAQUE",
+      "textures": 0
+    },
+    {
+      "name": "Lamp_Red",
+      "baseColorLinear": [
+        0.55,
+        0.02,
+        0.02,
+        1
+      ],
+      "metallic": 0,
+      "roughness": 0.3,
+      "alphaMode": "OPAQUE",
+      "textures": 0
+    },
+    {
+      "name": "Lamp_White",
+      "baseColorLinear": [
+        0.8,
+        0.8,
+        0.8,
+        1
+      ],
+      "metallic": 0,
+      "roughness": 0.5,
+      "alphaMode": "OPAQUE",
+      "textures": 0
+    },
+    {
+      "name": "Lens_Smoked",
+      "baseColorLinear": [
+        0,
+        0,
+        0,
+        0.25
+      ],
+      "metallic": 0,
+      "roughness": 0.05,
+      "alphaMode": "BLEND",
+      "textures": 0
+    },
+    {
+      "name": "License_Plate_Black",
+      "baseColorLinear": [
+        0.01,
+        0.01,
+        0.01,
+        1
+      ],
+      "metallic": 0,
+      "roughness": 0.4,
+      "alphaMode": "OPAQUE",
+      "textures": 0
+    },
+    {
+      "name": "License_Plate_Blue",
+      "baseColorLinear": [
+        0,
+        0.08,
+        0.6,
+        1
+      ],
+      "metallic": 0,
+      "roughness": 0.4,
+      "alphaMode": "OPAQUE",
+      "textures": 0
+    },
+    {
+      "name": "License_Plate_White",
+      "baseColorLinear": [
+        0.9,
+        0.9,
+        0.9,
+        1
+      ],
+      "metallic": 0,
+      "roughness": 0.4,
+      "alphaMode": "OPAQUE",
+      "textures": 0
+    },
+    {
+      "name": "Mirror_Glass",
+      "baseColorLinear": [
+        0.9,
+        0.9,
+        0.9,
+        1
+      ],
+      "metallic": 1,
+      "roughness": 0.05,
+      "alphaMode": "OPAQUE",
+      "textures": 0
+    },
+    {
+      "name": "Pixel_Clear",
+      "baseColorLinear": [
+        0.6,
+        0.6,
+        0.62,
+        1
+      ],
+      "metallic": 0.6000000238418579,
+      "roughness": 0.3,
+      "alphaMode": "OPAQUE",
+      "textures": 0
+    },
+    {
+      "name": "Pixel_Trim",
+      "baseColorLinear": [
+        0.09,
+        0.09,
+        0.095,
+        1
+      ],
+      "metallic": 0,
+      "roughness": 0.3,
+      "alphaMode": "OPAQUE",
+      "textures": 0
+    },
+    {
+      "name": "Reflector_Red",
+      "baseColorLinear": [
+        0.45,
+        0.01,
+        0.01,
+        1
+      ],
+      "metallic": 0,
+      "roughness": 0.3,
+      "alphaMode": "OPAQUE",
+      "textures": 0
+    },
+    {
+      "name": "Rim_Aero",
+      "baseColorLinear": [
+        0.05,
+        0.05,
+        0.052,
+        1
+      ],
+      "metallic": 0,
+      "roughness": 0.55,
+      "alphaMode": "OPAQUE",
+      "textures": 0
+    },
+    {
+      "name": "Rim_Black",
+      "baseColorLinear": [
+        0.025,
+        0.025,
+        0.025,
+        1
+      ],
+      "metallic": 0,
+      "roughness": 0.45,
+      "alphaMode": "OPAQUE",
+      "textures": 0
+    },
+    {
+      "name": "Rim_Machined",
+      "baseColorLinear": [
+        0.78,
+        0.78,
+        0.78,
+        1
+      ],
+      "metallic": 1,
+      "roughness": 0.25,
+      "alphaMode": "OPAQUE",
+      "textures": 0
+    },
+    {
+      "name": "Seat_Fabric",
+      "baseColorLinear": [
+        0.05,
+        0.05,
+        0.055,
+        1
+      ],
+      "metallic": 0,
+      "roughness": 0.8,
+      "alphaMode": "OPAQUE",
+      "textures": 0
+    },
+    {
+      "name": "Tire",
+      "baseColorLinear": [
+        0.02,
+        0.02,
+        0.02,
+        1
+      ],
+      "metallic": 0,
+      "roughness": 0.8,
+      "alphaMode": "OPAQUE",
+      "textures": 0
+    },
+    {
+      "name": "Trim_Grey",
+      "baseColorLinear": [
+        0.19,
+        0.19,
+        0.2,
+        1
+      ],
+      "metallic": 0,
+      "roughness": 0.45,
+      "alphaMode": "OPAQUE",
+      "textures": 0
+    },
+    {
+      "name": "White_Matte",
+      "baseColorLinear": [
+        0.85,
+        0.85,
+        0.85,
+        1
+      ],
+      "metallic": 0,
+      "roughness": 0.85,
+      "alphaMode": "OPAQUE",
+      "textures": 0
+    }
+  ]
+}

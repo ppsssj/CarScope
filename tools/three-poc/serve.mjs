@@ -2,7 +2,7 @@
 // ./vendor/three/, and car.glb from the geometry export. Binds to 127.0.0.1 only.
 import { createServer } from "node:http";
 import { readFile } from "node:fs/promises";
-import { extname, join, normalize, dirname } from "node:path";
+import { extname, join, normalize, dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -13,6 +13,9 @@ const ROOTS = [
   ["/envelope/", join(HERE, "..", "anatomy-car", "build", "envelope")],
   ["/vendor/three/", join(HERE, "node_modules", "three")],
   ["/car.glb", join(HERE, "..", "anatomy-car", "build", "geometry", "car.glb")],
+  // P2-A6: the converted third-party IONIQ 5 GLB lives outside the repo; served only when configured.
+  ["/ioniq5-asset/parts.mjs", join(HERE, "..", "ioniq5-asset", "parts.mjs")],
+  ...(process.env.CARSCOPE_IONIQ5_GLB ? [["/external/ioniq5.glb", resolve(process.env.CARSCOPE_IONIQ5_GLB)]] : []),
   ["/", HERE],
 ];
 const TYPES = { ".html": "text/html", ".js": "text/javascript", ".mjs": "text/javascript", ".glb": "model/gltf-binary", ".json": "application/json" };
