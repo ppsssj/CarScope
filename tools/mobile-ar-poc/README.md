@@ -4,7 +4,7 @@
 
 기존 Android 앱·Pleos SDK·vehicle-core·Geometry·Three.js에는 연결하지 않는다. 앱에서 QR을 표시하는 통합도 이번 범위에 없다. PC의 독립 도구 화면에서 QR을 표시하고 스마트폰의 기본 카메라/QR 리더로 연다. release 앱에는 포함하지 않는다.
 
-QR-AR-01.1의 최신 실기기 준비/결과는 [실제 스마트폰 검증 문서](REAL_DEVICE_VALIDATION.md)에 있다. Android Chrome/iPhone Safari 9개 시나리오, 접근 제한이 있는 HTTPS 준비 명령, 실물 사진 평가/성능 기록 절차를 제공한다. 현재 실기기는 NOT_RUN, 실물 사진은 DATA_INSUFFICIENT다.
+QR-AR-01.2의 최신 상태와 10단계 실행 명령은 [모바일 E2E 검증](MOBILE_E2E_VERIFICATION.md)에 있다. 현재 AR012_BLOCKED_HTTPS이며 설치·로그인·사설 노출 승인을 대기한다. 기존 [01.1 문서](REAL_DEVICE_VALIDATION.md)는 상세 접근 정책과 실물 사진/성능 평가 절차를 보존한다. 실제 기기는 NOT_RUN이다.
 
 ## 감사와 구현 결정 (2026-10-31)
 

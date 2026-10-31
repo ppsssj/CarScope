@@ -1,5 +1,7 @@
 # QR-AR-01 검증 · 2026-10-31
 
+QR-AR-01.2: [모바일 E2E 검증](MOBILE_E2E_VERIFICATION.md). 새 회귀 Node 12/12·합성 브라우저 11개 그룹 PASS. 실제 HTTPS 경로는 승인 대기로 AR012_BLOCKED_HTTPS, 양 플랫폼의 실기기 10단계/화면 품질은 모두 NOT_RUN이다. SEMANTIC_RECOGNITION_UNVERIFIED / REAL_VEHICLE_DATA_INSUFFICIENT를 유지한다.
+
 후속 QR-AR-01.1: [실기기 검증 준비와 새 실행 결과](REAL_DEVICE_VALIDATION.md). 기존 구현을 유지한 새 회귀는 Node 12/12·합성 브라우저 11개 그룹 PASS. 실기기/QR→카메라는 NOT_RUN, 실제 사진은 DATA_INSUFFICIENT이며 이전 합성 결과와 구분한다. 아래 내용은 최초 QR-AR-01 실행 기록이다.
 
 판정: **독립 PoC의 합성 기능 검증 PASS / 실물 식별 UNVERIFIED / 실기기 end-to-end NOT_RUN**. 배포·주입 작업 사용 승인 또는 실차 정확도 성공 판정이 아니다.
