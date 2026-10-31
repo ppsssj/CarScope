@@ -12,6 +12,8 @@ P1-B 런타임 T1~T10은 **집 PC에서 PASS**입니다. 실제 SDK 초기화·D
 
 [P2-A3-1 Sedan·SUV 이미지 갤러리](docs/visuals/p2-a3-1/README.md)에는 실제 CarScope SVG와 GLB 렌더링 PNG 11개가 있습니다. AAOS AVD 치수 기반의 참고 형상이며 OEM 외형 일치는 검증되지 않았습니다.
 
+[P2-A3-1.1 보닛 Loft Before/After](docs/visuals/p2-a3-1-1/README.md)는 동일 SUV의 기존 프리즘 보닛과 새 단면 보간 곡면을 실제 SVG·GLB 캡처로 비교합니다. [형상 설계와 검증 범위](docs/p2-a3-1-1-surface-loft.md)를 함께 확인하세요.
+
 연구실/집 PC 설정과 clone·테스트·빌드·브랜치 운영은 [개발 환경 가이드](docs/development-setup.md)를 따릅니다. 원본 AVD 캡처·로그·SDK·AVD·APK·개인 설정은 Git에 포함하지 않습니다. P2-A3-1 갤러리에는 CarScope가 생성한 비식별 렌더링만 포함합니다. [G0 업로드 점검](docs/github-bootstrap.md)과 [현재 검증 상태](docs/validation-report.md)를 확인하세요.
 
 | 검증 범위 | 현재 상태 |
@@ -130,6 +132,7 @@ MOCK 시나리오 버튼은 새 관측값을 만듭니다. 저장된 관측값�
 - [Anatomy 기반 차량 시각화 (P2-A)](docs/anatomy-visualization.md)
 - [Envelope SUV geometry profile (P2-A3-1)](docs/p2-a3-1-vehicle-geometry-profile.md)
 - [P2-A3-1 SVG·GLB 시각 증거 갤러리](docs/visuals/p2-a3-1/README.md)
+- [P2-A3-1.1 보닛 Loft MVP·Before/After](docs/visuals/p2-a3-1-1/README.md)
 - [공식 문서 근거와 실현 가능성](docs/feasibility.md)
 - [P1 진입 조건 및 로드맵](docs/roadmap.md)
 - [P0 검증 결과, 복구 내역, 실행 명령](docs/validation-report.md)

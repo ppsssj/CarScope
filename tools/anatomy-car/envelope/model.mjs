@@ -5,8 +5,9 @@ import { geometry, region, polyline, withGeo } from "../automotive/geometry.mjs"
 import { scene, yFrame, xFrame } from "../automotive/scene.mjs";
 import { VIEW } from "../automotive/camera.mjs";
 import { ENVELOPE_SUV, envelopeParameters } from "../profiles/vehicle-profile.mjs";
+import { loftMesh } from "../geometry-export/loft.mjs";
 
-export async function buildEnvelopeModel({ profile = ENVELOPE_SUV } = {}) {
+export async function buildEnvelopeModel({ profile = ENVELOPE_SUV, hoodLoft = true } = {}) {
   const anatomy = await loadAnatomy();
   const { k, G, A } = anatomy;
   const d = envelopeParameters(profile), half = d.width / 2;
@@ -141,8 +142,25 @@ export async function buildEnvelopeModel({ profile = ENVELOPE_SUV } = {}) {
     return [y, d.height - (d.height-d.roofEdgeHeight)*(y/d.roofHalfWidth)**2];
   });
   addPrism("suv.crowned-roof", X, [...crown, ...crown.map(([y,z]) => [y,z-1.4]).reverse()], d.roofRearX, d.roofFrontX);
-  // The hood is an independent, gently curved longitudinal profile with a shorter rear deck.
-  addPrism("suv.hood", Y, region(d.windshieldBaseX+1, d.xFront-2, (x) => top(x)-3, top, stations, 3), -half+2, half-2);
+  // The P2-A3-1 prism remains selectable for before/after evidence. The opt-in surface
+  // changes actual XYZ vertices in two axes while preserving the hood's outer edges.
+  if (!hoodLoft) addPrism("suv.hood", Y, region(d.windshieldBaseX+1, d.xFront-2, (x) => top(x)-3, top, stations, 3), -half+2, half-2);
+  else {
+    const x0=d.windshieldBaseX+1,x1=d.xFront-2,w=half-2;
+    const sections=[x0,140,208,x1].map(x=>({x,points:[-w,-w/2,0,w/2,w].map(y=>{
+      const base=top(x),rise=d.hoodCrownRise*Math.sin(Math.PI*(x-x0)/(x1-x0))*(1-(y/w)**2);
+      return [y,base+rise,base-3];
+    })}));
+    const geo={kind:"loft",sections,resolution:2},loft=loftMesh(geo);
+    const shapes=loft.topTriangles.map((triangle,i)=>{
+      const [a,b,c]=triangle,u=G.unit3(G.sub3(b,a)),n=G.unit3(G.cross3(G.sub3(b,a),G.sub3(c,a)));
+      const v=G.unit3(G.cross3(n,u)),F={o:a,u,v,a:n};
+      const polygon=[[0,0],[G.len3(G.sub3(b,a)),0],[G.dot3(G.sub3(c,a),u),G.dot3(G.sub3(c,a),v)]];
+      return sc.record(A.prism(F,polygon,-0.01,0,{name:`suv.hood.loft.surface-${i}`,owner:"body"}));
+    });
+    sc.item("suv.hood.loft",[(x0+x1)/2,0,top((x0+x1)/2)],
+      [sc.solid(ctx.loftPaths(loft,geo),{palette:"paint",tone:"hi",crease:"none"})],shapes);
+  }
   const glassEnd = (name, xb, xt, zt, rear = false) => {
     const v = G.unit3([xt-xb,0,zt-d.beltHeight]), a = G.unit3([rear ? -(zt-d.beltHeight) : zt-d.beltHeight,0,rear ? xt-xb : xb-xt]);
     const F = { o: [xb,0,d.beltHeight], u:[0,1,0], v, a };
