@@ -44,10 +44,11 @@ export function glbContractFailures(bytes, parts, doorDefs, view) {
   }
   for (const def of Object.values(doorDefs)) {
     const node = json.nodes.find((n) => n.name === def.id);
-    close(node?.translation, [def.hinge / 100, 0, -(HALF + 0.05) / 100], 1e-12, `${def.id}: pivot or cm/m conversion`);
+    const [x, y, z] = def.pivot ?? [def.hinge, HALF + 0.05, 0];
+    close(node?.translation, [x / 100, z / 100, -y / 100], 1e-12, `${def.id}: pivot or cm/m conversion`);
     close(node?.extras?.axis, [0, 1, 0], 0, `${def.id}: hinge axis`);
     close(node?.rotation, [0, 0, 0, 1], 0, `${def.id}: closed rest rotation`);
-    if (node?.extras?.states?.open !== -def.open * Math.PI / 180) failures.push(`${def.id}: open angle`);
+    if (node?.extras?.states?.open !== (def.openSign ?? -1) * def.open * Math.PI / 180) failures.push(`${def.id}: open angle`);
   }
   for (const p of parts) {
     const node = json.nodes.find((n) => n.name === p.partId);

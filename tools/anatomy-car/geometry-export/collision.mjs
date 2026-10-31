@@ -158,7 +158,7 @@ export function angles(max) {
   return [...set].sort((a, b) => a - b);
 }
 export function posePart(p, deg) {
-  const angle = -deg * Math.PI / 180;
+  const angle = (p.rotationSign ?? -1) * deg * Math.PI / 180;
   const point = (q) => rotateZ(q, p.pivot, angle);
   const dir = (q) => rotateZ(q, [0, 0, 0], angle);
   const g = p.geo;
@@ -183,7 +183,7 @@ export function sweepDoors({ parts, doorDefs }) {
         for (const b of body) {
           if (!overlaps(a.box, b.box)) continue;
           for (const p of rest[index].samples) {
-            const q = rotateZ(p, rest[index].p.pivot, -deg * Math.PI / 180);
+            const q = rotateZ(p, rest[index].p.pivot, (rest[index].p.rotationSign ?? -1) * deg * Math.PI / 180);
             pointWorst = record(pointWorst, b.depth(q), a, b, q);
           }
           for (const p of b.verts) pointWorst = record(pointWorst, a.depth(p), a, b, p);
@@ -198,9 +198,9 @@ export function sweepDoors({ parts, doorDefs }) {
     report.doors[def.id] = { angles: results.length, fixedClosedParts: body.length, results,
       violations: results.filter((r) => Math.max(r.pointWorst.depth, r.surfaceWorst.depth) > POLICY.penetrationCm) };
   }
-  const [front, rear] = Object.values(doorPoses);
+  const all = Object.values(doorPoses);
   // Independent opening angles, not just equal fractions. AABB rejects only provably disjoint pairs.
-  for (const a of front) for (const b of rear) {
+  for (let i = 0; i < all.length; i++) for (let j = i + 1; j < all.length; j++) for (const a of all[i]) for (const b of all[j]) {
     report.bothDoors.poses++;
     if (!overlaps(a.box, b.box)) continue;
     for (const x of a.moving) for (const y of b.moving) {

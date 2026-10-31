@@ -126,6 +126,7 @@ MOCK 시나리오 버튼은 새 관측값을 만듭니다. 저장된 관측값�
 - [P1-B SDK 구현·실행 결과](docs/pleos-sdk-integration.md)
 - [STALE 표시 정책 검토 (후속)](docs/stale-policy-review.md)
 - [Anatomy 기반 차량 시각화 (P2-A)](docs/anatomy-visualization.md)
+- [Envelope SUV geometry profile (P2-A3-1)](docs/p2-a3-1-vehicle-geometry-profile.md)
 - [공식 문서 근거와 실현 가능성](docs/feasibility.md)
 - [P1 진입 조건 및 로드맵](docs/roadmap.md)
 - [P0 검증 결과, 복구 내역, 실행 명령](docs/validation-report.md)

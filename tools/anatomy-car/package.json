@@ -6,7 +6,10 @@
     "build": "node build.mjs --audit",
     "export": "node geometry-export/export.mjs",
     "test": "node --test test/*.test.mjs",
-    "verify": "node geometry-export/verify.mjs"
+    "verify": "node geometry-export/verify.mjs",
+    "envelope:generate": "node envelope/build.mjs --generate",
+    "envelope:verify": "node envelope/build.mjs --verify",
+    "envelope": "node envelope/build.mjs"
   },
   "devDependencies": {
     "gltf-validator": "2.0.0-dev.3.10"
