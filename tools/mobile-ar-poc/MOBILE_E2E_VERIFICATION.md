@@ -1,5 +1,7 @@
 # QR-AR-01.2 — 모바일 End-to-End 검증
 
+후속 승인·실제 배포 완료 후의 최신 상태는 [HTTPS 스테이징](HTTPS_STAGING.md)을 참조한다. 아래 AR012_BLOCKED_HTTPS는 이 단계 당시의 보존 기록이다.
+
 2026-10-31. 시작 커밋 `9225bfcbe13e352f3b71421d4001f9884f6c0357`, 기존 [Draft PR #18](https://github.com/ppsssj/CarScope/pull/18).
 
 **현재 판정: `AR012_BLOCKED_HTTPS`.** 안전한 실제 HTTPS 경로를 확보하지 못했다. 설치·로그인·사설 Serve 노출에 대한 사용자 승인을 요청했으며 아직 실행하지 않았다. 실제 스마트폰 제어도 불가능하므로 Android Chrome/iPhone Safari는 모두 NOT_RUN이다. 실행 절차가 있다는 이유로 READY_FOR_MANUAL_TEST나 E2E_VALIDATED로 판정하지 않는다.
