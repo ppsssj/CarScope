@@ -1,7 +1,7 @@
 // External-only shell/frunk sidecar. Same geometry as SVG and browser; original GLB is never rewritten.
 import { writeGlb, toGltf, dirToGltf } from '../anatomy-car/geometry-export/gltf.mjs';
 
-export function frunkGlb(shell, frunk, deg = 0) {
+export function frunkGlb(shell, frunk, deg = 0, extraFixedParts = []) {
   if (!Number.isFinite(deg) || deg < 0 || deg > 60) throw RangeError('frunk GLB angle 0..60');
   const point = frunk.axis.point;
   const nodeFor = (p) => {
@@ -14,11 +14,12 @@ export function frunkGlb(shell, frunk, deg = 0) {
     }
     return { name: p.id, mesh: { primitives: [{ positions, normals, indices, material: p.palettes[0] }] }, extras: p.meta };
   };
-  const fixed = [...shell.panels, ...frunk.parts.filter((p)=>!p.moving)].map(nodeFor);
+  const fixed = [...shell.panels, ...frunk.parts.filter((p)=>!p.moving), ...extraFixedParts].map(nodeFor);
   const moving = frunk.parts.filter((p)=>p.moving).map(nodeFor), pivotIndex = fixed.length;
   const rad = deg*Math.PI/180;
   const pivot = { name: 'frunk-cover-pivot', translation: toGltf(point), rotation: [0,0,Math.sin(rad/2),Math.cos(rad/2)], children: moving.map((_,i)=>pivotIndex+1+i), extras: { ...frunk.axis, angle: deg, angles: 'SIMULATION_ONLY', maximumAngle: 'UNVERIFIED' } };
   return writeGlb({ nodes: [...fixed, pivot, ...moving], roots: [...fixed.map((_,i)=>i), pivotIndex], materials: {
     trim: { color:'#2b2e33', roughness:0.88 }, doorInner: { color:'#4b5058', roughness:0.88 }, paint: { color:'#848b91', roughness:0.5 },
+    ...(extraFixedParts.length ? { glass: { color:'#247dbc', roughness:0.75 } } : {}),
   }, extras: { note:'Estimated shell/frunk sidecar, align with the unchanged local IONIQ 5 GLB. Not Hyundai CAD; no source model geometry included.', cavityLitres:frunk.cavityLitres } });
 }

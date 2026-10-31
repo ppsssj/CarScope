@@ -55,7 +55,7 @@ export function attachFrunk({ scene, shell, others, hood, camera, canvas, dom, h
     if (tween) { cancelAnimationFrame(tween.frame); tween.done({ accepted: false, reason: 'superseded' }); }
     return new Promise((done) => {
       const start = angle, t0 = performance.now(); tween = { done, frame: null };
-      const step = (now) => { const t = Math.min(1, (now-t0)/duration), e = t*t*(3-2*t); const result = setAngle(start+(target-start)*e, true);
+      const step = (now) => { const t = Math.max(0, Math.min(1, (now-t0)/duration)), e = t*t*(3-2*t); const result = setAngle(start+(target-start)*e, true);
         if (!result.accepted || t === 1) { tween = null; done(result); check(); } else tween.frame = requestAnimationFrame(step); };
       tween.frame = requestAnimationFrame(step);
     });

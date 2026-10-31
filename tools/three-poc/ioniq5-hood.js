@@ -11,6 +11,7 @@ import { staticScene, meshClearance, baselineContacts } from "./ioniq5-asset/col
 import { attachFrontCompartment } from "./front-compartment-view.js";
 import { attachFrunk } from "./frunk-view.js";
 import { frunkTransition } from "./ioniq5-asset/frunk.mjs";
+import { attachServiceComponents } from "./service-components-view.js";
 
 const params = new URLSearchParams(location.search);
 window.__labLog = [];
@@ -125,7 +126,7 @@ function animateTo(target, ms = 1400) {
   }
   return new Promise((done) => {
     const from = S.angle, t0 = performance.now();
-    S.tween = (now) => { const t = Math.min(1, (now - t0) / ms); setAngle(from + (target - from) * ease(t)); if (t >= 1) { S.tween = null; setAngle(target); done(); } };
+    S.tween = (now) => { const t = Math.max(0, Math.min(1, (now - t0) / ms)); setAngle(from + (target - from) * ease(t)); if (t >= 1) { S.tween = null; setAngle(target); done(); } };
   });
 }
 
@@ -141,7 +142,8 @@ function useView(v) {
   const c = new THREE.Vector3(0, 0.75, 0), hoodC = toGltf([160, 0, 100]);
   const views = { front: [c, [1, 0.25, 0], 6.5], side: [c, [0, 0.12, -1], 6.8], iso: [c, [0.75, 0.45, -0.85], 7.2], top: [c, [0.001, 1, 0], 9.0], bay: [toGltf([155, 0, 62]), [1.0, 1.35, -0.3], 3.3],
     // P3-A2.1 compartment close-ups
-    bayiso: [toGltf([160, 0, 70]), [0.75, 0.9, -0.85], 3.2], baytop: [toGltf([160, 0, 70]), [0.55, 1, 0.001], 3.2], bayside: [toGltf([150, 0, 85]), [0, 0.2, -1], 3.4] };
+    bayiso: [toGltf([160, 0, 70]), [0.75, 0.9, -0.85], 3.2], baytop: [toGltf([160, 0, 70]), [0.55, 1, 0.001], 3.2], bayside: [toGltf([150, 0, 85]), [0, 0.2, -1], 3.4],
+    washer: [toGltf([130, -48, 84]), [0.8, 1.5, 1.1], 1.8] };
   const [target, dir, dist] = views[v] ?? views.iso;
   camera.position.copy(target).add(new THREE.Vector3(...dir).normalize().multiplyScalar(dist));
   controls.target.copy(target);
@@ -221,6 +223,9 @@ loader.load(params.get("model") ?? "./external/ioniq5.glb", async (gltf) => {
   S.frunk = attachFrunk({ scene, shell: S.fc.shell, others: S.others, hood: S.closedCar, camera, canvas: renderer.domElement, dom: document, hoodState: () => ({ angle: S.angle, axis: S.axis }), log });
   $("frunk").addEventListener("change", (e) => { if (e.target.checked) setShell({ shell: true }); });
   window.__frunk = S.frunk;
+  S.services = attachServiceComponents({ scene, shell: S.fc.shell, camera, canvas: renderer.domElement, dom: document, log, onSelect: () => { S.fc.select(null); S.frunk.select(null); } });
+  window.__services = S.services;
+  $("focusWasher").onclick = async () => { setShell({ shell: true }); S.frunk.setVisible(true); S.services.setVisible(true); useAxis("A"); await animateTo(60); useView("washer"); S.services.select("washer-fluid-cap"); };
   if (params.get("shell") === "1") setShell({ shell: true });
   useAxis(params.get("axis") ?? "A");
   const gl = renderer.getContext(), dbg = gl.getExtension("WEBGL_debug_renderer_info");
@@ -258,7 +263,7 @@ $("zones").addEventListener("change", (e) => setShell({ zones: e.target.checked 
 $("shellPart").addEventListener("change", (e) => setShell({ part: e.target.value || null }));
 let downAt = null;
 renderer.domElement.addEventListener("pointerdown", (e) => { downAt = [e.clientX, e.clientY]; });
-renderer.domElement.addEventListener("pointerup", (e) => { if (downAt && Math.hypot(e.clientX - downAt[0], e.clientY - downAt[1]) < 4 && !S.frunk?.pick(e.clientX, e.clientY)) S.fc?.pick(e.clientX, e.clientY, renderer.domElement); });
+renderer.domElement.addEventListener("pointerup", (e) => { if (downAt && Math.hypot(e.clientX - downAt[0], e.clientY - downAt[1]) < 4 && !S.services?.pick(e.clientX, e.clientY) && !S.frunk?.pick(e.clientX, e.clientY)) S.fc?.pick(e.clientX, e.clientY, renderer.domElement); });
 document.querySelectorAll("[data-view]").forEach((b) => b.addEventListener("click", () => useView(b.dataset.view)));
 addEventListener("resize", () => { camera.aspect = innerWidth / innerHeight; shiftView(); renderer.setSize(innerWidth, innerHeight); });
 

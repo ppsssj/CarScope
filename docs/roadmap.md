@@ -42,6 +42,8 @@
 
 ## P2 — 자산 및 제품 수준 UI
 
+**P3-A2.3 (2026-10-31 UTC)**: PR #19 병합 main에서 워셔액 주입구 몸체와 안정적인 `washer-fluid-cap`을 추정 형상으로 추가했습니다. 캔버스 선택·강조·점검 안내·근접 카메라가 있는 debug PoC입니다. 나머지 냉각수/LCW/브레이크액/12V/퓨즈박스는 공식 2022 UK 설명서의 존재·그림 방향을 기록한 예약 영역이며, 정확 형상과 대상 시장/좌우 일치는 UNVERIFIED입니다. 서비스 286행 정확 검사와 기존 프렁크 4,148행 회귀, 닫힌 SVG 동일성·GLB·브라우저를 검증했습니다. [출처·검증·성능·외부 증거](p3-a2-3-service-components.md)
+
 **P3-A2.2 (2026-10-31 UTC)**: P3-A2.1 Shell의 FrunkZone 안에 추정 57 L 수납함·별도 덮개·레버와 debug 개폐 PoC를 추가했습니다. 판정 `P3A22_ESTIMATED_FRUNK_VALIDATED`입니다. 정확 삼각형 검사 4,148개 샘플 행에서 결함 교차 0, 닫힌 SVG 바이트 동일, GLB 0/60° 좌표·강체 round trip과 브라우저 20자세·개폐 순서 제약을 검증했습니다. 형상·치수는 ESTIMATED이며 힌지 UNVERIFIED, 각도 SIMULATION_ONLY입니다. OEM/VDA·연속 무충돌·Android 통합 검증은 아닙니다. [구현·출처·검증·외부 증거 인덱스](p3-a2-2-frunk-modeling.md)
 
 **P3-A2.1 (2026-10-31)**: 보닛 아래 빈 외피를 막는 전방 구획 Shell(벌크헤드·카울 커버, 좌우 에이프런과 스트럿 타워 캡, 중앙 웰과 좌우 선반이 있는 하부 라이너, 래치 크로스멤버, 앞 슈라우드)과 FrunkZone·서비스 영역 예약을 추가했습니다. 판정 `P3A21_SHELL_VALIDATED`입니다. 정확 검사 결과 차체·패널 간 결함 0이고, 보닛 축 A/C 0–60°(1°, SIMULATION_ONLY)에서 새 교차가 없습니다. 열었을 때 바닥판·실내 노출은 0입니다. 패널은 사용설명서 그림을 참고한 ESTIMATED_GEOMETRY이며 OEM 형상이 아닙니다. [구조·근거·검증·P3-A2.2 조건](p3-a2-1-front-compartment-shell.md)
