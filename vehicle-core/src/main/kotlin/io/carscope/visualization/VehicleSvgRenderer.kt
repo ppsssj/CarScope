@@ -9,32 +9,55 @@ import io.carscope.vehicle.DoorId
  * `data-state`, whose first `<rect>` is the state chip and whose first `<text>` is the state name.
  * The near-side doors (FRONT_LEFT, REAR_LEFT) are also drawn on the car, open or closed; the
  * right-side doors are hidden by the body at this camera, so they appear in the inset only.
+ *
+ * P2-A8: the drawing comes from a [VehicleVisualAsset]. `render(diagram)` keeps using the bundled
+ * reference asset and its output is unchanged. A non-default visual profile additionally carries
+ * its id and, when it has no open door shape, `data-pose="UNAVAILABLE"` plus a note, so an OPEN
+ * reading drawn on closed geometry is never mistaken for an open-door drawing.
  */
 object VehicleSvgRenderer {
     private const val INSET_W = 290
 
-    fun render(diagram: VehicleDiagram): String = buildString {
-        val car = AnatomyCarAsset.instance
+    fun render(diagram: VehicleDiagram): String = render(diagram, VehicleVisualAsset.default)
+
+    fun render(diagram: VehicleDiagram, asset: VehicleVisualAsset): String = buildString {
+        val car = asset.car
+        val profile = asset.profile
+        val annotated = profile != VisualProfile.DEFAULT
         val width = car.width + INSET_W
         append("""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 $width ${car.height}" role="img" aria-labelledby="carscope-title carscope-desc">""")
-        append("<title id=\"carscope-title\">${escapeXml("CarScope ${diagram.origin.name} door diagram")}</title>")
-        append("<desc id=\"carscope-desc\">${escapeXml(description(diagram))}</desc>")
+        val title = "CarScope ${diagram.origin.name} door diagram" + if (annotated) " (visual profile ${profile.id})" else ""
+        append("<title id=\"carscope-title\">${escapeXml(title)}</title>")
+        append("<desc id=\"carscope-desc\">${escapeXml(description(diagram, if (annotated) profile else null))}</desc>")
         val drawn = mutableSetOf<DoorId>()
         for (section in car.sections) {
             when (section) {
                 is AnatomyCarAsset.Section.Static -> append(section.markup)
                 is AnatomyCarAsset.Section.Door -> {
                     val state = stateOf(diagram, section.door)
-                    if (section.open == (state == DoorVisualState.OPEN)) {
-                        appendDoor(car.width, section.door, state, section)
+                    // Closed-only drawings never pick an "open" section: there is no open shape.
+                    val wanted = profile.doorPose == DoorPoseSupport.OPEN_AND_CLOSED && state == DoorVisualState.OPEN
+                    if (section.open == wanted) {
+                        appendDoor(car.width, section.door, state, section, if (annotated) doorPose(profile, state) else null)
                         drawn += section.door
                     }
                 }
             }
         }
         appendInset(car.width, car.height, diagram)
-        for (door in DoorId.entries) if (door !in drawn) appendDoor(car.width, door, stateOf(diagram, door), null)
+        if (annotated) appendProfileNotes(car.width, car.height, diagram, profile)
+        for (door in DoorId.entries) if (door !in drawn) {
+            val state = stateOf(diagram, door)
+            appendDoor(car.width, door, state, null, if (annotated) doorPose(profile, state) else null)
+        }
         append("</svg>")
+    }
+
+    /** Shape drawn for a door: the reported state is separate from whether the drawing can show it. */
+    fun doorPose(profile: VisualProfile, state: DoorVisualState): DoorPose = when {
+        state != DoorVisualState.OPEN -> DoorPose.CLOSED
+        profile.doorPose == DoorPoseSupport.OPEN_AND_CLOSED -> DoorPose.OPEN
+        else -> DoorPose.UNAVAILABLE
     }
 
     fun partId(door: DoorId): String = when (door) {
@@ -75,10 +98,12 @@ object VehicleSvgRenderer {
 
     private fun stateOf(diagram: VehicleDiagram, door: DoorId) = diagram.doors[door] ?: DoorVisualState.UNAVAILABLE
 
-    private fun StringBuilder.appendDoor(carWidth: Int, door: DoorId, state: DoorVisualState, section: AnatomyCarAsset.Section.Door?) {
+    private fun StringBuilder.appendDoor(carWidth: Int, door: DoorId, state: DoorVisualState, section: AnatomyCarAsset.Section.Door?, pose: DoorPose? = null) {
         val color = colorOf(state)
         val chip = Inset.chip(carWidth, door)
-        append("""<g id="${partId(door)}" data-state="${state.name}">""")
+        append("""<g id="${partId(door)}" data-state="${state.name}"""")
+        if (pose != null) append(""" data-pose="${pose.name}"""")
+        append(">")
         append("""<rect x="${chip.x}" y="${chip.y}" width="${Inset.CHIP_W}" height="${Inset.CHIP_H}" rx="3" fill="$color" stroke="#233448" stroke-width="1.2"/>""")
         append("""<text x="${chip.labelX}" y="${chip.y + Inset.CHIP_H / 2 + 4}" text-anchor="${chip.anchor}" font-size="12" font-family="sans-serif" fill="#233448">${state.name}</text>""")
         if (section != null) {
@@ -103,8 +128,21 @@ object VehicleSvgRenderer {
         append("""<text x="$cx" y="${height - 10}" text-anchor="middle" font-size="10" font-family="sans-serif" fill="#57606a">RIGHT DOORS: INSET ONLY</text>""")
     }
 
-    private fun description(diagram: VehicleDiagram): String = DoorId.entries.joinToString("; ") {
-        "${it.name}: ${(diagram.doors[it] ?: DoorVisualState.UNAVAILABLE).name}"
+    /** Profile id above the inset; a note when an OPEN reading is drawn on closed geometry. */
+    private fun StringBuilder.appendProfileNotes(carWidth: Int, height: Int, diagram: VehicleDiagram, profile: VisualProfile) {
+        val cx = Inset.centre(carWidth)
+        append("""<text x="$cx" y="${Inset.TOP - 44}" text-anchor="middle" font-size="10" font-family="sans-serif" fill="#57606a">${escapeXml("PROFILE ${profile.id}")}</text>""")
+        if (DoorId.entries.any { doorPose(profile, stateOf(diagram, it)) == DoorPose.UNAVAILABLE }) {
+            append("""<text x="$cx" y="${height - 26}" text-anchor="middle" font-size="11" font-family="sans-serif" fill="#b93817" data-note="open-pose-unavailable">${escapeXml(OPEN_POSE_NOTE)}</text>""")
+        }
+    }
+
+    /** Shown whenever an OPEN door is drawn without an open shape. */
+    const val OPEN_POSE_NOTE = "OPEN · 개폐 형상 미지원"
+
+    private fun description(diagram: VehicleDiagram, profile: VisualProfile? = null): String = DoorId.entries.joinToString("; ") {
+        val state = diagram.doors[it] ?: DoorVisualState.UNAVAILABLE
+        "${it.name}: ${state.name}" + if (profile != null && doorPose(profile, state) == DoorPose.UNAVAILABLE) " (open shape unavailable)" else ""
     }
 
     /** Plan-view inset to the right of the car: the four doors in their real positions. */

@@ -42,6 +42,8 @@
 
 ## P2 — 자산 및 제품 수준 UI
 
+**P2-A8 (2026-10-31)**: 렌더러가 `VehicleVisualAsset`을 입력으로 받고, 명시적 `VisualProfile`(기본 `pleos-avd-reference`)과 대체 경로가 있는 리졸버를 추가했습니다. 기본 SVG 출력은 바이트 단위로 같습니다. Debug 전용 화면에서 `run-as`로 넣은 IONIQ 5 자산이 Pleos AVD WebView에 실제 표시되었고, OPEN은 `DoorPose.UNAVAILABLE`과 "개폐 형상 미지원"으로 구분됩니다. Release APK/AAB에는 파생 자산과 debug 경로가 없습니다. 배포 승인은 아닙니다. [아키텍처·AVD 실측·P3-A 검토](p2-a8-android-runtime-validation.md)
+
 **P2-A7 (2026-10-31)**: IONIQ 5 GLB에서 기존 시점·팔레트·선 규칙의 Anatomy 스타일 SVG를 자동 생성하는 메시 어댑터(`tools/anatomy-car/mesh-svg`)를 추가했습니다. 같은 카메라 GPU 렌더와 비교해 실루엣 IoU 0.998, 부품 일치 99.6%, 히트 테스트 9/9입니다(156 KB, 118 요소). 기존 렌더러는 코드 변경 없이 4개 상태를 그렸지만(로컬 평가), 앱 통합·열린 도어·모델 파생 SVG 배포는 보류합니다. [어댑터·비교·Android 평가](p2-a7-ioniq5-anatomy-svg.md)
 
 **P2-A6 (2026-10-31)**: OpenX IONIQ 5(2022 Long Range RWD) `.blend`를 Blender 없이 GLB로 변환하고(Khronos 0/0, `.xoma`·원본 좌표 재계산 일치), 별도 `hyundai-ioniq5-2022` 프로필과 브라우저 부품 선택 PoC를 추가했습니다. 기본 차량은 `pleos-avd-reference`로 유지합니다. 배터리·모터·서스펜션은 원본에 없어 NOT_AVAILABLE, 도어 힌지 축은 UNVERIFIED, 원본·GLB는 저장소 밖에 둡니다. [변환·분석·제원 비교·한계](p2-a6-ioniq5-asset.md)

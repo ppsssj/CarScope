@@ -116,14 +116,17 @@ export async function buildIoniqSvg(glbBytes, { samples = 4, tolerance = 1.5, mi
   return { anatomy, P, bounds, parts, order, ids, problems, result, svg, idSvg, halo, idColors: order.map((id, i) => ({ id, source: parts[i].source, color: idColor(i) })) };
 }
 
-/** App asset text (#carscope-anatomy-car 1). Doors have no verified hinge, so both variants hold the closed shape. */
+/**
+ * App asset text (#carscope-anatomy-car 1). Doors have no verified hinge, so only closed sections are
+ * written and the asset says so (`#door-pose closed-only`); VehicleVisualAsset rejects open sections.
+ */
 export function partsAsset(built, { rev }) {
   const doors = ["door-front-left", "door-rear-left", "door-front-right", "door-rear-right"];
   const { result, order, halo } = built;
   const touches = (s, id) => s.parts.includes(id);
   const staticIds = order.filter((id) => !doors.includes(id));
   const staticStrokes = result.strokes.filter((s) => !doors.some((d) => touches(s, d)));
-  const lines = ["#carscope-anatomy-car 1", `#viewbox ${VIEW.width} ${VIEW.height}`, `#source anatomy-kit ${rev} mesh-svg openx-ioniq5`, "@static", halo + fillMarkup(result.fills, staticIds) + strokeMarkup(staticStrokes)];
+  const lines = ["#carscope-anatomy-car 1", `#viewbox ${VIEW.width} ${VIEW.height}`, `#source anatomy-kit ${rev} mesh-svg openx-ioniq5`, "#visual-profile hyundai-ioniq5-2022", "#door-pose closed-only", "@static", halo + fillMarkup(result.fills, staticIds) + strokeMarkup(staticStrokes)];
   const assigned = new Set();
   const missing = [];
   for (const door of doors) {
@@ -133,7 +136,7 @@ export function partsAsset(built, { rev }) {
     const markup = fillMarkup(result.fills, [door]) + strokeMarkup(own);
     // Accent = the door's visible region as closed rings (chains with the door on exactly one side).
     const accent = regionOutline(result.strokes, door, built.anatomy.k);
-    for (const variant of ["closed", "open"]) lines.push(`@door ${door} ${variant}`, markup, `@accent ${door} ${variant}`, accent);
+    lines.push(`@door ${door} closed`, markup, `@accent ${door} closed`, accent);
   }
   return { text: lines.join("\n") + "\n", missing };
 }
@@ -160,7 +163,7 @@ async function main(argv) {
     stats: { ...built.result.stats, msTotal: ms, svgElements: (built.svg.match(/<(path|g|circle)\b/g) ?? []).length },
     parts: built.order.map((id) => ({ id, source: built.parts.find((p) => p.id === id).source, regions: built.result.fills.filter((f) => f.id === id).length })),
     hiddenFromView: built.order.filter((id) => !built.result.fills.some((f) => f.id === id)),
-    partsAsset: { missingDoorSections: asset.missing, note: "open variant repeats the closed shape: hinge axes UNVERIFIED, no open pose" },
+    partsAsset: { missingDoorSections: asset.missing, note: "closed sections only (#door-pose closed-only): hinge axes UNVERIFIED, no open pose" },
     files,
   };
   files.push(write("svg-report.json", JSON.stringify(report, null, 2) + "\n"));

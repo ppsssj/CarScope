@@ -22,11 +22,18 @@ import io.carscope.vehicle.VehicleDataSource
 import io.carscope.vehicle.VehicleSnapshot
 import io.carscope.app.pleos.PleosVehicleDataSource
 import io.carscope.app.pleos.SdkDoorSession
+import io.carscope.visualization.VehicleDiagram
 import io.carscope.visualization.VehicleDiagramMapper
 import io.carscope.visualization.VehicleSvgRenderer
+import io.carscope.visualization.VehicleVisualAsset
 import java.time.Instant
 
-class MainActivity : Activity() {
+/**
+ * Main screen. The drawing always comes from [visualAsset]; release builds use the bundled reference.
+ * The protected hooks exist so a debug-only subclass (src/debug) can select another visual profile
+ * and record timings; their defaults do nothing and change no output.
+ */
+open class MainActivity : Activity() {
     private val mockSource = MockVehicleDataSource()
     private lateinit var pleosSource: PleosVehicleDataSource
     private var usePleos = false
@@ -176,15 +183,36 @@ class MainActivity : Activity() {
                 appendLine("${door.name}: ${diagram.doors.getValue(door).name}${reason?.let { " ($it)" } ?: ""}")
             }
             if (usePleos) appendLine(pleosSource.status)
+            visualStatus(diagram)?.let { appendLine(it) }
         }
-        val svg = VehicleSvgRenderer.render(diagram)
+        val renderStarted = System.nanoTime()
+        val svg = VehicleSvgRenderer.render(diagram, visualAsset())
+        val renderNanos = System.nanoTime() - renderStarted
         // Self-contained, typed SVG. No scripts, bridge, network assets, or untrusted text.
         // Give SVG both viewport dimensions so its viewBox fits inside the fixed-height WebView.
         val html = """<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'"><title>CarScope ${snapshot.origin.name}</title><style>html,body{margin:0;inline-size:100%;block-size:100%}svg{display:block;inline-size:100%;block-size:100%}</style></head><body>$svg</body></html>"""
         if (svg != lastSvg) {
-            diagramView?.loadDataWithBaseURL("https://carscope.invalid/", html, "text/html", "UTF-8", null)
+            diagramView?.let { view ->
+                view.loadDataWithBaseURL("https://carscope.invalid/", html, "text/html", "UTF-8", null)
+                onDiagramLoaded(view, svg, renderNanos)
+            }
             lastSvg = svg
         }
+    }
+
+    /** Drawing for the diagram. Release: always the bundled reference profile. */
+    protected open fun visualAsset(): VehicleVisualAsset = VehicleVisualAsset.default
+
+    /** Extra summary line describing the drawing, or null (release). */
+    protected open fun visualStatus(diagram: VehicleDiagram): String? = null
+
+    /** Called after a new SVG was handed to the WebView. */
+    protected open fun onDiagramLoaded(view: WebView, svg: String, renderNanos: Long) = Unit
+
+    /** Draw again even if the SVG text did not change (e.g. after the drawing was replaced). */
+    protected fun redrawDiagram() {
+        lastSvg = null
+        renderSnapshot()
     }
 
     override fun onStart() {

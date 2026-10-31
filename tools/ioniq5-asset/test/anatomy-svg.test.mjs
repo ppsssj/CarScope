@@ -37,7 +37,7 @@ test("door and wheel IDs come from position and must agree with the OpenX names"
   assert.ok(partIds(swapped).problems.some((p) => /Door_Left_0: position says door-rear-left/.test(p)));
 });
 
-test("app asset text keeps the #carscope-anatomy-car 1 grammar; open repeats closed", () => {
+test("app asset text keeps the #carscope-anatomy-car 1 grammar and declares closed-only doors", () => {
   const k = { pathOf: (pts, closed) => pts.map(([x, y], i) => `${i ? "L" : "M"}${x} ${y}`).join("") + (closed ? "Z" : "") };
   const sq = [[0, 0], [10, 0], [10, 10], [0, 10], [0, 0]];
   const built = {
@@ -51,17 +51,20 @@ test("app asset text keeps the #carscope-anatomy-car 1 grammar; open repeats clo
   const lines = text.split("\n");
   assert.equal(lines[0], "#carscope-anatomy-car 1");
   assert.equal(lines[1], "#viewbox 640 330");
-  assert.equal(lines[3], "@static");
+  assert.equal(lines[3], "#visual-profile hyundai-ioniq5-2022");
+  assert.equal(lines[4], "#door-pose closed-only");
+  assert.equal(lines[5], "@static");
   assert.deepEqual(missing, ["door-rear-left", "door-front-right", "door-rear-right"]);
-  for (const v of ["closed", "open"]) {
+  assert.equal(lines.indexOf("@door door-front-left open"), -1, "no fake open pose");
+  for (const v of ["closed"]) {
     const at = lines.indexOf(`@door door-front-left ${v}`);
     assert.ok(at > 0);
     assert.equal(lines[at + 2], `@accent door-front-left ${v}`);
     assert.match(lines[at + 3], /^M0 0(L\d+ \d+){3,4}Z$/, "accent is one closed ring");
   }
   // Body lines never start with '@' or '#' (renderer parse rule): markup, or path data after @accent.
-  lines.forEach((l, i) => { if (i > 2 && l && !/^[@#]/.test(l)) assert.match(l, lines[i - 1].startsWith("@accent") ? /^M/ : /^</); });
-  assert.equal(lines.filter((l) => l.startsWith("@door")).length, 2);
+  lines.forEach((l, i) => { if (i > 4 && l && !/^[@#]/.test(l)) assert.match(l, lines[i - 1].startsWith("@accent") ? /^M/ : /^</); });
+  assert.equal(lines.filter((l) => l.startsWith("@door")).length, 1);
 });
 
 test("the CLI refuses to write model-derived SVG into the repository", () => {
