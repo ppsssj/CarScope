@@ -1,141 +1,161 @@
 # CarScope
 
-차량 상태를 `VehicleDataSource → VehicleSnapshot → VehicleDiagram → SVG → Android WebView`로 표시합니다. Mock과 앱 모듈의 Pleos SDK 2.3.2 읽기 전용 어댑터를 분리했습니다. PLEOS는 ROW_1_LEFT 한 도어만 대상으로 하며 실패 시 Mock으로 자동 대체하지 않습니다. 실제 서비스·이벤트·SVG 판정은 [P1-B 연동 기록](docs/pleos-sdk-integration.md)을 확인하세요.
+**3D 차량 탐색에서 스마트폰 카메라 안내까지 이어지는 인터랙티브 차량 점검 프로토타입**
 
-P1-B 런타임 T1~T10은 **집 PC에서 PASS**입니다. 실제 SDK 초기화·Door capability·현재 값, Virtual Console 도어 이벤트→SVG OPEN/CLOSED, SDK 모드 Activity 재생성, Mock 전체 회귀를 확인했습니다. 같은 날 연구실 PC에서는 OEM/framework ANR·VHAL/system 사망으로 BLOCKED였고, 그 기록은 보존합니다. 오류 경로 런타임 검증과 [STALE 정책](docs/stale-policy-review.md) 결정이 남아 있어 P2 진입은 보류합니다.
+CarScope는 차량 전체 모델에서 점검 부위를 찾아 확대하고, 점검 절차를 확인한 뒤 QR로 모바일 카메라 보조 화면에 진입하는 사용자 흐름을 구현합니다. Android Automotive OS(AAOS) 및 Pleos SDK의 **읽기 전용 차량 상태 관측**은 별도 경계에서 검증하고 있습니다.
 
-차량 도식은 [Anatomy](https://github.com/wheresryan22/anatomy) kit로 만든 아이소메트릭 세단입니다(P2-A, [기록](docs/anatomy-visualization.md)). 근거리 도어 2개는 차량 위에서 열림/닫힘으로, 네 도어 모두는 평면도 inset에 표시됩니다.
+> **현재 범위:** 브라우저 기반 차량 점검 UX와 모바일 QR-AR PoC의 연결이 구현됐습니다. 이 3D 점검 화면이 Android/Pleos 앱에 통합된 것은 **아직 아닙니다**. 보닛 회전과 부품 위치는 시뮬레이션·추정값이며, QR-AR은 워셔액 주입구를 의미적으로 인식하지 않습니다.
 
-[P2-A2.1 Geometry Correctness](docs/p2-a21-geometry-correctness.md)는 SVG/3D 화면 기저를 맞추고 뒷도어·힌지를 수정합니다. Anatomy pin은 유지하며, 별도 Geometry CI에서 SVG 재생성/audit·GLB·메시·좌표·강체성·샘플링 충돌·검증 실패 시 nonzero 종료를 검사합니다. [AGENTS.md](AGENTS.md)에 작업 경계를 기록했습니다.
+[차량 점검 UI](tools/three-poc/INSPECTION_UI.md) · [QR-AR 검증](tools/mobile-ar-poc/HTTPS_STAGING.md) · [Android/Pleos 연동](docs/pleos-sdk-integration.md) · [개발 로드맵](docs/roadmap.md)
 
-[P2-A3-0 Vehicle Identity Probe](docs/p2-a3-0-vehicle-identity-probe.md)는 debug 전용 진단과 실제 AVD 반환값을 기록합니다. AAOS metadata는 PARTIAL이며 OEM 3D 차량과의 대응 관계는 UNVERIFIED입니다.
+## Preview
 
-[P2-A3-1 Sedan·SUV 이미지 갤러리](docs/visuals/p2-a3-1/README.md)에는 실제 CarScope SVG와 GLB 렌더링 PNG 11개가 있습니다. AAOS AVD 치수 기반의 참고 형상이며 OEM 외형 일치는 검증되지 않았습니다.
+![IONIQ 5 커뮤니티 참조 모델의 CarScope 브라우저 렌더링](docs/visuals/p2-a6/iso.png)
 
-[P2-A3-1.1 보닛 Loft Before/After](docs/visuals/p2-a3-1-1/README.md)는 동일 SUV의 기존 프리즘 보닛과 새 단면 보간 곡면을 실제 SVG·GLB 캡처로 비교합니다. [형상 설계와 검증 범위](docs/p2-a3-1-1-surface-loft.md)를 함께 확인하세요.
+*기존 P2-A6 3D 참조 모델 검증 캡처입니다. 최신 P3-A4 점검 UI의 화면 캡처는 아니며, 해당 UI는 `tools/three-poc/inspect.html`에서 실행합니다. 최신 UI 캡처는 로컬 외부 증거 폴더에 보관되어 있어 라이선스·공개 범위 확인 후 추가할 예정입니다.*
 
-[P2-A3-1.2 앞 펜더 Before/After](docs/visuals/p2-a3-1-2/README.md)는 보닛 경계와 휠 아치 주변의 실제 곡면 메시를 SVG·GLB PNG로 비교합니다. [설계·경계·검증 기록](docs/p2-a3-1-2-fender-surfacing.md)에 적용 범위와 한계를 명시했습니다.
+<details>
+<summary>추가 3D 검증 이미지 보기</summary>
 
-연구실/집 PC 설정과 clone·테스트·빌드·브랜치 운영은 [개발 환경 가이드](docs/development-setup.md)를 따릅니다. 원본 AVD 캡처·로그·SDK·AVD·APK·개인 설정은 Git에 포함하지 않습니다. P2-A3-1 갤러리에는 CarScope가 생성한 비식별 렌더링만 포함합니다. [G0 업로드 점검](docs/github-bootstrap.md)과 [현재 검증 상태](docs/validation-report.md)를 확인하세요.
-
-| 검증 범위 | 현재 상태 |
+| 부품 선택 검증 | 원본 차량 외피 숨김 검증 |
 | --- | --- |
-| P0 JVM / P1-A APK·Mock UI | PASS (당시 실행 범위) |
-| P2-A Anatomy 차량 시각화 | PASS (core 24 + app 19, AVD에서 SDK 도어 OPEN/CLOSED 반영) |
-| P2-A2 Anatomy-to-3D PoC | CONDITIONAL GO ([기록](docs/p2-a2-geometry-poc.md)). SVG가 거울상이라는 사실 발견 |
-| P2-A1 자동차 전용 kit 시각 개선 | 기술 PASS / 시각 NEEDS_REFINEMENT ([기록](docs/anatomy-visualization.md#p2-a1--자동차-전용-kit와-시각-개선)) |
-| P1-B JVM / APK build·install | 36 PASS / PASS |
-| SDK initialization / Door capability / Door state (집 PC) | PASS / PASS / PASS |
-| Door event / 실제 SDK SVG (집 PC) | PASS / PASS |
-| SDK 모드 Activity 재생성 / Mock 전체 회귀 (집 PC) | PASS / PASS |
-| 같은 항목 (연구실 PC) | BLOCKED (OEM/framework ANR, 기록 보존) |
-| 오류 경로 런타임 / release Service 측 확인 | NOT_RUN / 미관측 |
-| STALE 정책 | 설계 위험, [검토 문서](docs/stale-policy-review.md) |
+| ![도어 선택 레이캐스트 검증](docs/visuals/p2-a6/selected-door-front-left.png) | ![외피 숨김 시 실내 구조 검증](docs/visuals/p2-a6/shell-hidden.png) |
 
-## JVM CI
+두 이미지는 기존 엔지니어링 PoC의 캡처입니다. 최신 차량 점검 UI와 혼동하지 마세요.
 
-[JVM CI 실행 상태](https://github.com/ppsssj/CarScope/actions/workflows/jvm-ci.yml)는 `main` 대상 PR, `main` push, 수동 실행에서 Ubuntu/JDK 17과 Gradle Wrapper 8.14로 아래 core 테스트(P2-A 이후 24개)를 실행합니다. 이 workflow를 추가하는 PR의 실제 실행 결과를 확인해야 하며, 배지가 없거나 대기 중인 상태를 PASS로 해석하지 않습니다. 수동 실행은 workflow가 기본 브랜치에 반영된 뒤 사용할 수 있습니다.
+</details>
 
-```sh
-./gradlew -PcoreOnly=true :vehicle-core:test --rerun-tasks --console=plain
+## Inspection Flow
+
+```mermaid
+flowchart LR
+  A["3D 차량 홈"] --> B["차량 점검 시작"]
+  B --> C["보닛 강조 · 선택"]
+  C --> D["카메라 이동 · 보닛 개방"]
+  D --> E["워셔액 캡 강조 · 선택"]
+  E --> F["점검 방법 · 주의사항"]
+  F --> G["QR 스캔"]
+  G --> H["모바일 카메라 후보 안내"]
 ```
 
-단일 job/Gradle worker 최대 1개, 15분 제한, 이전 동일 ref 실행 취소를 적용합니다. 공식 action은 commit SHA로 고정하며 권한은 `contents: read`, 추가 사용자 Secrets는 없습니다. Android SDK 경로 환경변수를 비우고 SDK/Pleos SDK/AVD 설치나 emulator 실행을 하지 않습니다. 의존성은 처음에 공식 Gradle 배포 서버·Google Maven·Maven Central 등의 네트워크 접근이 필요합니다. 다운로드/DNS/TLS/HTTP 실패는 테스트 assertion 실패와 구분해 Actions 로그에서 확인합니다.
+- **3D 점검 UI (브라우저):** 3D 차량 회전·줌, 보닛 raycast 선택, 카메라 이동, 보닛 개폐 애니메이션, 워셔액 캡 `washer-fluid-cap` 강조, 점검 패널을 제공합니다.
+- **모바일 QR-AR (스마트폰 브라우저):** `#v=1&task=washer-fluid` 계약으로 이동해 카메라 영상에서 **파란색 영역 후보**를 2D 바운딩 박스로 표시합니다. 수동 안내와 카메라 중지·재시작을 지원합니다. 영상은 브라우저 내에서 처리하며 업로드하지 않습니다.
+- **Android/Pleos (별도 프로토타입):** Mock/Pleos 소스를 분리하고, Pleos SDK에서 읽은 도어 상태를 SVG로 반영합니다. 집 PC의 Pleos AVD에서 도어 이벤트 → SVG 변경을 확인했습니다. **Three.js 점검 UI가 Android 앱에 연결됐다는 뜻은 아닙니다.**
 
-**CI PASS의 범위는 순수 JVM 테스트와 Kotlin 로직뿐입니다.** app 합성 테스트 19개·Android APK·Pleos SDK 초기화·Vehicle Service 연결·실제 Door Event·SVG 실시간 갱신은 이 CI의 검증 대상이 아닙니다. P1-B 런타임 결과는 CI가 아니라 로컬 Pleos AVD 수동 검증의 결과입니다. GitHub hosted 이미지에 Android 도구가 미리 존재할 수 있어도 이 job은 이를 요구하거나 사용하지 않습니다.
+## Features & Status
 
-2026-10-30 P1-A 검증: core JUnit **17개 PASS**, Android debug APK 생성·서명 검증 PASS, Pleos API 34 AVD 설치·부팅 및 Mock UI/SVG 표시 확인. 실제 화면에서 발견한 SVG 잘림을 수정했습니다. 현재 PC의 메모리/GPU 제약으로 cold launch timeout과 SVG 갱신 지연이 있어 성능 검증은 통과하지 못했습니다. 자세한 명령·증거·미검증 범위는 [검증 보고서](docs/validation-report.md#p1-a--android-환경-및-mock-앱-실행-2026-10-30)를 참조하세요.
+| 기능 | 현재 범위 | 상태 |
+| --- | --- | --- |
+| 3D 차량 점검 UX | 차량 홈 → 보닛 → 워셔액 안내 → QR | 브라우저 PoC 구현 |
+| 전방 구획 | Shell, 프렁크, 워셔액 주입구 몸체·캡 | 추정 Geometry / 검증된 시뮬레이션 범위 |
+| 부품 인터랙션 | 부품 강조, 선택, 근접 카메라, 뒤로 가기, 취소·복원 | 브라우저 회귀 PASS |
+| 모바일 카메라 보조 | 색상 후보 오버레이, 수동 안내, 중지·재시작 | Galaxy Z Flip8 사용자 보고 검증 |
+| Pleos 연동 | 읽기 전용 ROW_1_LEFT 도어 관측 → Android SVG | Pleos AVD 특정 환경 PASS |
+| 기타 전방 점검 부품 | 냉각수·저전도 냉각수·브레이크액·12V 배터리·퓨즈박스 | 예약만 존재 · 실제 형상 미구현 |
+| Android 3D 점검 UI | Three.js 점검 UX의 앱 내 실행·통합 | **P3-A5 예정** |
 
-## 프로젝트 구조
+워셔액 캡·프렁크와 보닛의 형상, 회전축 및 좌표는 OEM CAD·실차 실측값이 아닙니다. 모바일의 파란 후보 박스는 실제 주입구의 식별 결과가 아닙니다.
 
-```text
-CarScope/
-├── app/                           # AAOS Activity, Mock/Pleos 선택, SDK 어댑터, WebView
-│   ├── build.gradle.kts
-│   └── src/main/
-│       ├── AndroidManifest.xml
-│       ├── java/io/carscope/app/MainActivity.kt
-│       ├── java/io/carscope/app/pleos/{PleosVehicleDataSource,SdkDoorSession}.kt
-│       └── res/values/strings.xml
-├── vehicle-core/                  # Android/SDK 의존성 없는 Kotlin JVM
-│   ├── build.gradle.kts
-│   └── src/
-│       ├── main/kotlin/io/carscope/
-│       │   ├── vehicle/{VehicleDataSource,MockVehicleDataSource}.kt
-│       │   └── visualization/{VehicleDiagram,VehicleSvgRenderer}.kt
-│       └── test/kotlin/io/carscope/vehicle/
-│           ├── VehiclePipelineTest.kt
-│           └── VehicleSvgSamples.kt
-├── scripts/validate-core.ps1       # 로컬 Gradle 배포본을 이용한 오프라인 대체 검증
-├── docs/{architecture,feasibility,roadmap,validation-report}.md
-├── docs/p1-a-environment.md         # 설치 범위·환경 진단·재실행 방법
-├── docs/development-setup.md        # Windows/두 PC 설정 및 브랜치 운영
-├── docs/evidence/                   # 공유 인덱스만 Git 포함, 원본 자료는 로컬 전용
-├── gradle/wrapper/                 # Gradle 8.14, 공식 배포본 checksum 고정
-├── build.gradle.kts
-├── settings.gradle.kts
-├── gradle.properties
-├── gradlew / gradlew.bat
-├── .gitattributes / .gitignore
-└── .tools/                        # Git 제외: 기존 bootstrap, 복구 사본, 원본 실행 로그
+## Architecture
+
+```mermaid
+flowchart TB
+  subgraph Browser["Browser · 3D Inspection PoC"]
+    UI["Three.js inspection UI"]
+    GEO["IONIQ 5 external GLB + estimated service geometry"]
+    UI --> GEO
+    UI --> QR["QR handoff contract"]
+  end
+  subgraph Mobile["Mobile browser · QR-AR PoC"]
+    QR --> CAM["Camera + 2D blue-region detector"]
+    CAM --> GUIDE["Candidate overlay / manual guide"]
+  end
+  subgraph Android["Android AAOS / Pleos · separate prototype"]
+    SDK["Mock / Pleos VehicleDataSource"] --> SNAP["VehicleSnapshot"]
+    SNAP --> MAP["VehicleDiagramMapper"]
+    MAP --> SVG["VehicleSvgRenderer"]
+    SVG --> WV["Android WebView · SVG"]
+  end
 ```
 
-## core 검증
+| 영역 | 주요 기술 및 역할 |
+| --- | --- |
+| 3D 프런트엔드 | JavaScript, Three.js, glTF/GLB, Raycaster, 상태 머신 |
+| 모바일 보조 | HTTPS, Web Camera API, Canvas, 2D 색상 후보 탐지, QR |
+| Android / 차량 데이터 | Kotlin, Android WebView, Pleos Vehicle SDK 2.3.2 |
+| Core | 순수 Kotlin JVM `vehicle-core` · 상태 매핑·SVG 렌더 |
+| 품질 검증 | Node 테스트, 브라우저 자동화, Geometry 회귀, GitHub Actions |
 
-필수: JDK 17. Gradle Wrapper는 Gradle 8.14를 사용합니다. 첫 실행은 배포본과 Maven 의존성 네트워크 접근이 필요할 수 있습니다. `coreOnly=true`를 주면 Android 모듈을 포함하지 않으므로 Android SDK 없이 검증할 수 있습니다. 루트의 공통 plugin classpath에는 AGP도 있으므로 처음에는 AGP/KGP 아티팩트 다운로드가 필요할 수 있습니다. 이는 Android SDK 설치와 별개입니다.
+## Getting Started
+
+### 1. 차량 점검 UI (로컬 브라우저)
+
+Node.js **22 이상**과, 별도로 권한을 확인하여 준비한 IONIQ 5 GLB가 필요합니다. 커뮤니티 원본 모델·변환 GLB는 저장소에 포함하지 않습니다. 변환 방법은 [IONIQ 5 자산 도구](tools/ioniq5-asset/README.md)를 참고하세요.
 
 ```powershell
-.\gradlew.bat -PcoreOnly=true :vehicle-core:check :vehicle-core:exportSvgSamples --console=plain
+cd tools/three-poc
+npm ci --ignore-scripts
+
+# 사용자가 로컬에서 준비한 외부 모델의 실제 경로로 교체
+$env:CARSCOPE_IONIQ5_GLB = 'C:\CarScope-External\ioniq5-carscope\hyundai_ioniq_5_2022.glb'
+
+# 선택 사항: 모바일 QR 스테이징 HTTPS origin
+# 미설정이면 QR 단계는 비활성 안내로 표시됩니다.
+$env:CARSCOPE_QR_AR_BASE_URL = 'https://carscope-qr-ar-staging.vercel.app/'
+
+$env:PORT = '8098'
+npm run serve
 ```
 
-캐시 준비 후에는 같은 명령에 `--offline`을 추가할 수 있습니다. 테스트 보고서는 `vehicle-core/build/reports/tests/test/index.html`, SVG 예제 4개는 `vehicle-core/build/validation/svg/`에 생성됩니다. SVG export 성공은 화면 렌더링 성공을 뜻하지 않습니다.
+브라우저에서 [http://127.0.0.1:8098/inspect.html](http://127.0.0.1:8098/inspect.html)을 엽니다. 상기 QR 스테이징은 **Vercel Authentication으로 접근이 제한**되어 있으며 일반 공개 데모가 아닙니다. 별도의 안전한 HTTPS origin을 사용해도 됩니다.
 
-Wrapper 다운로드가 불가능하면 이미 설치된 로컬 Gradle을 현재 셸 변수로만 선택할 수 있습니다.
+### 2. 테스트
 
 ```powershell
-$gradleUserDir = if ($env:GRADLE_USER_HOME) { $env:GRADLE_USER_HOME } else { Join-Path $env:USERPROFILE '.gradle' }
-$localGradle = Get-ChildItem (Join-Path $gradleUserDir 'wrapper/dists/gradle-8.14-bin') -Recurse -Filter gradle.bat |
-    Select-Object -First 1 -ExpandProperty FullName
-if (-not $localGradle) { throw '로컬 Gradle 8.14를 찾지 못했습니다.' }
-& $localGradle -PcoreOnly=true :vehicle-core:check :vehicle-core:exportSvgSamples --offline --console=plain
-```
+# 저장소 루트
+node --test tools/three-poc/test/*.test.mjs
 
-Kotlin Gradle Plugin 의존성까지 사용할 수 없으면 아래 대체 경로가 있습니다. 다운로드·SDK 설치 없이 로컬 Gradle 8.14에 포함된 **Kotlin 2.0.21**, JUnit 4.13.2, Hamcrest 1.3으로 main/test를 별도 컴파일하고 같은 테스트를 실행합니다. 프로젝트의 KGP 2.2.0 검증과 구분해야 합니다.
+cd tools/mobile-ar-poc
+npm ci
+npm run check
+npm test
+# Playwright 브라우저 준비가 된 환경에서:
+npm run test:browser
+```
 
 ```powershell
-.\scripts\validate-core.ps1
-# 다른 로컬 위치를 현재 실행에만 지정할 때:
-# .\scripts\validate-core.ps1 -GradleHome '<로컬 Gradle 8.14 디렉터리>'
+# 저장소 루트 · JDK 17 · Android SDK 없이 coreOnly 검증
+.\gradlew.bat -PcoreOnly=true :vehicle-core:test --console=plain
 ```
 
-각 실행의 로그/JAR/SVG는 `vehicle-core/build/standalone/<run-id>/`에 보존됩니다. 스크립트는 기존 실행 결과를 삭제하지 않습니다.
+전체 브라우저 점검 시나리오는 외부 GLB가 필요한 로컬 검증입니다. GitHub Actions의 합성 fixture 기반 CI 성공을 실차·실기기 E2E 성공으로 해석하지 않습니다. Android 앱 실행은 [개발 환경 가이드](docs/development-setup.md)를 참고하세요.
 
-## Android 상태
+## Validation
 
-설정 기준선은 Gradle 8.14 / AGP 8.10.0 / Kotlin 2.2.0 / JDK 17, minSdk 28 / compileSdk·targetSdk 34입니다. 앱은 Automotive 기능을 필수로 선언하며 `:vehicle-core`와 공식 `ai.pleos.playground:Vehicle:2.3.2`에 의존합니다. core에는 Android/SDK 의존성이 없습니다.
+| 검증 대상 | 확인된 결과 | 한계 |
+| --- | --- | --- |
+| 점검 UI 상태 전이 | Node 단위 테스트 9/9 PASS | 브라우저와 Android 앱은 별도 |
+| 점검 UI E2E | 4개 뷰포트에서 각각 17개 assertion PASS | 로컬 브라우저·외부 GLB 기반 |
+| QR-AR | Node 16/16, 합성 브라우저 반복 검증 PASS | 실차 의미 인식 정확도 미검증 |
+| 모바일 실기기 | Samsung Galaxy Z Flip8 / Android Chrome, 13개 항목 `USER_REPORTED PASS` | OS·Chrome 세부 버전 미기록; 실차 캡 직접 촬영 아님 |
+| Pleos SDK | 집 PC Pleos AVD에서 실제 도어 이벤트 → SVG 반영 PASS | 오류 경로·STALE 정책 및 릴리스 검증 잔여 |
+| Geometry | 서비스 286행·프렁크 4,148행 표본 검사에서 교차 0 | 연속 회전 전체·OEM 기구 무충돌 증명이 아님 |
 
-P1-A에서 사용자의 전체 설치 승인 후 Android Studio, SDK Platform 34, Build Tools 35.0.0, Platform Tools, Emulator 및 Pleos API 34 이미지를 설치했습니다. 기존 JDK 17을 재사용하며 SDK 경로는 Git 제외 `local.properties`, 로컬 JDK는 Git 제외 `.gradle/config.properties`에만 기록했습니다. P1-B에서 앱에만 Vehicle SDK를 추가했습니다.
+근거: [P3-A4 점검 UI](tools/three-poc/INSPECTION_UI.md), [QR-AR 실기기 기록](tools/mobile-ar-poc/HTTPS_STAGING.md), [전방 서비스 Geometry](docs/p3-a2-3-service-components.md), [프렁크 검증](docs/p3-a2-2-frunk-modeling.md), [Pleos SDK 실험](docs/pleos-sdk-integration.md).
 
-```powershell
-.\gradlew.bat :vehicle-core:test --rerun-tasks --console=plain
-.\gradlew.bat :app:testDebugUnitTest --console=plain
-.\gradlew.bat :app:assembleDebug --console=plain
-```
+## Roadmap
 
-APK: `app/build/outputs/apk/debug/app-debug.apk`. P1-A의 APK 크기/hash는 과거 검증 보고서, P1-B 빌드 hash는 연동 기록에 있습니다. 테스트 AVD는 `CarScope_Pleos_API34`입니다. Android Studio는 시작 메뉴 `Android Studio (CarScope)`로 열 수 있습니다. IDE 자체 실행/프로젝트 import는 미검증이고, Gradle JDK는 기존 17 또는 `GRADLE_LOCAL_JAVA_HOME`으로 선택해야 합니다. 설치 경로·재실행 명령은 [P1-A 환경 문서](docs/p1-a-environment.md#설치-후-상태와-재실행)에 있습니다.
+1. **P3-A5 · Android/Pleos 통합:** 현재 브라우저 점검 UI를 Android 디버그 경계에서 검증하고, 기존 SVG 및 Pleos 관측 기능을 보존합니다.
+2. **안정성·성능:** Android WebView/WebGL 성능, 수명주기, 액세스 정책, 터치/HMI 동작을 별도 검증합니다.
+3. **점검 부위 확장:** 공식 근거와 실제 형상 검증이 가능한 부위부터 순차적으로 추가합니다.
+4. **식별 정확도 평가:** 라벨이 있는 실물 이미지와 실제 차량을 확보한 이후 색상 후보 방식의 오탐·미탐을 별도로 평가합니다.
 
-MOCK 시나리오 버튼은 새 관측값을 만듭니다. 저장된 관측값의 나이를 재평가하여 5초 초과 시 STALE로 바꾸며 Pleos AVD에서 이 동작을 확인했습니다. 현재 호스트에서는 텍스트와 WebView 그림 갱신 사이에 지연이 관찰됩니다. 주차 상태 개발 검증용이며 주행 허용·배포 승인·차량 상태의 정확성을 보장하지 않습니다.
+자세한 단계별 기록은 [로드맵](docs/roadmap.md)과 [전체 검증 문서](docs/validation-report.md)에 보존합니다.
 
-## 후속 문서
+## Model, References & Attribution
 
-- [아키텍처 및 데이터 계약](docs/architecture.md)
-- [P1-B SDK 구현·실행 결과](docs/pleos-sdk-integration.md)
-- [STALE 표시 정책 검토 (후속)](docs/stale-policy-review.md)
-- [Anatomy 기반 차량 시각화 (P2-A)](docs/anatomy-visualization.md)
-- [Envelope SUV geometry profile (P2-A3-1)](docs/p2-a3-1-vehicle-geometry-profile.md)
-- [P2-A3-1 SVG·GLB 시각 증거 갤러리](docs/visuals/p2-a3-1/README.md)
-- [P2-A3-1.1 보닛 Loft MVP·Before/After](docs/visuals/p2-a3-1-1/README.md)
-- [P2-A3-1.2 앞 펜더·보닛 경계 Before/After](docs/visuals/p2-a3-1-2/README.md)
-- [공식 문서 근거와 실현 가능성](docs/feasibility.md)
-- [P1 진입 조건 및 로드맵](docs/roadmap.md)
-- [P0 검증 결과, 복구 내역, 실행 명령](docs/validation-report.md)
+IONIQ 5 참조 형상은 **현대자동차 공식 CAD가 아닌 커뮤니티 모델**입니다. [OpenX Assets 기반 변환 및 저작권 고지](docs/p2-a6-ioniq5-asset.md)에 따르면 “Hyundai Ioniq 5” © 2022 andikapratamaw (CC BY 4.0), OpenX Assets 수정 © 2026 Dogan Ulus (MPL-2.0 AND CC-BY-4.0)이며, 이 README의 기존 3D 렌더 이미지에도 같은 출처가 적용됩니다. Hyundai의 보증 또는 공식 인증을 의미하지 않습니다.
+
+워셔액 점검 절차와 부품 존재 근거는 [Hyundai UK IONIQ 5 2022 Maintenance PDF](https://manuals.hyundai.co.uk/umanuals/ioniq-5/ioniq-5-2022-maintenance.pdf)를 참조했습니다. 시장별 실제 배치·치수·정비 적용은 사용자 차량 설명서로 다시 확인해야 합니다.
+
+저장소에는 외부 원본 GLB, 파생 고밀도 메시, 실기기 캡처·로그, 인증 토큰 또는 SDK 바이너리를 넣지 않습니다. 이미지·모델 재배포는 각 원출처의 조건을 따릅니다.
