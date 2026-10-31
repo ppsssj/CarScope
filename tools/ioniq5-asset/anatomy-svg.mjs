@@ -95,15 +95,20 @@ export function threeCamera(P, G, bounds, view = VIEW) {
 
 export const FLAT_PALETTES = Object.freeze(["glass", "lamp", "lampSmoke", "plate", "amber"]);
 
-export async function buildIoniqSvg(glbBytes, { samples = 4, tolerance = 1.5, minRegion = 12 } = {}) {
+/**
+ * `nodes` (P3-A1): use these mesh nodes instead of the GLB's own, e.g. with a rotated hood; extra
+ * nodes may carry an explicit `id`. `projection` ({ P, bounds }): keep one camera across poses.
+ */
+export async function buildIoniqSvg(glbBytes, { samples = 4, tolerance = 1.5, minRegion = 12, nodes: given = null, projection = null } = {}) {
   const anatomy = await loadAnatomy();
-  const nodes = glbParts(glbBytes);
-  const { ids, problems } = partIds(nodes);
-  const unmapped = [...new Set(nodes.flatMap((n) => n.materials))].filter((m) => !MATERIAL_PALETTE[m]);
+  const nodes = given ?? glbParts(glbBytes);
+  const { ids, problems } = partIds(nodes.filter((n) => !n.id));
+  for (const n of nodes) if (n.id) ids.set(n.name, n.id);
+  const unmapped = [...new Set(nodes.filter((n) => !n.palettes).flatMap((n) => n.materials))].filter((m) => !MATERIAL_PALETTE[m]);
   if (unmapped.length) throw new Error(`Materials without an Anatomy palette: ${unmapped.join(", ")}`);
   // Small emitters lie on their housings: on equal depth the smaller part wins.
-  const parts = nodes.map((n) => ({ id: ids.get(n.name), source: n.name, triangles: n.triangles, palettes: n.materials.map((m) => MATERIAL_PALETTE[m]), priority: -n.triangles.length / 9 }));
-  const { P, bounds } = fitMeshProjection(parts, anatomy.k);
+  const parts = nodes.map((n) => ({ id: ids.get(n.name), source: n.name, triangles: n.triangles, palettes: n.palettes ?? n.materials.map((m) => MATERIAL_PALETTE[m]), priority: -n.triangles.length / 9 }));
+  const { P, bounds } = projection ?? fitMeshProjection(parts, anatomy.k);
   const result = meshAnatomySvg(parts, anatomy, { P, samples, tolerance, minRegion, flatPalettes: FLAT_PALETTES });
   const order = parts.map((p) => p.id);
   const plan = { x: bounds.lo[0], y: bounds.lo[1], w: bounds.hi[0] - bounds.lo[0], d: bounds.hi[1] - bounds.lo[1], r: 45 };

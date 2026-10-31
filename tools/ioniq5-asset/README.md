@@ -63,6 +63,21 @@ adb shell am start -n io.carscope.app/.profile.VisualProfileActivity --es profil
 node tools/ioniq5-asset/avd-validate.mjs --out=C:\CarScope-External\p2-a8\run1   # captures + timings, outside the repo
 ```
 
+## P3-A1: hood hinge feasibility
+
+Details, sources and measurements: [docs/p3-a1-hood-hinge-feasibility.md](../../docs/p3-a1-hood-hinge-feasibility.md).
+`hood.mjs` and `collision.mjs` are browser-safe and shared by the Node report and the PoC page. Hinge axes are
+candidates (A: OpenX group origin, UNVERIFIED; B/C: ESTIMATED), never a verified Hyundai hinge.
+
+```powershell
+$glb = 'C:\CarScope-External\ioniq5-carscope\hyundai_ioniq_5_2022.glb'
+node tools/ioniq5-asset/hood-feasibility.mjs --glb=$glb --out=C:\CarScope-External\p3-a1\report   # --quick for a coarse run
+$env:CARSCOPE_IONIQ5_GLB = $glb; $env:CARSCOPE_P3A1_DIR = 'C:\CarScope-External\p3-a1\report'; node tools/three-poc/serve.mjs
+#    http://127.0.0.1:8095/ioniq5-hood.html
+node tools/three-poc/check-ioniq5-hood.mjs C:\CarScope-External\p3-a1\captures
+$env:IONIQ5_GLB = $glb; node --test tools/ioniq5-asset/test/hood.test.mjs
+```
+
 Not implemented (reported, not guessed): modifier/constraint evaluation (none in this source),
 Blender custom split normals (`custom_normal` is stored relative to Blender's corner normal spaces),
 UVs/textures (none in this source), older `.blend` header formats.
