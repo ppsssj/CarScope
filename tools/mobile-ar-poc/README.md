@@ -4,7 +4,7 @@
 
 기존 Android 앱·Pleos SDK·vehicle-core·Geometry·Three.js에는 연결하지 않는다. 앱에서 QR을 표시하는 통합도 이번 범위에 없다. PC의 독립 도구 화면에서 QR을 표시하고 스마트폰의 기본 카메라/QR 리더로 연다. release 앱에는 포함하지 않는다.
 
-최신 상태는 [보호된 HTTPS 스테이징](HTTPS_STAGING.md)이다. 실제 배포·인증 보호·QR 검증을 완료해 AR012_READY_FOR_MANUAL_TEST이며 Vercel 로그인 후 사용자 스마트폰 테스트를 기다린다. PC 서버/Tailscale 상시 실행은 필요 없다. [01.2](MOBILE_E2E_VERIFICATION.md)·[01.1](REAL_DEVICE_VALIDATION.md)은 이전 차단 상태와 상세 평가 절차를 보존한다. 실제 기기는 NOT_RUN이다.
+최신 상태는 [실제 폰 사용자 관측과 HTTPS 스테이징](HTTPS_STAGING.md)이며 **AR012_PARTIAL**이다. 플랫폼 미상의 실제 폰에서 HTTPS·QR·카메라·후보·중지·재시작·수동 안내가 사용자 보고 PASS다. 후면 렌즈, 소실·거부·회전·백그라운드와 기기 정보는 미확인/NOT_RUN이라 Draft·병합 보류를 유지한다. PC 서버/Tailscale 상시 실행은 필요 없다. [01.2](MOBILE_E2E_VERIFICATION.md)·[01.1](REAL_DEVICE_VALIDATION.md)은 이전 단계 기록이다.
 
 ## 감사와 구현 결정 (2026-10-31)
 

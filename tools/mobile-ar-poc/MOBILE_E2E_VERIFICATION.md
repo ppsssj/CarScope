@@ -4,7 +4,7 @@
 
 2026-10-31. 시작 커밋 `9225bfcbe13e352f3b71421d4001f9884f6c0357`, 기존 [Draft PR #18](https://github.com/ppsssj/CarScope/pull/18).
 
-**현재 판정: `AR012_BLOCKED_HTTPS`.** 안전한 실제 HTTPS 경로를 확보하지 못했다. 설치·로그인·사설 Serve 노출에 대한 사용자 승인을 요청했으며 아직 실행하지 않았다. 실제 스마트폰 제어도 불가능하므로 Android Chrome/iPhone Safari는 모두 NOT_RUN이다. 실행 절차가 있다는 이유로 READY_FOR_MANUAL_TEST나 E2E_VALIDATED로 판정하지 않는다.
+**01.2 당시 판정: `AR012_BLOCKED_HTTPS` (과거 기록).** 당시에는 안전한 실제 HTTPS 경로를 확보하지 못했다. 아래 승인 대기·기기 NOT_RUN은 그 시점의 기록이다. 현재는 [배포와 사용자 실기기 관측](HTTPS_STAGING.md)에 따라 **AR012_PARTIAL**이며, HTTPS 차단 상태로 보고하지 않는다.
 
 `SEMANTIC_RECOGNITION_UNVERIFIED` / `REAL_VEHICLE_DATA_INSUFFICIENT`를 유지한다. 파란색 물체 후보는 워셔액 주입구 의미 식별의 성공이 아니다. ML 학습이나 기존 런타임 변경은 하지 않았다.
 

@@ -1,6 +1,6 @@
 # QR-AR-01 검증 · 2026-10-31
 
-최신: [보호된 HTTPS 스테이징](HTTPS_STAGING.md). 실제 Vercel HTTPS/인증 차단/배포 QR 디코딩 PASS, Node 15/15·기존 합성 브라우저 11개 그룹 PASS. AR012_READY_FOR_MANUAL_TEST이며 실제 폰은 사용자 검증 대기 NOT_RUN이다. 아래 기록은 이전 단계의 당시 결과다.
+최신: [실제 폰 사용자 관측과 HTTPS 스테이징](HTTPS_STAGING.md). 현재 **AR012_PARTIAL**: HTTPS·QR·카메라·후보 표시/이동·중지·재시작·수동 안내 8개는 USER_REPORTED PASS. 기종/플랫폼/후면 렌즈는 미확인, 소실·거부·회전·백그라운드 등은 NOT_RUN이다. SEMANTIC_RECOGNITION_UNVERIFIED / REAL_VEHICLE_DATA_INSUFFICIENT 유지. 배포 단계 Node 15/15·합성 브라우저 11개 그룹 PASS는 기존 근거이며 이번 문서 변경에서 재실행하지 않았다. 아래는 이전 단계 당시의 기록이다.
 
 QR-AR-01.2: [모바일 E2E 검증](MOBILE_E2E_VERIFICATION.md). 새 회귀 Node 12/12·합성 브라우저 11개 그룹 PASS. 실제 HTTPS 경로는 승인 대기로 AR012_BLOCKED_HTTPS, 양 플랫폼의 실기기 10단계/화면 품질은 모두 NOT_RUN이다. SEMANTIC_RECOGNITION_UNVERIFIED / REAL_VEHICLE_DATA_INSUFFICIENT를 유지한다.
 
