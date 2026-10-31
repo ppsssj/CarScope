@@ -4,6 +4,8 @@
 
 기존 Android 앱·Pleos SDK·vehicle-core·Geometry·Three.js에는 연결하지 않는다. 앱에서 QR을 표시하는 통합도 이번 범위에 없다. PC의 독립 도구 화면에서 QR을 표시하고 스마트폰의 기본 카메라/QR 리더로 연다. release 앱에는 포함하지 않는다.
 
+QR-AR-01.1의 최신 실기기 준비/결과는 [실제 스마트폰 검증 문서](REAL_DEVICE_VALIDATION.md)에 있다. Android Chrome/iPhone Safari 9개 시나리오, 접근 제한이 있는 HTTPS 준비 명령, 실물 사진 평가/성능 기록 절차를 제공한다. 현재 실기기는 NOT_RUN, 실물 사진은 DATA_INSUFFICIENT다.
+
 ## 감사와 구현 결정 (2026-10-31)
 
 - 작업 사본 `C:\dev\CarScope-qr-ar01`, 지정 브랜치 `feat/qr-ar-01-washer-fluid-mobile-assist`. 시작 HEAD·main·원격 main: `e394bdc1bb12a1a72699e1c6ce0f92d95ea897b9`. origin: `https://github.com/ppsssj/CarScope.git`. 다른 worktree는 합치지 않는다.

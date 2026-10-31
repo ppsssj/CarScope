@@ -1,5 +1,7 @@
 # QR-AR-01 검증 · 2026-10-31
 
+후속 QR-AR-01.1: [실기기 검증 준비와 새 실행 결과](REAL_DEVICE_VALIDATION.md). 기존 구현을 유지한 새 회귀는 Node 12/12·합성 브라우저 11개 그룹 PASS. 실기기/QR→카메라는 NOT_RUN, 실제 사진은 DATA_INSUFFICIENT이며 이전 합성 결과와 구분한다. 아래 내용은 최초 QR-AR-01 실행 기록이다.
+
 판정: **독립 PoC의 합성 기능 검증 PASS / 실물 식별 UNVERIFIED / 실기기 end-to-end NOT_RUN**. 배포·주입 작업 사용 승인 또는 실차 정확도 성공 판정이 아니다.
 
 환경: Windows, Node v22.16.0, npm 10.9.2, Microsoft Edge 156.0.4314.50 headless, Playwright 1.56.1. 브라우저 영상은 Canvas captureStream 합성 입력이다. 거부·미지원·정지·visibilitychange는 테스트가 주입한다. 최종 실행의 12개 Node 테스트와 11개 브라우저 assertion 그룹이 PASS다. 기존 보고서 결과를 새 실행으로 재사용하지 않았다.
