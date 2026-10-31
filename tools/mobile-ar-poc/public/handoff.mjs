@@ -13,6 +13,12 @@ export function parseHandoff(hash) {
   return { valid: true, source: 'qr-task' };
 }
 
+// Loopback is not reachable from a phone. Used where a QR target is published (staging, inspection UI);
+// the local direct-TLS server keeps accepting any HTTPS root.
+export function isLoopbackHost(hostname) {
+  return hostname === 'localhost' || hostname.endsWith('.localhost') || hostname === '[::1]' || /^127\.\d+\.\d+\.\d+$/.test(hostname);
+}
+
 export function handoffURL(input) {
   const url = new URL(input);
   if (url.protocol !== 'https:' || url.username || url.password || url.search || url.hash || url.pathname !== '/') {

@@ -100,6 +100,8 @@ try {
   });
   assert.equal(await page.evaluate(() => document.getElementById('video').srcObject), null);
   results.checks.push('PASS: simulated visibilitychange stops stream (real device backgrounding NOT_RUN)');
+  // A fragment-only change is a same-document navigation; leave the page first so the hash is parsed on a fresh load.
+  await page.goto('about:blank');
   await page.goto(root + '/#v=2&task=washer-fluid');
   assert.equal(await page.locator('#start').isDisabled(), true);
   results.checks.push('PASS: invalid handoff blocks camera');
