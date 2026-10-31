@@ -57,10 +57,10 @@ Details and AVD measurements: [docs/p2-a8-android-runtime-validation.md](../../d
 `ioniq5.parts` now declares `#visual-profile hyundai-ioniq5-2022` and `#door-pose closed-only` (closed sections only).
 
 ```powershell
-.\gradlew.bat :app:assembleDebug; adb install -r appuild\outputspk\debugpp-debug.apk
+.\gradlew.bat :app:assembleDebug; adb install -r app\build\outputs\apk\debug\app-debug.apk
 powershell -NoProfile -ExecutionPolicy Bypass -File tools/ioniq5-asset/push-debug-asset.ps1 -Parts C:\CarScope-External\ioniq5-svg\ioniq5.parts
 adb shell am start -n io.carscope.app/.profile.VisualProfileActivity --es profile hyundai-ioniq5-2022
-node tools/ioniq5-asset/avd-validate.mjs --out=C:\CarScope-External\p2-a8un1   # captures + timings, outside the repo
+node tools/ioniq5-asset/avd-validate.mjs --out=C:\CarScope-External\p2-a8\run1   # captures + timings, outside the repo
 ```
 
 Not implemented (reported, not guessed): modifier/constraint evaluation (none in this source),
