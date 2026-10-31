@@ -63,6 +63,44 @@ def build_contract():
             assert (b"Lio/carscope/app/identity/VehicleIdentityActivity;" in dex) == (variant == "debug")
             assert (b"Lio/carscope/app/identity/IdentityProbe;" in dex) == (variant == "debug")
     print("PASS: debug activity/AAOS permission/library; release manifest and DEX boundary")
+    visual_asset_boundary(manifests, names)
+
+
+BUNDLED_PARTS = "io/carscope/visualization/anatomy-car.parts"
+# Bytes that only a model-derived drawing (tools/ioniq5-asset/anatomy-svg.mjs) contains.
+DERIVED_MARKERS = (b"mesh-svg openx-ioniq5", b"#visual-profile hyundai-ioniq5-2022", b"andikapratamaw")
+
+
+def visual_asset_boundary(manifests, names):
+    """P2-A8: the visual-profile screen is debug-only and no model-derived drawing is packaged or tracked."""
+    import hashlib
+    activity = "io.carscope.app.profile.VisualProfileActivity"
+    assert activity in names(manifests["debug"], "activity")
+    assert activity not in names(manifests["release"], "activity")
+    expected = hashlib.sha256((ROOT / "vehicle-core/src/main/resources" / BUNDLED_PARTS).read_bytes()).hexdigest()
+    archives = [ROOT / "app/build/outputs/apk/debug/app-debug.apk", ROOT / "app/build/outputs/apk/release/app-release-unsigned.apk"]
+    bundle = ROOT / "app/build/outputs/bundle/release/app-release.aab"
+    assert bundle.is_file(), "build :app:bundleRelease first"
+    archives.append(bundle)
+    for path in archives:
+        release = "release" in path.name
+        with zipfile.ZipFile(path) as archive:
+            parts = [n for n in archive.namelist() if n.endswith(".parts")]
+            assert len(parts) == 1 and parts[0].endswith(BUNDLED_PARTS), (path.name, parts)
+            assert hashlib.sha256(archive.read(parts[0])).hexdigest() == expected, f"{path.name}: bundled drawing changed"
+            if release:
+                assert not [n for n in archive.namelist() if n.lower().endswith((".glb", ".gltf", ".blend", ".svg"))], path.name
+            for name in archive.namelist():
+                data = archive.read(name)
+                for marker in DERIVED_MARKERS:
+                    assert marker not in data, f"{path.name}:{name} contains model-derived drawing data"
+                if release and name.endswith(".dex"):
+                    assert b"Lio/carscope/app/profile/" not in data, f"{path.name}: debug profile classes in release"
+                    assert b"debug-visual-assets" not in data, f"{path.name}: debug asset path in release"
+    tracked = subprocess.run(["git", "-C", str(ROOT), "ls-files"], check=True, capture_output=True, text=True).stdout.split()
+    assert [t for t in tracked if t.endswith(".parts")] == ["vehicle-core/src/main/resources/" + BUNDLED_PARTS]
+    assert not [t for t in tracked if t.lower().endswith((".glb", ".blend")) or "/assets/" in t and t.startswith("app/")]
+    print("PASS: visual-profile screen debug-only; APK/AAB carry only the bundled drawing; no derived asset tracked")
 
 
 def capture(adb, serial, output):

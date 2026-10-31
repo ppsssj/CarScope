@@ -36,7 +36,7 @@ jobs:
           "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" 'platforms;android-34' 'build-tools;35.0.0'
           test -f "$ANDROID_HOME/platforms/android-34/optional/android.car.jar"
       - name: Test and build both variants
-        run: ./gradlew :app:testDebugUnitTest :app:assembleDebug :app:assembleRelease :app:lintDebug --rerun-tasks --console=plain --max-workers=1 -Pkotlin.compiler.execution.strategy=in-process
+        run: ./gradlew :app:testDebugUnitTest :app:assembleDebug :app:assembleRelease :app:bundleRelease :app:lintDebug --rerun-tasks --console=plain --max-workers=1 -Pkotlin.compiler.execution.strategy=in-process
       - name: Verify debug-only APK and manifest boundary
         run: python3 tools/identity-probe/check.py build-contract
       - name: Summarize JVM test evidence

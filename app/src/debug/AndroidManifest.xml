@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Debug-only WebGL experiment and read-only identity diagnostic. Exported for adb on the
-     test AVD; neither activity has a launcher entry or exists in release builds. -->
+<!-- Debug-only WebGL experiment, read-only identity diagnostic and visual-profile screen. Exported for adb on the
+     test AVD; none of these activities has a launcher entry or exists in release builds. -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.car.permission.CAR_INFO" />
     <application>
@@ -9,6 +9,12 @@
             android:name=".identity.VehicleIdentityActivity"
             android:exported="true"
             android:label="CarScope identity probe" />
+        <!-- P2-A8: main screen with an explicit visual profile; reads only app-private debug files. -->
+        <activity
+            android:name=".profile.VisualProfileActivity"
+            android:exported="true"
+            android:launchMode="singleTop"
+            android:label="CarScope visual profile (debug)" />
         <activity
             android:name=".lab.WebGlLabActivity"
             android:exported="true"
