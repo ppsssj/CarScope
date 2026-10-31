@@ -100,8 +100,8 @@ export function trianglesIntersect(A, B, eps = 1e-6) {
 }
 
 /**
- * A point where two intersecting triangles meet: an edge of one crossing the other, or (coplanar
- * overlap) the centroid of A. Null when they do not intersect. Used to locate a crossing.
+ * A point shared by both intersecting triangles, including coplanar overlaps.
+ * Null when they do not intersect. Used to locate a crossing for joint classification.
  */
 export function crossingPoint(A, B) {
   if (!trianglesIntersect(A, B)) return null;
@@ -109,7 +109,16 @@ export function crossingPoint(A, B) {
     const p = segmentTriangle(A[k], A[(k + 1) % 3], B[0], B[1], B[2], 1e-9) ?? segmentTriangle(B[k], B[(k + 1) % 3], A[0], A[1], A[2], 1e-9);
     if (p) return p;
   }
-  return [0, 1, 2].map((i) => (A[0][i] + A[1][i] + A[2][i]) / 3);
+  // Coplanar overlap: a centroid of A need not lie in B (e.g. a small lever on a large lid).
+  // Return an actual shared vertex or edge crossing, so joint classification uses the contact.
+  const near = (a, b) => len(sub(a, b)) <= 1e-6;
+  for (const p of A) if (near(p, closestOnTriangle(p, ...B))) return [...p];
+  for (const p of B) if (near(p, closestOnTriangle(p, ...A))) return [...p];
+  for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++) {
+    const [p, q] = segmentSegment(A[i], A[(i + 1) % 3], B[j], B[(j + 1) % 3]);
+    if (near(p, q)) return p.map((v, k) => (v + q[k]) / 2);
+  }
+  throw new Error('Intersecting triangles have no recoverable crossing point');
 }
 
 /** Exact distance between two triangles and the closest points ([0, p, p] when they intersect). */
