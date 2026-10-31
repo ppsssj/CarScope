@@ -27,7 +27,8 @@ for(const [name,enabled] of [["before",false],["after",true]]) {
     theme:"light",body:`<style>${CAR_CSS}</style>${plate}`,width:760}));
   results.push({name,buildMs:Number(buildMs.toFixed(1)),exportMs:Number((performance.now()-exportStart).toFixed(1)),
     parts:bundle.report.parts,triangles:bundle.report.triangles,
-    frontFenderTriangles:bundle.report.checks.filter(c=>c.partId.startsWith(enabled?"suv.front-fender.":"suv.front-quarter.")).reduce((n,c)=>n+c.triangles,0)});
+    frontFenderTriangles:bundle.report.checks.filter(c=>enabled?c.cls==="fender":c.partId.startsWith("suv.front-quarter.")).reduce((n,c)=>n+c.triangles,0),
+    frontArchTrimTriangles:bundle.report.checks.filter(c=>c.cls==="trimShell").reduce((n,c)=>n+c.triangles,0)});
 }
 writeFileSync(join(out,"comparison.json"),JSON.stringify({camera:VIEW,results},null,2));
 console.log(JSON.stringify(results,null,2));

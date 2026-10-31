@@ -30,7 +30,7 @@ for(const name of ["before","after"]) {
       ["eval",`window.__lab.useView('${view}')`],["wait",300],["shot",join(out,`fender-after-${view}.png`),"body"],
       ["eval",`(() => {const l=window.__lab,v=l.cam().position.clone().sub(l.state.box.getCenter(l.cam().position.clone())).normalize();if(Math.abs(v.${axis}-1)>1e-6)throw Error('wrong ${view} camera');return v.toArray()})()`]);
     actions.push(["eval","window.__lab.useSvgCamera()"],["wait",300],["shot",join(out,"fender-after-glb.png"),"body"],
-      ["eval","(() => {const f=window.__lab.state.meshes.filter(x=>(x.userData?.partId??x.name).includes('suv.front-fender.')); if(f.length!==2) throw Error('expected two fenders, got '+f.length); for(const m of f) m.material.wireframe=true; window.__lab.state.dirty=true; return f.map(m=>m.geometry.index.count/3)})()"],
+      ["eval","(() => {const f=window.__lab.state.meshes.filter(x=>['1/0','1/1','-1/0','-1/1'].map(s=>'suv.front-fender.'+s).includes(x.userData?.partId??x.name)); if(f.length!==4) throw Error('expected two fenders and two arch trims, got '+f.length); for(const m of f) m.material.wireframe=true; window.__lab.state.dirty=true; return f.map(m=>m.geometry.index.count/3)})()"],
       ["wait",300],["shot",join(out,"fender-after-wireframe.png"),"body"]);
   }
   const file=join(out,`${name}-actions.json`);writeFileSync(file,JSON.stringify(actions));

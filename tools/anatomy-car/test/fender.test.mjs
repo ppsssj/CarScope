@@ -1,10 +1,10 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { ENVELOPE_SUV } from "../profiles/vehicle-profile.mjs";
+import { ENVELOPE_SUV, envelopeParameters } from "../profiles/vehicle-profile.mjs";
 import { buildEnvelopeModel } from "../envelope/model.mjs";
 import { generateGeometry } from "../geometry-export/generate.mjs";
-import { fenderMesh } from "../geometry-export/fender.mjs";
+import { fenderMesh, archTrim } from "../geometry-export/fender.mjs";
 import { loftMesh } from "../geometry-export/loft.mjs";
 import { checkMesh, vec } from "../geometry-export/mesh.mjs";
 import { collider, surfaceOverlap } from "../geometry-export/collision.mjs";
@@ -70,4 +70,35 @@ test("hood edge has a constant 2 mm panel seam and aligned surface directions, w
     const s=surfaceOverlap(left,collider(p));
     assert.equal(Math.max(s.aIntoB.depth,s.bIntoA.depth),0,`${p.item} penetration`);
   }
+});
+
+test("front arch trim is a closed shell on the real fender skin, matching the rear trim without covering the opening",()=>{
+  const d=envelopeParameters(ENVELOPE_SUV),half=d.width/2;
+  const params={axle:d.axleFront,centerZ:d.wheelRadius,innerR:d.archRadius,outerR:d.flareRadius};
+  const trims=[1,-1].map(side=>{
+    const t=after.parts.find(p=>p.partId===`suv.front-fender.${side}/1`),rear=after.parts.find(p=>p.partId===`suv.tail-quarter.${side}/1`);
+    assert.equal(t.cls,"trimShell");assert.equal(t.materialId,rear.materialId);assert.equal(rear.cls,"plane");
+    const prim=after.model.sc.R.items.find(it=>it.name===`suv.front-fender.${side}`).prims[1];
+    assert.equal(prim.kind,"poly");assert.equal(prim.shell,t.mesh,"SVG outline and GLB mesh come from one trim build");
+    const built=archTrim(fenderMesh(fender(side).geo),{side,...params});
+    assert.deepEqual(built.mesh.positions,t.mesh.positions);
+    const check=checkMesh(t.mesh,{closed:true});
+    assert.equal(check.degenerate,0);assert.equal(check.flippedNormals,0);assert.equal(check.windingConflicts,0);
+    assert.equal(check.boundaryEdges,0);assert.equal(check.nonManifoldEdges,0);assert.equal(check.outward,true);
+    // One layer of constant thickness over the overlaid region: volume is exactly area x 1.5 mm.
+    assert.ok(Math.abs(check.signedVolume-built.area*0.15)<1e-6*check.signedVolume);
+    const s=surfaceOverlap(collider(fender(side)),collider(t));
+    assert.equal(Math.max(s.aIntoB.depth,s.bIntoA.depth),0,"trim penetration into fender");
+    const {xs,bottomZ}=fender(side).geo,lip=(x)=>{let i=xs.findIndex(v=>v>=x);if(i<1)i=1;return bottomZ[i-1]+(bottomZ[i]-bottomZ[i-1])*(x-xs[i-1])/(xs[i]-xs[i-1]);};
+    for(const p of t.mesh.positions) {
+      assert.ok(side*p[1]<=half,"trim stays inside the body side");
+      assert.ok(Math.hypot(p[0]-params.axle,p[2]-params.centerZ)<=params.outerR+1e-9 && p[2]>=params.centerZ-1e-9);
+      assert.ok(p[2]>=lip(p[0])-1e-6,"trim never hangs over the wheel opening");
+    }
+    return t;
+  });
+  const key=(p)=>p.map(v=>v.toFixed(4)).join(",");
+  assert.deepEqual(new Set(trims[0].mesh.positions.map(p=>key([p[0],-p[1],p[2]]))),new Set(trims[1].mesh.positions.map(key)));
+  assert.throws(()=>archTrim(fenderMesh(fender(1).geo),{side:1,...params,outerR:params.innerR}),/0 < innerR < outerR/);
+  assert.throws(()=>archTrim(fenderMesh(fender(1).geo),{side:1,...params,axle:params.axle+0.5}),/fender sections at both arch ends/);
 });

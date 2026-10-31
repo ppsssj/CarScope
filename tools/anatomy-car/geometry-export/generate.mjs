@@ -19,6 +19,7 @@ export function generateGeometry(model) {
     prism: ["A", "exact: polygon, frame and extent are the drawn prism"],
     loft: ["A", "section-interpolated closed mesh; SVG faces share its tessellated vertices"],
     fender: ["A", "wheel-arch-aware closed sweep; SVG faces share its tessellated vertices"],
+    trimShell: ["A", "closed thin trim shell clipped from its host surface and offset along Y; SVG fills its outer-face outline"],
     convex: ["A", "exact: vertices and faces are the drawn polyhedron"],
     lathe: ["A", "exact meridian and axis; facet count from the SVG build"],
     latheSmooth: ["B", "meridian is exact, but the SVG smooths runs of smooth knots with a Hermite curve; 3D joins knots straight and only shares normals"],
@@ -39,6 +40,7 @@ export function generateGeometry(model) {
       if (g.kind === "convex") return { mesh: convexMesh(g), closed: true, cls: "convex" };
       if (g.kind === "lathe") return { mesh: latheMesh(g), closed: true, cls: g.meridian.some((p) => p[2]) ? "latheSmooth" : "lathe" };
     }
+    if (prim.kind === "poly" && prim.shell) return { mesh: prim.shell, closed: true, cls: "trimShell" };
     if (prim.kind === "poly") return { mesh: planeMesh({ points: prim.points, toward: V }), closed: false, cls: "plane" };
     if (prim.kind === "line") return { cls: "line" };
     if (prim.kind === "dots") return { cls: "dots" };

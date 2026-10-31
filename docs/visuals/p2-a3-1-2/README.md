@@ -16,7 +16,9 @@ These ten PNGs are actual CarScope renders from the same procedural SUV builder.
 | --- | --- |
 | ![Before side](images/fender-before-side.png) | ![After side](images/fender-after-side.png) |
 
-The GLB side and 3/4 views show a rounded shoulder above the front wheel and a less planar front side. The SVG detail shows the same geometry, though its triangle-based shading makes the change subtler and the wheel-arch edge remains stylized. The entire car still reads as a boxy reference prototype.
+The GLB side and 3/4 views show a rounded shoulder above the front wheel and a less planar front side. The SVG detail shows the same geometry, though its triangle-based shading makes the change subtler. The front arch again carries a dark trim like the rear arch.
+
+The old planar trim was not restored. The new trim is a 1.5 mm closed shell: the real fender skin is clipped to the same 46–48.5 cm annulus and offset 0.5 mm along Y. It shares the rear trim's colour and radial width, and its SVG outline and GLB mesh come from the same build. The entire car still reads as a boxy reference prototype.
 
 ## After views and SVG / GLB
 
@@ -32,15 +34,15 @@ The GLB side and 3/4 views show a rounded shoulder above the front wheel and a l
 | --- | --- |
 | ![Shaded front fender](images/fender-after-glb.png) | ![Front fender wireframe](images/fender-after-wireframe.png) |
 
-The SVG and GLB use the same fender cross-section coordinates. The SVG renders visible mesh triangles without filling the convex hull across the wheel opening. The GLB uses averaged surface normals where valid and flat normals around the tight inner seam. Wireframe shows the added front-fender facets, not a material-only smoothing effect.
+The SVG and GLB use the same fender cross-section coordinates. The SVG renders visible mesh triangles without filling the convex hull across the wheel opening. The GLB uses averaged surface normals where valid and flat normals around the tight inner seam. The wireframe shows the added front-fender and arch-trim facets (both sides), not a material-only smoothing effect.
 
 ## Boundary, mesh and limits
 
-At the hood-edge sample stations the height difference is 0 and the deliberate panel gap is 2 mm. The sampled adjacent surface-normal angle is 5.5° mean, 8.2° maximum. Because the panels are separated, this is **visual tangent alignment**, not mathematical G1 continuity. G2 is unverified. The closed front fender meshes have no degenerate triangles, flipped normals, non-manifold edges or open boundary edges. The four-door sampled collision policy remains 0.3 cm; it is not a continuous-motion proof.
+At the hood-edge sample stations the height difference is 0 and the deliberate panel gap is 2 mm. The sampled adjacent surface-normal angle is 5.5° mean, 8.2° maximum. This uses 55 fender seam strips against the hood's outermost top triangle; the other triangle of the same hood quad gives 5.8°/8.5°. [Method](../../p2-a3-1-2-fender-surfacing.md#boundary-and-design-estimates). Because the panels are separated, this is **visual tangent alignment**, not mathematical G1 continuity. G2 is unverified. The closed front fender and arch-trim meshes have no degenerate triangles, flipped normals, non-manifold edges or open boundary edges. The trim keeps an exact 0.5 mm clearance from the fender skin and stays inside the body side and above the wheel-opening lip. The four-door sampled collision policy remains 0.3 cm; it is not a continuous-motion proof.
 
-In one final-code local comparison run: before 143 parts / 11,340 triangles / 688 front-quarter triangles; after 141 parts / 13,068 triangles / 2,312 front-fender triangles. Total growth is 1,728 triangles. Model generation took 9,133 ms before and 10,275 ms after, export 329 ms and 228 ms respectively. These single-run timings include Anatomy setup and are diagnostic, not a performance benchmark.
+In one final-code local comparison run: before 143 parts / 11,340 triangles / 688 front-quarter triangles; after 143 parts / 14,988 triangles / 2,312 front-fender and 1,920 arch-trim triangles. Total growth is 3,648 triangles. Model generation took 9,159 ms before and 10,569 ms after, export 287 ms and 272 ms respectively. These single-run timings include Anatomy setup and are diagnostic, not a performance benchmark.
 
-This is AAOS AVD based reference geometry. Actual OEM appearance is unverified; curvature, arch, panel depth and shoulder drop are design estimates. The 55 mm hood crown is retained. The front fascia, doors, rear quarter and roof remain mostly planar, the wheel-arch trim is simplified, and no Class-A surface or full-body self-intersection proof is claimed.
+This is AAOS AVD based reference geometry. Actual OEM appearance is unverified; curvature, arch, panel depth and shoulder drop are design estimates. The 55 mm hood crown is retained. The front fascia, doors, rear quarter and roof remain mostly planar. The front trim follows the fender's inset lip roll, while the rear trim is still a flush planar inlay, so the two match in colour and width but not in construction. No Class-A surface or full-body self-intersection proof is claimed.
 
 ## Reproduce
 

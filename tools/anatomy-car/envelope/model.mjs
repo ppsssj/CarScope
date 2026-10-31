@@ -6,7 +6,7 @@ import { scene, yFrame, xFrame } from "../automotive/scene.mjs";
 import { VIEW } from "../automotive/camera.mjs";
 import { ENVELOPE_SUV, envelopeParameters } from "../profiles/vehicle-profile.mjs";
 import { loftMesh } from "../geometry-export/loft.mjs";
-import { fenderMesh } from "../geometry-export/fender.mjs";
+import { fenderMesh, archTrim } from "../geometry-export/fender.mjs";
 
 export async function buildEnvelopeModel({ profile = ENVELOPE_SUV, hoodLoft = true, fenderSurface = true } = {}) {
   const anatomy = await loadAnatomy();
@@ -84,6 +84,8 @@ export async function buildEnvelopeModel({ profile = ENVELOPE_SUV, hoodLoft = tr
         const geo={kind:"fender",side,xs,innerY:half-5,halfWidth:half,
           bottomZ:xs.map(bottom),topZ:xs.map(fenderTop),shoulderDrop:d.fenderShoulderDrop};
         const sweep=fenderMesh(geo);
+        // The planar trim above fits a Y-constant skin; this one is clipped from the curved fender skin.
+        const trim=archTrim(sweep,{side,axle,centerZ:d.wheelRadius,innerR:d.archRadius,outerR:d.flareRadius});
         const shapes=sweep.surfaceTriangles.map((triangle,i)=>{
           const [a,b,c]=triangle,u=G.unit3(G.sub3(b,a)),n=G.unit3(G.cross3(G.sub3(b,a),G.sub3(c,a)));
           const v=G.unit3(G.cross3(n,u)),frame={o:a,u,v,a:n};
@@ -91,7 +93,8 @@ export async function buildEnvelopeModel({ profile = ENVELOPE_SUV, hoodLoft = tr
           return sc.record(A.prism(frame,polygon,-0.01,0,{name:`suv.front-fender.${side}.surface-${i}`,owner:"body"}));
         });
         sc.item(`suv.front-fender.${side}`,[(x0+x1)/2,side*(half-1),top((x0+x1)/2)],
-          [sc.solid(ctx.loftPaths(sweep,geo),{palette:"paint",tone:"hi",crease:"none"})],shapes);
+          [sc.solid(ctx.loftPaths(sweep,geo),{palette:"paint",tone:"hi",crease:"none"}),
+            sc.poly(trim.points,"trim",{tone:"none",shell:trim.mesh})],shapes);
       } else addPrism(`suv.${name}.${side}`, F, region(x0, x1, bottom, top, stations, 4), inner, out,"paint",{extra});
     }
     // Real apertures: the rocker stays below the door, following the same wheel-arch cut.
