@@ -209,8 +209,9 @@ async function main(argv) {
     return { id: c.id, maxPairDistanceChangeCm: dd, maxRestoreErrorCm: rb, zeroDegreeIdentical: H.rotatePoints(hood, c, 0).every((v, i) => v === hood[i]), frontEdgeLiftAt45Cm: r(frontLift(hood, c, 45), 1) };
   });
   // Owner's manual p.5-47: "Lower the hood halfway (lifted approximately 30 cm (12 in.) from the closed
-  // position)". Read as half of the full lift, the full front-edge lift is about 60 cm. The reading and
-  // the angles are ESTIMATED; the manual gives no angle.
+  // position)" is the recommended position for closing, not a maximum-opening figure; whether 30 cm is half
+  // of the full lift is not documented. The 60 cm row is a conditional geometric value (assumed 60 cm
+  // maximum lift); the real maximum opening angle stays UNVERIFIED.
   const manualLift = candidates.map((c) => ({ id: c.id, angleAt30cmLiftDeg: angleForLift(hood, c, 30), angleAt60cmLiftDeg: angleForLift(hood, c, 60) }));
   const interior = interiorAssessment(hood, others, json);
   const analysisMs = Math.round(performance.now() - t0);
@@ -238,7 +239,7 @@ async function main(argv) {
     search: { ...search, criterion: "no new intersection and >= minClearanceCm to non-seam geometry at every search angle; among those, the pivot nearest B" },
     sweeps, beyond60: beyond, rigidity, interior,
     manualLiftReference: { quote: "Lower the hood halfway (lifted approximately 30 cm (12 in.) from the closed position)", source: "Hyundai IONIQ 5 2022 owner's manual (UK), Convenience features p.5-47",
-      reading: "ESTIMATED: halfway = 30 cm front-edge lift, so a full opening of about 60 cm; no opening angle is published", byAxis: manualLift },
+      reading: "30 cm is the manual's recommended position for closing; it does not state the maximum lift and cannot be taken as half of it. angleAt60cmLiftDeg is a conditional geometric value for an ASSUMED 60 cm maximum lift. Real maximum opening angle: UNVERIFIED", maximumOpeningAngle: "UNVERIFIED", byAxis: manualLift },
     svg: { axis: svgAxis.id, angles: svgAngles, projection: svg.projection.P, closedEqualsP2A7: sha(svg.closedDefault.svg) === sha(svg.reference.svg), p2a7Sha256: sha(svg.reference.svg),
       deterministic: sha(svg.again.svg) === sha(svg.frames.at(-1).built.svg), frames: frameReport, placeholder: placeholderSvg && { ...placeholderSvg, regions: svg.withPlaceholder.regions } },
     timingsMs: { analysis: analysisMs, total: Math.round(performance.now() - t0) },

@@ -7,7 +7,7 @@
 export const HOOD_NODE = "Door_Front_0";
 export const HOOD_GROUP = "Grp_Door_Front_0";
 export const TAILGATE_NODE = "Door_Rear_0";
-/** Experimental sample angles; NOT the vehicle's opening range (no published value, see the report). */
+/** SIMULATION_ONLY sample angles; NOT the vehicle's opening range (real maximum opening angle UNVERIFIED). */
 export const SAMPLE_ANGLES = Object.freeze([0, 5, 15, 30, 45, 60]);
 export const PLACEHOLDER_TAG = "SYNTHETIC_DEBUG_PLACEHOLDER";
 
