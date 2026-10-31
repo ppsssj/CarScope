@@ -11,7 +11,7 @@ export const POLICY = Object.freeze({
   fineStepDegrees: 0.1,
 });
 
-export function meshFailures(report) {
+export function meshFailures(report, doorIds = ["door-front-left", "door-rear-left"]) {
   const failures = [];
   if (!Array.isArray(report.checks) || report.checks.length === 0) return ["missing mesh checks"];
   for (const c of report.checks) {
@@ -23,7 +23,7 @@ export function meshFailures(report) {
       failures.push(`${c.partId}: closed mesh must be watertight and outward`);
     }
   }
-  for (const id of ["door-front-left", "door-rear-left"]) {
+  for (const id of doorIds) {
     const r = report.doorRigidity?.[id];
     if (!r || !(r.comparedParts > 0) || !Number.isFinite(r.maxDeviation) || r.maxDeviation > POLICY.rigidityCm) {
       failures.push(`${id}: invalid rigidity or deviation > ${POLICY.rigidityCm} cm`);

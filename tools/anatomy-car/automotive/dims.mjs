@@ -1,18 +1,19 @@
 // Dimensions of the CarScope sedan (world units ~ 1 cm; x forward, y to the car's left, z up).
 // Every module reads its numbers from here, so body, doors and greenhouse always agree.
 import { polyline } from "./geometry.mjs";
+import { GENERIC_SEDAN_PARAMETERS as PARAMS } from "../profiles/vehicle-profile.mjs";
 
-export const HALF = 90; // body half width at the outer panel
+export const HALF = PARAMS.body.halfWidth; // body half width at the outer panel
 export const INNER = HALF - 1.2; // recessed panel layer: shoulder band and rocker
 export const SKIN_Y = HALF - 2.4; // inner face of the side skin
 export const CORE_Y = HALF - 26; // near face of the core, behind the near wheels
-export const AXLE = 136;
-export const WHEEL_Z = 33;
-export const TYRE_R = 32.5;
-export const ARCH_R = 40;
-export const FLARE_R = 43.4;
+export const AXLE = PARAMS.wheels.wheelbase / 2;
+export const WHEEL_Z = PARAMS.wheels.centerZ;
+export const TYRE_R = PARAMS.wheels.radius;
+export const ARCH_R = PARAMS.wheels.archRadius;
+export const FLARE_R = PARAMS.wheels.flareRadius;
 export const SILL = 20;
-export const BELT = 95;
+export const BELT = PARAMS.body.beltHeight;
 export const ROCKER_TOP = 26.5;
 export const CHAR_DROP = 7; // the shoulder crease runs this far below the top edge
 
@@ -21,8 +22,8 @@ const TOP = [[-230, 58], [-226, 74], [-215, 86], [-197, 92], [-150, BELT], [40, 
 /** Bottom edge outside the arches: tail and nose undersides. */
 const TAIL_BOTTOM = [[-230, 58], [-229, 40], [-223, 26], [-214, SILL]];
 const NOSE_BOTTOM = [[214, SILL], [222, 22], [228, 32], [231, 44], [231.5, 56]];
-export const X_REAR = -230;
-export const X_FRONT = 231.5;
+export const X_REAR = PARAMS.body.rearX;
+export const X_FRONT = PARAMS.body.frontX;
 
 export const top = polyline(TOP);
 const archZ = (cx, r) => (x) => WHEEL_Z + Math.sqrt(Math.max(0, r * r - (x - cx) ** 2));
@@ -72,13 +73,13 @@ STATIONS.push(
 // ---------------------------------------------------------------- greenhouse (tumblehome)
 export const GH = {
   baseHalf: HALF - 2.4, // at the beltline the window frames start on the door's shoulder band
-  roofHalf: 77,
-  edgeZ: 141.3,
+  roofHalf: PARAMS.greenhouse.roofHalfWidth,
+  edgeZ: PARAMS.greenhouse.edgeZ,
   aBase: 40, // windshield base
   aTop: 1, // windshield top
   cBase: -150, // rear glass base
   cTop: -97, // rear glass top
-  ridgeFront: [-4, 144.4],
+  ridgeFront: [-4, PARAMS.greenhouse.frontRidgeZ],
   ridgeRear: [-90, 144.0],
 };
 GH.lean = Math.atan((GH.baseHalf - GH.roofHalf) / (GH.edgeZ - BELT));

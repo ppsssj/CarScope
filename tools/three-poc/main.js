@@ -6,6 +6,7 @@ import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { VertexNormalsHelper } from "three/addons/helpers/VertexNormalsHelper.js";
 
 const params = new URLSearchParams(location.search);
+const doorControls = { "door-front-left": "fl", "door-rear-left": "rl", "door-front-right": "fr", "door-rear-right": "rr" };
 window.__labLog = [];
 const log = (tag, data) => { window.__labLog.push({ tag, ...data }); console.log(`CARSCOPE_LAB ${tag} ${JSON.stringify(data)}`); };
 const view = document.getElementById("view");
@@ -56,7 +57,15 @@ loader.load(params.get("model") ?? "./car.glb", (gltf) => {
   log("loaded", { ms: Math.round(performance.now() - t0), meshes: state.meshes.length, triangles: tris, doors: Object.keys(state.doors) });
   if (params.get("cam") === "svg") useSvgCamera();
   if (params.get("landmarks")) addLandmarks(gltf.parser.json.extras?.coordinateLandmarks ?? []);
-  for (const [id, key] of [["door-front-left", "fl"], ["door-rear-left", "rl"]]) if (params.get(key)) { const d = state.doors[id]; d.t = d.target = Number(params.get(key)); }
+  for (const [id,key] of Object.entries(doorControls)) {
+    const d=state.doors[id];
+    const extra=document.getElementById(`${key}-control`);
+    if(extra) extra.hidden=!d;
+    if(d && params.get(key)) d.t=d.target=Number(params.get(key));
+  }
+  const profile=gltf.parser.json.extras?.vehicleGeometryProfile;
+  if(profile) document.querySelector("#panel h1").textContent=`Envelope SUV · ${profile.oemVisualMatch}`;
+  if(params.get("view") && directions[params.get("view")]) useView(params.get("view"));
   applyDoors();
   if (params.get("wire")) { document.getElementById("wire").checked = true; for (const m of state.meshes) m.material.wireframe = true; }
   if (params.get("normals")) { document.getElementById("normals").checked = true; document.getElementById("normals").dispatchEvent(new Event("change")); }
@@ -67,15 +76,15 @@ function applyDoors() {
   for (const [id, d] of Object.entries(state.doors)) {
     d.node.quaternion.setFromAxisAngle(new THREE.Vector3(0, 1, 0), d.closed + (d.open - d.closed) * d.t);
     for (const f of state.fixed[id] ?? []) f.visible = d.t > 0.01;
-    const slider = document.getElementById(id === "door-front-left" ? "fl" : "rl");
+    const slider = document.getElementById(doorControls[id]);
     if (slider && document.activeElement !== slider) slider.value = d.t.toFixed(2);
   }
   state.dirty = true;
 }
-for (const [id, el] of [["door-front-left", "fl"], ["door-rear-left", "rl"]]) {
-  document.getElementById(el).addEventListener("input", (e) => { const d = state.doors[id]; d.t = d.target = Number(e.target.value); applyDoors(); });
+for (const [id, el] of Object.entries(doorControls)) {
+  document.getElementById(el).addEventListener("input", (e) => { const d = state.doors[id]; if(d) { d.t = d.target = Number(e.target.value); applyDoors(); } });
 }
-document.querySelectorAll("[data-anim]").forEach((b) => b.addEventListener("click", () => { const d = state.doors[b.dataset.anim]; d.target = d.target > 0.5 ? 0 : 1; }));
+document.querySelectorAll("[data-anim]").forEach((b) => b.addEventListener("click", () => { const d = state.doors[b.dataset.anim]; if(d) d.target = d.target > 0.5 ? 0 : 1; }));
 document.getElementById("wire").addEventListener("change", (e) => { for (const m of state.meshes) m.material.wireframe = e.target.checked; state.dirty = true; });
 document.getElementById("normals").addEventListener("change", (e) => {
   if (e.target.checked) for (const m of state.meshes) { const h = new VertexNormalsHelper(m, 0.02, 0x3e63dd); state.helpers.push(h); scene.add(h); }
@@ -100,18 +109,21 @@ function useSvgCamera() {
   ortho.updateProjectionMatrix();
   camera = ortho;
   controls.object = ortho;
+  controls.enabled = params.get("orthographic") !== "1";
   controls.target.copy(centre);
   state.dirty = true;
 }
 document.getElementById("svgcam").addEventListener("click", useSvgCamera);
 
-const directions = { front: [1, 0.22, 0], rear: [-1, 0.22, 0], left: [0, 0.22, -1], right: [0, 0.22, 1] };
+const pitch=params.get("orthographic")==="1"?0:0.22;
+const directions = { front: [1, pitch, 0], rear: [-1, pitch, 0], left: [0, pitch, -1], right: [0, pitch, 1], top:[0,1,0] };
 function useView(name) {
   useSvgCamera();
   const centre = state.box.getCenter(new THREE.Vector3());
   ortho.position.copy(centre).addScaledVector(new THREE.Vector3(...directions[name]).normalize(), 20);
+  if(name==="top") { ortho.up.set(1,0,0); controls.enabled=false; } // physical front (+car X) points up in plan view
   ortho.lookAt(centre);
-  controls.update(); state.dirty = true;
+  if(controls.enabled) controls.update(); state.dirty = true;
 }
 document.querySelectorAll("[data-view]").forEach((b) => b.addEventListener("click", () => useView(b.dataset.view)));
 
@@ -126,7 +138,7 @@ function addLandmarks(landmarks) {
     label.position.copy(dot.position).add(new THREE.Vector3(0, 0.12, 0)); label.scale.set(0.6, 0.15, 1); scene.add(label);
   }
 }
-document.getElementById("freecam").addEventListener("click", () => { camera = persp; controls.object = persp; state.dirty = true; });
+document.getElementById("freecam").addEventListener("click", () => { camera = persp; controls.object = persp; controls.enabled=true; state.dirty = true; });
 
 const ray = new THREE.Raycaster();
 renderer.domElement.addEventListener("pointerdown", (e) => {
@@ -152,7 +164,7 @@ function frame(now) {
   requestAnimationFrame(frame);
   const dt = Math.min(0.05, (now - last) / 1000);
   last = now;
-  controls.update();
+  if(controls.enabled) controls.update();
   for (const d of Object.values(state.doors)) {
     if (Math.abs(d.t - d.target) > 1e-3) { d.t += Math.sign(d.target - d.t) * Math.min(Math.abs(d.target - d.t), dt * 0.9); applyDoors(); }
   }

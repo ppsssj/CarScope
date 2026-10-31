@@ -43,8 +43,9 @@ export function generateGeometry(model) {
   // ---------------------------------------------------------------- parts
   const parts = [];
   const variantOf = sc.variantOf;
-  const doorDefs = { [FRONT_DOOR.id]: FRONT_DOOR, [REAR_DOOR.id]: REAR_DOOR };
-  const isFixedOpenPart = (prim) => prim.kind === "poly" || (prim.paths?.geo?.kind === "lathe" && prim.palette === "trim");
+  const doorDefs = model.doorDefs ?? { [FRONT_DOOR.id]: FRONT_DOOR, [REAR_DOOR.id]: REAR_DOOR };
+  const pivotOf = (def) => def.pivot ?? [def.hinge, HALF + 0.05, 0];
+  const isFixedOpenPart = model.isFixedOpenPart ?? ((prim) => prim.kind === "poly" || (prim.paths?.geo?.kind === "lathe" && prim.palette === "trim"));
 
   for (const item of sc.R.items) {
     const v = variantOf(item);
@@ -54,9 +55,10 @@ export function generateGeometry(model) {
       note(got.cls);
       if (!got.mesh) return;
       const part = { partId: `${item.name}/${i}`, item: item.name, cls: got.cls, materialId: prim.palette ?? "paint", mesh: got.mesh, closed: got.closed, parent: "body", geo: prim.paths?.geo };
+      if (prim.measurementRole) part.measurementRole = prim.measurementRole;
       if (v) {
         const def = doorDefs[v.door];
-        const theta = (def.open * Math.PI) / 180;
+        const theta = -(def.openSign ?? -1) * (def.open * Math.PI) / 180;
         if (isFixedOpenPart(prim)) {
           // hinge knuckles and the cabin seen through the window opening: fixed to the body, shown open
           part.partId = `${v.door}.fixed/${i}`;
@@ -66,7 +68,8 @@ export function generateGeometry(model) {
           // move the open pose back to closed, relative to the hinge pivot
           part.partId = `${v.door}/${i}`;
           part.parent = v.door;
-          part.pivot = [def.hinge, HALF + 0.05, 0];
+          part.pivot = pivotOf(def);
+          part.rotationSign = def.openSign ?? -1;
           part.mesh = mapMesh(got.mesh, (p) => rotateZ(p, part.pivot, theta), (n) => rotateZ(n, [0, 0, 0], theta));
           part.openOnly = prim.palette === "doorInner";
           const g = part.geo;
@@ -123,10 +126,10 @@ export function generateGeometry(model) {
   const doorNode = {};
   for (const id of Object.keys(doorDefs)) {
     const def = doorDefs[id];
-    const pivot = [def.hinge, HALF + 0.05, 0];
+    const pivot = pivotOf(def);
     nodes.push({
       name: id, translation: toGltf(pivot), rotation: quatAboutCarZ(0), children: [],
-      extras: { partId: id, pivot: toGltf(pivot), axis: [0, 1, 0], states: { closed: 0, open: (-def.open * Math.PI) / 180 }, stateAngleUnit: "radians about glTF +Y (car +z)" },
+      extras: { partId: id, pivot: toGltf(pivot), axis: [0, 1, 0], states: { closed: 0, open: ((def.openSign ?? -1) * def.open * Math.PI) / 180 }, stateAngleUnit: "radians about glTF +Y (car +z)" },
     });
     doorNode[id] = nodes.length - 1;
     nodes[0].children.push(doorNode[id]);
@@ -138,7 +141,7 @@ export function generateGeometry(model) {
     const idx = nodes.length - 1;
     (p.parent === "body" ? nodes[1] : nodes[doorNode[p.parent]]).children.push(idx);
   }
-  const glb = writeGlb({ nodes, roots: [0], materials, extras: { source: `anatomy-kit ${anatomy.rev}`, units: "metres", carAxes: "glTF X = car forward, Y = up, Z = car right", svgViewDirection: dirToGltf(V), svgCamera: { ...VIEW, projection: "orthographic", screenX: "camera-right" }, coordinateLandmarks: LANDMARKS.map((l) => ({ id: l.id, color: l.color, gltfMetres: toGltf(l.world) })) } });
+  const glb = writeGlb({ nodes, roots: [0], materials, extras: { source: `anatomy-kit ${anatomy.rev}`, units: "metres", carAxes: "glTF X = car forward, Y = up, Z = car right", svgViewDirection: dirToGltf(V), svgCamera: { ...VIEW, projection: "orthographic", screenX: "camera-right" }, coordinateLandmarks: LANDMARKS.map((l) => ({ id: l.id, color: l.color, gltfMetres: toGltf(l.world) })), ...(model.profile ? { vehicleGeometryProfile: model.profile } : {}) } });
 
 
   const ir = {
@@ -147,7 +150,7 @@ export function generateGeometry(model) {
     parts: parts.map((p) => ({
       partId: p.partId, item: p.item, cls: p.cls, classification: CLASS_NOTES[p.cls][0], materialId: p.materialId,
       parent: p.parent, pivot: p.pivot ?? null, axis: p.pivot ? [0, 0, 1] : null,
-      states: p.pivot ? { closed: 0, open: (-doorDefs[p.parent].open * Math.PI) / 180 } : null,
+      states: p.pivot ? { closed: 0, open: ((doorDefs[p.parent].openSign ?? -1) * doorDefs[p.parent].open * Math.PI) / 180 } : null,
       visibleWhen: p.visibleWhen ?? null,
       vertices: p.mesh.positions.flat().map((v) => Number(v.toFixed(3))),
       normals: p.mesh.normals.flat().map((v) => Number(v.toFixed(4))),

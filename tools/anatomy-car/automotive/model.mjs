@@ -9,9 +9,9 @@ import { buildWheels } from "./wheels.mjs";
 import { buildDoors } from "./doors.mjs";
 import { HALF, X_REAR, X_FRONT } from "./dims.mjs";
 
-export async function buildModel({ allowOtherRevision = false } = {}) {
+export async function buildModel({ allowOtherRevision = false, projection } = {}) {
   const anatomy = await loadAnatomy({ allowOtherRevision });
-  const P = camera(anatomy.k);
+  const P = projection ?? camera(anatomy.k);
   const ctx = { ...anatomy, P, ...geometry(anatomy, P) };
   const sc = scene(ctx);
   buildWheels(ctx, sc);

@@ -7,6 +7,8 @@ import { fileURLToPath } from "node:url";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOTS = [
+  ["/envelope.glb", join(HERE, "..", "anatomy-car", "build", "envelope", "car.glb")],
+  ["/envelope/", join(HERE, "..", "anatomy-car", "build", "envelope")],
   ["/vendor/three/", join(HERE, "node_modules", "three")],
   ["/car.glb", join(HERE, "..", "anatomy-car", "build", "geometry", "car.glb")],
   ["/", HERE],

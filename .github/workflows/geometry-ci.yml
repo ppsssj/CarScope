@@ -55,6 +55,8 @@ jobs:
           git diff --exit-code -- vehicle-core/src/main/resources/io/carscope/visualization/anatomy-car.parts
       - name: Export GLB and geometry reports
         run: npm run export --prefix tools/anatomy-car
+      - name: Generate and verify Envelope SUV independently of the original Sedan
+        run: npm run envelope --prefix tools/anatomy-car
       - name: Unit and regression tests (including nonzero CLI failure cases)
         run: npm test --prefix tools/anatomy-car
       - name: Verify GLB and sampled door collisions
