@@ -19,5 +19,10 @@
             android:name=".lab.WebGlLabActivity"
             android:exported="true"
             android:label="CarScope WebGL lab" />
+        <!-- P3-A5.1: IONIQ 5 Three.js rendering feasibility; the GLB is read from app-private debug storage. -->
+        <activity
+            android:name=".lab.Ioniq5LabActivity"
+            android:exported="true"
+            android:label="CarScope IONIQ 5 WebGL lab" />
     </application>
 </manifest>

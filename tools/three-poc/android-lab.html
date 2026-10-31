@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>CarScope IONIQ 5 WebGL lab (debug)</title>
+<link rel="stylesheet" href="./android-lab.css">
+<script type="importmap">
+{ "imports": { "three": "./vendor/three/build/three.module.js", "three/addons/": "./vendor/three/examples/jsm/" } }
+</script>
+</head>
+<body>
+<div id="view"></div>
+<div id="status" role="status">차량 모델을 불러오는 중…</div>
+<button type="button" id="close" aria-label="닫기">✕ 닫기</button>
+<div id="pick" hidden></div>
+<div id="zoom"><button type="button" id="zoomIn" aria-label="확대">+</button><button type="button" id="zoomOut" aria-label="축소">−</button></div>
+<div id="stats"></div>
+<p id="credit">“Hyundai Ioniq 5” © 2022 andikapratamaw, CC BY 4.0 · OpenX Assets · P3-A5.1 debug WebGL lab</p>
+<script type="module" src="./android-lab.js"></script>
+</body>
+</html>
