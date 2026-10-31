@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>CarScope · 워셔액 주입구 탐색 PoC</title>
+  <link rel="stylesheet" href="/style.css">
+  <script type="module" src="/app.mjs"></script>
+</head>
+<body>
+<main>
+  <header><p>CarScope / QR-AR-01 / 독립 실험</p><h1>워셔액 주입구 탐색</h1></header>
+  <p class="notice"><strong>실물 식별 정확도 미검증</strong> · 파란색 영역만 찾는 실험입니다. 표시된 후보를 워셔액 주입구로 확정하지 마세요. 화면 오버레이는 3D 공간에 고정되지 않습니다.</p>
+  <p id="handoff-status" role="status"></p>
+  <section aria-labelledby="camera-heading">
+    <h2 id="camera-heading">1. 스마트폰 카메라로 후보 찾기</h2>
+    <p>안전하게 주차하고 전원을 끈 뒤, 차량 설명서에 따라 보닛을 여세요. 움직이는 부품이나 뜨거운 부품에 접근하지 마세요.</p>
+    <div class="controls"><button id="start" type="button">카메라 시작</button><button id="stop" type="button" disabled>카메라 중지</button><button id="manual" type="button">수동 안내 보기</button></div>
+    <p id="status" role="status" aria-live="polite">카메라 대기 · 영상은 기기 안에서만 처리합니다.</p>
+    <div id="stage"><video id="video" autoplay muted playsinline aria-label="카메라 영상"></video><canvas id="overlay" aria-label="미검증 후보 오버레이"></canvas><p id="placeholder">카메라를 시작하면 여기에 영상이 표시됩니다.</p></div>
+    <p>최대 3개 후보 · 파란 캡이 아니거나 빛·가림·배경색이 다르면 놓치거나 잘못 표시할 수 있습니다. 이미지 저장·업로드 기능은 없습니다.</p>
+  </section>
+  <section id="guidance" aria-labelledby="manual-heading" tabindex="-1">
+    <h2 id="manual-heading">2. 찾지 못했거나 확신이 없을 때</h2>
+    <ol><li>차량의 정확한 연식·모델에 맞는 사용설명서에서 “워셔액” 항목과 주입구 위치를 확인하세요. 이 PoC는 차종별 위치를 알지 못합니다.</li><li>캡의 앞유리와 분사 모양 워셔 표시를 직접 확인하세요. 파란색만으로 판단하지 마세요.</li><li>냉각수·브레이크액 등 다른 주입구와 혼동할 수 있습니다. 위치나 표시가 불명확하면 열거나 주입하지 말고 제조사 서비스에 문의하세요.</li></ol>
+    <p>수동 안내는 탐지 성공이나 주입 승인 판정이 아닙니다.</p>
+  </section>
+  <section aria-labelledby="qr-heading"><h2 id="qr-heading">스마트폰으로 이어서 보기</h2><p>PC에서는 아래 QR을 스마트폰 기본 카메라로 스캔하세요. QR은 차량 정보나 실시간 상태를 전달하지 않습니다.</p><div id="qr"></div><a id="handoff-link" hidden>스마트폰 연결 주소 열기</a><p id="qr-status">QR 설정 확인 중…</p></section>
+  <noscript>이 PoC의 카메라와 QR 연결에는 JavaScript가 필요합니다. 위 수동 안내를 이용하세요.</noscript>
+</main>
+</body>
+</html>

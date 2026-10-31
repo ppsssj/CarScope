@@ -1,0 +1,15 @@
+{
+  "name": "carscope-mobile-ar-poc",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "serve": "node server.mjs",
+    "test": "node --test test/*.test.mjs",
+    "check": "node --check server.mjs && node --check public/app.mjs && node --check public/detector.mjs && node --check public/handoff.mjs && node --check public/camera.mjs",
+    "test:browser": "node test/browser.mjs"
+  },
+  "dependencies": { "qrcode": "1.5.4" },
+  "devDependencies": { "playwright": "1.56.1", "jsqr": "1.4.0", "pngjs": "7.0.0" }
+}
