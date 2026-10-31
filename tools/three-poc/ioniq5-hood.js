@@ -8,6 +8,7 @@ import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import * as H from "./ioniq5-asset/hood.mjs";
 import { staticScene, meshClearance, baselineContacts } from "./ioniq5-asset/collision.mjs";
+import { attachFrontCompartment } from "./front-compartment-view.js";
 
 const params = new URLSearchParams(location.search);
 window.__labLog = [];
@@ -96,7 +97,8 @@ function runCheck() {
   if (!S.scene) return null;
   const t0 = performance.now();
   const moved = H.rotatePoints(S.closedCar, S.axis, S.angle);
-  const c = meshClearance(moved, S.scene, { cutoff: 10, baseline: S.baseline });
+  // With the P3-A2.1 shell shown, the hood is also checked against it (shell items come after the source meshes).
+  const c = meshClearance(moved, S.fc?.group.visible ? S.fc.sceneWithShell() : S.scene, { cutoff: 10, baseline: S.baseline });
   const ms = performance.now() - t0;
   const verdict = S.angle === 0 ? "CLOSED_BASELINE" : c.intersectingPairs ? "NEW_MESH_INTERSECTION" : "NO_NEW_INTERSECTION";
   const regions = Object.entries(c.byRegion).filter(([, v]) => v.minCm < 10).sort((a, b) => a[1].minCm - b[1].minCm).slice(0, 5).map(([k, v]) => `  ${k}: ${v.minCm.toFixed(2)} cm${v.intersectingPairs ? `, ${v.intersectingPairs} crossing pairs` : ""}`).join("\n");
@@ -126,7 +128,9 @@ function useAxis(id) {
 
 function useView(v) {
   const c = new THREE.Vector3(0, 0.75, 0), hoodC = toGltf([160, 0, 100]);
-  const views = { front: [c, [1, 0.25, 0], 6.5], side: [c, [0, 0.12, -1], 6.8], iso: [c, [0.75, 0.45, -0.85], 7.2], top: [c, [0.001, 1, 0], 9.0], bay: [hoodC, [0.55, 1.0, -0.55], 3.4] };
+  const views = { front: [c, [1, 0.25, 0], 6.5], side: [c, [0, 0.12, -1], 6.8], iso: [c, [0.75, 0.45, -0.85], 7.2], top: [c, [0.001, 1, 0], 9.0], bay: [toGltf([155, 0, 62]), [1.0, 1.35, -0.3], 3.3],
+    // P3-A2.1 compartment close-ups
+    bayiso: [toGltf([160, 0, 70]), [0.75, 0.9, -0.85], 3.2], baytop: [toGltf([160, 0, 70]), [0.55, 1, 0.001], 3.2], bayside: [toGltf([150, 0, 85]), [0, 0.2, -1], 3.4] };
   const [target, dir, dist] = views[v] ?? views.iso;
   camera.position.copy(target).add(new THREE.Vector3(...dir).normalize().multiplyScalar(dist));
   controls.target.copy(target);
@@ -200,11 +204,16 @@ loader.load(params.get("model") ?? "./external/ioniq5.glb", async (gltf) => {
     S.placeholder.visible = false;
     scene.add(S.placeholder);
   }
+  // P3-A2.1 front compartment shell: separate group, never under the hood pivot.
+  const bodyMaterial = S.meshes.find((m) => m.userData.part === "Body" && m.material.name === "Body")?.material;
+  S.fc = attachFrontCompartment({ scene, bodyMaterial, others: S.others, camera, dom: document, log });
+  if (params.get("shell") === "1") setShell({ shell: true });
   useAxis(params.get("axis") ?? "A");
   const gl = renderer.getContext(), dbg = gl.getExtension("WEBGL_debug_renderer_info");
   const info = { ms: Math.round(performance.now() - t0), parts: parts.length, hoodTriangles: S.closedCar.length / 9, staticTriangles: S.scene.items.length, seamTriangles: S.baseline.size, identification: id.problems,
     zeroDegree: { changedPixels: diff, sameSceneRerenderChangedPixels: noise, totalPixels: before.length / 4, hoodWorldMatrixMaxDelta: worldDelta, hoodLocalMatrixUnchanged: localSame },
-    candidates: S.candidates.map((c) => ({ id: c.id, point: c.point, direction: c.direction, evidence: c.evidence })), placeholder: box, webgl: dbg ? gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL) : "unknown" };
+    candidates: S.candidates.map((c) => ({ id: c.id, point: c.point, direction: c.direction, evidence: c.evidence })), placeholder: box, webgl: dbg ? gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL) : "unknown",
+    shell: { panels: S.fc.shell.panels.length, triangles: S.fc.shell.panels.reduce((a, p) => a + p.triangles.length / 9, 0), buildMs: +S.fc.buildMs.toFixed(2) } };
   log("loaded", info);
   $("status").textContent = `${parts.length} parts · hood ${info.hoodTriangles} tri · 0° pixel diff ${diff}`;
   runCheck();
@@ -219,10 +228,30 @@ $("outline").addEventListener("change", (e) => S.outline.forEach((l) => (l.visib
 $("xray").addEventListener("change", (e) => setXray(e.target.checked));
 $("placeholder").addEventListener("change", (e) => { if (S.placeholder) S.placeholder.visible = e.target.checked; $("placeholderTag").style.display = e.target.checked ? "block" : "none"; });
 $("live").addEventListener("change", scheduleCheck);
+
+/** P3-A2.1 shell controls: visibility, opacity, reserved zones, part selection. */
+function setShell(opts) {
+  if (!S.fc) return opts;
+  if (opts.shell !== undefined) { $("shell").checked = opts.shell; S.fc.setVisible(opts.shell); scheduleCheck(); }
+  if (opts.shellOpacity !== undefined) { $("shellOpacity").value = String(opts.shellOpacity); S.fc.setOpacity(opts.shellOpacity); }
+  if (opts.zones !== undefined) { $("zones").checked = opts.zones; S.fc.zonesGroup.visible = opts.zones; $("placeholderTag").style.display = opts.zones || $("placeholder").checked ? "block" : "none"; }
+  if (opts.part !== undefined) S.fc.select(opts.part);
+  return opts;
+}
+$("shell").addEventListener("change", (e) => setShell({ shell: e.target.checked }));
+$("shellOpacity").addEventListener("input", (e) => setShell({ shellOpacity: Number(e.target.value) }));
+$("zones").addEventListener("change", (e) => setShell({ zones: e.target.checked }));
+$("shellPart").addEventListener("change", (e) => setShell({ part: e.target.value || null }));
+let downAt = null;
+renderer.domElement.addEventListener("pointerdown", (e) => { downAt = [e.clientX, e.clientY]; });
+renderer.domElement.addEventListener("pointerup", (e) => { if (downAt && Math.hypot(e.clientX - downAt[0], e.clientY - downAt[1]) < 4) S.fc?.pick(e.clientX, e.clientY, renderer.domElement); });
 document.querySelectorAll("[data-view]").forEach((b) => b.addEventListener("click", () => useView(b.dataset.view)));
 addEventListener("resize", () => { camera.aspect = innerWidth / innerHeight; shiftView(); renderer.setSize(innerWidth, innerHeight); });
 
-const frameTimes = [];
+const frameTimes = [], renderCpu = [], gpuTimes = [];
+// GPU time per frame where the driver exposes EXT_disjoint_timer_query_webgl2; otherwise not measured.
+const glx = renderer.getContext(), timer = glx.getExtension("EXT_disjoint_timer_query_webgl2");
+const pending = [];
 let last = 0;
 renderer.setAnimationLoop((now) => {
   if (last) frameTimes.push(now - last);
@@ -230,13 +259,32 @@ renderer.setAnimationLoop((now) => {
   last = now;
   S.tween?.(now);
   controls.update();
+  const query = timer && pending.length < 4 ? glx.createQuery() : null;
+  if (query) glx.beginQuery(timer.TIME_ELAPSED_EXT, query);
+  const c0 = performance.now();
   renderer.render(scene, camera);
+  renderCpu.push(performance.now() - c0);
+  if (renderCpu.length > 600) renderCpu.shift();
+  if (query) { glx.endQuery(timer.TIME_ELAPSED_EXT); pending.push(query); }
+  while (pending.length && glx.getQueryParameter(pending[0], glx.QUERY_RESULT_AVAILABLE)) {
+    const q0 = pending.shift();
+    if (!glx.getParameter(timer.GPU_DISJOINT_EXT)) gpuTimes.push(glx.getQueryParameter(q0, glx.QUERY_RESULT) / 1e6);
+    glx.deleteQuery(q0);
+    if (gpuTimes.length > 600) gpuTimes.shift();
+  }
 });
 
 const q = (a) => { const s = [...a].sort((x, y) => x - y); const at = (p) => s[Math.min(s.length - 1, Math.floor((s.length - 1) * p))]; return s.length ? { n: s.length, p50: +at(0.5).toFixed(2), p95: +at(0.95).toFixed(2), max: +s.at(-1).toFixed(2) } : null; };
 
 window.__hood = {
-  state: S, useView, useAxis, setAngle, animateTo, runCheck,
+  state: S, useView, useAxis, setAngle, animateTo, runCheck, setShell,
+  /** Cost of showing or hiding the shell: setVisible + the next rendered frame (CPU side). */
+  async shellToggleCost(on) {
+    const t = performance.now();
+    setShell({ shell: on });
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+    return { on, msToSecondFrame: +(performance.now() - t).toFixed(1), lastRenderCpuMs: +renderCpu.at(-1).toFixed(2), drawCalls: renderer.info.render.calls, triangles: renderer.info.render.triangles };
+  },
   set: (opts) => { if (opts.outline !== undefined) { $("outline").checked = opts.outline; $("outline").dispatchEvent(new Event("change")); } if (opts.xray !== undefined) { $("xray").checked = opts.xray; $("xray").dispatchEvent(new Event("change")); } if (opts.placeholder !== undefined) { $("placeholder").checked = opts.placeholder; $("placeholder").dispatchEvent(new Event("change")); } return opts; },
   /** Browser pivot against the Node rotation (hood.mjs rotatePoints): max vertex difference in cm. */
   compareWithNode(deg) {
@@ -249,19 +297,20 @@ window.__hood = {
   },
   /** Frame intervals while the hood opens and closes continuously (requestAnimationFrame). */
   async perf(cycles = 2) {
-    frameTimes.length = 0;
+    frameTimes.length = 0; renderCpu.length = 0; gpuTimes.length = 0;
     const t = performance.now(), info0 = { ...renderer.info.render };
     for (let i = 0; i < cycles; i++) { await animateTo(45, 1400); await animateTo(0, 1400); }
-    const r = { cycles, wallMs: Math.round(performance.now() - t), frameMs: q(frameTimes), drawCalls: renderer.info.render.calls, trianglesPerFrame: renderer.info.render.triangles, pixelRatio: renderer.getPixelRatio(), canvas: [renderer.domElement.width, renderer.domElement.height], info0 };
+    const r = { cycles, wallMs: Math.round(performance.now() - t), frameMs: q(frameTimes), renderCpuMs: q(renderCpu), gpuMs: timer ? q(gpuTimes) : "NOT_AVAILABLE (no EXT_disjoint_timer_query_webgl2)",
+      drawCalls: renderer.info.render.calls, trianglesPerFrame: renderer.info.render.triangles, pixelRatio: renderer.getPixelRatio(), canvas: [renderer.domElement.width, renderer.domElement.height], shell: Boolean(S.fc?.group.visible), info0 };
     log("perf", r);
     return r;
   },
   /** Load model-derived SVG frames from the external folder: fetch, parse and first paint as <img>. */
-  async svgTiming(names) {
+  async svgTiming(names, base = "./external/p3-a1/svg/") {
     const rows = [];
     for (const name of names) {
       const t0 = performance.now();
-      const text = await (await fetch(`./external/p3-a1/svg/${name}`)).text();
+      const text = await (await fetch(`${base}${name}`)).text();
       const t1 = performance.now();
       const img = new Image();
       img.src = URL.createObjectURL(new Blob([text], { type: "image/svg+xml" }));

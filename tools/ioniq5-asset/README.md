@@ -78,6 +78,21 @@ node tools/three-poc/check-ioniq5-hood.mjs C:\CarScope-External\p3-a1\captures
 $env:IONIQ5_GLB = $glb; node --test tools/ioniq5-asset/test/hood.test.mjs
 ```
 
+## P3-A2.1: front compartment shell
+
+Details, sources and measurements: [docs/p3-a2-1-front-compartment-shell.md](../../docs/p3-a2-1-front-compartment-shell.md).
+`front-compartment-layout.mjs` holds the measured model references and the panel/zone parameters; `front-compartment.mjs`
+builds the shell (ESTIMATED_GEOMETRY panels, SYNTHETIC_DEBUG_PLACEHOLDER zones) deterministically, browser-safe.
+
+```powershell
+$glb = 'C:\CarScope-External\ioniq5-carscope\hyundai_ioniq_5_2022.glb'
+node tools/ioniq5-asset/front-compartment-report.mjs --glb=$glb --out=C:\CarScope-External\p3-a2-1\report   # --quick for a coarse run
+$env:CARSCOPE_IONIQ5_GLB = $glb; $env:CARSCOPE_P3A1_DIR = 'C:\CarScope-External\p3-a1\report'; $env:CARSCOPE_P3A21_DIR = 'C:\CarScope-External\p3-a2-1\report'; node tools/three-poc/serve.mjs
+#    http://127.0.0.1:8095/ioniq5-hood.html?shell=1
+node tools/three-poc/check-ioniq5-shell.mjs C:\CarScope-External\p3-a2-1\captures
+$env:IONIQ5_GLB = $glb; node --test tools/ioniq5-asset/test/front-compartment.test.mjs
+```
+
 Not implemented (reported, not guessed): modifier/constraint evaluation (none in this source),
 Blender custom split normals (`custom_normal` is stored relative to Blender's corner normal spaces),
 UVs/textures (none in this source), older `.blend` header formats.

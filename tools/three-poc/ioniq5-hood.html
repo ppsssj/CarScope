@@ -20,6 +20,8 @@
   #credit{left:8px;bottom:8px;max-width:520px;font-size:11px;color:#57606a}
   #status{right:8px;bottom:8px;font-family:ui-monospace,Consolas,monospace;font-size:11px;white-space:pre}
   #axisInfo{font-family:ui-monospace,Consolas,monospace;font-size:11px;white-space:pre-wrap;margin-top:4px}
+  #shellTag{display:none;position:fixed;left:50%;top:34px;transform:translateX(-50%);background:#e0e7ff;border:1px solid #4f46e5;color:#312e81;font:600 11px ui-monospace,Consolas,monospace;padding:3px 8px;border-radius:4px}
+  #shellInfo{display:none;right:8px;top:236px;width:360px;white-space:pre-wrap;font-family:ui-monospace,Consolas,monospace;font-size:11px}
   #placeholderTag{display:none;position:fixed;left:50%;top:8px;transform:translateX(-50%);background:#fef3c7;border:1px solid #d97706;color:#92400e;font:600 11px ui-monospace,Consolas,monospace;padding:3px 8px;border-radius:4px}
 </style>
 <script type="importmap">
@@ -44,11 +46,20 @@
   <label><input id="xray" type="checkbox"> translucent body (see under the hood)</label>
   <label><input id="placeholder" type="checkbox"> SYNTHETIC_DEBUG_PLACEHOLDER volume</label>
   <label><input id="live" type="checkbox" checked> live mesh collision check</label>
+  <fieldset style="margin:4px 0;padding:4px 6px;border:1px solid #c9d0d8;border-radius:4px">
+    <legend style="font-size:11px">Front compartment shell (P3-A2.1, ESTIMATED_GEOMETRY)</legend>
+    <label><input id="shell" type="checkbox"> show shell</label>
+    <label>opacity <input id="shellOpacity" type="range" min="0.1" max="1" step="0.05" value="1" style="width:60%"></label>
+    <label><input id="zones" type="checkbox"> FrunkZone / service zones (SYNTHETIC_DEBUG_PLACEHOLDER)</label>
+    <select id="shellPart"></select>
+  </fieldset>
   <div><button data-view="front">FRONT</button><button data-view="side">SIDE</button><button data-view="iso">ISO</button><button data-view="top">TOP</button><button data-view="bay">BAY</button></div>
   <div class="muted" style="margin-top:4px">drag: rotate · wheel: zoom · right-drag: pan</div>
 </div>
 <div id="check" class="card">loading…</div>
 <div id="placeholderTag">SYNTHETIC_DEBUG_PLACEHOLDER: not a real part shape</div>
+<div id="shellTag">FRONT COMPARTMENT SHELL: ESTIMATED_GEOMETRY · not Hyundai CAD</div>
+<div id="shellInfo" class="card"></div>
 <div id="status" class="card">loading…</div>
 <div id="credit" class="card">Model: “Hyundai Ioniq 5” © 2022 andikapratamaw (sketchfab.com/andikapratamaw), CC BY 4.0; modified © 2026 Dogan Ulus, OpenX Assets (MPL-2.0 AND CC-BY-4.0). Converted by CarScope. Community model, not Hyundai data; not endorsed by Hyundai. Hinge axes are candidates, not manufacturer data.</div>
 <script type="module" src="./ioniq5-hood.js"></script>

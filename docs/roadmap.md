@@ -42,6 +42,8 @@
 
 ## P2 — 자산 및 제품 수준 UI
 
+**P3-A2.1 (2026-10-31)**: 보닛 아래 빈 외피를 막는 전방 구획 Shell(벌크헤드·카울 커버, 좌우 에이프런과 스트럿 타워 캡, 중앙 웰과 좌우 선반이 있는 하부 라이너, 래치 크로스멤버, 앞 슈라우드)과 FrunkZone·서비스 영역 예약을 추가했습니다. 판정 `P3A21_SHELL_VALIDATED`입니다. 정확 검사 결과 차체·패널 간 결함 0이고, 보닛 축 A/C 0–60°(1°, SIMULATION_ONLY)에서 새 교차가 없습니다. 열었을 때 바닥판·실내 노출은 0입니다. 패널은 사용설명서 그림을 참고한 ESTIMATED_GEOMETRY이며 OEM 형상이 아닙니다. [구조·근거·검증·P3-A2.2 조건](p3-a2-1-front-compartment-shell.md)
+
 **P3-A1 (2026-10-31)**: IONIQ 5 보닛(`Door_Front_0`)을 원본 변환 그대로 두고 피벗 노드로만 회전하는 브라우저 PoC와, 정확한 삼각형 교차·간격 검사(0–60°, 1° 간격, 축 후보 3개)를 추가했습니다. 판정 `P3A1_GEOMETRY_VERIFIED`이며 힌지는 미검증입니다. 원본 그룹 원점(A)과 Geometry 탐색 축(C)은 새 간섭이 없고, 모서리 아래 추정 축(B)은 19°부터 A필러 밑과 간섭합니다. 실차 힌지 좌표와 최대 개방 각도는 공개 자료가 없어 UNVERIFIED입니다. 사용설명서의 30 cm는 닫기 권장 위치일 뿐이며, 사용한 각도는 모두 `SIMULATION_ONLY` 실험값입니다. 보닛 아래는 빈 외피이며 앞 구획 부품 메시가 없습니다. [근거·측정·P3-A2 요구사항](p3-a1-hood-hinge-feasibility.md)
 
 **P2-A8 (2026-10-31)**: 렌더러가 `VehicleVisualAsset`을 입력으로 받고, 명시적 `VisualProfile`(기본 `pleos-avd-reference`)과 대체 경로가 있는 리졸버를 추가했습니다. 기본 SVG 출력은 바이트 단위로 같습니다. Debug 전용 화면에서 `run-as`로 넣은 IONIQ 5 자산이 Pleos AVD WebView에 실제 표시되었고, OPEN은 `DoorPose.UNAVAILABLE`과 "개폐 형상 미지원"으로 구분됩니다. Release APK/AAB에는 파생 자산과 debug 경로가 없습니다. 배포 승인은 아닙니다. [아키텍처·AVD 실측·P3-A 검토](p2-a8-android-runtime-validation.md)

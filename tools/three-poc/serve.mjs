@@ -21,7 +21,11 @@ const ROOTS = [
   // P3-A1: hood modules shared with the Node report, and its output folder (outside the repo).
   ["/ioniq5-asset/hood.mjs", join(HERE, "..", "ioniq5-asset", "hood.mjs")],
   ["/ioniq5-asset/collision.mjs", join(HERE, "..", "ioniq5-asset", "collision.mjs")],
+  // P3-A2.1: front compartment shell modules (layout + builder, no model-derived data).
+  ["/ioniq5-asset/front-compartment.mjs", join(HERE, "..", "ioniq5-asset", "front-compartment.mjs")],
+  ["/ioniq5-asset/front-compartment-layout.mjs", join(HERE, "..", "ioniq5-asset", "front-compartment-layout.mjs")],
   ...(process.env.CARSCOPE_P3A1_DIR ? [["/external/p3-a1/", resolve(process.env.CARSCOPE_P3A1_DIR)]] : []),
+  ...(process.env.CARSCOPE_P3A21_DIR ? [["/external/p3-a2-1/", resolve(process.env.CARSCOPE_P3A21_DIR)]] : []),
   ["/", HERE],
 ];
 const TYPES = { ".html": "text/html", ".js": "text/javascript", ".mjs": "text/javascript", ".glb": "model/gltf-binary", ".json": "application/json", ".svg": "image/svg+xml" };
