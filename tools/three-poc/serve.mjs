@@ -16,9 +16,11 @@ const ROOTS = [
   // P2-A6: the converted third-party IONIQ 5 GLB lives outside the repo; served only when configured.
   ["/ioniq5-asset/parts.mjs", join(HERE, "..", "ioniq5-asset", "parts.mjs")],
   ...(process.env.CARSCOPE_IONIQ5_GLB ? [["/external/ioniq5.glb", resolve(process.env.CARSCOPE_IONIQ5_GLB)]] : []),
+  // P2-A7: model-derived SVG output, also outside the repo.
+  ...(process.env.CARSCOPE_IONIQ5_SVG_DIR ? [["/external/ioniq5-svg/", resolve(process.env.CARSCOPE_IONIQ5_SVG_DIR)]] : []),
   ["/", HERE],
 ];
-const TYPES = { ".html": "text/html", ".js": "text/javascript", ".mjs": "text/javascript", ".glb": "model/gltf-binary", ".json": "application/json" };
+const TYPES = { ".html": "text/html", ".js": "text/javascript", ".mjs": "text/javascript", ".glb": "model/gltf-binary", ".json": "application/json", ".svg": "image/svg+xml" };
 const port = Number(process.env.PORT ?? 8095);
 createServer(async (req, res) => {
   const url = decodeURIComponent(new URL(req.url, "http://x").pathname);

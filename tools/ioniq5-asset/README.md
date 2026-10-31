@@ -33,6 +33,24 @@ $env:CARSCOPE_IONIQ5_GLB = 'C:\CarScope-External\ioniq5-carscope\hyundai_ioniq_5
 | `parts.mjs` | Name-based categories (browser-safe); service parts that must report `NOT_AVAILABLE` when absent |
 | `profile.mjs` | `VEHICLE_PROFILES` registry: `pleos-avd-reference` (default, unchanged) and `hyundai-ioniq5-2022` |
 
+## P2-A7: Anatomy-style SVG from the GLB
+
+Details and measurements: [docs/p2-a7-ioniq5-anatomy-svg.md](../../docs/p2-a7-ioniq5-anatomy-svg.md). The generic
+mesh adapter lives in [tools/anatomy-car/mesh-svg/](../anatomy-car/mesh-svg/); this folder only binds the IONIQ 5
+materials and part IDs. Output is model-derived and stays outside the repository.
+
+```powershell
+$glb = 'C:\CarScope-External\ioniq5-carscope\hyundai_ioniq_5_2022.glb'
+node tools/ioniq5-asset/anatomy-svg.mjs --glb=$glb --out=C:\CarScope-External\ioniq5-svg   # --tolerance=1.5 --min-region=12
+# SVG vs GLB with the same camera (GPU part-ID comparison, hit tests, paint timing)
+$env:CARSCOPE_IONIQ5_GLB = $glb; $env:CARSCOPE_IONIQ5_SVG_DIR = 'C:\CarScope-External\ioniq5-svg'; node tools/three-poc/serve.mjs
+node tools/three-poc/check-ioniq5-svg.mjs http://127.0.0.1:8095/ioniq5-svg.html C:\CarScope-External\ioniq5-svg\compare.png
+# existing Kotlin renderer with the IONIQ 5 asset, local only (swaps and restores the resource, SHA-checked)
+powershell -NoProfile -ExecutionPolicy Bypass -File tools/ioniq5-asset/eval-android-renderer.ps1 -Parts C:\CarScope-External\ioniq5-svg\ioniq5.parts -Out C:\CarScope-External\android-eval
+# tests (IONIQ5_GLB enables the real-asset test)
+node --test tools/ioniq5-asset/test/*.test.mjs; node --test tools/anatomy-car/test/mesh-svg.test.mjs
+```
+
 Not implemented (reported, not guessed): modifier/constraint evaluation (none in this source),
 Blender custom split normals (`custom_normal` is stored relative to Blender's corner normal spaces),
 UVs/textures (none in this source), older `.blend` header formats.
