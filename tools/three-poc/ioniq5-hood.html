@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>CarScope IONIQ 5 hood and frunk PoC</title>
+<title>CarScope IONIQ 5 service inspection PoC</title>
 <style>
   html,body{margin:0;height:100%;background:#f4f5f7;font:13px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif;color:#233448}
   #view{position:fixed;inset:0}
@@ -31,7 +31,7 @@
 <body>
 <div id="view"></div>
 <div id="panel" class="card">
-  <h1>IONIQ 5 hood &amp; frunk (P3-A2.2 debug PoC)</h1>
+  <h1>IONIQ 5 점검 부품 (P3-A2.3 debug PoC)</h1>
   <div class="muted">profile hyundai-ioniq5-2022 · source mesh unmodified · debug simulation</div>
   <label>Hinge axis candidate
     <select id="axis"></select>
@@ -65,6 +65,13 @@
     <div id="frunkMessage" role="status" class="muted">SIMULATION_ONLY</div>
     <details><summary>Part evidence</summary><div id="frunkInfo" class="muted" style="white-space:pre-wrap;overflow-wrap:anywhere"></div></details>
   </fieldset>
+  <fieldset style="margin:4px 0;padding:4px 6px;border:1px solid #c9d0d8;border-radius:4px">
+    <legend>점검 부품 · 추정 형상</legend>
+    <label><input id="services" type="checkbox"> 워셔액 주입구 표시</label>
+    <button id="focusWasher">워셔액 점검 위치 보기</button>
+    <label><input id="serviceReservations" type="checkbox"> 나머지 5종 예약 영역 (UNVERIFIED)</label>
+    <label>점검 대상 <select id="servicePart"></select></label>
+  </fieldset>
   <div><button data-view="front">FRONT</button><button data-view="side">SIDE</button><button data-view="iso">ISO</button><button data-view="top">TOP</button><button data-view="bay">BAY</button></div>
   <div class="muted" style="margin-top:4px">drag: rotate · wheel: zoom · right-drag: pan</div>
 </div>
@@ -72,6 +79,10 @@
 <div id="placeholderTag">SYNTHETIC_DEBUG_PLACEHOLDER: not a real part shape</div>
 <div id="shellTag">FRONT COMPARTMENT SHELL: ESTIMATED_GEOMETRY · not Hyundai CAD</div>
 <div id="shellInfo" class="card"></div>
+<div id="serviceInfo" class="card" hidden style="right:8px;top:260px;width:340px;max-height:50vh;overflow-y:auto">
+  <b id="serviceName"></b><div id="serviceConfidence" class="muted" style="white-space:pre-wrap;overflow-wrap:anywhere"></div>
+  <p id="serviceGuidance"></p><a id="serviceSource" target="_blank" rel="noopener noreferrer"></a>
+</div>
 <div id="status" class="card">loading…</div>
 <div id="credit" class="card">Model: “Hyundai Ioniq 5” © 2022 andikapratamaw (sketchfab.com/andikapratamaw), CC BY 4.0; modified © 2026 Dogan Ulus, OpenX Assets (MPL-2.0 AND CC-BY-4.0). Converted by CarScope. Community model, not Hyundai data; not endorsed by Hyundai. Hinge axes are candidates, not manufacturer data.</div>
 <script type="module" src="./ioniq5-hood.js"></script>
