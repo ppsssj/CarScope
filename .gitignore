@@ -32,6 +32,7 @@ docs/evidence/**
 
 # P2-A2 experiment: generated lab assets and the PoC toolchain
 app/src/debug/assets/webgl-lab/
+app/src/debug/assets/ioniq5-lab/
 node_modules/
 
 # P2-A8: model-derived drawings and meshes never enter the repo (see docs/p2-a8-android-runtime-validation.md)

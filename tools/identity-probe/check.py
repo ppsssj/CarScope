@@ -93,6 +93,9 @@ def visual_asset_boundary(manifests, names):
             for name in archive.namelist():
                 data = archive.read(name)
                 for marker in DERIVED_MARKERS:
+                    # P3-A5.1: the debug WebGL lab page shows the CC BY credit line; that is attribution, not model data.
+                    if not release and name.startswith(LAB_ASSETS) and marker == ATTRIBUTION_MARKER:
+                        continue
                     assert marker not in data, f"{path.name}:{name} contains model-derived drawing data"
                 if release and name.endswith(".dex"):
                     assert b"Lio/carscope/app/profile/" not in data, f"{path.name}: debug profile classes in release"
@@ -101,6 +104,28 @@ def visual_asset_boundary(manifests, names):
     assert [t for t in tracked if t.endswith(".parts")] == ["vehicle-core/src/main/resources/" + BUNDLED_PARTS]
     assert not [t for t in tracked if t.lower().endswith((".glb", ".blend")) or "/assets/" in t and t.startswith("app/")]
     print("PASS: visual-profile screen debug-only; APK/AAB carry only the bundled drawing; no derived asset tracked")
+    lab_boundary(manifests, names, archives)
+
+
+LAB_ASSETS = "assets/ioniq5-lab/"
+ATTRIBUTION_MARKER = b"andikapratamaw"
+
+
+def lab_boundary(manifests, names, archives):
+    """P3-A5.1: the WebGL lab screens and their assets exist only in debug builds; the GLB is never packaged."""
+    for activity in ("io.carscope.app.lab.WebGlLabActivity", "io.carscope.app.lab.Ioniq5LabActivity"):
+        assert activity in names(manifests["debug"], "activity"), activity
+        assert activity not in names(manifests["release"], "activity"), activity
+    for path in archives:
+        if "release" not in path.name:
+            continue
+        with zipfile.ZipFile(path) as archive:
+            listed = archive.namelist()
+            assert not [n for n in listed if "webgl-lab/" in n or "ioniq5-lab/" in n], f"{path.name}: lab assets in release"
+            dex = b"".join(archive.read(n) for n in listed if n.endswith(".dex"))
+            for marker in (b"Lio/carscope/app/lab/", b"debug-3d-assets", b"carscope-ioniq5-lab.invalid", b"carscope-lab.invalid"):
+                assert marker not in dex, f"{path.name}: {marker!r} in release DEX"
+    print("PASS: WebGL lab activities debug-only; release APK/AAB carry no lab assets, classes, hosts or model path")
 
 
 def capture(adb, serial, output):
