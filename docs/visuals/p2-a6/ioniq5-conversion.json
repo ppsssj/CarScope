@@ -1,0 +1,1552 @@
+{
+  "tool": "tools/ioniq5-asset/convert.mjs",
+  "provenance": {
+    "sourceFile": "hyundai_ioniq_5_2022.blend",
+    "sourceSha256": "e8e8788dee08ae2885e829c860930b843f3c3471ff05dcd851fa5aaa006abd8a",
+    "sourceBytes": 839941,
+    "container": "ZSTD",
+    "zstdFrames": 4,
+    "decompressedBytes": 3893940,
+    "blendHeader": "BLENDER17-01v0502",
+    "blenderFileVersion": "5.2",
+    "license": "MPL-2.0 AND CC-BY-4.0",
+    "copyrights": [
+      "(c) 2026 Dogan Ulus <dogan.ulus@bogazici.edu.tr>",
+      "(c) 2022 andikapratamaw <https://sketchfab.com/andikapratamaw>, licensed under CC-BY-4.0"
+    ],
+    "authors": [
+      "Dogan Ulus <dogan.ulus@bogazici.edu.tr>"
+    ],
+    "uuid": "5ce99efb-aa47-4c5f-8a30-8d5615d32e0c",
+    "name": "Hyundai Ioniq 5"
+  },
+  "axisMap": {
+    "position": "(x, y, z) -> (x, z, -y)",
+    "unit": "metres",
+    "scale": 1
+  },
+  "counts": {
+    "objects": 101,
+    "meshObjects": 44,
+    "empties": 57,
+    "meshes": 44,
+    "materials": 30,
+    "triangles": 37350,
+    "sourceVertices": 46655,
+    "sourceFaces": 25274
+  },
+  "issues": [],
+  "limits": [
+    "No modifier/constraint evaluation (none present in this source; any would be listed in issues).",
+    "Shading normals are derived (face normal for sharp faces, angle-weighted smooth normals otherwise).",
+    "Blender custom split normals (custom_normal, int16x2 in corner normal space) are NOT decoded; meshes listing it shade slightly differently from Blender. Positions and topology are unaffected.",
+    "No UV maps or textures exist in this source, so none are exported.",
+    "Lights, cameras and animation are not exported."
+  ],
+  "output": {
+    "glb": "hyundai_ioniq_5_2022.glb",
+    "bytes": 1902820,
+    "sha256": "cfe0d754b5aaf8daeff7b498b0f786d7b2fb94323850f214678a3b68d00139e1"
+  },
+  "meshes": [
+    {
+      "name": "Body",
+      "point": 4288,
+      "edge": 7946,
+      "face": 4031,
+      "corner": 12093,
+      "triangles": 4031,
+      "degenerateFaces": 0,
+      "materials": [
+        "Body",
+        "Trim_Grey",
+        "Black_Plastic",
+        "Black_Gloss",
+        "Lens_Smoked"
+      ],
+      "sharpFaces": 266,
+      "uvMaps": [],
+      "shapeKeys": false,
+      "customNormals": true,
+      "sharpEdges": false,
+      "ignoredAttributes": [
+        "srcmat",
+        "pmat",
+        "custom_normal",
+        ".uv_select_vert",
+        ".uv_select_edge",
+        ".uv_select_face"
+      ]
+    },
+    {
+      "name": "Body_Glass",
+      "point": 86,
+      "edge": 209,
+      "face": 124,
+      "corner": 372,
+      "triangles": 124,
+      "degenerateFaces": 0,
+      "materials": [
+        "Body_Glass"
+      ],
+      "sharpFaces": 0,
+      "uvMaps": [],
+      "shapeKeys": false,
+      "customNormals": true,
+      "sharpEdges": false,
+      "ignoredAttributes": [
+        "srcmat",
+        "pmat",
+        "custom_normal",
+        ".uv_select_vert",
+        ".uv_select_edge",
+        ".uv_select_face"
+      ]
+    },
+    {
+      "name": "Brake_Caliper_0_0",
+      "point": 28,
+      "edge": 52,
+      "face": 26,
+      "corner": 104,
+      "triangles": 52,
+      "degenerateFaces": 0,
+      "materials": [
+        "Brake_Caliper"
+      ],
+      "sharpFaces": 26,
+      "uvMaps": [],
+      "shapeKeys": false,
+      "customNormals": false,
+      "sharpEdges": false,
+      "ignoredAttributes": []
+    },
+    {
+      "name": "Brake_Caliper_0_1",
+      "point": 28,
+      "edge": 52,
+      "face": 26,
+      "corner": 104,
+      "triangles": 52,
+      "degenerateFaces": 0,
+      "materials": [
+        "Brake_Caliper"
+      ],
+      "sharpFaces": 26,
+      "uvMaps": [],
+      "shapeKeys": false,
+      "customNormals": false,
+      "sharpEdges": false,
+      "ignoredAttributes": []
+    },
+    {
+      "name": "Brake_Caliper_1_0",
+      "point": 28,
+      "edge": 52,
+      "face": 26,
+      "corner": 104,
+      "triangles": 52,
+      "degenerateFaces": 0,
+      "materials": [
+        "Brake_Caliper"
+      ],
+      "sharpFaces": 26,
+      "uvMaps": [],
+      "shapeKeys": false,
+      "customNormals": false,
+      "sharpEdges": false,
+      "ignoredAttributes": []
+    },
+    {
+      "name": "Brake_Caliper_1_1",
+      "point": 28,
+      "edge": 52,
+      "face": 26,
+      "corner": 104,
+      "triangles": 52,
+      "degenerateFaces": 0,
+      "materials": [
+        "Brake_Caliper"
+      ],
+      "sharpFaces": 26,
+      "uvMaps": [],
+      "shapeKeys": false,
+      "customNormals": false,
+      "sharpEdges": false,
+      "ignoredAttributes": []
+    },
+    {
+      "name": "Door_Front_0",
+      "point": 2769,
+      "edge": 3104,
+      "face": 972,
+      "corner": 3536,
+      "triangles": 1592,
+      "degenerateFaces": 0,
+      "materials": [
+        "Body",
+        "Chrome"
+      ],
+      "sharpFaces": 638,
+      "uvMaps": [],
+      "shapeKeys": false,
+      "customNormals": true,
+      "sharpEdges": false,
+      "ignoredAttributes": [
+        "srcmat",
+        "pmat",
+        "custom_normal",
+        ".select_vert",
+        ".select_edge",
+        ".select_poly",
+        ".uv_select_vert",
+        ".uv_select_edge",
+        ".uv_select_face"
+      ]
+    },
+    {
+      "name": "Door_Left_0",
+      "point": 1108,
+      "edge": 1599,
+      "face": 677,
+      "corner": 2139,
+      "triangles": 785,
+      "degenerateFaces": 0,
+      "materials": [
+        "Body",
+        "Body_Glass",
+        "Black_Gloss",
+        "Trim_Grey",
+        "Black_Plastic",
+        "Chrome_Satin",
+        "Garnish_Silver"
+      ],
+      "sharpFaces": 185,
+      "uvMaps": [],
+      "shapeKeys": false,
+      "customNormals": true,
+      "sharpEdges": false,
+      "ignoredAttributes": [
+        "srcmat",
+        "pmat",
+        "custom_normal",
+        ".select_vert",
+        ".select_edge",
+        ".select_poly",
+        ".uv_select_vert",
+        ".uv_select_edge",
+        ".uv_select_face"
+      ]
+    },
+    {
+      "name": "Door_Left_1",
+      "point": 912,
+      "edge": 1324,
+      "face": 563,
+      "corner": 1778,
+      "triangles": 652,
+      "degenerateFaces": 0,
+      "materials": [
+        "Body",
+        "Trim_Grey",
+        "Body_Glass",
+        "Black_Gloss",
+        "Black_Plastic",
+        "Chrome_Satin",
+        "Garnish_Silver"
+      ],
+      "sharpFaces": 155,
+      "uvMaps": [],
+      "shapeKeys": false,
+      "customNormals": true,
+      "sharpEdges": false,
+      "ignoredAttributes": [
+        "srcmat",
+        "pmat",
+        "custom_normal",
+        ".select_vert",
+        ".select_edge",
+        ".select_poly",
+        ".uv_select_vert",
+        ".uv_select_edge",
+        ".uv_select_face"
+      ]
+    },
+    {
+      "name": "Door_Rear_0",
+      "point": 12701,
+      "edge": 14634,
+      "face": 4674,
+      "corner": 17190,
+      "triangles": 7842,
+      "degenerateFaces": 0,
+      "materials": [
+        "Body",
+        "Trim_Grey",
+        "Black_Gloss",
+        "Body_Glass",
+        "Black_Plastic",
+        "Pixel_Trim",
+        "White_Matte",
+        "Chrome"
+      ],
+      "sharpFaces": 3045,
+      "uvMaps": [],
+      "shapeKeys": false,
+      "customNormals": true,
+      "sharpEdges": false,
+      "ignoredAttributes": [
+        "srcmat",
+        "pmat",
+        "custom_normal",
+        ".select_vert",
+        ".select_edge",
+        ".select_poly"
+      ]
+    },
+    {
+      "name": "Door_Right_0",
+      "point": 1149,
+      "edge": 1640,
+      "face": 687,
+      "corner": 2180,
+      "triangles": 806,
+      "degenerateFaces": 0,
+      "materials": [
+        "Body",
+        "Body_Glass",
+        "Black_Gloss",
+        "Trim_Grey",
+        "Black_Plastic",
+        "Chrome_Satin",
+        "Garnish_Silver"
+      ],
+      "sharpFaces": 193,
+      "uvMaps": [],
+      "shapeKeys": false,
+      "customNormals": true,
+      "sharpEdges": false,
+      "ignoredAttributes": [
+        "srcmat",
+        "pmat",
+        "custom_normal",
+        ".select_vert",
+        ".select_edge",
+        ".select_poly",
+        ".uv_select_vert",
+        ".uv_select_edge",
+        ".uv_select_face"
+      ]
+    },
+    {
+      "name": "Door_Right_1",
+      "point": 907,
+      "edge": 1319,
+      "face": 562,
+      "corner": 1773,
+      "triangles": 649,
+      "degenerateFaces": 0,
+      "materials": [
+        "Body",
+        "Trim_Grey",
+        "Body_Glass",
+        "Black_Gloss",
+        "Black_Plastic",
+        "Chrome_Satin",
+        "Garnish_Silver"
+      ],
+      "sharpFaces": 153,
+      "uvMaps": [],
+      "shapeKeys": false,
+      "customNormals": true,
+      "sharpEdges": false,
+      "ignoredAttributes": [
+        "srcmat",
+        "pmat",
+        "custom_normal",
+        ".select_vert",
+        ".select_edge",
+        ".select_poly",
+        ".uv_select_vert",
+        ".uv_select_edge",
+        ".uv_select_face"
+      ]
+    },
+    {
+      "name": "Interior_Static",
+      "point": 352,
+      "edge": 692,
+      "face": 370,
+      "corner": 1376,
+      "triangles": 636,
+      "degenerateFaces": 0,
+      "materials": [
+        "Seat_Fabric",
+        "Grey_Plastic",
+        "Black_Matte",
+        "Black_Gloss"
+      ],
+      "sharpFaces": 370,
+      "uvMaps": [],
+      "shapeKeys": false,
+      "customNormals": false,
+      "sharpEdges": false,
+      "ignoredAttributes": []
+    },
+    {
+      "name": "Lamp_Housings",
+      "point": 3947,
+      "edge": 5587,
+      "face": 1898,
+      "corner": 7434,
+      "triangles": 3638,
+      "degenerateFaces": 0,
+      "materials": [
+        "Black_Plastic",
+        "Black_Gloss",
+        "Pixel_Trim",
+        "Reflector_Red",
+        "Pixel_Clear"
+      ],
+      "sharpFaces": 1898,
+      "uvMaps": [],
+      "shapeKeys": false,
+      "customNormals": true,
+      "sharpEdges": false,
+      "ignoredAttributes": [
+        "srcmat",
+        "pmat",
+        "custom_normal",
+        ".select_vert",
+        ".select_edge",
+        ".select_poly"
+      ]
+    },
+    {
+      "name": "License_Plate_0",
+      "point": 212,
+      "edge": 381,
+      "face": 181,
+      "corner": 550,
+      "triangles": 188,
+      "degenerateFaces": 0,
+      "materials": [
+        "Black_Plastic",
+        "License_Plate_White",
+        "License_Plate_Blue",
+        "License_Plate_Black"
+      ],
+      "sharpFaces": 181,
+      "uvMaps": [],
+      "shapeKeys": false,
+      "customNormals": false,
+      "sharpEdges": false,
+      "ignoredAttributes": []
+    },
+    {
+      "name": "License_Plate_1",
+      "point": 212,
+      "edge": 381,
+      "face": 181,
+      "corner": 550,
+      "triangles": 188,
+      "degenerateFaces": 0,
+      "materials": [
+        "Black_Plastic",
+        "License_Plate_White",
+        "License_Plate_Blue",
+        "License_Plate_Black"
+      ],
+      "sharpFaces": 181,
+      "uvMaps": [],
+      "shapeKeys": false,
+      "customNormals": false,
+      "sharpEdges": false,
+      "ignoredAttributes": []
+    },
+    {
+      "name": "Light_Brake_Center_0",
+      "point": 26,
+      "edge": 37,
+      "face": 12,
+      "corner": 48,
+      "triangles": 24,
+      "degenerateFaces": 0,
+      "materials": [
+        "Lamp_Red"
+      ],
+      "sharpFaces": 12,
+      "uvMaps": [],
+      "shapeKeys": false,
+      "customNormals": false,
+      "sharpEdges": false,
+      "ignoredAttributes": [
+        ".uv_select_vert",
+        ".uv_select_edge",
+        ".uv_select_face"
+      ]
+    },
+    {
+      "name": "Light_Brake_Left_0",
+      "point": 1266,
+      "edge": 1266,
+      "face": 316,
+      "corner": 1266,
+      "triangles": 634,
+      "degenerateFaces": 0,
+      "materials": [
+        "Lamp_Red"
+      ],
+      "sharpFaces": 316,
+      "uvMaps": [],
+      "shapeKeys": false,
+      "customNormals": true,
+      "sharpEdges": false,
+      "ignoredAttributes": [
+        "srcmat",
+        "pmat",
+        "custom_normal"
+      ]
+    },
+    {
+      "name": "Light_Brake_Right_0",
+      "point": 1266,
+      "edge": 1266,
+      "face": 316,
+      "corner": 1266,
+      "triangles": 634,
+      "degenerateFaces": 0,
+      "materials": [
+        "Lamp_Red"
+      ],
+      "sharpFaces": 316,
+      "uvMaps": [],
+      "shapeKeys": false,
+      "customNormals": true,
+      "sharpEdges": false,
+      "ignoredAttributes": [
+        "srcmat",
+        "pmat",
+        "custom_normal"
+      ]
+    },
+    {
+      "name": "Light_Day_Left_0",
+      "point": 112,
+      "edge": 140,
+      "face": 56,
+      "corner": 168,
+      "triangles": 56,
+      "degenerateFaces": 0,
+      "materials": [
+        "Lamp_White"
+      ],
+      "sharpFaces": 56,
+      "uvMaps": [],
+      "shapeKeys": false,
+      "customNormals": true,
+      "sharpEdges": false,
+      "ignoredAttributes": [
+        "srcmat",
+        "pmat",
+        "custom_normal",
+        ".select_vert",
+        ".select_edge",
+        ".select_poly",
+        ".uv_select_vert",
+        ".uv_select_edge",
+        ".uv_select_face"
+      ]
+    },
+    {
+      "name": "Light_Day_Right_0",
+      "point": 100,
+      "edge": 134,
+      "face": 56,
+      "corner": 168,
+      "triangles": 56,
+      "degenerateFaces": 0,
+      "materials": [
+        "Lamp_White"
+      ],
+      "sharpFaces": 56,
+      "uvMaps": [],
+      "shapeKeys": false,
+      "customNormals": true,
+      "sharpEdges": false,
+      "ignoredAttributes": [
+        "srcmat",
+        "pmat",
+        "custom_normal",
+        ".select_vert",
+        ".select_edge",
+        ".select_poly",
+        ".uv_select_vert",
+        ".uv_select_edge",
+        ".uv_select_face"
+      ]
+    },
+    {
+      "name": "Light_High_Beam_Left_0",
+      "point": 4,
+      "edge": 4,
+      "face": 1,
+      "corner": 4,
+      "triangles": 2,
+      "degenerateFaces": 0,
+      "materials": [
+        "Lamp_Projector"
+      ],
+      "sharpFaces": 1,
+      "uvMaps": [],
+      "shapeKeys": false,
+      "customNormals": false,
+      "sharpEdges": false,
+      "ignoredAttributes": []
+    },
+    {
+      "name": "Light_High_Beam_Right_0",
+      "point": 4,
+      "edge": 4,
+      "face": 1,
+      "corner": 4,
+      "triangles": 2,
+      "degenerateFaces": 0,
+      "materials": [
+        "Lamp_Projector"
+      ],
+      "sharpFaces": 1,
+      "uvMaps": [],
+      "shapeKeys": false,
+      "customNormals": false,
+      "sharpEdges": false,
+      "ignoredAttributes": []
+    },
+    {
+      "name": "Light_Indicator_Left_0",
+      "point": 354,
+      "edge": 354,
+      "face": 91,
+      "corner": 354,
+      "triangles": 172,
+      "degenerateFaces": 0,
+      "materials": [
+        "Lamp_Amber"
+      ],
+      "sharpFaces": 91,
+      "uvMaps": [],
+      "shapeKeys": false,
+      "customNormals": false,
+      "sharpEdges": false,
+      "ignoredAttributes": []
+    },
+    {
+      "name": "Light_Indicator_Left_1.001",
+      "point": 18,
+      "edge": 25,
+      "face": 8,
+      "corner": 32,
+      "triangles": 16,
+      "degenerateFaces": 0,
+      "materials": [
+        "Lamp_Amber"
+      ],
+      "sharpFaces": 8,
+      "uvMaps": [],
+      "shapeKeys": false,
+      "customNormals": false,
+      "sharpEdges": false,
+      "ignoredAttributes": []
+    },
+    {
+      "name": "Light_Indicator_Left_2",
+      "point": 521,
+      "edge": 521,
+      "face": 129,
+      "corner": 521,
+      "triangles": 263,
+      "degenerateFaces": 0,
+      "materials": [
+        "Lamp_Amber"
+      ],
+      "sharpFaces": 129,
+      "uvMaps": [],
+      "shapeKeys": false,
+      "customNormals": true,
+      "sharpEdges": false,
+      "ignoredAttributes": [
+        "srcmat",
+        "pmat",
+        "custom_normal"
+      ]
+    },
+    {
+      "name": "Light_Indicator_Right_0",
+      "point": 354,
+      "edge": 354,
+      "face": 91,
+      "corner": 354,
+      "triangles": 172,
+      "degenerateFaces": 0,
+      "materials": [
+        "Lamp_Amber"
+      ],
+      "sharpFaces": 91,
+      "uvMaps": [],
+      "shapeKeys": false,
+      "customNormals": false,
+      "sharpEdges": false,
+      "ignoredAttributes": []
+    },
+    {
+      "name": "Light_Indicator_Right_1.001",
+      "point": 18,
+      "edge": 25,
+      "face": 8,
+      "corner": 32,
+      "triangles": 16,
+      "degenerateFaces": 0,
+      "materials": [
+        "Lamp_Amber"
+      ],
+      "sharpFaces": 8,
+      "uvMaps": [],
+      "shapeKeys": false,
+      "customNormals": false,
+      "sharpEdges": false,
+      "ignoredAttributes": []
+    },
+    {
+      "name": "Light_Indicator_Right_2",
+      "point": 522,
+      "edge": 522,
+      "face": 129,
+      "corner": 522,
+      "triangles": 264,
+      "degenerateFaces": 0,
+      "materials": [
+        "Lamp_Amber"
+      ],
+      "sharpFaces": 129,
+      "uvMaps": [],
+      "shapeKeys": false,
+      "customNormals": true,
+      "sharpEdges": false,
+      "ignoredAttributes": [
+        "srcmat",
+        "pmat",
+        "custom_normal"
+      ]
+    },
+    {
+      "name": "Light_License_Plate_0",
+      "point": 4,
+      "edge": 4,
+      "face": 1,
+      "corner": 4,
+      "triangles": 2,
+      "degenerateFaces": 0,
+      "materials": [
+        "Lamp_White"
+      ],
+      "sharpFaces": 1,
+      "uvMaps": [],
+      "shapeKeys": false,
+      "customNormals": false,
+      "sharpEdges": false,
+      "ignoredAttributes": []
+    },
+    {
+      "name": "Light_License_Plate_1",
+      "point": 4,
+      "edge": 4,
+      "face": 1,
+      "corner": 4,
+      "triangles": 2,
+      "degenerateFaces": 0,
+      "materials": [
+        "Lamp_White"
+      ],
+      "sharpFaces": 1,
+      "uvMaps": [],
+      "shapeKeys": false,
+      "customNormals": false,
+      "sharpEdges": false,
+      "ignoredAttributes": []
+    },
+    {
+      "name": "Light_Low_Beam_Left_0",
+      "point": 4,
+      "edge": 4,
+      "face": 1,
+      "corner": 4,
+      "triangles": 2,
+      "degenerateFaces": 0,
+      "materials": [
+        "Lamp_Projector"
+      ],
+      "sharpFaces": 1,
+      "uvMaps": [],
+      "shapeKeys": false,
+      "customNormals": false,
+      "sharpEdges": false,
+      "ignoredAttributes": []
+    },
+    {
+      "name": "Light_Low_Beam_Right_0",
+      "point": 4,
+      "edge": 4,
+      "face": 1,
+      "corner": 4,
+      "triangles": 2,
+      "degenerateFaces": 0,
+      "materials": [
+        "Lamp_Projector"
+      ],
+      "sharpFaces": 1,
+      "uvMaps": [],
+      "shapeKeys": false,
+      "customNormals": false,
+      "sharpEdges": false,
+      "ignoredAttributes": []
+    },
+    {
+      "name": "Light_Reverse_Left_0.001",
+      "point": 172,
+      "edge": 242,
+      "face": 77,
+      "corner": 307,
+      "triangles": 153,
+      "degenerateFaces": 0,
+      "materials": [
+        "Lamp_White"
+      ],
+      "sharpFaces": 77,
+      "uvMaps": [],
+      "shapeKeys": false,
+      "customNormals": false,
+      "sharpEdges": false,
+      "ignoredAttributes": []
+    },
+    {
+      "name": "Light_Reverse_Right_0.001",
+      "point": 173,
+      "edge": 242,
+      "face": 77,
+      "corner": 307,
+      "triangles": 153,
+      "degenerateFaces": 0,
+      "materials": [
+        "Lamp_White"
+      ],
+      "sharpFaces": 77,
+      "uvMaps": [],
+      "shapeKeys": false,
+      "customNormals": false,
+      "sharpEdges": false,
+      "ignoredAttributes": []
+    },
+    {
+      "name": "Light_Tail_Left_0.001",
+      "point": 42,
+      "edge": 46,
+      "face": 15,
+      "corner": 50,
+      "triangles": 20,
+      "degenerateFaces": 0,
+      "materials": [
+        "Lamp_Red"
+      ],
+      "sharpFaces": 15,
+      "uvMaps": [],
+      "shapeKeys": false,
+      "customNormals": false,
+      "sharpEdges": false,
+      "ignoredAttributes": [
+        ".uv_select_vert",
+        ".uv_select_edge",
+        ".uv_select_face"
+      ]
+    },
+    {
+      "name": "Light_Tail_Right_0.001",
+      "point": 42,
+      "edge": 46,
+      "face": 15,
+      "corner": 50,
+      "triangles": 20,
+      "degenerateFaces": 0,
+      "materials": [
+        "Lamp_Red"
+      ],
+      "sharpFaces": 15,
+      "uvMaps": [],
+      "shapeKeys": false,
+      "customNormals": false,
+      "sharpEdges": false,
+      "ignoredAttributes": [
+        ".uv_select_vert",
+        ".uv_select_edge",
+        ".uv_select_face"
+      ]
+    },
+    {
+      "name": "Mirror_Side_Left_0",
+      "point": 377,
+      "edge": 641,
+      "face": 309,
+      "corner": 927,
+      "triangles": 309,
+      "degenerateFaces": 0,
+      "materials": [
+        "Body",
+        "Mirror_Glass",
+        "Black_Gloss"
+      ],
+      "sharpFaces": 16,
+      "uvMaps": [],
+      "shapeKeys": false,
+      "customNormals": true,
+      "sharpEdges": false,
+      "ignoredAttributes": [
+        "srcmat",
+        "pmat",
+        "custom_normal",
+        ".select_vert",
+        ".select_edge",
+        ".select_poly",
+        ".uv_select_vert",
+        ".uv_select_edge",
+        ".uv_select_face"
+      ]
+    },
+    {
+      "name": "Mirror_Side_Right_0",
+      "point": 377,
+      "edge": 641,
+      "face": 309,
+      "corner": 927,
+      "triangles": 309,
+      "degenerateFaces": 0,
+      "materials": [
+        "Body",
+        "Mirror_Glass",
+        "Black_Gloss"
+      ],
+      "sharpFaces": 16,
+      "uvMaps": [],
+      "shapeKeys": false,
+      "customNormals": true,
+      "sharpEdges": false,
+      "ignoredAttributes": [
+        "srcmat",
+        "pmat",
+        "custom_normal",
+        ".select_vert",
+        ".select_edge",
+        ".select_poly",
+        ".uv_select_vert",
+        ".uv_select_edge",
+        ".uv_select_face"
+      ]
+    },
+    {
+      "name": "Steering_Wheel",
+      "point": 352,
+      "edge": 692,
+      "face": 346,
+      "corner": 1384,
+      "triangles": 692,
+      "degenerateFaces": 0,
+      "materials": [
+        "Black_Plastic"
+      ],
+      "sharpFaces": 90,
+      "uvMaps": [],
+      "shapeKeys": false,
+      "customNormals": false,
+      "sharpEdges": false,
+      "ignoredAttributes": []
+    },
+    {
+      "name": "Wheel_0_0",
+      "point": 2946,
+      "edge": 4630,
+      "face": 1971,
+      "corner": 6951,
+      "triangles": 3009,
+      "degenerateFaces": 0,
+      "materials": [
+        "Tire",
+        "Rim_Machined",
+        "Rim_Black",
+        "Rim_Aero",
+        "Brake_Disc",
+        "Chrome"
+      ],
+      "sharpFaces": 1397,
+      "uvMaps": [],
+      "shapeKeys": false,
+      "customNormals": false,
+      "sharpEdges": false,
+      "ignoredAttributes": [
+        "srcmat",
+        "pmat",
+        ".select_vert",
+        ".select_edge",
+        ".select_poly",
+        ".uv_select_vert",
+        ".uv_select_edge",
+        ".uv_select_face"
+      ]
+    },
+    {
+      "name": "Wheel_0_1",
+      "point": 2946,
+      "edge": 4630,
+      "face": 1971,
+      "corner": 6951,
+      "triangles": 3009,
+      "degenerateFaces": 0,
+      "materials": [
+        "Tire",
+        "Rim_Machined",
+        "Rim_Black",
+        "Rim_Aero",
+        "Brake_Disc",
+        "Chrome"
+      ],
+      "sharpFaces": 1397,
+      "uvMaps": [],
+      "shapeKeys": false,
+      "customNormals": false,
+      "sharpEdges": false,
+      "ignoredAttributes": [
+        "srcmat",
+        "pmat",
+        ".select_vert",
+        ".select_edge",
+        ".select_poly",
+        ".uv_select_vert",
+        ".uv_select_edge",
+        ".uv_select_face"
+      ]
+    },
+    {
+      "name": "Wheel_1_0",
+      "point": 2946,
+      "edge": 4630,
+      "face": 1971,
+      "corner": 6951,
+      "triangles": 3009,
+      "degenerateFaces": 0,
+      "materials": [
+        "Tire",
+        "Rim_Machined",
+        "Rim_Black",
+        "Rim_Aero",
+        "Brake_Disc",
+        "Chrome"
+      ],
+      "sharpFaces": 1397,
+      "uvMaps": [],
+      "shapeKeys": false,
+      "customNormals": false,
+      "sharpEdges": false,
+      "ignoredAttributes": [
+        "srcmat",
+        "pmat",
+        ".select_vert",
+        ".select_edge",
+        ".select_poly",
+        ".uv_select_vert",
+        ".uv_select_edge",
+        ".uv_select_face"
+      ]
+    },
+    {
+      "name": "Wheel_1_1",
+      "point": 2946,
+      "edge": 4630,
+      "face": 1971,
+      "corner": 6951,
+      "triangles": 3009,
+      "degenerateFaces": 0,
+      "materials": [
+        "Tire",
+        "Rim_Machined",
+        "Rim_Black",
+        "Rim_Aero",
+        "Brake_Disc",
+        "Chrome"
+      ],
+      "sharpFaces": 1397,
+      "uvMaps": [],
+      "shapeKeys": false,
+      "customNormals": false,
+      "sharpEdges": false,
+      "ignoredAttributes": [
+        "srcmat",
+        "pmat",
+        ".select_vert",
+        ".select_edge",
+        ".select_poly",
+        ".uv_select_vert",
+        ".uv_select_edge",
+        ".uv_select_face"
+      ]
+    }
+  ],
+  "materials": [
+    {
+      "name": "Black_Gloss",
+      "source": "PRINCIPLED_BSDF_CONSTANTS",
+      "baseColor": [
+        0.009999999776482582,
+        0.009999999776482582,
+        0.009999999776482582,
+        1
+      ],
+      "metallic": 0,
+      "roughness": 0.15000000596046448,
+      "alpha": 1,
+      "blendFlag": 64,
+      "backfaceCulling": false
+    },
+    {
+      "name": "Black_Matte",
+      "source": "PRINCIPLED_BSDF_CONSTANTS",
+      "baseColor": [
+        0.009999999776482582,
+        0.009999999776482582,
+        0.009999999776482582,
+        1
+      ],
+      "metallic": 0,
+      "roughness": 0.8999999761581421,
+      "alpha": 1,
+      "blendFlag": 64,
+      "backfaceCulling": false
+    },
+    {
+      "name": "Black_Plastic",
+      "source": "PRINCIPLED_BSDF_CONSTANTS",
+      "baseColor": [
+        0.019999999552965164,
+        0.019999999552965164,
+        0.019999999552965164,
+        1
+      ],
+      "metallic": 0,
+      "roughness": 0.5,
+      "alpha": 1,
+      "blendFlag": 64,
+      "backfaceCulling": false
+    },
+    {
+      "name": "Body",
+      "source": "PRINCIPLED_BSDF_CONSTANTS",
+      "baseColor": [
+        0.5709999799728394,
+        0.5329999923706055,
+        0.503000020980835,
+        1
+      ],
+      "metallic": 1,
+      "roughness": 0.46000000834465027,
+      "alpha": 1,
+      "blendFlag": 64,
+      "backfaceCulling": false
+    },
+    {
+      "name": "Body_Glass",
+      "source": "PRINCIPLED_BSDF_CONSTANTS",
+      "baseColor": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "metallic": 0,
+      "roughness": 0.05000000074505806,
+      "alpha": 0.20000000298023224,
+      "blendFlag": 64,
+      "backfaceCulling": false
+    },
+    {
+      "name": "Brake_Caliper",
+      "source": "PRINCIPLED_BSDF_CONSTANTS",
+      "baseColor": [
+        0.029999999329447746,
+        0.029999999329447746,
+        0.029999999329447746,
+        1
+      ],
+      "metallic": 0,
+      "roughness": 0.5,
+      "alpha": 1,
+      "blendFlag": 64,
+      "backfaceCulling": false
+    },
+    {
+      "name": "Brake_Disc",
+      "source": "PRINCIPLED_BSDF_CONSTANTS",
+      "baseColor": [
+        0.3149999976158142,
+        0.3149999976158142,
+        0.3149999976158142,
+        1
+      ],
+      "metallic": 1,
+      "roughness": 0.5,
+      "alpha": 1,
+      "blendFlag": 64,
+      "backfaceCulling": false
+    },
+    {
+      "name": "Chrome",
+      "source": "PRINCIPLED_BSDF_CONSTANTS",
+      "baseColor": [
+        0.8999999761581421,
+        0.8999999761581421,
+        0.8999999761581421,
+        1
+      ],
+      "metallic": 1,
+      "roughness": 0.15000000596046448,
+      "alpha": 1,
+      "blendFlag": 64,
+      "backfaceCulling": false
+    },
+    {
+      "name": "Chrome_Satin",
+      "source": "PRINCIPLED_BSDF_CONSTANTS",
+      "baseColor": [
+        0.5080000162124634,
+        0.5080000162124634,
+        0.5080000162124634,
+        1
+      ],
+      "metallic": 1,
+      "roughness": 0.30000001192092896,
+      "alpha": 1,
+      "blendFlag": 64,
+      "backfaceCulling": false
+    },
+    {
+      "name": "Garnish_Silver",
+      "source": "PRINCIPLED_BSDF_CONSTANTS",
+      "baseColor": [
+        0.6000000238418579,
+        0.6000000238418579,
+        0.6100000143051147,
+        1
+      ],
+      "metallic": 0,
+      "roughness": 0.3499999940395355,
+      "alpha": 1,
+      "blendFlag": 64,
+      "backfaceCulling": false
+    },
+    {
+      "name": "Grey_Plastic",
+      "source": "PRINCIPLED_BSDF_CONSTANTS",
+      "baseColor": [
+        0.05999999865889549,
+        0.05999999865889549,
+        0.05999999865889549,
+        1
+      ],
+      "metallic": 0,
+      "roughness": 0.5,
+      "alpha": 1,
+      "blendFlag": 64,
+      "backfaceCulling": false
+    },
+    {
+      "name": "Lamp_Amber",
+      "source": "PRINCIPLED_BSDF_CONSTANTS",
+      "baseColor": [
+        1,
+        0.25,
+        0,
+        1
+      ],
+      "metallic": 0,
+      "roughness": 0.30000001192092896,
+      "alpha": 1,
+      "blendFlag": 64,
+      "backfaceCulling": false
+    },
+    {
+      "name": "Lamp_Projector",
+      "source": "PRINCIPLED_BSDF_CONSTANTS",
+      "baseColor": [
+        0.3499999940395355,
+        0.3499999940395355,
+        0.3700000047683716,
+        1
+      ],
+      "metallic": 1,
+      "roughness": 0.25,
+      "alpha": 1,
+      "blendFlag": 64,
+      "backfaceCulling": false
+    },
+    {
+      "name": "Lamp_Red",
+      "source": "PRINCIPLED_BSDF_CONSTANTS",
+      "baseColor": [
+        0.550000011920929,
+        0.019999999552965164,
+        0.019999999552965164,
+        1
+      ],
+      "metallic": 0,
+      "roughness": 0.30000001192092896,
+      "alpha": 1,
+      "blendFlag": 64,
+      "backfaceCulling": false
+    },
+    {
+      "name": "Lamp_White",
+      "source": "PRINCIPLED_BSDF_CONSTANTS",
+      "baseColor": [
+        0.800000011920929,
+        0.800000011920929,
+        0.800000011920929,
+        1
+      ],
+      "metallic": 0,
+      "roughness": 0.5,
+      "alpha": 1,
+      "blendFlag": 64,
+      "backfaceCulling": false
+    },
+    {
+      "name": "Lens_Smoked",
+      "source": "PRINCIPLED_BSDF_CONSTANTS",
+      "baseColor": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "metallic": 0,
+      "roughness": 0.05000000074505806,
+      "alpha": 0.25,
+      "blendFlag": 64,
+      "backfaceCulling": false
+    },
+    {
+      "name": "License_Plate_Black",
+      "source": "PRINCIPLED_BSDF_CONSTANTS",
+      "baseColor": [
+        0.009999999776482582,
+        0.009999999776482582,
+        0.009999999776482582,
+        1
+      ],
+      "metallic": 0,
+      "roughness": 0.4000000059604645,
+      "alpha": 1,
+      "blendFlag": 64,
+      "backfaceCulling": false
+    },
+    {
+      "name": "License_Plate_Blue",
+      "source": "PRINCIPLED_BSDF_CONSTANTS",
+      "baseColor": [
+        0,
+        0.07999999821186066,
+        0.6000000238418579,
+        1
+      ],
+      "metallic": 0,
+      "roughness": 0.4000000059604645,
+      "alpha": 1,
+      "blendFlag": 64,
+      "backfaceCulling": false
+    },
+    {
+      "name": "License_Plate_White",
+      "source": "PRINCIPLED_BSDF_CONSTANTS",
+      "baseColor": [
+        0.8999999761581421,
+        0.8999999761581421,
+        0.8999999761581421,
+        1
+      ],
+      "metallic": 0,
+      "roughness": 0.4000000059604645,
+      "alpha": 1,
+      "blendFlag": 64,
+      "backfaceCulling": false
+    },
+    {
+      "name": "Mirror_Glass",
+      "source": "PRINCIPLED_BSDF_CONSTANTS",
+      "baseColor": [
+        0.8999999761581421,
+        0.8999999761581421,
+        0.8999999761581421,
+        1
+      ],
+      "metallic": 1,
+      "roughness": 0.05000000074505806,
+      "alpha": 1,
+      "blendFlag": 64,
+      "backfaceCulling": false
+    },
+    {
+      "name": "Pixel_Clear",
+      "source": "PRINCIPLED_BSDF_CONSTANTS",
+      "baseColor": [
+        0.6000000238418579,
+        0.6000000238418579,
+        0.6200000047683716,
+        1
+      ],
+      "metallic": 0.6000000238418579,
+      "roughness": 0.30000001192092896,
+      "alpha": 1,
+      "blendFlag": 64,
+      "backfaceCulling": false
+    },
+    {
+      "name": "Pixel_Trim",
+      "source": "PRINCIPLED_BSDF_CONSTANTS",
+      "baseColor": [
+        0.09000000357627869,
+        0.09000000357627869,
+        0.0949999988079071,
+        1
+      ],
+      "metallic": 0,
+      "roughness": 0.30000001192092896,
+      "alpha": 1,
+      "blendFlag": 64,
+      "backfaceCulling": false
+    },
+    {
+      "name": "Reflector_Red",
+      "source": "PRINCIPLED_BSDF_CONSTANTS",
+      "baseColor": [
+        0.44999998807907104,
+        0.009999999776482582,
+        0.009999999776482582,
+        1
+      ],
+      "metallic": 0,
+      "roughness": 0.30000001192092896,
+      "alpha": 1,
+      "blendFlag": 64,
+      "backfaceCulling": false
+    },
+    {
+      "name": "Rim_Aero",
+      "source": "PRINCIPLED_BSDF_CONSTANTS",
+      "baseColor": [
+        0.05000000074505806,
+        0.05000000074505806,
+        0.052000001072883606,
+        1
+      ],
+      "metallic": 0,
+      "roughness": 0.550000011920929,
+      "alpha": 1,
+      "blendFlag": 64,
+      "backfaceCulling": false
+    },
+    {
+      "name": "Rim_Black",
+      "source": "PRINCIPLED_BSDF_CONSTANTS",
+      "baseColor": [
+        0.02500000037252903,
+        0.02500000037252903,
+        0.02500000037252903,
+        1
+      ],
+      "metallic": 0,
+      "roughness": 0.44999998807907104,
+      "alpha": 1,
+      "blendFlag": 64,
+      "backfaceCulling": false
+    },
+    {
+      "name": "Rim_Machined",
+      "source": "PRINCIPLED_BSDF_CONSTANTS",
+      "baseColor": [
+        0.7799999713897705,
+        0.7799999713897705,
+        0.7799999713897705,
+        1
+      ],
+      "metallic": 1,
+      "roughness": 0.25,
+      "alpha": 1,
+      "blendFlag": 64,
+      "backfaceCulling": false
+    },
+    {
+      "name": "Seat_Fabric",
+      "source": "PRINCIPLED_BSDF_CONSTANTS",
+      "baseColor": [
+        0.05000000074505806,
+        0.05000000074505806,
+        0.054999999701976776,
+        1
+      ],
+      "metallic": 0,
+      "roughness": 0.800000011920929,
+      "alpha": 1,
+      "blendFlag": 64,
+      "backfaceCulling": false
+    },
+    {
+      "name": "Tire",
+      "source": "PRINCIPLED_BSDF_CONSTANTS",
+      "baseColor": [
+        0.019999999552965164,
+        0.019999999552965164,
+        0.019999999552965164,
+        1
+      ],
+      "metallic": 0,
+      "roughness": 0.800000011920929,
+      "alpha": 1,
+      "blendFlag": 64,
+      "backfaceCulling": false
+    },
+    {
+      "name": "Trim_Grey",
+      "source": "PRINCIPLED_BSDF_CONSTANTS",
+      "baseColor": [
+        0.1899999976158142,
+        0.1899999976158142,
+        0.20000000298023224,
+        1
+      ],
+      "metallic": 0,
+      "roughness": 0.44999998807907104,
+      "alpha": 1,
+      "blendFlag": 64,
+      "backfaceCulling": false
+    },
+    {
+      "name": "White_Matte",
+      "source": "PRINCIPLED_BSDF_CONSTANTS",
+      "baseColor": [
+        0.8500000238418579,
+        0.8500000238418579,
+        0.8500000238418579,
+        1
+      ],
+      "metallic": 0,
+      "roughness": 0.8500000238418579,
+      "alpha": 1,
+      "blendFlag": 64,
+      "backfaceCulling": false
+    }
+  ]
+}

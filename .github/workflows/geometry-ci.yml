@@ -59,6 +59,8 @@ jobs:
         run: npm run envelope --prefix tools/anatomy-car
       - name: Unit and regression tests (including nonzero CLI failure cases)
         run: npm test --prefix tools/anatomy-car
+      - name: IONIQ 5 external-asset tooling (synthetic fixtures only; no third-party geometry in CI)
+        run: node --test tools/ioniq5-asset/test/*.test.mjs
       - name: Verify GLB and sampled door collisions
         run: npm run verify --prefix tools/anatomy-car
       - name: Kotlin SVG state, ID, inset, accent and bounds contracts
