@@ -83,6 +83,8 @@ $env:IONIQ5_GLB = $glb; node --test tools/ioniq5-asset/test/hood.test.mjs
 Details, sources and measurements: [docs/p3-a2-1-front-compartment-shell.md](../../docs/p3-a2-1-front-compartment-shell.md).
 `front-compartment-layout.mjs` holds the measured model references and the panel/zone parameters; `front-compartment.mjs`
 builds the shell (ESTIMATED_GEOMETRY panels, SYNTHETIC_DEBUG_PLACEHOLDER zones) deterministically, browser-safe.
+The panels follow the hood's underside, which `measureHoodSurface()` measures at run time from the local GLB; the
+repository stores only the sampling grid, never the model-derived heights (CI uses a synthetic hood).
 
 ```powershell
 $glb = 'C:\CarScope-External\ioniq5-carscope\hyundai_ioniq_5_2022.glb'

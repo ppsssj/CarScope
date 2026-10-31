@@ -8,7 +8,8 @@
 // ├── LowerLiner         fc-lower-liner
 // ├── FrontUpperSupport  fc-front-upper-support, fc-front-shroud
 // └── ReservedZones      zone-frunk, zone-service-left/right       (SYNTHETIC_DEBUG_PLACEHOLDER)
-import { PARTS, HOOD_GAP, hoodUndersideAt, zoneBoxes, JOINTS } from "./front-compartment-layout.mjs";
+import { PARTS, HOOD_GAP, HOOD_SAMPLE_GRID, hoodUndersideAt, zoneBoxes, JOINTS } from "./front-compartment-layout.mjs";
+import { rayDown } from "./hood.mjs";
 
 const sub = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
 const cross = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
@@ -55,11 +56,11 @@ function cowl({ xRear, xFront, zRear, zFront, lipZ, halfWidth }) {
   return orient(sheet(rows), toward([114, 0, 200]));
 }
 
-function apron(side, { x, wallY, zBottom, zKnee, bendY, bendZ, flangeY, topCap }) {
+function apron(side, { x, wallY, zBottom, zKnee, bendY, bendZ, flangeY, topCap }, surface) {
   const s = side;
   const rows = x.map((xi) => {
     // Lowest hood surface across the flange (the hood's side edge curls down near the fender).
-    const hood = [bendY, (bendY + flangeY) / 2, flangeY, flangeY + 3, flangeY + 6].map((y) => hoodUndersideAt(xi, y)).filter((z) => z !== null).reduce((m, z) => Math.min(m, z), Infinity);
+    const hood = [bendY, (bendY + flangeY) / 2, flangeY, flangeY + 3, flangeY + 6].map((y) => hoodUndersideAt(surface, xi, y)).filter((z) => z !== null).reduce((m, z) => Math.min(m, z), Infinity);
     const top = Math.max(bendZ + 1, Math.min(topCap, hood - HOOD_GAP));
     return [[xi, s * wallY, zBottom], [xi, s * wallY, zKnee], [xi, s * bendY, bendZ], [xi, s * (bendY + flangeY) / 2, (bendZ + top) / 2 + 0.6], [xi, s * flangeY, top]];
   });
@@ -106,8 +107,8 @@ function shroud({ x, zBottom, zTopCentre, halfWidthCentre, halfWidth, zTopSide }
 const BUILDERS = {
   "fc-rear-bulkhead": (p) => bulkhead(p.params),
   "fc-cowl-cover": (p) => cowl(p.params),
-  "fc-apron-left": (p) => apron(p.side, p.params),
-  "fc-apron-right": (p) => apron(p.side, p.params),
+  "fc-apron-left": (p, s) => apron(p.side, p.params, s),
+  "fc-apron-right": (p, s) => apron(p.side, p.params, s),
   "fc-strut-tower-left": (p) => strutTower(p.side, p.params),
   "fc-strut-tower-right": (p) => strutTower(p.side, p.params),
   "fc-lower-liner": (p) => liner(p.params),
@@ -126,15 +127,31 @@ export function boxTriangles(min, max) {
 export const metaOf = ({ params, side, ...meta }) => meta;
 
 /**
+ * Lowest hood surface (closed pose) on HOOD_SAMPLE_GRID, measured from the hood triangles (CarScope cm):
+ * for each grid point the lowest hood hit of a vertical ray, taking the lower of the +y and -y sides.
+ * The result is model-derived; it is computed at run time and never written into the repository.
+ */
+export function measureHoodSurface(hoodTriangles, grid = HOOD_SAMPLE_GRID) {
+  const lowest = (x, y) => {
+    let lo = null;
+    for (let i = 0; i < hoodTriangles.length; i += 9) { const z = rayDown(x, y, Infinity, hoodTriangles.subarray(i, i + 9)); if (z !== null && (lo === null || z < lo)) lo = z; }
+    return lo;
+  };
+  const z = grid.y.map((y) => grid.x.map((x) => { const a = lowest(x, y), b = y === 0 ? a : lowest(x, -y); return a === null || b === null ? (a ?? b) : Math.min(a, b); }));
+  return { x: [...grid.x], y: [...grid.y], z, source: "measured at run time from the hood mesh" };
+}
+
+/**
  * The shell: one node per panel (`{ id, name, triangles, meta }`, CarScope cm) plus the reserved zones.
  * Panel nodes carry `palettes` so they can go straight into buildIoniqSvg as extra nodes.
  */
-export function buildFrontCompartment(parts = PARTS) {
+export function buildFrontCompartment({ hoodSurface, parts = PARTS } = {}) {
+  if (!hoodSurface?.z) throw new Error("buildFrontCompartment needs { hoodSurface } (measureHoodSurface(hood triangles) or a synthetic surface)");
   const panels = parts.map((p) => {
-    const triangles = Float64Array.from(BUILDERS[p.id](p));
+    const triangles = Float64Array.from(BUILDERS[p.id](p, hoodSurface));
     return { id: p.id, name: p.id, label: p.name, group: p.group, triangles, materials: Array(triangles.length / 9).fill(p.id), palettes: Array(triangles.length / 9).fill(p.palette), meta: metaOf(p) };
   });
-  const zones = zoneBoxes().map((z) => ({ id: z.id, name: z.id, label: z.name, group: z.group, triangles: boxTriangles(z.min, z.max), box: { min: z.min, max: z.max }, meta: metaOf(z) }));
+  const zones = zoneBoxes(hoodSurface).map((z) => ({ id: z.id, name: z.id, label: z.name, group: z.group, triangles: boxTriangles(z.min, z.max), box: { min: z.min, max: z.max }, meta: metaOf(z) }));
   return { panels, zones, joints: JOINTS };
 }
 

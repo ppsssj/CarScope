@@ -2,7 +2,7 @@
 // (front-compartment.mjs, no model-derived file), added as its own group next to the GLB scene, and
 // never parented to the hood: the hood's pivot and its 0-degree identity are untouched.
 import * as THREE from "three";
-import { buildFrontCompartment } from "./ioniq5-asset/front-compartment.mjs";
+import { buildFrontCompartment, measureHoodSurface } from "./ioniq5-asset/front-compartment.mjs";
 import { staticScene } from "./ioniq5-asset/collision.mjs";
 import { bodyRegion } from "./ioniq5-asset/hood.mjs";
 
@@ -16,11 +16,12 @@ function toGltfPositions(T) {
 const PLASTIC = { trim: 0x2b2e33, doorInner: 0x4b5058 };
 
 /**
- * @param {{ scene: THREE.Scene, bodyMaterial: THREE.Material, others: {name,triangles}[], camera: THREE.Camera, dom: HTMLElement, log: Function }} ctx
+ * @param {{ scene: THREE.Scene, bodyMaterial: THREE.Material, hood: Float64Array, others: {name,triangles}[], camera: THREE.Camera, dom: HTMLElement, log: Function }} ctx
+ *   `hood`: closed hood triangles (CarScope cm) from the loaded GLB; the panels follow its measured underside.
  */
-export function attachFrontCompartment({ scene, bodyMaterial, others, camera, dom, log }) {
+export function attachFrontCompartment({ scene, bodyMaterial, hood, others, camera, dom, log }) {
   const t0 = performance.now();
-  const shell = buildFrontCompartment();
+  const shell = buildFrontCompartment({ hoodSurface: measureHoodSurface(hood) });
   const buildMs = performance.now() - t0;
   const group = new THREE.Group();
   group.name = "__p3a21_front_compartment";

@@ -2,9 +2,11 @@
 // +Y left, +Z up). Browser-safe, no geometry from the third-party model is stored here.
 //
 // Two kinds of numbers:
-//   MODEL_REFERENCES  a few clearances MEASURED on the converted OpenX GLB (P3-A1/A2.1 probes). They are
-//                     facts about that model, not about the vehicle; test/front-compartment.test.mjs
-//                     re-measures them when IONIQ5_GLB is set.
+//   MODEL_REFERENCES  a few single clearance values MEASURED on the converted OpenX GLB (bounding values of
+//                     the same kind as the bounds in docs/p2-a6, no vertex or surface data). They are facts
+//                     about that model, not the vehicle; tests re-measure them when IONIQ5_GLB is set.
+//   Hood surface      the panels follow the hood's underside, which is measured at run time from the local
+//                     GLB (measureHoodSurface); only the sampling grid is stored here.
 //   PARTS / ZONES     new panel and reserved-space parameters chosen here. Their shapes are ESTIMATED from
 //                     the owner's manual figure (Maintenance p.9-3, ONE1091001); nothing is Hyundai CAD.
 
@@ -32,39 +34,34 @@ export const MODEL_REFERENCES = Object.freeze({
   lampHousingBay: { min: [184.8, 43.0, 71.8], max: [212.4, 63.2, 84.0], what: "Lamp_Housings + DRL inside the bay (mirrored in y)" },
   indicatorTopZ: { value: 45.0, what: "Light_Indicator_*_0, x 206.9-225.1, |y| 54.8-84.8" },
   windshieldBottom: { x: 106.8, z: 109.7, what: "Body_Glass lowest/most forward point" },
-  /**
-   * Lowest hood surface z (closed pose) sampled at x = HOOD_X, |y| = HOOD_Y; null where no hood is above.
-   * Columns x 110..225 step 5; rows |y|. The 98.x values at x 120-130 are the hood's rear flange.
-   */
-  hoodUnderside: {
-    x: [110, 115, 120, 125, 130, 135, 140, 145, 150, 155, 160, 165, 170, 175, 180, 185, 190, 195, 200, 205, 210, 215, 220, 225],
-    y: [0, 20, 30, 40, 50, 55, 58, 62, 70, 78],
-    z: [
-      [null, null, null, 98.4, 98.4, 107.2, 106.6, 106.1, 105.5, 104.7, 104.0, 103.2, 102.2, 101.2, 100.1, 99.0, 97.9, 96.5, 95.1, 93.3, 91.5, 89.0, 86.1, null],
-      [null, null, null, 98.4, 98.4, 107.1, 106.5, 105.9, 105.3, 104.5, 103.7, 102.9, 101.9, 100.9, 99.8, 98.8, 97.6, 96.2, 94.7, 92.9, 91.0, 88.5, null, null],
-      [null, null, null, 98.4, 107.5, 106.9, 106.4, 105.8, 105.1, 104.4, 103.6, 102.8, 101.8, 100.7, 99.7, 98.6, 97.4, 96.0, 94.5, 92.8, 90.7, 88.2, null, null],
-      [null, null, 98.3, 98.3, 107.2, 106.7, 106.2, 105.6, 105.0, 104.2, 103.4, 102.6, 101.6, 100.6, 99.5, 98.4, 97.2, 95.8, 94.2, 92.4, 90.2, 87.6, null, null],
-      [null, null, 98.2, 107.3, 106.9, 106.4, 105.9, 105.4, 104.7, 104.0, 103.3, 102.4, 101.4, 100.4, 99.3, 98.2, 96.8, 95.4, 93.7, 91.9, 89.4, 86.6, null, null],
-      [null, null, 98.2, 107.1, 106.6, 106.2, 105.7, 105.2, 104.5, 103.8, 103.1, 102.2, 101.2, 100.2, 99.1, 98.0, 96.6, 95.2, 93.5, 91.6, 88.9, 85.7, null, null],
-      [null, null, 98.2, 106.9, 106.5, 106.0, 105.6, 105.1, 104.4, 103.7, 103.0, 102.1, 101.1, 100.1, 99.0, 97.9, 96.5, 95.1, 93.2, 91.2, 88.4, null, null, null],
-      [null, null, 107.2, 106.8, 106.3, 105.9, 105.4, 104.9, 104.2, 103.5, 102.9, 101.9, 101.0, 99.9, 98.8, 97.6, 96.2, 94.8, 92.7, 90.5, 87.7, null, null, null],
-      [null, 107.4, 107.0, 106.5, 106.0, 105.6, 105.1, 104.6, 104.0, 103.3, 102.6, 101.7, 100.7, 99.7, 98.5, 97.2, 95.7, 93.9, null, null, null, null, null, null],
-      [107.6, 107.2, 106.8, 106.4, 105.9, 105.4, 104.9, 104.0, 102.7, 101.3, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
-    ],
-  },
+});
+
+/**
+ * Where the hood surface is sampled (our sampling plan, not model data): x 110..225 step 5, |y| rows.
+ * The heights themselves are NOT stored in the repository: they are model-derived surface samples, so
+ * measureHoodSurface() (front-compartment.mjs) measures them at run time from the local GLB's hood mesh,
+ * and synthetic tests pass a synthetic hood.
+ */
+export const HOOD_SAMPLE_GRID = Object.freeze({
+  x: Object.freeze(Array.from({ length: 24 }, (_, i) => 110 + 5 * i)),
+  y: Object.freeze([0, 20, 30, 40, 50, 55, 58, 62, 70, 78]),
 });
 
 /** Lowest hood surface over the rectangle [x0,x1] x [y0,y1], sampled every 2.5 cm; null if no hood above. */
-export function hoodClearanceOver(x0, x1, y0, y1, step = 2.5) {
+export function hoodClearanceOver(surface, x0, x1, y0, y1, step = 2.5) {
   let min = null;
   for (let x = x0; x <= x1 + 1e-9; x += step)
-    for (let y = y0; y <= y1 + 1e-9; y += step) { const z = hoodUndersideAt(x, y); if (z !== null && (min === null || z < min)) min = z; }
+    for (let y = y0; y <= y1 + 1e-9; y += step) { const z = hoodUndersideAt(surface, x, y); if (z !== null && (min === null || z < min)) min = z; }
   return min;
 }
 
-/** Hood underside at (x, |y|) by bilinear interpolation of the table; null outside the hood. */
-export function hoodUndersideAt(x, y) {
-  const t = MODEL_REFERENCES.hoodUnderside, ay = Math.abs(y);
+/**
+ * Hood underside at (x, |y|) by bilinear interpolation of a measured surface `{ x, y, z }` (z[row][col],
+ * null where no hood is above); null outside the hood.
+ */
+export function hoodUndersideAt(surface, x, y) {
+  if (!surface?.z) throw new Error("hood surface required: measure it from the hood mesh (measureHoodSurface)");
+  const t = surface, ay = Math.abs(y);
   const fi = (arr, v) => { if (v <= arr[0]) return [0, 0, 0]; for (let i = 0; i < arr.length - 1; i++) if (v <= arr[i + 1]) return [i, i + 1, (v - arr[i]) / (arr[i + 1] - arr[i])]; const n = arr.length - 1; return [n, n, 0]; };
   const [c0, c1, u] = fi(t.x, x), [r0, r1, v] = fi(t.y, ay);
   const q = [t.z[r0][c0], t.z[r0][c1], t.z[r1][c0], t.z[r1][c1]];
@@ -158,10 +155,10 @@ export const ZONES = Object.freeze([
     min: [124, -55, 53], max: [180, -33, null], topGap: HOOD_GAP + 1 }),
 ]);
 
-/** Zone boxes with the top resolved against the hood (lowest hood surface over the footprint minus topGap). */
-export function zoneBoxes() {
+/** Zone boxes with the top resolved against the measured hood surface (lowest over the footprint minus topGap). */
+export function zoneBoxes(surface) {
   return ZONES.map((z) => {
-    const top = hoodClearanceOver(z.min[0], z.max[0], z.min[1], z.max[1]);
+    const top = hoodClearanceOver(surface, z.min[0], z.max[0], z.min[1], z.max[1]);
     return { ...z, max: [z.max[0], z.max[1], z.max[2] ?? Math.round((top - z.topGap) * 10) / 10] };
   });
 }

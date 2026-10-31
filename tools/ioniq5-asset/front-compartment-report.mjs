@@ -12,7 +12,7 @@ import { fitMeshProjection, regionOutline } from "../anatomy-car/mesh-svg/mesh-s
 import * as H from "./hood.mjs";
 import { staticScene, meshClearance, baselineContacts, tri, crossingPoint } from "./collision.mjs";
 import { hoodHierarchy, searchAxis } from "./hood-feasibility.mjs";
-import { buildFrontCompartment, panelStats } from "./front-compartment.mjs";
+import { buildFrontCompartment, panelStats, measureHoodSurface } from "./front-compartment.mjs";
 import { MODEL_REFERENCES } from "./front-compartment-layout.mjs";
 
 const REPO = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
@@ -87,8 +87,11 @@ async function main(argv) {
   const hierarchy = hoodHierarchy(glb);
   const hood = nodes.find((n) => n.name === H.HOOD_NODE).triangles;
   const others = nodes.filter((n) => n.name !== H.HOOD_NODE);
+  const tm = performance.now();
+  const hoodSurface = measureHoodSurface(hood); // model-derived, kept in memory and in the external report only
+  const measureMs = performance.now() - tm;
   const tb = performance.now();
-  const shell = buildFrontCompartment();
+  const shell = buildFrontCompartment({ hoodSurface });
   const buildMs = performance.now() - tb;
   const panels = shell.panels;
 
@@ -176,6 +179,7 @@ async function main(argv) {
   const stats = panels.map(panelStats).map((s) => ({ ...s, areaCm2: r(s.areaCm2, 0), min: r(s.min, 1), max: r(s.max, 1) }));
   const report = {
     tool: "tools/ioniq5-asset/front-compartment-report.mjs", glbSha256: sha(glb), frame: "CarScope cm (+X forward, +Y left, +Z up)", angles: "SIMULATION_ONLY",
+    hoodSurface: { ...hoodSurface, z: hoodSurface.z.map((row) => row.map((v) => (v === null ? null : r(v, 3)))), measureMs: r(measureMs, 1) },
     shell: { panels: panels.length, triangles: panels.reduce((a, p) => a + p.triangles.length / 9, 0), buildMs: r(buildMs, 2), stats, meta: panels.map((p) => p.meta), zones: shell.zones.map((z) => ({ id: z.id, box: z.box, meta: z.meta })), joints: shell.joints },
     checks: {
       shellVsModel: vsModel, shellVsClosedHood: vsClosedHood, shellVsShell: vsShell,

@@ -206,7 +206,7 @@ loader.load(params.get("model") ?? "./external/ioniq5.glb", async (gltf) => {
   }
   // P3-A2.1 front compartment shell: separate group, never under the hood pivot.
   const bodyMaterial = S.meshes.find((m) => m.userData.part === "Body" && m.material.name === "Body")?.material;
-  S.fc = attachFrontCompartment({ scene, bodyMaterial, others: S.others, camera, dom: document, log });
+  S.fc = attachFrontCompartment({ scene, bodyMaterial, hood: S.closedCar, others: S.others, camera, dom: document, log });
   if (params.get("shell") === "1") setShell({ shell: true });
   useAxis(params.get("axis") ?? "A");
   const gl = renderer.getContext(), dbg = gl.getExtension("WEBGL_debug_renderer_info");

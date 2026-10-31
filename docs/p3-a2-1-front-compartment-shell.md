@@ -38,7 +38,7 @@ P3-A1에서 보닛을 열면 빈 외피가 보였다. 같은 측정을 Shell 적
 | S1 | [Hyundai UK IONIQ 5 2022 사용설명서, Maintenance](https://manuals.hyundai.co.uk/umanuals/ioniq-5/ioniq-5-2022-maintenance.pdf) p.9-3 그림 ONE1091001 "Motor compartment" | 중앙에 큰 프렁크 덮개(7)와 공조 필터(6). 한쪽에 냉각수(1)·LCW 냉각수(2)·워셔액(4), 다른 쪽에 브레이크액(3)·퓨즈박스(5)·12V 배터리(8). 뒤 모서리에 둥근 스트럿 타워 상단, 뒤쪽 카울 띠, 앞쪽 래치가 있는 평평한 상부 지지대, 좌우 어두운 측면 커버 | 문서 스스로 "실제 모터 구획은 그림과 다를 수 있다"고 적고 있다. 치수 없음. 그림의 좌우 배치가 어느 시장·핸들 위치 기준인지 표시 없음 |
 | S2 | 같은 문서 "Cabin air filter" | 공조 필터는 프렁크 덮개를 열고 그 아래에서 교체한다 | 위치 치수 없음 |
 | S3 | Convenience features p.5-48, Hyundai 뉴스룸 | 프렁크는 보닛 아래 별도 덮개. 2WD(북미 외) 57 L, AWD/북미 24 L | 프렁크 통 형상·고정점 없음 |
-| S4 | 변환 GLB 측정 | 아래 5절의 모델 기준값 | 커뮤니티 모델 값이며 실차 값이 아님 |
+| S4 | 변환 GLB 측정 | 아래 5절의 모델 기준값(단일 경계값). 보닛 하면 높이는 실행 시 측정(5a절) | 커뮤니티 모델 값이며 실차 값이 아님 |
 
 시도했지만 얻지 못한 것:
 - 요청서의 Hyundai Canada 정비 PDF 링크는 HTTP 404였다. 같은 Maintenance 장을 Hyundai UK 판으로 대신 확인했다.
@@ -88,7 +88,7 @@ FrontCompartment (tools/ioniq5-asset/front-compartment.mjs, layout: front-compar
 | 휠하우스 안쪽 벽 | \|y\| 58–63.8, x 101.5–189.6, z 24.9–81.9 |
 | 앞바퀴 상단 / 앞차축 | z 75.1 / x 145.86 |
 | 구획 안 램프 하우징 | x 184.8–212.4, \|y\| 43–63.2, z 71.8–84.0 |
-| 보닛 하면 | 24 × 10 표(x 110–225, \|y\| 0–78)를 레이아웃에 기록. 실제 자산 테스트에서 재측정해 차이 < 0.06 cm 확인 |
+| 보닛 하면 | **저장소에 없음.** 샘플 격자(x 110–225 5 cm 간격, \|y\| 10행)만 저장하고, 높이는 실행 시 로컬 GLB의 보닛 메시에서 측정(`measureHoodSurface`, 5a절) |
 
 | 패널 | tri | 면적 cm² | 경계 min → max |
 |---|---|---|---|
@@ -99,6 +99,37 @@ FrontCompartment (tools/ioniq5-asset/front-compartment.mjs, layout: front-compar
 | fc-lower-liner | 264 | 13,189 | (108.6, −56.5, 46) → (213.4, 56.5, 56) |
 | fc-front-upper-support | 90 | 2,884 | (198, −42, 71) → (214, 42, 84.1) |
 | fc-front-shroud | 48 | 2,472 | (214, −56.5, 49) → (214, 56.5, 71) |
+
+## 5a. 모델 파생 데이터 정책 (PR #17 수정)
+
+처음 커밋에는 `MODEL_REFERENCES.hoodUnderside`가 있었다. OpenX 보닛 메시에서 5 cm 격자로 뽑은 높이 240개다.
+- 이는 모델 표면을 표본화한 **모델 파생 Geometry 데이터**다.
+- P2-A6 커밋 정책(저장소에는 도구, 정점 데이터 없는 측정 JSON, 저작자 표시 렌더 3장만)과 맞지 않는다. 라이선스 승인 전이라 배포 허용 여부도 명확하지 않다.
+
+수정:
+- 표를 제거하고 샘플 격자(`HOOD_SAMPLE_GRID`, 우리의 표본화 계획)만 남겼다.
+- `measureHoodSurface(hood triangles)`가 실행 시 보닛 메시에서 같은 격자의 최저 하면을 측정한다. 이제 +y와 −y 중 낮은 쪽을 쓴다.
+  - Node 보고서는 로컬 GLB에서 측정한다.
+  - 브라우저 PoC는 로드한 GLB에서 측정한다.
+  - 측정값은 저장소 밖 보고서 JSON(`hoodSurface`)에만 남는다.
+- `buildFrontCompartment`는 측정한 하면이 없으면 실행을 거부한다.
+- CI는 합성 보닛 판(fixture)에서 측정한 하면으로 검증한다. 실제 모델 기준 테스트는 `IONIQ5_GLB`가 없으면 SKIP이다.
+- 남은 `MODEL_REFERENCES` 값은 바닥 z, 대시보드 x, 카울 최저 z, 바퀴 상단, 램프 하우징 경계 등 단일 경계값이다. P2-A6/P3-A1 문서에 이미 있는 경계 상자와 같은 종류다. 테스트가 배열 길이 ≤ 3을 강제한다.
+
+기존 측정값과의 비교. 같은 GLB와 같은 PC에서, 이전 보고서는 `C:\CarScope-External\p3-a2-1\report-table-baseline`에 보존했다.
+
+| 항목 | 표 방식 → 실행 시 측정 |
+|---|---|
+| 하면 높이 240칸 | 최대 차이 0.049 cm(표의 0.1 cm 반올림). null 위치 동일. −y 쪽이 0.05 cm 넘게 낮은 칸 0 |
+| 패널 경계(0.1 cm 단위) | 변화 없음. 에이프런 플랜지 상단만 ≤ 0.05 cm 이동 |
+| 예약 영역 상자·부피 | 동일 |
+| 차체 결함, Shell 간 결함, 닫힌 보닛 교차 | 0 / 0 / 0, 동일 |
+| 닫힌 보닛 ↔ 에이프런 최소 간격 | 2.302 → 2.285 cm |
+| 보닛 개방 ↔ Shell (A/C, 0–60°, 1°) | 판정 변화 0, 최소 간격 변화 ≤ 0.017 cm, 새 교차 0 |
+| 노출 광선, 프렁크 덮개 간격 | 동일 |
+| SVG | 닫힌 상태 2장 바이트 동일. 열린 상태 2장은 좌표 반올림만 달라짐(크기 동일, 172,484 / 171,640 B). 결정성 유지 |
+| 브라우저 검사 | Shell 표시 상태 12자세 결과 동일(새 교차 0). P3-A1 검사 통과 |
+| 비용 | 하면 측정 Node 60 ms. 브라우저 Shell 준비 6.6 → 46 ms(측정 포함) |
 
 ## 6. 정확도 및 추정 수준
 
@@ -143,8 +174,8 @@ FrontCompartment (tools/ioniq5-asset/front-compartment.mjs, layout: front-compar
 | 패널별 원본과의 최소 간격 | 벌크헤드 0.56(Body), 상부 지지대 0.31(Body), 슈라우드 1.57(Body), 에이프런 1.83(램프 하우징), 카울 2.75, 라이너 3.63, 스트럿 타워 4.10 cm |
 | Shell ↔ Shell | 결함 0 |
 | 선언된 접합 교차 | 벌크헤드–카울 58, 타워–에이프런 각 57, 지지대–슈라우드 44, 카울–에이프런 3/2 |
-| Shell ↔ 닫힌 보닛 | 교차 0. 최소 2.30 cm(에이프런 플랜지, 보닛 측면 끝이 말려 내려간 곳) |
-| 보닛 개방 ↔ Shell (0–60°, 1°, 61 × 2축) | **A·C 모두 새 교차 0**. 최소 간격 2.30 cm(0°) |
+| Shell ↔ 닫힌 보닛 | 교차 0. 최소 2.29 cm(에이프런 플랜지, 보닛 측면 끝이 말려 내려간 곳) |
+| 보닛 개방 ↔ Shell (0–60°, 1°, 61 × 2축) | **A·C 모두 새 교차 0**. 최소 간격 2.29 cm(0°) |
 | 같은 검사, 주요 각도 (A / C) | 5° 4.21 / 4.31 (카울), 15° 6.58 / 6.81 (에이프런), 30° 9.36 / 9.65, 45°·60° ≥ 10 cm |
 | 예약 영역 ↔ 원본·Shell·보닛 | 교차 0. FrunkZone은 Shell에서 2.0 cm. 서비스 영역은 선반에서 0.44 cm(1 cm 위에 놓임). 닫힌 보닛과 3.84 / 3.52 / 2.92 cm. 0–60° 열림 중 교차 0 |
 
@@ -221,7 +252,7 @@ FrontCompartment (tools/ioniq5-asset/front-compartment.mjs, layout: front-compar
 | 충돌 검사(한 자세, 30°) | 36.4 ms | 37.0 ms |
 
 - 프레임 간격은 60 Hz vsync 상한이다. CPU 1 ms와 GPU 3 ms 모두 16.7 ms보다 훨씬 작아 병목이 없다. 그 이상의 GPU 여유는 추정하지 않는다.
-- 페이지 로드 → 준비: 1,359 ms. 이 중 Shell 생성은 9.3 ms(Node에서는 24 ms)다. P3-A1 측정은 1,495 ms였다.
+- 페이지 로드 → 준비: 1,359 ms. 이 중 Shell 생성은 9.3 ms(Node에서는 24 ms)였다. P3-A1 측정은 1,495 ms였다. 하면 측정을 실행 시로 옮긴 뒤 브라우저 Shell 준비는 46 ms다(5a절).
 - 표시 전환 비용(두 번째 프레임까지): 켜기 29.4 ms, 끄기 23.6 ms.
 - Node 보고서 전체는 131 s다: 축 C 탐색, 1° 스윕 2축 × 61, 노출 광선 9.5 s, SVG 5장.
 
@@ -266,7 +297,7 @@ FrontCompartment (tools/ioniq5-asset/front-compartment.mjs, layout: front-compar
 
 | 파일 | 내용 |
 |---|---|
-| `tools/ioniq5-asset/front-compartment-layout.mjs` | 모델 기준값(측정), 패널·영역 파라미터, 출처·정확도, 이음새 선언 |
+| `tools/ioniq5-asset/front-compartment-layout.mjs` | 모델 기준 단일값, 보닛 하면 샘플 격자(높이 없음), 패널·영역 파라미터, 출처·정확도, 이음새 선언 |
 | `tools/ioniq5-asset/front-compartment.mjs` | 결정적 패널 생성, 법선 정렬, 통계 |
 | `tools/ioniq5-asset/front-compartment-report.mjs` | 검증 CLI: 간섭, 보닛 스윕, 영역, 노출, SVG |
 | `tools/ioniq5-asset/collision.mjs` | `crossingPoint` 추가(기존 함수 변경 없음) |

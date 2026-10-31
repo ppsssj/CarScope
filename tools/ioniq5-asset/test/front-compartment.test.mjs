@@ -1,5 +1,7 @@
 // P3-A2.1 front compartment shell tests. Synthetic only, except the tests gated on IONIQ5_GLB (the
-// OpenX model never enters CI; without it those tests are reported as SKIP).
+// OpenX model never enters CI; without it those tests are reported as SKIP, never PASS).
+// The hood surface the panels follow is model-derived and not stored in the repository: here it is
+// measured from a SYNTHETIC hood plate; the gated tests measure the real one from the local GLB.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
@@ -7,8 +9,8 @@ import { createHash } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { buildFrontCompartment, panelStats, sheet, orient, boxTriangles, MIN_TRIANGLE_AREA } from "../front-compartment.mjs";
-import { PARTS, ZONES, JOINTS, CONFIDENCE, MODEL_REFERENCES, HOOD_GAP, hoodUndersideAt, hoodClearanceOver, zoneBoxes } from "../front-compartment-layout.mjs";
+import { buildFrontCompartment, measureHoodSurface, panelStats, sheet, orient, boxTriangles, MIN_TRIANGLE_AREA } from "../front-compartment.mjs";
+import { PARTS, ZONES, JOINTS, CONFIDENCE, MODEL_REFERENCES, HOOD_GAP, HOOD_SAMPLE_GRID, hoodUndersideAt, hoodClearanceOver, zoneBoxes } from "../front-compartment-layout.mjs";
 import { classifyCrossings, jointFor } from "../front-compartment-report.mjs";
 import { staticScene, meshClearance } from "../collision.mjs";
 import { buildIoniqSvg, glbParts } from "../anatomy-svg.mjs";
@@ -19,8 +21,30 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO = join(HERE, "..", "..", "..");
 const sha = (x) => createHash("sha256").update(Buffer.from(x.buffer, x.byteOffset, x.byteLength)).digest("hex");
 const normalOf = (T, i) => { const u = [T[i + 3] - T[i], T[i + 4] - T[i + 1], T[i + 5] - T[i + 2]], v = [T[i + 6] - T[i], T[i + 7] - T[i + 1], T[i + 8] - T[i + 2]]; return [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]]; };
-const shell = buildFrontCompartment();
+// Synthetic hood fixture (invented, same scale as the bay): a flat plate from x 122 (z 107.5) to x 224 (z 86), |y| <= 81.
+const SYNTH_HOOD = Float64Array.from([122, -81, 107.5, 224, -81, 86, 224, 81, 86, 122, -81, 107.5, 224, 81, 86, 122, 81, 107.5]);
+const synthZ = (x) => 107.5 - ((x - 122) * 21.5) / 102;
+const surface = measureHoodSurface(SYNTH_HOOD);
+const shell = buildFrontCompartment({ hoodSurface: surface });
 const panel = (id) => shell.panels.find((p) => p.id === id);
+
+test("the repository holds no hood surface samples: the surface is measured from a hood mesh", () => {
+  // MODEL_REFERENCES keeps single clearance values only (no sampled surface or vertex arrays).
+  for (const [k, v] of Object.entries(MODEL_REFERENCES)) for (const x of Object.values(v)) if (Array.isArray(x)) assert.ok(x.length <= 3, `${k} holds an array of ${x.length}`);
+  assert.equal(MODEL_REFERENCES.hoodUnderside, undefined);
+  assert.throws(() => buildFrontCompartment(), /needs { hoodSurface }/);
+  assert.throws(() => hoodUndersideAt(undefined, 150, 0), /hood surface required/);
+  // measureHoodSurface: exact on the synthetic plate, null where no hood is above, grid = sampling plan.
+  assert.deepEqual(surface.x, HOOD_SAMPLE_GRID.x);
+  surface.y.forEach((y, r) => surface.x.forEach((x, c) => {
+    const z = surface.z[r][c];
+    if (x < 122 || x > 224) assert.equal(z, null, `(${x}, ${y})`); else assert.ok(Math.abs(z - synthZ(x)) < 1e-9, `(${x}, ${y}): ${z}`);
+  }));
+  // The lower of the +y / -y sides is used.
+  const tilted = measureHoodSurface(Float64Array.from([122, -81, 100, 224, -81, 100, 224, 81, 110, 122, -81, 100, 224, 81, 110, 122, 81, 110]));
+  const row = tilted.y.indexOf(40), col = tilted.x.indexOf(150);
+  assert.ok(tilted.z[row][col] < 105, "takes the -y side, which is lower here");
+});
 
 test("shell components: ids, groups and provenance on every part", () => {
   assert.deepEqual(shell.panels.map((p) => p.id), ["fc-rear-bulkhead", "fc-cowl-cover", "fc-apron-left", "fc-apron-right", "fc-strut-tower-left", "fc-strut-tower-right", "fc-lower-liner", "fc-front-upper-support", "fc-front-shroud"]);
@@ -56,7 +80,7 @@ test("coordinate frame: left at +Y, front at +X, liner below the support, all in
 });
 
 test("geometry is deterministic and has no degenerate or non-finite triangles", () => {
-  const again = buildFrontCompartment();
+  const again = buildFrontCompartment({ hoodSurface: measureHoodSurface(SYNTH_HOOD) });
   for (const p of shell.panels) {
     assert.equal(sha(p.triangles), sha(again.panels.find((x) => x.id === p.id).triangles), p.id);
     const s = panelStats(p);
@@ -70,13 +94,18 @@ test("geometry is deterministic and has no degenerate or non-finite triangles", 
 });
 
 test("panel normals face the compartment; orient() turns reversed triangles", () => {
-  const facing = { "fc-rear-bulkhead": (n) => n[0] > 0, "fc-cowl-cover": (n) => n[2] > 0 || n[0] > 0, "fc-apron-left": (n) => n[1] < 0, "fc-apron-right": (n) => n[1] > 0, "fc-lower-liner": (n) => n[2] > 0 || Math.abs(n[0]) > Math.abs(n[2]), "fc-front-shroud": (n) => n[0] < 0 };
-  for (const [id, ok] of Object.entries(facing)) {
+  // Every triangle faces the point it is seen from inside the compartment (the builder's reference points).
+  const seenFrom = { "fc-rear-bulkhead": [200, 0, 60], "fc-cowl-cover": [114, 0, 200], "fc-apron-left": [145, 0, 80], "fc-apron-right": [145, 0, 80], "fc-lower-liner": [160, 0, 200], "fc-front-upper-support": [205, 0, 200], "fc-front-shroud": [150, 0, 60] };
+  for (const [id, eye] of Object.entries(seenFrom)) {
     const T = panel(id).triangles;
     let good = 0;
-    for (let i = 0; i < T.length; i += 9) if (ok(normalOf(T, i))) good++;
-    assert.equal(good, T.length / 9, `${id}: ${T.length / 9 - good} triangles face away`);
+    for (let i = 0; i < T.length; i += 9) { const n = normalOf(T, i), c = [0, 1, 2].map((k) => (T[i + k] + T[i + 3 + k] + T[i + 6 + k]) / 3); if (n[0] * (eye[0] - c[0]) + n[1] * (eye[1] - c[1]) + n[2] * (eye[2] - c[2]) > 0) good++; }
+    // The support's latch pad faces outward from the pad; only its body follows the reference point.
+    assert.ok(id === "fc-front-upper-support" ? good >= T.length / 9 - 10 : good === T.length / 9, `${id}: ${T.length / 9 - good} triangles face away`);
   }
+  // Dominant directions: bulkhead toward +X, shroud toward -X, left apron wall toward -Y, liner well up.
+  const mean = (id) => { const T = panel(id).triangles, m = [0, 0, 0]; for (let i = 0; i < T.length; i += 9) normalOf(T, i).forEach((v, k) => (m[k] += v)); return m; };
+  assert.ok(mean("fc-rear-bulkhead")[0] > 0 && mean("fc-front-shroud")[0] < 0 && mean("fc-apron-left")[1] < 0 && mean("fc-apron-right")[1] > 0 && mean("fc-lower-liner")[2] > 0);
   // Liner lips face the compartment too: rear lip toward +X, front lip toward -X.
   const flipped = orient([0, 0, 0, 0, 1, 0, 1, 0, 0], () => [0.3, 0.3, 5]);
   assert.ok(normalOf(flipped, 0)[2] > 0, "a downward-facing triangle is re-wound to face up");
@@ -86,18 +115,18 @@ test("panels stay under the closed hood with the design gap and inside the measu
   for (const p of shell.panels) {
     const T = p.triangles;
     for (let i = 0; i < T.length; i += 3) {
-      const h = hoodUndersideAt(T[i], T[i + 1]);
+      const h = hoodUndersideAt(surface, T[i], T[i + 1]);
       if (h !== null) assert.ok(T[i + 2] <= h - HOOD_GAP + 0.75, `${p.id} vertex (${T[i]}, ${T[i + 1]}, ${T[i + 2]}) under hood ${h}`);
       if (T[i] < 123 && Math.abs(T[i + 1]) <= 69.4) assert.ok(T[i + 2] < MODEL_REFERENCES.cowlBodyMinZ.value, `${p.id} below the Body cowl strip`);
     }
   }
-  assert.equal(hoodUndersideAt(140, 0), 106.6);
-  assert.equal(hoodUndersideAt(300, 0), null);
-  assert.ok(hoodClearanceOver(126, 196, -27, 27) < hoodUndersideAt(140, 0));
+  assert.ok(Math.abs(hoodUndersideAt(surface, 140, 0) - synthZ(140)) < 1e-9);
+  assert.equal(hoodUndersideAt(surface, 300, 0), null);
+  assert.ok(Math.abs(hoodClearanceOver(surface, 126, 196, -27, 27) - synthZ(196)) < 1e-9);
 });
 
 test("reserved zones: placeholders on the well and shelves, clear of each other and of the shell", () => {
-  const zones = zoneBoxes();
+  const zones = zoneBoxes(surface);
   const frunk = zones.find((z) => z.id === "zone-frunk"), left = zones.find((z) => z.id === "zone-service-left"), right = zones.find((z) => z.id === "zone-service-right");
   assert.ok(frunk.min[1] < 0 && frunk.max[1] > 0, "frunk zone on the centre line");
   assert.ok(left.min[1] > frunk.max[1] && right.max[1] < frunk.min[1], "service zones beside it, separate");
@@ -166,21 +195,23 @@ test("real GLB: recorded model references still match the converted model", { sk
   assert.ok(Math.abs(box("Interior_Static", (c) => c[0] > 95).hi[0] - MODEL_REFERENCES.interiorFrontX.value) < 0.1);
   assert.ok(Math.abs(box("Body", (c) => c[0] > 100 && c[0] < 125 && Math.abs(c[1]) < 60 && c[2] > 95).lo[2] - MODEL_REFERENCES.cowlBodyMinZ.value) < 0.1);
   assert.ok(Math.abs(box("Wheel_0_1", () => true).hi[2] - MODEL_REFERENCES.wheelTopZ.value) < 0.1);
+  // The run-time hood measurement covers the compartment and lies in the hood's height range.
   const hood = nodes.find((n) => n.name === H.HOOD_NODE).triangles;
-  const t = MODEL_REFERENCES.hoodUnderside;
-  for (const [r, y] of t.y.entries()) for (const [c, x] of t.x.entries()) {
-    let lo = null;
-    for (let i = 0; i < hood.length; i += 9) { const z = H.rayDown(x, y, Infinity, hood.subarray(i, i + 9)); if (z !== null && (lo === null || z < lo)) lo = z; }
-    if (t.z[r][c] === null) assert.equal(lo, null, `(${x}, ${y})`); else assert.ok(Math.abs(lo - t.z[r][c]) < 0.06, `(${x}, ${y}): ${lo} vs ${t.z[r][c]}`);
-  }
+  const m = measureHoodSurface(hood), values = m.z.flat().filter((z) => z !== null);
+  assert.ok(values.length > 180, `${values.length} measured cells`);
+  assert.ok(Math.min(...values) > 83 && Math.max(...values) < 109);
 });
 
 test("real GLB: no shell defects against the model, closed hood clear, opening hood (A) clear at sample angles", { skip }, () => {
   const glb = readFileSync(real), nodes = glbParts(glb);
   const hood = nodes.find((n) => n.name === H.HOOD_NODE).triangles;
   const model = staticScene(nodes.filter((n) => n.name !== H.HOOD_NODE));
-  for (const p of shell.panels) assert.equal(classifyCrossings(p.id, p.triangles, model, JOINTS).defects, 0, p.id);
-  const shellScene = staticScene(shell.panels.map((p) => ({ name: p.id, triangles: p.triangles })));
+  const realShell = buildFrontCompartment({ hoodSurface: measureHoodSurface(hood) }); // follows the real hood
+  for (const p of realShell.panels) assert.equal(classifyCrossings(p.id, p.triangles, model, JOINTS).defects, 0, p.id);
+  const shellScene = staticScene(realShell.panels.map((p) => ({ name: p.id, triangles: p.triangles })));
+  const closed = meshClearance(hood, shellScene, { cutoff: 5 });
+  assert.equal(closed.intersectingPairs, 0);
+  assert.ok(closed.minDistanceCm > 2, `closed hood clearance ${closed.minDistanceCm}`);
   const h = hoodHierarchy(glb);
   const [A] = H.axisCandidates({ hoodTriangles: hood, groupOriginCm: h.group.originCm, groupLateralCm: h.lateralAxisCar }).candidates;
   for (const deg of H.SAMPLE_ANGLES) assert.equal(meshClearance(H.rotatePoints(hood, A, deg), shellScene, { cutoff: 5 }).intersectingPairs, 0, `${deg} deg`);
