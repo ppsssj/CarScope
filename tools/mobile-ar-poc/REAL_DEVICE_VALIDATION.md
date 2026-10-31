@@ -2,6 +2,8 @@
 
 2026-10-31 / PR [#18](https://github.com/ppsssj/CarScope/pull/18), **Draft 유지**. 검증 시작 HEAD: `9e402131bc83709adfa714974b5aec6de16fdc0f`. 이번 변경은 검증 문서뿐이며 기존 구현을 재작성하지 않았다.
 
+> 이후 기록: 아래 NOT_RUN 표는 2026-10-31 이 실행 시점의 결과로 보존한다. 보호된 HTTPS 스테이징을 통한 사용자 실기기 관측(13개 항목, `USER_REPORTED`)은 [HTTPS_STAGING.md](HTTPS_STAGING.md)에 기록한다.
+
 ## 이번 실행 결과
 
 | 보고 항목 | 결과 | 근거와 제한 |
