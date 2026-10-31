@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>CarScope IONIQ 5 SVG vs GLB (debug)</title>
+<style>
+  html,body{margin:0;background:#fff;font:12px/1.4 system-ui,"Segoe UI",sans-serif;color:#233448}
+  #row{display:flex;gap:0}
+  .panel{position:relative;width:960px;height:495px;border-right:1px solid #d0d5db}
+  .panel b{position:absolute;left:8px;top:6px;background:#ffffffd0;padding:1px 4px;z-index:2}
+  #svg svg{width:960px;height:495px;display:block}
+  #out{white-space:pre;font-family:ui-monospace,Consolas,monospace;font-size:11px;padding:6px 8px}
+  #credit{font-size:11px;color:#57606a;padding:0 8px}
+</style>
+<script type="importmap">
+{ "imports": { "three": "./vendor/three/build/three.module.js", "three/addons/": "./vendor/three/examples/jsm/" } }
+</script>
+</head>
+<body>
+<div id="row">
+  <div class="panel" id="svg"><b>Anatomy SVG (mesh-svg)</b></div>
+  <div class="panel" id="gl"><b>GLB, Three.js, same orthographic camera</b></div>
+</div>
+<div id="credit">Model: “Hyundai Ioniq 5” © 2022 andikapratamaw, CC BY 4.0; modified © 2026 Dogan Ulus, OpenX Assets (MPL-2.0 AND CC-BY-4.0). Local debug comparison only.</div>
+<div id="out">running…</div>
+<script type="module" src="./ioniq5-svg.js"></script>
+</body>
+</html>
