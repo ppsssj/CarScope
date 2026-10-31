@@ -1,82 +1,82 @@
 # CarScope
 
-**3D 차량 탐색에서 스마트폰 카메라 안내까지 이어지는 인터랙티브 차량 점검 프로토타입**
+**Interactive 3D vehicle inspection, from the car to your phone camera.**
 
-CarScope는 차량 전체 모델에서 점검 부위를 찾아 확대하고, 점검 절차를 확인한 뒤 QR로 모바일 카메라 보조 화면에 진입하는 사용자 흐름을 구현합니다. Android Automotive OS(AAOS) 및 Pleos SDK의 **읽기 전용 차량 상태 관측**은 별도 경계에서 검증하고 있습니다.
+CarScope는 3D 차량 모델에서 점검할 부위를 찾아 열어 보고, 점검 방법을 확인한 뒤 QR로 스마트폰 카메라 보조 화면까지 이어지는 차량 점검 경험을 만드는 프로젝트입니다. Android Automotive OS(AAOS)와 Pleos SDK의 **읽기 전용 차량 상태 관측**은 별도 프로토타입에서 검증하고 있습니다.
 
-> **현재 범위:** 브라우저 기반 차량 점검 UX와 모바일 QR-AR PoC의 연결이 구현됐습니다. 이 3D 점검 화면이 Android/Pleos 앱에 통합된 것은 **아직 아닙니다**. 보닛 회전과 부품 위치는 시뮬레이션·추정값이며, QR-AR은 워셔액 주입구를 의미적으로 인식하지 않습니다.
+<p align="center">
+  <img src="docs/visuals/p3-a4/hero-home.webp" width="860" alt="CarScope 차량 점검 UI 홈 화면: 다크 배경 중앙의 IONIQ 5 참조 모델과 차량 점검 버튼">
+</p>
+<p align="center"><sub>P3-A4 차량 점검 UI 홈 화면 (<code>tools/three-poc/inspect.html</code>, 로컬 Chrome 실제 캡처). 차량 모델: “Hyundai Ioniq 5” © 2022 andikapratamaw, <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>. OpenX Assets 수정본을 CarScope에서 변환·렌더링했습니다. <a href="#model-references--attribution">출처 자세히</a></sub></p>
+
+> **현재 범위:** 브라우저 기반 차량 점검 UI와 모바일 QR-AR PoC가 연결됐습니다. 이 3D 점검 화면은 Android/Pleos 앱에 **아직 통합되지 않았습니다**(P3-A5 예정). 보닛 회전과 부품 위치는 시뮬레이션·추정값이고, QR-AR은 워셔액 주입구를 의미적으로 인식하지 않습니다.
 
 [차량 점검 UI](tools/three-poc/INSPECTION_UI.md) · [QR-AR 검증](tools/mobile-ar-poc/HTTPS_STAGING.md) · [Android/Pleos 연동](docs/pleos-sdk-integration.md) · [개발 로드맵](docs/roadmap.md)
 
-## Preview
+## Features
 
-![IONIQ 5 커뮤니티 참조 모델의 CarScope 브라우저 렌더링](docs/visuals/p2-a6/iso.png)
+| 기능 | 구현 범위 | 상태 |
+| --- | --- | --- |
+| **Interactive 3D Vehicle Inspection** | 차량 회전·확대/축소, 차량 점검 모드, 상태 머신 기반 단계 이동과 뒤로 가기·점검 종료 | 브라우저 PoC 구현 |
+| **Hood Opening Animation** | 보닛 선택 시 카메라가 전방으로 이동하고 보닛이 0→60° 열림. 전방 구획 Shell·프렁크(닫힘) 노출. 중간 취소 시 현재 각도에서 닫힘 | 시뮬레이션 축 A 기준 · 실제 힌지 미검증 |
+| **Component Highlight & Navigation** | 보닛 강조 → 워셔액 캡 `washer-fluid-cap` 강조·라벨·근접 카메라. 3D 클릭과 목록 선택 모두 지원 | 구현 · 다른 5개 부품은 “준비 중”(선택 불가) |
+| **Washer Fluid Inspection Guide** | 점검 방법, 주의사항, Hyundai 공식 정비 설명서 출처 | 구현 · 위치·형상은 추정 |
+| **QR-to-Mobile Camera Assistance** | `#v=1&task=washer-fluid` QR과 직접 링크. 스마트폰 카메라에서 파란색 영역 후보를 2D 박스로 표시하고 수동 안내 제공. 영상은 기기 안에서만 처리 | Galaxy Z Flip8 Android Chrome 사용자 보고 PASS · 의미 인식 미검증 |
+| **Pleos SDK Vehicle Data** | Pleos SDK에서 1열 좌측(`ROW_1_LEFT`) 도어 상태를 읽기 전용으로 관측해 Android SVG 차량도에 반영 | Pleos AVD 특정 환경 PASS · 3D UI와 미연결 |
 
-*기존 P2-A6 3D 참조 모델 검증 캡처입니다. 최신 P3-A4 점검 UI의 화면 캡처는 아니며, 해당 UI는 `tools/three-poc/inspect.html`에서 실행합니다. 최신 UI 캡처는 로컬 외부 증거 폴더에 보관되어 있어 라이선스·공개 범위 확인 후 추가할 예정입니다.*
+냉각수·저전도 냉각수·브레이크액·12V 배터리·퓨즈박스는 공식 배치도에서 존재만 확인한 예약 영역이며 실제 형상과 점검 안내가 없습니다. 보닛·프렁크·워셔액 캡의 형상과 회전축·좌표는 OEM CAD나 실차 실측값이 아닙니다.
+
+## User Flow
+
+차량 홈 → 차량 점검 → 보닛 선택 → 보닛 개방 → 워셔액 캡 → QR → 모바일 보조
+
+| ① 차량 점검 · 보닛 강조 | ② 보닛 개방 · 점검 항목 |
+| --- | --- |
+| <a href="docs/visuals/p3-a4/flow-1-hood-highlight.webp"><img src="docs/visuals/p3-a4/flow-1-hood-highlight.webp" alt="차량 점검 모드: 보닛이 청록색으로 강조되고 우측 패널에 점검 가능 부위 목록이 표시됨"></a> | <a href="docs/visuals/p3-a4/flow-2-hood-open-components.webp"><img src="docs/visuals/p3-a4/flow-2-hood-open-components.webp" alt="보닛이 열리고 전방 구획이 보이며 워셔액 캡에 라벨이 표시됨. 패널에는 워셔액만 점검 가능, 나머지 5개는 준비 중"></a> |
+| 강조된 보닛을 3D에서 누르거나 목록에서 선택합니다. | 카메라가 전방으로 이동하고 보닛이 열립니다. 워셔액 캡만 선택할 수 있습니다. |
+
+| ③ 워셔액 점검 상세 | ④ 스마트폰 연결 QR |
+| --- | --- |
+| <a href="docs/visuals/p3-a4/flow-3-washer-detail.webp"><img src="docs/visuals/p3-a4/flow-3-washer-detail.webp" alt="워셔액 캡 근접 화면과 점검 방법, 주의사항, 공식 설명서 출처가 있는 상세 패널"></a> | <a href="docs/visuals/p3-a4/flow-4-qr-handoff.webp"><img src="docs/visuals/p3-a4/flow-4-qr-handoff.webp" width="300" alt="스마트폰으로 이어서 보기 패널: QR 코드, 직접 열기 링크, 개인정보 안내"></a> |
+| 근접 카메라와 함께 점검 방법·주의사항·출처를 표시합니다. | QR을 스캔하면 모바일 카메라 보조 화면이 열립니다. |
+
+위 4장은 1440×900 로컬 Chrome에서 `inspect.html`을 실제로 실행해 캡처했습니다(2026-11-01, main `062b6b2`와 같은 UI 코드). QR은 접근이 제한된 스테이징 주소를 가리킵니다. 마지막 모바일 보조 단계는 사용자가 실제 스마트폰에서 확인했지만 공개 가능한 실기기 화면 캡처가 없어 이미지를 넣지 않았습니다.
 
 <details>
-<summary>추가 3D 검증 이미지 보기</summary>
+<summary>이전 단계의 엔지니어링 검증 이미지 (P2-A6)</summary>
 
-| 부품 선택 검증 | 원본 차량 외피 숨김 검증 |
-| --- | --- |
-| ![도어 선택 레이캐스트 검증](docs/visuals/p2-a6/selected-door-front-left.png) | ![외피 숨김 시 실내 구조 검증](docs/visuals/p2-a6/shell-hidden.png) |
+| 3D 참조 모델 | 부품 선택 검증 | 외피 숨김 검증 |
+| --- | --- | --- |
+| ![IONIQ 5 커뮤니티 참조 모델의 브라우저 렌더링](docs/visuals/p2-a6/iso.png) | ![도어 선택 레이캐스트 검증](docs/visuals/p2-a6/selected-door-front-left.png) | ![외피 숨김 시 실내 구조 검증](docs/visuals/p2-a6/shell-hidden.png) |
 
-두 이미지는 기존 엔지니어링 PoC의 캡처입니다. 최신 차량 점검 UI와 혼동하지 마세요.
+P2-A6 엔지니어링 PoC 캡처이며 현재 차량 점검 UI 화면이 아닙니다.
 
 </details>
-
-## Inspection Flow
-
-```mermaid
-flowchart LR
-  A["3D 차량 홈"] --> B["차량 점검 시작"]
-  B --> C["보닛 강조 · 선택"]
-  C --> D["카메라 이동 · 보닛 개방"]
-  D --> E["워셔액 캡 강조 · 선택"]
-  E --> F["점검 방법 · 주의사항"]
-  F --> G["QR 스캔"]
-  G --> H["모바일 카메라 후보 안내"]
-```
-
-- **3D 점검 UI (브라우저):** 3D 차량 회전·줌, 보닛 raycast 선택, 카메라 이동, 보닛 개폐 애니메이션, 워셔액 캡 `washer-fluid-cap` 강조, 점검 패널을 제공합니다.
-- **모바일 QR-AR (스마트폰 브라우저):** `#v=1&task=washer-fluid` 계약으로 이동해 카메라 영상에서 **파란색 영역 후보**를 2D 바운딩 박스로 표시합니다. 수동 안내와 카메라 중지·재시작을 지원합니다. 영상은 브라우저 내에서 처리하며 업로드하지 않습니다.
-- **Android/Pleos (별도 프로토타입):** Mock/Pleos 소스를 분리하고, Pleos SDK에서 읽은 도어 상태를 SVG로 반영합니다. 집 PC의 Pleos AVD에서 도어 이벤트 → SVG 변경을 확인했습니다. **Three.js 점검 UI가 Android 앱에 연결됐다는 뜻은 아닙니다.**
-
-## Features & Status
-
-| 기능 | 현재 범위 | 상태 |
-| --- | --- | --- |
-| 3D 차량 점검 UX | 차량 홈 → 보닛 → 워셔액 안내 → QR | 브라우저 PoC 구현 |
-| 전방 구획 | Shell, 프렁크, 워셔액 주입구 몸체·캡 | 추정 Geometry / 검증된 시뮬레이션 범위 |
-| 부품 인터랙션 | 부품 강조, 선택, 근접 카메라, 뒤로 가기, 취소·복원 | 브라우저 회귀 PASS |
-| 모바일 카메라 보조 | 색상 후보 오버레이, 수동 안내, 중지·재시작 | Galaxy Z Flip8 사용자 보고 검증 |
-| Pleos 연동 | 읽기 전용 ROW_1_LEFT 도어 관측 → Android SVG | Pleos AVD 특정 환경 PASS |
-| 기타 전방 점검 부품 | 냉각수·저전도 냉각수·브레이크액·12V 배터리·퓨즈박스 | 예약만 존재 · 실제 형상 미구현 |
-| Android 3D 점검 UI | Three.js 점검 UX의 앱 내 실행·통합 | **P3-A5 예정** |
-
-워셔액 캡·프렁크와 보닛의 형상, 회전축 및 좌표는 OEM CAD·실차 실측값이 아닙니다. 모바일의 파란 후보 박스는 실제 주입구의 식별 결과가 아닙니다.
 
 ## Architecture
 
 ```mermaid
 flowchart TB
-  subgraph Browser["Browser · 3D Inspection PoC"]
-    UI["Three.js inspection UI"]
+  subgraph Browser["Browser · 3D Inspection UI (tools/three-poc)"]
+    UI["inspect.html · state machine"]
     GEO["IONIQ 5 external GLB + estimated service geometry"]
     UI --> GEO
-    UI --> QR["QR handoff contract"]
+    UI --> QR["QR handoff contract<br/>task = washer-fluid"]
   end
-  subgraph Mobile["Mobile browser · QR-AR PoC"]
+  subgraph Mobile["Mobile browser · QR-AR PoC (tools/mobile-ar-poc)"]
     QR --> CAM["Camera + 2D blue-region detector"]
     CAM --> GUIDE["Candidate overlay / manual guide"]
   end
-  subgraph Android["Android AAOS / Pleos · separate prototype"]
+  subgraph Android["Android AAOS / Pleos · separate prototype (app, vehicle-core)"]
     SDK["Mock / Pleos VehicleDataSource"] --> SNAP["VehicleSnapshot"]
     SNAP --> MAP["VehicleDiagramMapper"]
     MAP --> SVG["VehicleSvgRenderer"]
     SVG --> WV["Android WebView · SVG"]
   end
+  UI -.-|"not connected yet · P3-A5"| WV
 ```
+
+브라우저 점검 UI와 Android/Pleos 앱은 **아직 별개의 구현**입니다. 점선은 P3-A5에서 연결할 예정인 경계이며 현재 데이터 흐름이 없습니다. 3D 점검 UI는 Pleos 차량 데이터를 읽지 않고, Android 앱은 3D 점검 UI를 실행하지 않습니다.
 
 | 영역 | 주요 기술 및 역할 |
 | --- | --- |
@@ -145,7 +145,11 @@ npm run test:browser
 
 ## Roadmap
 
-1. **P3-A5 · Android/Pleos 통합:** 현재 브라우저 점검 UI를 Android 디버그 경계에서 검증하고, 기존 SVG 및 Pleos 관측 기능을 보존합니다.
+| 완료 | 다음 단계 |
+| --- | --- |
+| P3-A4 차량 점검 UI (PR #21) · QR-AR 모바일 보조 (PR #18) | **P3-A5 · Android/Pleos UI 통합** |
+
+1. **P3-A5 · Android/Pleos 통합 (다음 단계):** 현재 브라우저 점검 UI를 Android 디버그 경계에서 검증하고, 기존 SVG 및 Pleos 관측 기능을 보존합니다.
 2. **안정성·성능:** Android WebView/WebGL 성능, 수명주기, 액세스 정책, 터치/HMI 동작을 별도 검증합니다.
 3. **점검 부위 확장:** 공식 근거와 실제 형상 검증이 가능한 부위부터 순차적으로 추가합니다.
 4. **식별 정확도 평가:** 라벨이 있는 실물 이미지와 실제 차량을 확보한 이후 색상 후보 방식의 오탐·미탐을 별도로 평가합니다.
@@ -154,8 +158,15 @@ npm run test:browser
 
 ## Model, References & Attribution
 
-IONIQ 5 참조 형상은 **현대자동차 공식 CAD가 아닌 커뮤니티 모델**입니다. [OpenX Assets 기반 변환 및 저작권 고지](docs/p2-a6-ioniq5-asset.md)에 따르면 “Hyundai Ioniq 5” © 2022 andikapratamaw (CC BY 4.0), OpenX Assets 수정 © 2026 Dogan Ulus (MPL-2.0 AND CC-BY-4.0)이며, 이 README의 기존 3D 렌더 이미지에도 같은 출처가 적용됩니다. Hyundai의 보증 또는 공식 인증을 의미하지 않습니다.
+IONIQ 5 참조 형상은 **현대자동차 공식 CAD가 아닌 커뮤니티 모델**입니다.
 
-워셔액 점검 절차와 부품 존재 근거는 [Hyundai UK IONIQ 5 2022 Maintenance PDF](https://manuals.hyundai.co.uk/umanuals/ioniq-5/ioniq-5-2022-maintenance.pdf)를 참조했습니다. 시장별 실제 배치·치수·정비 적용은 사용자 차량 설명서로 다시 확인해야 합니다.
+- 원본 모델: “Hyundai Ioniq 5” © 2022 [andikapratamaw](https://sketchfab.com/andikapratamaw), [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)
+- 수정본: [OpenX Assets](https://github.com/vevalabs/openx-assets) © 2026 Dogan Ulus, `MPL-2.0 AND CC-BY-4.0`
+- 변경 사항: CarScope가 형식을 변환하고(`.blend` → GLB), 점검 UI에서 렌더링했습니다. 보닛 회전, 전방 구획·프렁크·워셔액 주입구 형상(CarScope 추정 Geometry), 강조·라벨·UI 패널을 더했습니다.
+- 적용 이미지: `docs/visuals/p3-a4/`의 점검 UI 캡처 5장과 `docs/visuals/p2-a6/`의 렌더 3장. 이 이미지를 재사용할 때도 위 저작자 표시와 라이선스 링크를 함께 표시해야 합니다.
 
-저장소에는 외부 원본 GLB, 파생 고밀도 메시, 실기기 캡처·로그, 인증 토큰 또는 SDK 바이너리를 넣지 않습니다. 이미지·모델 재배포는 각 원출처의 조건을 따릅니다.
+자세한 출처와 커밋 정책은 [IONIQ 5 자산 문서](docs/p2-a6-ioniq5-asset.md)에 있습니다. CarScope는 Hyundai와 관련이 없으며, 이 자료는 Hyundai의 보증이나 공식 인증을 뜻하지 않습니다. 차량 디자인과 상표는 각 권리자에게 있습니다.
+
+워셔액 점검 절차와 부품 존재 근거는 [Hyundai UK IONIQ 5 2022 Maintenance PDF](https://manuals.hyundai.co.uk/umanuals/ioniq-5/ioniq-5-2022-maintenance.pdf)를 참조했습니다. 시장별 실제 배치·치수·정비 방법은 사용자 차량의 설명서로 다시 확인해야 합니다.
+
+저장소에는 외부 원본 GLB, Blender 원본, 파생 고밀도 메시, 실기기 캡처·로그, 인증 토큰, SDK 바이너리를 넣지 않습니다.
