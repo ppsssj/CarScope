@@ -4,6 +4,8 @@ import { createServer } from "node:http";
 import { readFile } from "node:fs/promises";
 import { extname, join, normalize, dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import QRCode from "qrcode";
+import { handoffTarget } from "./inspection-handoff.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOTS = [
@@ -32,10 +34,21 @@ const ROOTS = [
   ...(process.env.CARSCOPE_P3A21_DIR ? [["/external/p3-a2-1/", resolve(process.env.CARSCOPE_P3A21_DIR)]] : []),
   ["/", HERE],
 ];
-const TYPES = { ".html": "text/html", ".js": "text/javascript", ".mjs": "text/javascript", ".glb": "model/gltf-binary", ".json": "application/json", ".svg": "image/svg+xml" };
+// P3-A4: the inspection UI's mobile handoff. The origin is configuration, never a constant in the page.
+const handoff = handoffTarget(process.env.CARSCOPE_QR_AR_BASE_URL);
+const handoffQr = handoff.configured ? await QRCode.toString(handoff.url, { type: "svg", margin: 2, errorCorrectionLevel: "M" }) : null;
+const TYPES ={ ".html": "text/html", ".js": "text/javascript", ".mjs": "text/javascript", ".glb": "model/gltf-binary", ".json": "application/json", ".svg": "image/svg+xml" };
 const port = Number(process.env.PORT ?? 8095);
 createServer(async (req, res) => {
   const url = decodeURIComponent(new URL(req.url, "http://x").pathname);
+  if (url === "/inspection-handoff.json") {
+    res.writeHead(200, { "content-type": "application/json", "cache-control": "no-store" });
+    return res.end(JSON.stringify({ configured: handoff.configured, url: handoff.url, reason: handoff.reason }));
+  }
+  if (url === "/inspection-qr.svg" && handoffQr) {
+    res.writeHead(200, { "content-type": "image/svg+xml", "cache-control": "no-store" });
+    return res.end(handoffQr);
+  }
   for (const [prefix, dir] of ROOTS) {
     if (!url.startsWith(prefix)) continue;
     const rest = prefix.endsWith("/") ? url.slice(prefix.length) : "";

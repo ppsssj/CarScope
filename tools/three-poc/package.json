@@ -2,12 +2,14 @@
   "name": "carscope-three-poc",
   "private": true,
   "version": "0.0.0",
-  "description": "Three.js proof of concept for the CarScope Anatomy geometry export (P2-A2). Not part of the app.",
+  "description": "Three.js proof of concept for the CarScope Anatomy geometry export (P2-A2). Not part of the app. inspect.html: P3-A4 inspection flow.",
   "type": "module",
   "scripts": {
-    "serve": "node serve.mjs"
+    "serve": "node serve.mjs",
+    "test": "node --test test/*.test.mjs"
   },
   "dependencies": {
+    "qrcode": "1.5.4",
     "three": "0.160.0"
   }
 }
