@@ -47,6 +47,7 @@ export const ENVELOPE_SUV = freeze({
     doorThickness: estimated(24, "Reference rigid shell thickness"),
     doorSill: estimated(310, "Reference door aperture bottom"),
     hoodCrownRise: estimated(55, "P2-A3-1.1 original surface study; not an AAOS or OEM measurement"),
+    fenderShoulderDrop: estimated(22, "P2-A3-1.2 front-fender shoulder below the hood edge; not an AAOS or OEM measurement"),
   },
   design: { kind: "procedural-crossover", source: "DESIGN_ESTIMATE", unit: "cm",
     unobservedConstruction: "Every procedural constant not in dimensions is an original design estimate, including panel bands, hinges, hub supports, lamps, windows and trim. No OEM layout inferred.",

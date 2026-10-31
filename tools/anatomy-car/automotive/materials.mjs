@@ -44,7 +44,7 @@ export function flatMarkup(ctx, prims) {
       const paths = p.paths;
       if(paths.loftFaces) {
         out.push(`<path${fmt({d:paths.fill,fill:pal.paper})}/>`);
-        for(const face of paths.loftFaces) out.push(`<path${fmt({d:face.d,fill:face.color})}/>`);
+        for(const face of paths.loftFaces) out.push(`<path${fmt({d:face.d,fill:face.color,...(paths.geo.kind==="fender"?{stroke:face.color,"stroke-width":0.35}:{})})}/>`);
         out.push(`<path${fmt({d:paths.outline,fill:"none",stroke:LINE[p.tone??"hi"],"stroke-width":LINE_W})}/>`);
         continue;
       }
@@ -74,7 +74,7 @@ export function kitMarkup(ctx, prims) {
     else if (p.kind === "solid") {
       if(p.paths.loftFaces) {
         out.push(`<path d="${p.paths.fill}" fill="${PALETTES[p.palette??"paint"].paper}"/>`);
-        for(const face of p.paths.loftFaces) out.push(`<path d="${face.d}" fill="${face.color}"/>`);
+        for(const face of p.paths.loftFaces) out.push(`<path d="${face.d}" fill="${face.color}"${p.paths.geo.kind==="fender"?` stroke="${face.color}" stroke-width="0.35"`:""}/>`);
         out.push(`<path d="${p.paths.outline}" fill="none" stroke="${LINE[p.tone??"hi"]}" stroke-width="${LINE_W}"/>`);
       } else out.push(k.solidSvg(p.paths, { tone: p.tone, crease: p.crease, className: `car-${p.palette ?? "paint"}`, inner: p.inner ? kitMarkup(ctx, p.inner) : "" }));
     }

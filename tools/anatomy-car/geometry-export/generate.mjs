@@ -6,6 +6,7 @@ import { LANDMARKS } from "../automotive/coordinates.mjs";
 import { FRONT_DOOR, REAR_DOOR, HALF } from "../automotive/dims.mjs";
 import { prismMesh, convexMesh, latheMesh, planeMesh, checkMesh, rotateZ, vec } from "./mesh.mjs";
 import { loftMesh } from "./loft.mjs";
+import { fenderMesh } from "./fender.mjs";
 import { writeGlb, toGltf, dirToGltf, quatAboutCarZ } from "./gltf.mjs";
 
 export function generateGeometry(model) {
@@ -17,6 +18,7 @@ export function generateGeometry(model) {
   const CLASS_NOTES = {
     prism: ["A", "exact: polygon, frame and extent are the drawn prism"],
     loft: ["A", "section-interpolated closed mesh; SVG faces share its tessellated vertices"],
+    fender: ["A", "wheel-arch-aware closed sweep; SVG faces share its tessellated vertices"],
     convex: ["A", "exact: vertices and faces are the drawn polyhedron"],
     lathe: ["A", "exact meridian and axis; facet count from the SVG build"],
     latheSmooth: ["B", "meridian is exact, but the SVG smooths runs of smooth knots with a Hermite curve; 3D joins knots straight and only shares normals"],
@@ -33,6 +35,7 @@ export function generateGeometry(model) {
       const g = prim.paths.geo;
       if (g.kind === "prism") return { mesh: prismMesh(g), closed: true, cls: "prism" };
       if (g.kind === "loft") return { mesh: loftMesh(g).mesh, closed: true, cls: "loft" };
+      if (g.kind === "fender") return { mesh: fenderMesh(g).mesh, closed: true, cls: "fender" };
       if (g.kind === "convex") return { mesh: convexMesh(g), closed: true, cls: "convex" };
       if (g.kind === "lathe") return { mesh: latheMesh(g), closed: true, cls: g.meridian.some((p) => p[2]) ? "latheSmooth" : "lathe" };
     }

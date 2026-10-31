@@ -6,8 +6,9 @@ import { scene, yFrame, xFrame } from "../automotive/scene.mjs";
 import { VIEW } from "../automotive/camera.mjs";
 import { ENVELOPE_SUV, envelopeParameters } from "../profiles/vehicle-profile.mjs";
 import { loftMesh } from "../geometry-export/loft.mjs";
+import { fenderMesh } from "../geometry-export/fender.mjs";
 
-export async function buildEnvelopeModel({ profile = ENVELOPE_SUV, hoodLoft = true } = {}) {
+export async function buildEnvelopeModel({ profile = ENVELOPE_SUV, hoodLoft = true, fenderSurface = true } = {}) {
   const anatomy = await loadAnatomy();
   const { k, G, A } = anatomy;
   const d = envelopeParameters(profile), half = d.width / 2;
@@ -36,6 +37,19 @@ export async function buildEnvelopeModel({ profile = ENVELOPE_SUV, hoodLoft = tr
     ...[d.axleFront, d.axleRear].flatMap((x) => [
       ...Array.from({ length: 65 }, (_, i) => x - d.archRadius + 2 * d.archRadius * i / 64),
       ...Array.from({ length: 49 }, (_,i)=>x+d.flareRadius*Math.cos(Math.PI*i/48))])];
+  const hoodX0=d.windshieldBaseX+1,hoodX1=d.xFront-2,hoodW=half-2;
+  const hoodGeo={kind:"loft",resolution:2,sections:[hoodX0,140,208,hoodX1].map(x=>({x,
+    points:[-hoodW,-hoodW/2,0,hoodW/2,hoodW].map(y=>{
+      const base=top(x),rise=d.hoodCrownRise*Math.sin(Math.PI*(x-hoodX0)/(hoodX1-hoodX0))*(1-(y/hoodW)**2);
+      return [y,base+rise,base-3];
+    })}))};
+  const hoodSurface=hoodLoft?loftMesh(hoodGeo):null;
+  const hoodEdge=hoodSurface?.top.map(row=>row.at(-1));
+  const fenderTop=(x)=>{
+    if(!hoodEdge||x<hoodX0||x>hoodX1) return top(x);
+    let i=hoodEdge.findIndex(p=>p[0]>=x);if(i<1)i=1;
+    const a=hoodEdge[i-1],b=hoodEdge[i];return a[2]+(b[2]-a[2])*(x-a[0])/(b[0]-a[0]);
+  };
   const addPrism = (name, F, poly, s0, s1, palette = "paint", opts = {}) => sc.prism(name, F, poly, s0, s1,
     { palette, tone: "hi", crease: "none" }, { meta: { owner: "body", ...opts.meta }, ...opts });
   const slab = (name, x0, x1, y0, y1, z0, z1, palette = "paint") => addPrism(name, Y, [[x0,z0],[x1,z0],[x1,z1],[x0,z1]], y0, y1, palette);
@@ -52,7 +66,7 @@ export async function buildEnvelopeModel({ profile = ENVELOPE_SUV, hoodLoft = tr
       for(let i=1;i<cuts.length;i++) {
         const a=cuts[i-1],b=cuts[i],mid=(a+b)/2;
         const brow=[d.axleFront,d.axleRear].some(x=>Math.abs(mid-x)<d.archRadius);
-        addPrism(`suv.${name}.band-${i}.${side}`,F,region(a,b,brow?()=>d.wheelRadius+d.flareRadius+1:bottom,name==="front-quarter"?(x)=>top(x)-3:top,stations,4),65,inner);
+        addPrism(`suv.${name}.band-${i}.${side}`,F,region(a,b,brow?()=>d.wheelRadius+d.flareRadius+1:bottom,name==="front-quarter"?(x)=>(fenderSurface?fenderTop(x):top(x))-3:top,stations,4),65,name==="front-quarter"&&fenderSurface?half-5:inner);
       }
       // Flush arch trim is an explicitly planar inlay on the integral skin, not a second
       // intersecting fender solid. The wheel opening itself is the true sampled prism boundary.
@@ -60,8 +74,25 @@ export async function buildEnvelopeModel({ profile = ENVELOPE_SUV, hoodLoft = tr
       const arc=(r,reverse=false)=>Array.from({length:49},(_,i)=>{
         const t=Math.PI*(reverse?1-i/48:i/48);return [axle+r*Math.cos(t),side*half,d.wheelRadius+r*Math.sin(t)];
       });
-      const extra=axle===null?[]:[sc.poly([...arc(d.flareRadius),...arc(d.archRadius,true)],"trim",{tone:"none"})];
-      addPrism(`suv.${name}.${side}`, F, region(x0, x1, bottom, top, stations, 4), inner, out,"paint",{extra});
+      const extra=axle===null||name==="front-quarter"&&fenderSurface?[]:[sc.poly([...arc(d.flareRadius),...arc(d.archRadius,true)],"trim",{tone:"none"})];
+      if(name==="front-quarter"&&fenderSurface) {
+        const fenderEnd=d.xFront-1.8;
+        const xs=[...new Set([x0,fenderEnd,140,208,237,...(hoodEdge?.map(p=>p[0])??[]),
+          ...Array.from({length:17},(_,i)=>x0+(fenderEnd-x0)*i/16),
+          ...Array.from({length:33},(_,i)=>d.axleFront-d.archRadius*Math.cos(Math.PI*i/32))]
+          .filter(x=>x>=x0&&x<=fenderEnd).map(x=>Number(x.toFixed(6))))].sort((a,b)=>a-b);
+        const geo={kind:"fender",side,xs,innerY:half-5,halfWidth:half,
+          bottomZ:xs.map(bottom),topZ:xs.map(fenderTop),shoulderDrop:d.fenderShoulderDrop};
+        const sweep=fenderMesh(geo);
+        const shapes=sweep.surfaceTriangles.map((triangle,i)=>{
+          const [a,b,c]=triangle,u=G.unit3(G.sub3(b,a)),n=G.unit3(G.cross3(G.sub3(b,a),G.sub3(c,a)));
+          const v=G.unit3(G.cross3(n,u)),frame={o:a,u,v,a:n};
+          const polygon=[[0,0],[G.len3(G.sub3(b,a)),0],[G.dot3(G.sub3(c,a),u),G.dot3(G.sub3(c,a),v)]];
+          return sc.record(A.prism(frame,polygon,-0.01,0,{name:`suv.front-fender.${side}.surface-${i}`,owner:"body"}));
+        });
+        sc.item(`suv.front-fender.${side}`,[(x0+x1)/2,side*(half-1),top((x0+x1)/2)],
+          [sc.solid(ctx.loftPaths(sweep,geo),{palette:"paint",tone:"hi",crease:"none"})],shapes);
+      } else addPrism(`suv.${name}.${side}`, F, region(x0, x1, bottom, top, stations, 4), inner, out,"paint",{extra});
     }
     // Real apertures: the rocker stays below the door, following the same wheel-arch cut.
     for (const [name, x0, x1] of [["front", -22.5, 85], ["rear", -112, -34.5]]) {
@@ -146,12 +177,7 @@ export async function buildEnvelopeModel({ profile = ENVELOPE_SUV, hoodLoft = tr
   // changes actual XYZ vertices in two axes while preserving the hood's outer edges.
   if (!hoodLoft) addPrism("suv.hood", Y, region(d.windshieldBaseX+1, d.xFront-2, (x) => top(x)-3, top, stations, 3), -half+2, half-2);
   else {
-    const x0=d.windshieldBaseX+1,x1=d.xFront-2,w=half-2;
-    const sections=[x0,140,208,x1].map(x=>({x,points:[-w,-w/2,0,w/2,w].map(y=>{
-      const base=top(x),rise=d.hoodCrownRise*Math.sin(Math.PI*(x-x0)/(x1-x0))*(1-(y/w)**2);
-      return [y,base+rise,base-3];
-    })}));
-    const geo={kind:"loft",sections,resolution:2},loft=loftMesh(geo);
+    const x0=hoodX0,x1=hoodX1,geo=hoodGeo,loft=hoodSurface;
     const shapes=loft.topTriangles.map((triangle,i)=>{
       const [a,b,c]=triangle,u=G.unit3(G.sub3(b,a)),n=G.unit3(G.cross3(G.sub3(b,a),G.sub3(c,a)));
       const v=G.unit3(G.cross3(n,u)),F={o:a,u,v,a:n};

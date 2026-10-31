@@ -52,11 +52,17 @@ export function geometry({ k, G }, P) {
       if(G.dot3(n,V)<=1e-9) continue;
       const ring=ids.map(i=>projected[i]), oriented=signed(ring)>0?ring:ring.reverse();
       const light=Math.max(0,Math.min(1,G.dot3(n,G.lightOf(P))));
-      const value=Math.round(216+37*light),color=`rgb(${value},${Math.min(255,value+2)},${Math.min(255,value+5)})`;
+      const value=geo.kind==="fender"?Math.round(225+15*light):Math.round(216+37*light);
+      const color=`rgb(${value},${Math.min(255,value+2)},${Math.min(255,value+5)})`;
       faces.push({d:k.pathOf(oriented,true),color});
     }
-    const outline=k.pathOf(hull,true);
-    return withGeo({fill:outline,outline,crease:"",top:"",shades:["","","",""],loftFaces:faces},geo);
+    // The fender's projected hull would close the wheel opening; its entire visible-edge
+    // outline also draws hidden far-side seams over the hood. Draw only the true arch lip.
+    const ground=Math.min(...(geo.bottomZ??[]));
+    const outline=geo.kind==="fender"?loft.rings.slice(0,-1).flatMap((ring,i)=>
+      Math.max(geo.bottomZ[i],geo.bottomZ[i+1])>ground+1?[path3([ring[1],loft.rings[i+1][1]])]:[]).join(""):k.pathOf(hull,true);
+    const fill=geo.kind==="fender"?faces.map(f=>f.d).join(""):outline;
+    return withGeo({fill,outline,crease:"",top:"",shades:["","","",""],loftFaces:faces},geo);
   }
 
   // prismPaths is adapted from Anatomy's examples/arcade-cabinet/build.mjs (MIT, (c) 2026 Ryan; see
