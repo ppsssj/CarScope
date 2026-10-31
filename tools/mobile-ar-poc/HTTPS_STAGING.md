@@ -1,6 +1,6 @@
 # QR-AR — 보호된 HTTPS 스테이징과 스마트폰 인계
 
-2026-11-01 갱신. 현재 판정: **`AR012_USER_REPORTED_PASS`**. 2026-10-31의 8개 항목과 2026-11-01의 추가 5개 항목(기기·후면 렌즈 확인, 대상 소실, 권한 거부, 회전, 중지·앱 전환/복귀)이 모두 사용자 보고 PASS다. 단, 기종·OS 버전·브라우저 명칭은 아직 전달되지 않아 Android Chrome/iPhone Safari 중 어느 플랫폼의 결과인지 귀속하지 않는다. 워셔액 주입구 의미 인식 정확도는 계속 미검증이다. 이전 판정 `AR012_PARTIAL`(2026-10-31), `AR012_BLOCKED_HTTPS`, `AR012_READY_FOR_MANUAL_TEST`는 이전 단계의 결과다. Draft 해제/병합은 사용자 결정으로 남긴다.
+2026-11-01 갱신. 현재 판정: **`AR012_USER_REPORTED_PASS`**. 2026-10-31의 8개 항목과 2026-11-01의 추가 5개 항목(기기·후면 렌즈 확인, 대상 소실, 권한 거부, 회전, 중지·앱 전환/복귀)이 모두 사용자 보고 PASS다. 사용자 보고 기기: **Samsung Galaxy Z Flip8 / Android (버전 UNKNOWN) / Google Chrome (버전 UNKNOWN)**. 따라서 이 결과는 Android Chrome 한 기기의 사용자 보고이며 iPhone Safari는 NOT_RUN이다. 워셔액 주입구 의미 인식 정확도는 계속 미검증이다. 이전 판정 `AR012_PARTIAL`(2026-10-31), `AR012_BLOCKED_HTTPS`, `AR012_READY_FOR_MANUAL_TEST`는 이전 단계의 결과다. Draft 해제/병합은 사용자 결정으로 남긴다.
 
 ## 실제 접근 주소
 
@@ -67,7 +67,7 @@ npm run build:staging
 
 ## 사용자 실기기 관측 기록 — 2026-10-31
 
-출처는 사용자가 이 대화로 전달한 실기기 테스트 결과(`USER_REPORTED`)다. 테스트 URL은 위 immutable 배포 주소이며 배포 소스는 `1328325`다. 기종·OS 세부 버전·브라우저 종류/버전은 미확인이다. Android Chrome 또는 iPhone Safari 중 어느 플랫폼인지 추정하지 않는다. 원본 스크린샷 파일은 이번 요청에 첨부되지 않았으므로 아래 사진/화면 설명을 Codex의 이미지 분석 결과로 취급하지 않는다.
+출처는 사용자가 이 대화로 전달한 실기기 테스트 결과(`USER_REPORTED`)다. 테스트 URL은 위 immutable 배포 주소이며 배포 소스는 `1328325`다. 작성 당시에는 기종·OS·브라우저가 미확인이었다. 2026-11-01 사용자가 이 기록과 같은 검증 환경을 Samsung Galaxy Z Flip8 / Android / Google Chrome으로 알려 왔다(아래 추가 기록 참고. Android·Chrome 버전은 UNKNOWN). 원본 스크린샷 파일은 이번 요청에 첨부되지 않았으므로 아래 사진/화면 설명을 Codex의 이미지 분석 결과로 취급하지 않는다.
 
 촬영 대상은 **PC 모니터에 표시한 워셔액 주입구 사진**이다. 실제 스마트폰 카메라를 사용했지만 실차/실물 캡 직접 촬영이나 권한·라벨을 확인한 원본 사진 데이터셋 평가는 아니다.
 
@@ -86,11 +86,20 @@ npm run build:staging
 
 ## 사용자 실기기 추가 관측 기록 — 2026-11-01
 
-출처는 사용자가 대화로 전달한 추가 체크리스트 완료 보고(`USER_REPORTED`)다. 위 2026-10-31 기록에서 NOT_RUN/UNVERIFIED였던 경로를 대상으로 한다. 사용자는 기기 정보 확인을 완료했다고 보고했으나 **기종·OS 버전·브라우저 명칭 자체는 전달되지 않았다**. 아래 표에 값을 추정해 넣지 않는다. 스크린샷·로그·측정값은 받지 않았다.
+출처는 사용자가 대화로 전달한 추가 체크리스트 완료 보고(`USER_REPORTED`)다. 위 2026-10-31 기록에서 NOT_RUN/UNVERIFIED였던 경로를 대상으로 한다. 사용자가 전달한 기기 정보는 Samsung Galaxy Z Flip8 / Android / Google Chrome이다. **Android와 Chrome의 세부 버전은 전달되지 않아 UNKNOWN**이며 추정해 넣지 않는다. 스크린샷·로그·측정값은 받지 않았다.
 
 | # | 사용자 수행 항목 | 결과 | 출처/범위 |
 | --- | --- | --- | --- |
-| 9 | 스마트폰 기종·OS·브라우저 확인 및 후면 렌즈 사용 확인 | PASS | `USER_REPORTED`. 후면 렌즈 사용은 사용자 확인. 기종·OS·브라우저 값은 미전달 |
+| 9 | 스마트폰 기종·OS·브라우저 확인 및 후면 렌즈 사용 확인 | PASS | `USER_REPORTED`. 후면 렌즈 사용은 사용자 체크리스트 완료 보고에 근거하며 독립 자동 검증이 아님 |
+
+검증 환경(사용자 보고, 2026-10-31 기록 8개 항목과 같은 환경으로 연결):
+
+| 항목 | 값 |
+| --- | --- |
+| 기기 | Samsung Galaxy Z Flip8 |
+| OS | Android — 세부 버전 UNKNOWN |
+| 브라우저 | Google Chrome — 버전 UNKNOWN |
+| 실행 대상 | 위 보호된 Vercel 배포 (소스 `1328325`) |
 | 10 | 파란색 대상 제거 후 Bounding Box 소실 | PASS | `USER_REPORTED`. 제거까지 걸린 시간은 측정/전달되지 않음 |
 | 11 | 카메라 권한 거부 후 수동 안내 전환 | PASS | `USER_REPORTED` |
 | 12 | 세로·가로 회전 후 box 위치 정합 | PASS | `USER_REPORTED`. 정합 오차 수치 없음 |
@@ -100,13 +109,14 @@ npm run build:staging
 
 | 미수행/미확인 항목 | 상태 |
 | --- | --- |
-| 기종·OS 세부 버전·브라우저 명칭 | NOT_PROVIDED — 사용자 확인 완료 보고는 있으나 값 미전달. Android/iPhone 결과로 귀속하지 않음 |
+| Android 세부 버전·Chrome 버전 | UNKNOWN — 추정하지 않음 |
 | 마이크 권한을 요청하지 않음 | 명시적 보고 없음. 앱 코드는 `audio: false`만 요청하고 응답 헤더가 마이크를 차단함(자동 검증 범위) |
 | 지연/FPS·발열·배터리 계측 | NOT_RUN |
-| 두 번째 플랫폼(Android Chrome과 iPhone Safari 중 나머지) | NOT_RUN — 한 기기 보고만 있음 |
+| iPhone Safari | NOT_RUN — Android Chrome 한 기기 보고만 있음 |
+| 다른 Android 기기·폴더블 화면 상태(접힘/펼침)별 차이 | NOT_RUN — 회전 결과는 사용자 보고 범위에 한정 |
 | 실제 워셔액 캡의 의미 인식 정확도 | UNVERIFIED — 촬영 대상은 PC 모니터의 사진, 일반 파란 영역도 후보로 표시됨 |
 
-`SEMANTIC_RECOGNITION_UNVERIFIED` / `REAL_VEHICLE_DATA_INSUFFICIENT`를 유지한다. 현재 기록은 **플랫폼 미상의 한 실제 폰에서 사용자가 체크리스트 13개 항목을 모두 PASS로 보고한 결과**이며, 특정 플랫폼 전체 지원이나 주입구 인식 정확도를 증명하지 않는다.
+`SEMANTIC_RECOGNITION_UNVERIFIED` / `REAL_VEHICLE_DATA_INSUFFICIENT`를 유지한다. 현재 기록은 **Samsung Galaxy Z Flip8의 Android Chrome에서 사용자가 체크리스트 13개 항목을 모두 PASS로 보고한 결과**다. Android Chrome 전반의 지원이나 주입구 인식 정확도를 증명하지는 않는다.
 
 ## 후속 스마트폰 검증 절차
 
@@ -123,7 +133,7 @@ Android Chrome/iPhone Safari별 검증은 기기/브라우저 정보가 확인�
 
 **2026-11-01 재평가: `READY_TO_MERGE` (실험용 PoC 범위, 사용자 승인 조건).** 이전에 병합 보류 사유였던 후면 렌즈, 대상 소실, 권한 거부, 회전, 중지·앱 전환/복귀가 모두 사용자 보고 PASS로 보완됐다. 자동 회귀(문법·Node 15/15·합성 브라우저 11/11)가 다시 통과했고, 최신 `main`(`0842b6b`)과 충돌이 없으며 변경은 `tools/mobile-ar-poc/`에 한정된다.
 
-병합해도 유지되는 제한: 기종·OS·브라우저 명칭 미전달(재현성 기록 보완 필요), 한 기기 보고만 있음, 성능 미측정, 워셔액 주입구 의미 인식 `UNVERIFIED`. 이 PR은 "QR handoff와 색상 후보 표시 PoC"로만 병합하며 실차 인식 기능으로 소개하지 않는다. Draft 해제와 병합은 사용자가 직접 수행한다. 자동 병합이나 임의 Draft 해제는 하지 않는다.
+병합해도 유지되는 제한: Android·Chrome 세부 버전 UNKNOWN, Galaxy Z Flip8 한 기기의 사용자 보고만 있음(iPhone Safari NOT_RUN), 성능 미측정, 워셔액 주입구 의미 인식 `UNVERIFIED`. 이 PR은 "QR handoff와 색상 후보 표시 PoC"로만 병합하며 실차 인식 기능으로 소개하지 않는다. Draft 해제와 병합은 사용자가 직접 수행한다. 자동 병합이나 임의 Draft 해제는 하지 않는다.
 
 (2026-10-31 이전 판단: 위 경로 미검증으로 Draft 유지·병합 보류.)
 
