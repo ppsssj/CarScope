@@ -4,7 +4,7 @@ import path from 'node:path';
 import QRCode from 'qrcode';
 import { handoffURL, isLoopbackHost } from '../public/handoff.mjs';
 
-export const PUBLIC_FILES = ['index.html', 'style.css', 'app.mjs', 'camera.mjs', 'detector.mjs', 'handoff.mjs', 'self-inspection.mjs', 'inspection-result.mjs', 'marker.mjs'];
+export const PUBLIC_FILES = ['index.html', 'style.css', 'app.mjs', 'camera.mjs', 'detector.mjs', 'handoff.mjs', 'self-inspection.mjs', 'inspection-result.mjs', 'marker.mjs', 'favicon.svg'];
 
 // Static staging only: the page and modules are copied unchanged. No upload API, no result transport (AR-01).
 export async function buildStaging({ origin, outputDirectory, revision = 'UNRECORDED' }) {
