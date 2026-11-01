@@ -1,8 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, readFile, readdir } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
-import path from 'node:path';
+import { readFile } from 'node:fs/promises';
 import http from 'node:http';
 import { takeMobileHandoff } from '../public/mobile-handoff.mjs';
 import { MobileSync } from '../public/mobile-sync.mjs';
@@ -12,7 +10,6 @@ import { LocalTestSessionCreationAuthorizer } from '../src/creation-authorizer.m
 import { newToken } from '../src/sessions.mjs';
 import { buildInviteFragment, PROTOCOL, PROTOCOL_VERSION, receiptMatches, resultDigest } from '../src/protocol.mjs';
 import { completeInspection, startInspection } from '../../mobile-ar-poc/public/inspection-result.mjs';
-import { buildStaging } from '../../mobile-ar-poc/staging/build.mjs';
 
 const done = () => completeInspection(startInspection(), 'NEEDS_REFILL');
 const env = (result) => ({ protocol: PROTOCOL, protocolVersion: PROTOCOL_VERSION, result });
@@ -126,12 +123,14 @@ test('mobile dev boundary: default creation denied, strict same-origin CSP, stat
   const page = await fetch(s.url); assert.match(page.headers.get('content-security-policy'), /connect-src 'self'/);
   assert.match(await page.text(), /mobile-dev-entry/);
   assert.equal((await fetch(s.url + '/?sync=1')).status, 400);
-  const outputDirectory = path.join(await mkdtemp(path.join(tmpdir(), 'carscope-static-boundary-')), 'staging');
-  await buildStaging({ origin: 'https://mobile.example/', outputDirectory });
-  const files = await readdir(outputDirectory);
+  // Built staging output is checked by the original AR-01 staging suite (with its existing qrcode dependency).
+  // Keep this core sync gate dependency-free, as required by the existing Geometry CI invocation.
+  const builder = await readFile(new URL('../../mobile-ar-poc/staging/build.mjs', import.meta.url), 'utf8');
+  const declaration = /export const PUBLIC_FILES = (\[[^;]+\]);/.exec(builder)[1];
+  const files = [...declaration.matchAll(/'([^']+)'/g)].map((m) => m[1]);
   assert.ok(!files.some((f) => /sync|dev/.test(f)));
-  assert.ok(!(await readFile(path.join(outputDirectory, 'app-entry.mjs'), 'utf8')).includes('SyncClient'));
-  assert.match(await readFile(path.join(outputDirectory, 'index.html'), 'utf8'), /src="\/app-entry.mjs"/);
+  assert.ok(!(await readFile(new URL('../../mobile-ar-poc/public/app-entry.mjs', import.meta.url), 'utf8')).includes('SyncClient'));
+  assert.match(await readFile(new URL('../../mobile-ar-poc/public/index.html', import.meta.url), 'utf8'), /src="\/app-entry.mjs"/);
 });
 
 test('mobile timers are called unbound and polling pauses, resumes, then stops on page close', async () => {

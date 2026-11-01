@@ -70,6 +70,9 @@ PR #34 반영 후 기존 Debug 자산은 저장소의 build-android-inspection/b
   합성 receiver의 읽기만 1회 제한 재시도하고 같은 credential/세션으로 복원 상태를 검증했다.
 - Host 거부 검사는 fetch가 Host를 정규화해 처음 실패했다. raw Node HTTP로 실제 Host를 전송해 403을 검증했다.
 - AR-01 원래 시계 혼용 결함은 수정/은폐하지 않고 PR #33의 독립 clock harness를 유지했다.
+- 최초 PR의 [Geometry CI](https://github.com/ppsssj/CarScope/actions/runs/41297999818)는 새 테스트의 staging builder import가
+  설치되지 않은 qrcode를 요구해 FAIL이었다. Geometry 검사를 변경하지 않고 core sync 테스트의 외부 import를 제거했다.
+  실제 staging 산출물의 개발 모듈 제외 검사는 기존 AR-01 staging 사례에 assertion을 추가했다. 원래 assertion은 모두 유지한다.
 
 ## 변경 격리와 CI
 
