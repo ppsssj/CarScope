@@ -30,6 +30,14 @@ jobs:
           distribution: temurin
           java-version: '17'
           overwrite-settings: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '22.16.0'
+      - name: Package debug inspection assets
+        run: |
+          npm ci --ignore-scripts --prefix tools/three-poc
+          node tools/three-poc/build-android-inspection.mjs
+          node tools/three-poc/build-android-lab.mjs
       - name: Install public Android 34 stubs and build tools
         run: |
           test -x "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
@@ -38,7 +46,11 @@ jobs:
       - name: Test and build both variants
         run: ./gradlew :app:testDebugUnitTest :app:assembleDebug :app:assembleRelease :app:bundleRelease :app:lintDebug --rerun-tasks --console=plain --max-workers=1 -Pkotlin.compiler.execution.strategy=in-process
       - name: Verify debug-only APK and manifest boundary
-        run: python3 tools/identity-probe/check.py build-contract
+        run: |
+          python3 tools/identity-probe/check.py build-contract
+          python3 tools/tire-probe/check.py build-contract
+      - name: Validate Kotlin status projection with the JavaScript consumer
+        run: node tools/three-poc/check-tire-native-contract.mjs app/build/test-results/tire-ui-v1.json
       - name: Summarize JVM test evidence
         run: |
           python3 - <<'PY'

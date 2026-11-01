@@ -14,6 +14,7 @@ import { buildServiceComponents, SERVICE_MANUAL } from "./ioniq5-asset/service-c
 import { buildInspectionComponents } from "./ioniq5-asset/inspection-components.mjs";
 import { componentDistance, boxDistance } from "./inspection-camera.mjs";
 import { TIRES, detachedTireInfo } from "./inspection-tires.mjs";
+import { tireStatus, enableTireStatus, disposeTireStatus } from "./tire-status.mjs";
 import { resolveTireTargets, tireCameraDirection } from "./tire-targets.mjs";
 import { STATES, EVENTS, INSPECTION_AREAS, initialState, transition, hoodTarget, cameraGoal, areaOf, HOOD_OPEN_DEG } from "./inspection-flow.mjs";
 
@@ -247,20 +248,29 @@ const item = (x, action) => ['available', 'preview'].includes(x.status)
   ? `<li><button type="button" class="item available ${x.status === 'preview' ? 'preview' : ''}" aria-pressed="${state.component === x.id}" data-action="${action}" data-id="${x.id}">${esc(x.label)}<span class="tag">${x.status === 'preview' || x.id === 'tires' ? '형상 보기' : '점검 가능'}</span></button></li>`
   : `<li><div class="item" aria-disabled="true">${esc(x.label)}<span class="tag">준비 중</span></div></li>`;
 
+const connectionLabels = { DETACHED: '미연동', ATTACHED: '앱 소유권 확보 · SDK 연결 완료를 뜻하지 않음', STOPPED: '화면 중지 · 이전 관측 무효화', SUPERSEDED: '다른 점검 화면이 세션을 소유함', UNAVAILABLE: '상태 전달 실패 · 이전 관측 무효화' };
+function tireStatusHtml(id) {
+  const t = tireStatus.forTire(id);
+  const source = t.source === 'MOCK' ? 'MOCK · 모의 데이터' : t.source === 'PLEOS' ? 'PLEOS · 앱 캐시' : '없음 · 미연동';
+  return `<dl class="tire-status"><dt>데이터 출처</dt><dd>${source}</dd></dl>${t.features.map(r =>
+    `<section data-feature="${r.featureId}"><h3>${r.featureId}</h3><dl class="tire-status"><dt>Capability</dt><dd><span class="tire-state">${r.capabilityStatus}</span></dd><dt>Availability</dt><dd><span class="tire-state">${r.availabilityStatus}</span></dd><dt>최근 관측 시각</dt><dd>${r.observedAt === null ? '없음' : esc(new Date(r.observedAt).toISOString())}</dd></dl></section>`).join('')}
+    <dl class="tire-status"><dt>연결</dt><dd>${connectionLabels[t.connectionStatus]}</dd><dt>세션 진단</dt><dd>${t.sessionPhase}${t.sessionPhase === 'UNRESOLVED' ? ' · SDK 요청/정리 미완료, 재시작 차단' : ' · 원격 연결/정리 완료 미검증'}</dd></dl>`;
+}
+
 function panelHtml() {
   const S = STATES;
   switch (state.name) {
     case S.TIRE_SELECTION:
       return `<div class="eyebrow">타이어 · 형상 탐색</div><h2>타이어 선택</h2><p>모델의 타이어·휠 또는 아래 목록을 선택하세요. 좌우는 차량 진행 방향 기준입니다.</p>
         <ul class="items">${TIRES.map(t => item(t, 'tire')).join('')}</ul>
-        <p class="note">API 데이터 미연동 · 공기압 및 차량 상태를 표시하지 않습니다.</p>
+        <p class="note">타이어를 선택해 API 상태를 확인하세요. 수치 및 정상·비정상 판정은 제공하지 않습니다.</p>
         <div class="actions"><button type="button" class="secondary" data-action="back">점검 부위로</button><button type="button" class="secondary" data-action="exit">점검 종료</button></div>`;
     case S.TIRE_PREVIEW: {
       const t = detachedTireInfo(state.component);
-      return `<div class="eyebrow">타이어 · 형상 탐색</div><h2>${esc(t.label)}</h2><span class="badge detached">데이터 미연동</span>
+      return `<div class="eyebrow">타이어 · 상태 탐색</div><h2>${esc(t.label)}</h2><span class="badge detached">상태만 표시 · 수치 및 진단 미제공</span>
         <dl class="tire-status"><dt>타이어 위치</dt><dd>${esc(t.label)} · 차량 진행 방향 기준</dd><dt>차량 부품 ID</dt><dd>${esc(t.vehiclePartId)}</dd>
-        <dt>데이터 출처</dt><dd>없음 · 미연동</dd><dt>API 지원 상태</dt><dd>${t.capabilityStatus} · 실제 지원 미검증</dd>
-        <dt>데이터 가용 상태</dt><dd>${t.availabilityStatus} · 미수신</dd><dt>최종 관측 시각</dt><dd>없음</dd></dl>
+        </dl><div id="tireStatusContent">${tireStatusHtml(state.component)}</div>
+        <p class="note">SUPPORTED는 API 기능 지원 여부입니다. STALE은 오래된 관측이며 정상·비정상 판정이 아닙니다.</p>
         <p class="note">커뮤니티 GLB의 기존 타이어 형상입니다. 실차 형상 정확도와 API 값·단위는 미검증이며 공기압 및 정상·비정상을 판단하지 않습니다.</p>
         <h3>다른 타이어 보기</h3><ul class="items">${TIRES.map(t => item(t, 'tire')).join('')}</ul>
         <div class="actions"><button type="button" class="secondary" data-action="back">선택 해제 · 이전 시점으로</button><button type="button" class="secondary" data-action="exit">점검 종료</button></div>`;
@@ -316,6 +326,12 @@ function render() {
   $("toast").classList.toggle("on", Boolean(hint));
   if (hint) toastTimer = setTimeout(() => $("toast").classList.remove("on"), 4000);
 }
+tireStatus.subscribe(() => {
+  const region = $('tireStatusContent');
+  if (region && state.name === STATES.TIRE_PREVIEW) region.innerHTML = tireStatusHtml(state.component);
+});
+// Explicit browser fixture mode; the Android shell enables the same read-only client by default.
+if (params.get('tireStatus') === 'fixture') enableTireStatus();
 
 $("panel").addEventListener("click", (e) => {
   const b = e.target.closest("[data-action]");
@@ -514,6 +530,7 @@ let disposed = false;
 function dispose(reason) {
   if (disposed) return null;
   disposed = true;
+  disposeTireStatus();
   renderer.setAnimationLoop(null);
   controls.dispose();
   const before = { ...renderer.info.memory }, seen = new Set();
@@ -537,12 +554,13 @@ window.__inspect = {
   get hoodAngle() { return M.angle; },
   get busy() { return Boolean(hoodTween || camTween); },
   get handoff() { return handoff; },
+  tireStatus: () => tireStatus.state,
   hoodPoint: () => screenPoint(M.hoodMeshes[0], false),
   capPoint: () => screenPoint(M.cap),
   hitAt,
   componentPoint: (id) => { const v = componentBounds(id).getCenter(new THREE.Vector3()).project(camera); return { x: (v.x+1)*innerWidth/2, y: (1-v.y)*innerHeight/2, inFront: v.z<1 }; },
   componentInfo: () => [...M.components].map(([id, meshes]) => ({ id, meshes: meshes.map(m => ({ id: m.name, target: m.userData.inspectionTarget, highlighted: m.material.emissiveIntensity > 0, meta: m.userData.meta })), bounds: { min: componentBounds(id).min.toArray(), max: componentBounds(id).max.toArray() } })),
-  tireInfo: () => [...M.tires].map(([id, t]) => ({ id, node: t.node, panel: detachedTireInfo(id), meshes: t.meshes.map(m => ({ name: m.name, material: m.material.name, highlighted: m.material.emissiveIntensity > 0 && m.material.emissive.getHex() !== 0 })), wheelMeshes: t.pickMeshes.map(m => ({ name: m.name, material: m.material.name, highlighted: m.material.emissiveIntensity > 0 && m.material.emissive.getHex() !== 0 })), bounds: { min: t.bounds.min.toArray(), max: t.bounds.max.toArray() } })),
+  tireInfo: () => [...M.tires].map(([id, t]) => ({ id, node: t.node, panel: tireStatus.forTire(id), meshes: t.meshes.map(m => ({ name: m.name, material: m.material.name, highlighted: m.material.emissiveIntensity > 0 && m.material.emissive.getHex() !== 0 })), wheelMeshes: t.pickMeshes.map(m => ({ name: m.name, material: m.material.name, highlighted: m.material.emissiveIntensity > 0 && m.material.emissive.getHex() !== 0 })), bounds: { min: t.bounds.min.toArray(), max: t.bounds.max.toArray() } })),
   cameraPose: () => ({ position: camera.position.toArray(), target: controls.target.toArray() }),
   zoom,
   view: () => ({ azimuthDeg: +THREE.MathUtils.radToDeg(controls.getAzimuthalAngle()).toFixed(1), polarDeg: +THREE.MathUtils.radToDeg(controls.getPolarAngle()).toFixed(1), distance: +camera.position.distanceTo(controls.target).toFixed(3) }),

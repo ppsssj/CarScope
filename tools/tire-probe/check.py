@@ -76,7 +76,7 @@ def boundary():
         with zipfile.ZipFile(file) as z:
             dex = b''.join(z.read(n) for n in z.namelist() if n.endswith('.dex'))
         debug = file.name == 'app-debug.apk'
-        for marker in (b'Lio/carscope/app/tire/TireProbeActivity;', b'Lio/carscope/app/tire/SdkTireSession;', b'Lio/carscope/app/tire/PleosTireDataSource;', b'Lio/carscope/app/tire/TireProbeOwner;', b'Lio/carscope/app/tire/TireSessionDiagnostics;'):
+        for marker in (b'Lio/carscope/app/tire/TireProbeActivity;', b'Lio/carscope/app/tire/SdkTireSession;', b'Lio/carscope/app/tire/PleosTireDataSource;', b'Lio/carscope/app/tire/TireProbeOwner;', b'Lio/carscope/app/tire/TireSessionDiagnostics;', b'Lio/carscope/app/tire/TireProcessOwner;', b'Lio/carscope/app/tire/TireUiChannel;', b'Lio/carscope/app/tire/TireUiProjection;', b'Lio/carscope/app/lab/DebugWebOrigin;'):
             assert (marker in dex) == debug, (file.name, marker)
     print('PASS: Tire probe, controller, SDK transport and new permissions debug-only; release permissions unchanged')
 

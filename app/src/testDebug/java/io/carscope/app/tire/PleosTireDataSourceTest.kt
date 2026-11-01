@@ -232,4 +232,33 @@ class PleosTireDataSourceTest {
         old.values.forEach { it.ok(TireCapability(true,TireId.entries.toSet(),"READ")) }; x.worker.drain()
         assertTrue(x.sdk.events.isEmpty()); assertEquals(1,x.sdk.releases)
     }
+    @Test fun `probe and inspection share ownership and permanent silence cannot create another SDK session`() {
+        val x=Fixture(); val owner=TireProbeOwner(x.source); val probe=owner.attach(); owner.start(probe); x.worker.drain()
+        val web=TireUiChannel(owner); web.start(); x.worker.drain(); x.worker.timeout()
+        owner.stop(probe); owner.detach(probe); x.worker.drain()
+        assertFalse(owner.owns(probe)); assertTrue(web.readJson().contains("UNRESOLVED"))
+        repeat(20) { web.stop(); web.start(); x.worker.drain() }
+        assertEquals(1,x.sdk.initializes); assertEquals(0,x.sdk.releases)
+        assertTrue(web.readJson().contains("\"source\":\"PLEOS\""))
+    }
+    @Test fun `superseded web channel clears metadata without stopping the current probe lease`() {
+        val x=Fixture(); x.ready(); x.reply(raw=13.125f)
+        val owner=TireProbeOwner(x.source); val web=TireUiChannel(owner); web.start(); x.worker.drain()
+        assertTrue(web.readJson().contains("\"observedAt\":100"))
+        val probe=owner.attach(); owner.start(probe); x.worker.drain()
+        assertTrue(web.readJson().contains("\"connectionStatus\":\"SUPERSEDED\""))
+        assertFalse(web.readJson().contains("\"observedAt\":100"))
+        web.stop(); x.worker.drain()
+        assertTrue(owner.owns(probe)); assertEquals(2,x.sdk.initializes)
+        val stopped=web.readJson(); assertTrue(stopped.contains("STOPPED")); assertFalse(stopped.contains("\"observedAt\":100"))
+        assertFalse(stopped.contains("13.125"))
+    }
+    @Test fun `late value after inspection recreation drains SDK only and never restores old observation`() {
+        val x=Fixture(); x.ready(); val owner=TireProbeOwner(x.source)
+        val old=TireUiChannel(owner); old.start(); x.worker.drain(); old.stop()
+        val restored=TireUiChannel(owner); restored.start(); x.worker.drain(); x.reply(raw=77f)
+        assertEquals(2,x.sdk.initializes); assertEquals(1,x.sdk.releases)
+        assertTrue(old.readJson().contains("STOPPED")); assertTrue(restored.readJson().contains("ATTACHED"))
+        assertFalse(restored.readJson().contains("\"observedAt\":100"))
+    }
 }

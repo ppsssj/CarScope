@@ -28,6 +28,7 @@ internal class DebugWebScreen(
     private val host: String,
     private val root: String,
     private val files: Map<String, File>,
+    private val tireStatusJson: (() -> String)? = null,
 ) {
     private var view: WebView? = null
 
@@ -51,9 +52,14 @@ internal class DebugWebScreen(
         web.webViewClient = object : WebViewClient() {
             override fun shouldInterceptRequest(view: WebView, request: WebResourceRequest): WebResourceResponse {
                 val url = request.url
-                if (url.scheme != "https" || url.host != host) return notFound()
+                if (!DebugWebOrigin.trusted(url.toString(), host, request.method)) return notFound()
                 val path = url.path.orEmpty().trimStart('/').ifEmpty { "index.html" }
                 if (path.contains("..")) return notFound()
+                if (path == "tire-status.json") {
+                    if (!DebugWebOrigin.statusPath(url.toString(), host, request.method) || tireStatusJson == null) return notFound()
+                    return try { ok("application/json", csp, tireStatusJson.invoke().byteInputStream(Charsets.UTF_8)) }
+                    catch (_: Exception) { WebResourceResponse("text/plain", "utf-8", 503, "Unavailable", mapOf("Cache-Control" to "no-store", "Content-Security-Policy" to csp), "Unavailable".byteInputStream()) }
+                }
                 files[path]?.let { return fileResponse(it, csp) }
                 return try {
                     ok(mimeOf(path), csp, activity.assets.open("$root/$path"))
@@ -65,7 +71,7 @@ internal class DebugWebScreen(
             override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
                 // Only the page's own close request is acted on; every other navigation is blocked.
                 val url = request.url
-                if (url.scheme == "https" && url.host == host && url.path == "/close") activity.finish()
+                if (DebugWebOrigin.trusted(url.toString(), host, request.method) && url.path == "/close") activity.finish()
                 return true
             }
 
@@ -87,6 +93,12 @@ internal class DebugWebScreen(
     fun resume() {
         view?.onResume()
         Log.i(tag, "lifecycle resume")
+    }
+
+    /** Fixed lifecycle signals only, never interpolated data or a callable JavaScript interface. */
+    fun signalTireStatus(active: Boolean) {
+        val event = if (active) "carscope-tire-active" else "carscope-tire-inactive"
+        view?.evaluateJavascript("window.dispatchEvent(new Event('$event'))", null)
     }
 
     /** [disposeScript] runs while the page can still execute; it is a fallback, the page releases GL on close itself. */
