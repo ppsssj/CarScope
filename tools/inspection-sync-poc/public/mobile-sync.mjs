@@ -29,9 +29,9 @@ export class MobileSync {
   get snapshot() {
     return Object.freeze({ connection: this.#connection, display: this.#display, message: SYNC_TEXT[this.#display],
       connectionMessage: SYNC_TEXT[this.#connection], received: this.#received,
-      canClaim: !this.#attempted && !this.#closed, canSend: Boolean(this.#result && this.#client.paired && !this.#busy && !this.#polling && !this.#received && !this.#terminal && !this.#closed),
+      canClaim: !this.#attempted && !this.#terminal && !this.#closed, canSend: Boolean(this.#result && this.#client.paired && !this.#busy && !this.#polling && !this.#received && !this.#terminal && !this.#closed),
       canRefresh: this.#client.paired && !this.#terminal && !this.#closed && !this.#busy && !this.#polling,
-      needsNewQr: this.#attempted && !this.#busy && !this.#client.paired });
+      needsNewQr: this.#attempted && !this.#busy && !this.#client.paired && this.#connection !== 'CLAIMED' });
   }
   #emit() { this.onChange(this.snapshot); }
   #stopTimer() { if (this.#timer !== null) this.unschedule(this.#timer); this.#timer = null; }
@@ -42,7 +42,7 @@ export class MobileSync {
   }
   #show(display) {
     this.#display = display;
-    if (STOP.has(display)) { this.#terminal = true; this.#stopTimer(); }
+    if (STOP.has(display)) { this.#terminal = true; this.#stopTimer(); this.#client.dispose(); }
     this.#emit();
   }
   async claim() {

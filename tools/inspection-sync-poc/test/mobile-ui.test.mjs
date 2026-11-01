@@ -63,7 +63,7 @@ test('mobile controller: completed only, duplicate buttons, SENT distinct from v
   await Promise.all([ui.send(), ui.send()]); assert.equal(ui.snapshot.display, 'SENT'); assert.equal(result.sync, 'NOT_SENT');
   await ui.refresh(); assert.equal(ui.snapshot.display, 'SENT');
   const view = await s.service.view(p.sessionId, p.receiverToken); await s.service.accept(p.sessionId, p.receiverToken, view.resultDigest);
-  await ui.refresh(); assert.equal(ui.snapshot.display, 'ACCEPTED'); assert.equal(timers.pending.size, 0);
+  await ui.refresh(); assert.equal(ui.snapshot.display, 'ACCEPTED'); assert.equal(timers.pending.size, 0); assert.equal(client.paired, false);
   assert.ok(!JSON.stringify(ui.snapshot).includes(p.inviteToken));
   const invalid = new MobileSync({ invite: newToken(), client: new SyncClient({ baseUrl: s.url }), ...sched() });
   invalid.setResult(startInspection()); assert.equal(invalid.snapshot.canSend, false); assert.equal(invalid.snapshot.display, 'REJECTED_INVALID'); invalid.close();

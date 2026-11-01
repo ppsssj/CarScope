@@ -42,7 +42,9 @@ async function pair({ claim = true, prepare } = {}) {
   assert.equal(new URL(page.url()).hash, '');
   if (prepare) await prepare();
   if (claim) {
+    const response = page.waitForResponse((r) => r.url().endsWith('/v1/claim'));
     await page.locator('#sync-claim').evaluate((b) => { b.click(); b.click(); });
+    const claimed = await (await response).json(); if (claimed.submitToken) secrets.push(claimed.submitToken);
     await page.waitForFunction(() => document.querySelector('#sync-claim').disabled && document.body.textContent.includes('연결됨'));
     assert.equal(claimCount, 1);
   }
@@ -82,7 +84,7 @@ try {
   pass('actual AR-01 checklist→completion→double SEND→verified receipt; SENT remains distinct from ACCEPTED');
   const view = await paired.receiver.view(); await paired.receiver.accept(view.resultDigest);
   await page.click('#sync-refresh'); await waitState('ACCEPTED'); await noLeak();
-  await page.evaluate(() => scrollTo(0, 0)); await page.screenshot({ path: path.join(output, '03-accepted.png'), fullPage: true });
+  await page.locator('#done-sync').scrollIntoViewIfNeeded(); await page.screenshot({ path: path.join(output, '03-accepted.png'), fullPage: false });
   pass('receiver exact-digest acceptance appears in mobile through server polling');
   await page.reload(); assert.equal(await page.locator('#sync-send').count(), 0);
   assert.equal(await page.evaluate(() => window.__selfInspection.state.record), null);
