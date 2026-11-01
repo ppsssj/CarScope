@@ -4,7 +4,8 @@ internal enum class ReceiverPhase { IDLE, CREATING, WAITING, RESULT_SUBMITTED, A
 internal data class SyncReceiverState(
     val phase: ReceiverPhase = ReceiverPhase.IDLE, val qr: SyncQrPayload? = null,
     val result: CompletedInspection? = null, val digest: String? = null,
-    val busy: Boolean = false, val failure: SyncFailure? = null, val retryAvailable: Boolean = false
+    val busy: Boolean = false, val failure: SyncFailure? = null, val retryAvailable: Boolean = false,
+    val inviteExpiresAt: Long? = null, val expiresAt: Long? = null
 ) {
     val canAccept: Boolean get() = phase == ReceiverPhase.RESULT_SUBMITTED && !busy && result != null && digest != null
     val canCancel: Boolean get() = phase in listOf(ReceiverPhase.WAITING, ReceiverPhase.RESULT_SUBMITTED) && !busy
@@ -42,7 +43,7 @@ internal class SyncReceiverController(
             if (owner != generation) return@synchronized
             pending = false
             when (reply) {
-                is SyncReply.Success -> { publish(SyncReceiverState(phase = ReceiverPhase.WAITING, qr = reply.value.qr)); schedule() }
+                is SyncReply.Success -> { publish(SyncReceiverState(phase = ReceiverPhase.WAITING, qr = reply.value.qr, inviteExpiresAt = reply.value.inviteExpiresAt, expiresAt = reply.value.expiresAt)); schedule() }
                 is SyncReply.Failure -> publish(SyncReceiverState(phase = ReceiverPhase.FAILED, failure = reply.reason))
             }
         } }
@@ -87,7 +88,7 @@ internal class SyncReceiverController(
                                 SyncSessionState.EXPIRED -> ReceiverPhase.EXPIRED
                             }
                             publish(SyncReceiverState(phase = phase, qr = if (v.sessionState == SyncSessionState.CREATED) state.qr else null,
-                                result = v.result, digest = v.resultDigest))
+                                result = v.result, digest = v.resultDigest, expiresAt = v.expiresAt, inviteExpiresAt = state.inviteExpiresAt))
                             if (phase in listOf(ReceiverPhase.ACCEPTED, ReceiverPhase.CANCELLED, ReceiverPhase.EXPIRED)) client.forget() else schedule()
                         }
                     }
@@ -99,5 +100,8 @@ internal class SyncReceiverController(
     @Synchronized fun close() {
         generation++; stopTimer(); request?.cancel(); request = null; pending = false; client.forget()
         publish(SyncReceiverState(phase = ReceiverPhase.CLOSED))
+    }
+    @Synchronized fun hideExpiredInvite(now: Long) {
+        if (state.qr != null && state.inviteExpiresAt?.let { now > it } == true) publish(state.copy(qr = null))
     }
 }
