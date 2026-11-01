@@ -29,7 +29,7 @@ internal class CreatedSyncSession(
 ) {
     override fun toString(): String = "CreatedSyncSession(REDACTED)"
 }
-internal data class ReceiverSession(val expiresAt: Long, val qr: SyncQrPayload)
+internal data class ReceiverSession(val expiresAt: Long, val qr: SyncQrPayload, val inviteExpiresAt: Long = expiresAt)
 
 internal data class CompletedInspection(
     val inspectionId: String, val startedAt: String, val completedAt: String,

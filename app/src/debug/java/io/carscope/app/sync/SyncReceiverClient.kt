@@ -23,7 +23,7 @@ internal class SyncReceiverClient(private val transport: SyncReceiverTransport, 
                         x.inviteExpiresAt <= now() || x.expiresAt < x.inviteExpiresAt) callback(SyncReply.Failure(SyncFailure.INVALID))
                     else {
                         id = x.sessionId; receiver = x.receiver; expiresAt = x.expiresAt
-                        callback(SyncReply.Success(ReceiverSession(expiresAt, SyncQrPayload(root + x.invite.fragment()))))
+                        callback(SyncReply.Success(ReceiverSession(expiresAt, SyncQrPayload(root + x.invite.fragment()), x.inviteExpiresAt)))
                     }
                 }
             }

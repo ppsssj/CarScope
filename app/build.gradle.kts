@@ -17,6 +17,7 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
+    testOptions { unitTests.isIncludeAndroidResources = true }
 }
 
 kotlin { jvmToolchain(17) }
@@ -27,4 +28,7 @@ dependencies {
     implementation(project(":vehicle-core"))
     implementation("ai.pleos.playground:Vehicle:2.3.2")
     testImplementation("junit:junit:4.13.2")
+    debugImplementation("com.google.code.gson:gson:2.15.0")
+    debugImplementation("com.google.zxing:core:3.5.4")
+    add("testDebugImplementation", "org.robolectric:robolectric:4.16")
 }
