@@ -8,7 +8,7 @@ import { handoffURL } from './public/handoff.mjs';
 const publicRoot = new URL('./public/', import.meta.url);
 const files = new Map([
   ['/', ['index.html', 'text/html; charset=utf-8']],
-  ...['app.mjs', 'handoff.mjs', 'camera.mjs', 'detector.mjs', 'self-inspection.mjs', 'inspection-result.mjs', 'marker.mjs'].map(name => [`/${name}`, [name, 'text/javascript; charset=utf-8']]),
+  ...['app-entry.mjs', 'app.mjs', 'handoff.mjs', 'camera.mjs', 'detector.mjs', 'self-inspection.mjs', 'inspection-result.mjs', 'marker.mjs'].map(name => [`/${name}`, [name, 'text/javascript; charset=utf-8']]),
   ['/style.css', ['style.css', 'text/css; charset=utf-8']],
   ['/favicon.svg', ['favicon.svg', 'image/svg+xml']]
 ]);

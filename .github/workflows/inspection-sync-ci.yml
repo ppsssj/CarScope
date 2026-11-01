@@ -53,3 +53,8 @@ jobs:
         working-directory: tools/mobile-ar-poc
         env:
           POC_EVIDENCE_DIR: C:/CarScope-External/qr-ar-01/ar-02b1-ci
+      - name: Integrated mobile QR v2 Edge E2E
+        if: runner.os == 'Windows'
+        run: npm run test:mobile-browser
+        env:
+          SYNC_EVIDENCE_DIR: C:/CarScope-External/ar-02b2/ci/mobile-browser

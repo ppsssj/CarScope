@@ -10,12 +10,14 @@
   "scripts": {
     "serve": "node src/server.mjs",
     "receiver": "node bin/receiver.mjs",
-    "check": "node --check src/protocol.mjs && node --check src/sessions.mjs && node --check src/session-store.mjs && node --check src/rate-limit.mjs && node --check src/server.mjs && node --check public/sync-client.mjs && node --check public/debug.mjs && node --check bin/receiver.mjs && node --check src/sqlite-store.mjs && node --check src/creation-authorizer.mjs",
+    "check": "node --check src/protocol.mjs && node --check src/sessions.mjs && node --check src/session-store.mjs && node --check src/rate-limit.mjs && node --check src/server.mjs && node --check public/sync-client.mjs && node --check public/debug.mjs && node --check bin/receiver.mjs && node --check src/sqlite-store.mjs && node --check src/creation-authorizer.mjs && node --check src/mobile-dev-server.mjs && node --check public/mobile-dev-entry.mjs && node --check public/mobile-handoff.mjs && node --check public/mobile-sync.mjs",
     "test": "node --test test/*.test.mjs",
     "test:browser": "node test/browser.mjs",
     "test:sqlite": "node test/run-sqlite.mjs",
     "test:legacy": "node --test test/client.test.mjs test/e2e.test.mjs test/protocol.test.mjs test/race.test.mjs test/server.test.mjs test/service.test.mjs",
     "test:ar01": "node test/run-ar01.mjs",
-    "verify:local": "node test/verify-local.mjs"
+    "verify:local": "node test/verify-local.mjs",
+    "serve:mobile-dev": "node src/mobile-dev-server.mjs",
+    "test:mobile-browser": "node test/mobile-browser.mjs"
   }
 }

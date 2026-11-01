@@ -69,3 +69,15 @@ Non-loopback binds reject test authorizers and debug pages. Real vehicle authent
 
 TLS tests use Git OpenSSL on Windows or OpenSSL on PATH (override with SYNC_OPENSSL). Development keys/CA stay in OS temp storage.
 Only the Node client explicitly trusts the generated CA. No OS trust installation or phone/Android trust is claimed.
+
+## AR-02B-2A integrated mobile development
+
+Install the existing mobile test dependencies first (`npm ci --ignore-scripts --prefix ../mobile-ar-poc` from this directory).
+`npm run serve:mobile-dev` serves the existing AR-01 flow with an isolated QR v2 sync entry at 127.0.0.1:4182 only.
+Creation still defaults to denial; `SYNC_LOCAL_TEST_AUTH=1` is the explicit single-PC synthetic stand-in.
+No query flag, external bind, deployment config or production authorization is enabled.
+`npm run test:mobile-browser` verifies the integrated page with SQLite and the Node receiver simulator; set an external
+SYNC_EVIDENCE_DIR under C:/CarScope-External. Android Debug components use Fake transport only.
+
+See [mobile integration](../../docs/ar-02b2-mobile-receiver.md), [network boundary](../../docs/ar-02b2-network-boundary.md),
+[UI contract](../../docs/contracts/inspection-sync-ui-v1.md) and [evidence](../../docs/evidence/ar-02b2/README.md).

@@ -3,14 +3,22 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "engines": { "node": ">=22" },
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "serve": "node server.mjs",
     "build:staging": "node staging/build.mjs",
     "test": "node --test test/*.test.mjs",
-    "check": "node --check server.mjs && node --check staging/build.mjs && node --check public/app.mjs && node --check public/detector.mjs && node --check public/handoff.mjs && node --check public/camera.mjs && node --check public/self-inspection.mjs && node --check public/inspection-result.mjs && node --check public/marker.mjs",
+    "check": "node --check server.mjs && node --check staging/build.mjs && node --check public/app.mjs && node --check public/detector.mjs && node --check public/handoff.mjs && node --check public/camera.mjs && node --check public/self-inspection.mjs && node --check public/inspection-result.mjs && node --check public/marker.mjs && node --check public/app-entry.mjs",
     "test:browser": "node test/browser.mjs"
   },
-  "dependencies": { "qrcode": "1.5.4" },
-  "devDependencies": { "playwright": "1.56.1", "jsqr": "1.4.0", "pngjs": "7.0.0" }
+  "dependencies": {
+    "qrcode": "1.5.4"
+  },
+  "devDependencies": {
+    "playwright": "1.56.1",
+    "jsqr": "1.4.0",
+    "pngjs": "7.0.0"
+  }
 }

@@ -2,7 +2,7 @@
 // tests. Rules: send only on an explicit call, only a COMPLETED record that passes the AR-01 validator, one request in
 // flight at a time, SENT only after a receipt that matches this record (inspectionId + SHA-256 digest). The completed
 // record itself is never modified; transport state lives here.
-import { PROTOCOL, PROTOCOL_VERSION, checkEnvelope, parseInviteFragment, receiptMatches } from '../src/protocol.mjs';
+import { PROTOCOL, PROTOCOL_VERSION, checkEnvelope, parseInviteFragment, receiptMatches, isToken, canonicalJson } from '../src/protocol.mjs';
 
 export const TRANSPORT = Object.freeze({
   NOT_SENT: 'NOT_SENT', SENDING: 'SENDING', SENT: 'SENT', // SENT = server receipt verified
@@ -33,7 +33,8 @@ function mapError(status, code) {
 }
 
 export class SyncClient {
-  #submitToken = null; #inFlight = null;
+  #submitToken = null; #inFlight = null; #claimFlight = null; #claimAttempted = false;
+  #disposed = false; #controllers = new Set(); #sendingJson = null; #sentJson = null;
   constructor({ baseUrl, fetchImpl = globalThis.fetch, timeoutMs = 8000, retries = 2, backoffMs = 400, sleep = (ms) => new Promise((r) => setTimeout(r, ms)) }) {
     // Wrapped: browsers throw "Illegal invocation" when window.fetch is called as a method of another object.
     this.baseUrl = baseUrl.replace(/\/$/, ''); this.fetch = (...a) => fetchImpl(...a); this.timeoutMs = timeoutMs; this.retries = retries; this.backoffMs = backoffMs; this.sleep = sleep;
@@ -43,7 +44,9 @@ export class SyncClient {
   get paired() { return Boolean(this.#submitToken); }
 
   async #call(method, path, token, body) {
+    if (this.#disposed) return { ok: false, status: 0, outcome: TRANSPORT.REJECTED_CLOSED };
     const ctrl = new AbortController();
+    this.#controllers.add(ctrl);
     const timer = setTimeout(() => ctrl.abort(), this.timeoutMs);
     try {
       const res = await this.fetch(this.baseUrl + path, {
@@ -56,13 +59,23 @@ export class SyncClient {
       return { ok: res.ok, status: res.status, json };
     } catch (e) {
       return { ok: false, status: 0, json: null, outcome: e?.name === 'AbortError' ? TRANSPORT.FAILED_TIMEOUT : TRANSPORT.FAILED_NETWORK };
-    } finally { clearTimeout(timer); }
+    } finally { clearTimeout(timer); this.#controllers.delete(ctrl); }
   }
 
   /** Exchange the one-time invite for this phone's submit token. */
-  async claim(inviteToken) {
+  claim(inviteToken) {
+    if (this.#claimFlight) return this.#claimFlight;
+    if (this.#disposed || this.#claimAttempted) return Promise.resolve({ ok: false, outcome: TRANSPORT.REJECTED_CLOSED });
+    this.#claimAttempted = true; // even a lost response never permits another claim/re-issue
+    this.#claimFlight = this.#claim(inviteToken).finally(() => { this.#claimFlight = null; });
+    return this.#claimFlight;
+  }
+
+  async #claim(inviteToken) {
     const r = await this.#call('POST', '/v1/claim', inviteToken);
+    if (this.#disposed) return { ok: false, outcome: TRANSPORT.REJECTED_CLOSED };
     if (!r.ok) return { ok: false, outcome: r.outcome ?? mapError(r.status, r.json?.error?.code), code: r.json?.error?.code ?? null };
+    if (!isToken(r.json?.submitToken) || r.json?.taskId !== 'washer-fluid') return { ok: false, outcome: TRANSPORT.REJECTED_INVALID };
     this.#submitToken = r.json.submitToken;
     return { ok: true, taskId: r.json.taskId, expiresAt: r.json.expiresAt };
   }
@@ -72,14 +85,22 @@ export class SyncClient {
    * idempotent on the server); rejections are not. Resolves to { transport, receipt }.
    */
   send(result) {
-    if (this.#inFlight) return this.#inFlight;
-    if (this.transport === TRANSPORT.SENT) return Promise.resolve({ transport: this.transport, receipt: this.receipt });
-    this.#inFlight = this.#send(result).finally(() => { this.#inFlight = null; });
+    if (this.#disposed) return Promise.resolve({ transport: TRANSPORT.REJECTED_CLOSED, receipt: null });
+    const json = canonicalJson(result);
+    if (this.#inFlight) return json === this.#sendingJson ? this.#inFlight : Promise.resolve({ transport: TRANSPORT.REJECTED_CONFLICT, receipt: null });
+    if (this.transport === TRANSPORT.SENT && json === this.#sentJson) return Promise.resolve({ transport: this.transport, receipt: this.receipt });
+    this.#sendingJson = json;
+    this.#inFlight = this.#send(structuredClone(result)).finally(() => { this.#inFlight = null; this.#sendingJson = null; });
     return this.#inFlight;
   }
 
   async #send(result) {
-    const finish = (transport, receipt = null, error = null) => { this.transport = transport; this.receipt = receipt; this.lastError = error; return { transport, receipt, error }; };
+    const finish = (transport, receipt = null, error = null) => {
+      if (this.#disposed) return { transport: TRANSPORT.REJECTED_CLOSED, receipt: null };
+      this.transport = transport; this.receipt = receipt; this.lastError = error;
+      if (transport === TRANSPORT.SENT) this.#sentJson = canonicalJson(result);
+      return { transport, receipt, error };
+    };
     if (!this.#submitToken) return finish(TRANSPORT.REJECTED_UNAUTHORIZED, null, 'not paired');
     const envelope = { protocol: PROTOCOL, protocolVersion: PROTOCOL_VERSION, result };
     const local = checkEnvelope(envelope, result?.taskId);
@@ -87,6 +108,7 @@ export class SyncClient {
     this.transport = TRANSPORT.SENDING;
     let outcome = TRANSPORT.FAILED_NETWORK, code = null;
     for (let attempt = 0; attempt <= this.retries; attempt++) {
+      if (this.#disposed) return finish(TRANSPORT.REJECTED_CLOSED);
       if (attempt) await this.sleep(this.backoffMs * 2 ** (attempt - 1));
       const r = await this.#call('POST', '/v1/submissions', this.#submitToken, envelope);
       if (r.ok) {
@@ -105,6 +127,14 @@ export class SyncClient {
   async status() {
     if (!this.#submitToken) return { ok: false, outcome: TRANSPORT.REJECTED_UNAUTHORIZED };
     const r = await this.#call('GET', '/v1/submissions/status', this.#submitToken);
+    if (this.#disposed) return { ok: false, outcome: TRANSPORT.REJECTED_CLOSED };
+    if (r.ok && !['CREATED', 'CLAIMED', 'RESULT_SUBMITTED', 'ACCEPTED', 'CANCELLED', 'EXPIRED'].includes(r.json?.sessionState)) return { ok: false, outcome: TRANSPORT.REJECTED_INVALID };
     return r.ok ? { ok: true, sessionState: r.json.sessionState, receipt: r.json.receipt } : { ok: false, outcome: r.outcome ?? mapError(r.status, r.json?.error?.code) };
+  }
+
+  dispose() {
+    this.#disposed = true; this.#submitToken = null; this.receipt = null;
+    this.transport = TRANSPORT.REJECTED_CLOSED;
+    for (const c of this.#controllers) c.abort();
   }
 }

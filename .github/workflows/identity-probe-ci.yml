@@ -51,6 +51,8 @@ jobs:
           python3 tools/tire-probe/check.py build-contract
       - name: Validate Kotlin status projection with the JavaScript consumer
         run: node tools/three-poc/check-tire-native-contract.mjs app/build/test-results/tire-ui-v1.json
+      - name: Verify sync receiver Debug and Release boundary
+        run: python3 tools/inspection-sync-poc/android/check-boundary.py
       - name: Summarize JVM test evidence
         run: |
           python3 - <<'PY'
