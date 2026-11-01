@@ -10,6 +10,7 @@ export const STATES = Object.freeze({
   HOOD_CLOSING: 'HOOD_CLOSING',
   COMPONENT_SELECTION: 'COMPONENT_SELECTION',
   WASHER_SELECTED: 'WASHER_SELECTED',
+  COMPONENT_PREVIEW: 'COMPONENT_PREVIEW',
   MOBILE_HANDOFF_READY: 'MOBILE_HANDOFF_READY',
 });
 
@@ -25,11 +26,11 @@ export const INSPECTION_AREAS = Object.freeze([
     id: 'hood', label: '보닛 · 전방 수납부', status: 'available',
     components: [
       { id: 'washer-fluid-cap', label: '워셔액', status: 'available' },
-      { id: 'coolant-reservoir', label: '냉각수', status: 'planned' },
+      { id: 'coolant-reservoir', label: '냉각수 리저버', status: 'preview', location: '모델 전방 구획의 차량 우측 중간' },
       { id: 'lcw-coolant-reservoir', label: '저전도 냉각수', status: 'planned' },
-      { id: 'brake-fluid-reservoir', label: '브레이크액', status: 'planned' },
-      { id: 'battery-12v', label: '12V 배터리', status: 'planned' },
-      { id: 'fuse-box', label: '퓨즈박스', status: 'planned' },
+      { id: 'brake-fluid-reservoir', label: '브레이크액 리저버', status: 'preview', location: '모델 전방 구획의 차량 좌측 뒤쪽' },
+      { id: 'battery-12v', label: '12V 보조 배터리', status: 'preview', location: '모델 전방 구획의 차량 좌측 앞쪽' },
+      { id: 'fuse-box', label: '퓨즈박스', status: 'preview', location: '모델 전방 구획의 차량 좌측 중간' },
     ],
   },
 ]);
@@ -49,6 +50,11 @@ export function transition(state, event, ctx = {}) {
   const { type } = event;
   const to = (name, patch = {}) => ({ ...state, name, ...patch });
   const close = (afterClose) => to(S.HOOD_CLOSING, { component: null, afterClose });
+  const select = () => {
+    const c = areaOf(state).components.find(c => c.id === event.id && ['available', 'preview'].includes(c.status));
+    if (!c || c.id === state.component) return state;
+    return to(c.status === 'preview' ? S.COMPONENT_PREVIEW : S.WASHER_SELECTED, { component: c.id });
+  };
   switch (state.name) {
     case S.IDLE:
       return type === E.START ? to(S.INSPECTION_OVERVIEW) : state;
@@ -67,12 +73,18 @@ export function transition(state, event, ctx = {}) {
       if (type === E.EXIT) return to(S.HOOD_CLOSING, { afterClose: S.IDLE });
       return state;
     case S.COMPONENT_SELECTION:
-      if (type === E.SELECT_COMPONENT && event.id === 'washer-fluid-cap' && available(areaOf(state).components, event.id)) return to(S.WASHER_SELECTED, { component: event.id });
+      if (type === E.SELECT_COMPONENT) return select();
       if (type === E.BACK) return close(S.INSPECTION_OVERVIEW);
       if (type === E.EXIT) return close(S.IDLE);
       return state;
     case S.WASHER_SELECTED:
+      if (type === E.SELECT_COMPONENT) return select();
       if (type === E.REQUEST_HANDOFF && ctx.handoffConfigured) return to(S.MOBILE_HANDOFF_READY);
+      if (type === E.BACK) return to(S.COMPONENT_SELECTION, { component: null });
+      if (type === E.EXIT) return close(S.IDLE);
+      return state;
+    case S.COMPONENT_PREVIEW:
+      if (type === E.SELECT_COMPONENT) return select();
       if (type === E.BACK) return to(S.COMPONENT_SELECTION, { component: null });
       if (type === E.EXIT) return close(S.IDLE);
       return state;
@@ -89,7 +101,7 @@ export const areaOf = (state) => INSPECTION_AREAS.find((a) => a.id === state.are
 
 /** Hood angle the page animates toward while in `state`. */
 export function hoodTarget(state) {
-  return [S.HOOD_OPENING, S.COMPONENT_SELECTION, S.WASHER_SELECTED, S.MOBILE_HANDOFF_READY].includes(state.name) ? HOOD_OPEN_DEG : 0;
+  return [S.HOOD_OPENING, S.COMPONENT_SELECTION, S.WASHER_SELECTED, S.COMPONENT_PREVIEW, S.MOBILE_HANDOFF_READY].includes(state.name) ? HOOD_OPEN_DEG : 0;
 }
 
 /** Named camera goal for `state`: home orbit, overview, engine bay or washer close-up. */
@@ -99,6 +111,7 @@ export function cameraGoal(state) {
     case S.INSPECTION_OVERVIEW: return 'overview';
     case S.HOOD_CLOSING: return state.afterClose === S.IDLE ? 'home' : 'overview';
     case S.HOOD_OPENING: case S.COMPONENT_SELECTION: return 'bay';
+    case S.COMPONENT_PREVIEW: return state.component;
     default: return 'washer';
   }
 }

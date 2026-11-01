@@ -42,7 +42,7 @@ const actions = [
   // Open via the panel button this time (keyboard-accessible path).
   ['click', '[data-action=area][data-id=hood]'], settled('COMPONENT_SELECTION'),
   expect(`${I}.hoodAngle===60`, 'hood fully open (axis A, 60 deg)'),
-  expect(`!document.getElementById('capLabel').hasAttribute('data-hidden')&&document.querySelectorAll('[data-action=component]').length===1&&document.querySelectorAll('.item[aria-disabled=true]').length===5`, 'cap label shown; washer only active item, 5 planned'),
+  expect(`!document.getElementById('capLabel').hasAttribute('data-hidden')&&document.querySelectorAll('[data-action=component]').length===5&&document.querySelectorAll('.item[aria-disabled=true]').length===1`, 'cap label shown; washer + 4 geometry previews, LCW planned'),
   ...shot('04-component-selection'),
   ev(tap(`${I}.capPoint()`)), settled('WASHER_SELECTED'),
   expect(`${I}.state.component==='washer-fluid-cap'&&document.querySelector('#panel h2').textContent==='워셔액 점검'&&document.querySelector('#panel a.link').href.startsWith('https://manuals.hyundai.co.uk/')`, 'washer detail with manual source'),

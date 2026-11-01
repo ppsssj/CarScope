@@ -6,7 +6,8 @@
   "type": "module",
   "scripts": {
     "serve": "node serve.mjs",
-    "test": "node --test test/*.test.mjs"
+    "test": "node --test test/*.test.mjs",
+    "test:android-assets": "node --test test-integration/*.test.mjs"
   },
   "dependencies": {
     "qrcode": "1.5.4",
