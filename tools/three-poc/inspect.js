@@ -13,6 +13,8 @@ import { buildFrunk } from "./ioniq5-asset/frunk.mjs";
 import { buildServiceComponents, SERVICE_MANUAL } from "./ioniq5-asset/service-components.mjs";
 import { buildInspectionComponents } from "./ioniq5-asset/inspection-components.mjs";
 import { componentDistance, boxDistance } from "./inspection-camera.mjs";
+import { createTireInspection, updateTireInspection, inspectionProgress } from "./tire-inspection.mjs";
+import { guideHtml, summaryHtml } from "./tire-inspection-view.mjs";
 import { TIRES, detachedTireInfo } from "./inspection-tires.mjs";
 import { tireStatus, enableTireStatus, disposeTireStatus } from "./tire-status.mjs";
 import { resolveTireTargets, tireCameraDirection } from "./tire-targets.mjs";
@@ -198,14 +200,16 @@ function driveCamera(name, dur = 1100) {
 }
 const ease = (t) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2);
 
+let userInspection = createTireInspection(crypto.randomUUID());
 function enter(prev) {
+  if (state.name === STATES.IDLE) userInspection = createTireInspection(crypto.randomUUID());
   clearTimeout(refit);
   // Flush OrbitControls inertia without changing the current pose before a scripted move.
   const position = camera.position.clone(), target = controls.target.clone(), damping = controls.enableDamping;
   controls.enableDamping = false; controls.update();
   camera.position.copy(position); controls.target.copy(target); controls.update(); controls.enableDamping = damping;
   if ((prev.name === STATES.COMPONENT_SELECTION && [STATES.COMPONENT_PREVIEW, STATES.WASHER_SELECTED].includes(state.name))
-    || ([STATES.TIRE_SELECTION, STATES.INSPECTION_OVERVIEW].includes(prev.name) && state.name === STATES.TIRE_PREVIEW)) {
+    || ([STATES.TIRE_SELECTION, STATES.TIRE_SUMMARY, STATES.INSPECTION_OVERVIEW].includes(prev.name) && state.name === STATES.TIRE_PREVIEW)) {
     selectionView = { position: camera.position.clone(), target: controls.target.clone(), scroll: $('panel').scrollTop, component: state.component, width: innerWidth, height: innerHeight, maxDistance: controls.maxDistance, goal: state.area === 'tires' ? 'tires' : 'bay' };
   }
   if (selectionView && state.component) selectionView.component = state.component;
@@ -219,7 +223,7 @@ function enter(prev) {
     title.tabIndex = -1; title.focus({ preventScroll: true });
   }
   layout();
-  if ([STATES.COMPONENT_SELECTION, STATES.TIRE_SELECTION].includes(state.name) && selectionView) {
+  if ([STATES.COMPONENT_SELECTION, STATES.TIRE_SELECTION, STATES.TIRE_SUMMARY].includes(state.name) && selectionView) {
     controls.minDistance = 1.3;
     const saved = selectionView;
     controls.maxDistance = saved.maxDistance;
@@ -260,20 +264,24 @@ function tireStatusHtml(id) {
 function panelHtml() {
   const S = STATES;
   switch (state.name) {
+    case S.TIRE_SUMMARY:
+      return `<div class="eyebrow">타이어 · 육안 기록</div><h2>네 타이어 점검 요약</h2>${summaryHtml(userInspection)}
+        <div class="actions"><button type="button" class="secondary" data-action="back">타이어 목록으로</button><button type="button" class="secondary" data-action="exit">점검 종료 · 기록 지우기</button></div>`;
     case S.TIRE_SELECTION:
       return `<div class="eyebrow">타이어 · 형상 탐색</div><h2>타이어 선택</h2><p>모델의 타이어·휠 또는 아래 목록을 선택하세요. 좌우는 차량 진행 방향 기준입니다.</p>
         <ul class="items">${TIRES.map(t => item(t, 'tire')).join('')}</ul>
-        <p class="note">타이어를 선택해 API 상태를 확인하세요. 수치 및 정상·비정상 판정은 제공하지 않습니다.</p>
-        <div class="actions"><button type="button" class="secondary" data-action="back">점검 부위로</button><button type="button" class="secondary" data-action="exit">점검 종료</button></div>`;
+        <p role="status">육안 점검 완료 ${inspectionProgress(userInspection)}/4</p><p class="note">타이어를 선택해 육안 기록과 API 상태를 확인하세요. 수치 및 정상·비정상 판정은 제공하지 않습니다.</p>
+        <div class="actions"><button type="button" class="primary" data-action="tire-summary">중간 결과 · 요약 보기</button><button type="button" class="secondary" data-action="back">점검 부위로</button><button type="button" class="secondary" data-action="exit">점검 종료</button></div>`;
     case S.TIRE_PREVIEW: {
       const t = detachedTireInfo(state.component);
       return `<div class="eyebrow">타이어 · 상태 탐색</div><h2>${esc(t.label)}</h2><span class="badge detached">상태만 표시 · 수치 및 진단 미제공</span>
         <dl class="tire-status"><dt>타이어 위치</dt><dd>${esc(t.label)} · 차량 진행 방향 기준</dd><dt>차량 부품 ID</dt><dd>${esc(t.vehiclePartId)}</dd>
-        </dl><div id="tireStatusContent">${tireStatusHtml(state.component)}</div>
+        </dl><div class="tire-nav"><button type="button" class="secondary" data-action="previous-tire">이전 타이어</button><button type="button" class="secondary" data-action="next-tire">다음 타이어</button></div>
+        <section id="tireGuide">${guideHtml(userInspection, state.component)}</section><details class="sdk-details"><summary>Pleos API 상태 · 수동 기록과 별개</summary><div id="tireStatusContent">${tireStatusHtml(state.component)}</div></details>
         <p class="note">SUPPORTED는 API 기능 지원 여부입니다. STALE은 오래된 관측이며 정상·비정상 판정이 아닙니다.</p>
         <p class="note">커뮤니티 GLB의 기존 타이어 형상입니다. 실차 형상 정확도와 API 값·단위는 미검증이며 공기압 및 정상·비정상을 판단하지 않습니다.</p>
         <h3>다른 타이어 보기</h3><ul class="items">${TIRES.map(t => item(t, 'tire')).join('')}</ul>
-        <div class="actions"><button type="button" class="secondary" data-action="back">선택 해제 · 이전 시점으로</button><button type="button" class="secondary" data-action="exit">점검 종료</button></div>`;
+        <div class="actions"><button type="button" class="primary" data-action="tire-summary">점검 요약 보기</button><button type="button" class="secondary" data-action="back">선택 해제 · 이전 시점으로</button><button type="button" class="secondary" data-action="exit">점검 종료</button></div>`;
     }
     case S.INSPECTION_OVERVIEW: case S.HOOD_CLOSING:
       return `<div class="eyebrow">차량 점검</div><h2>점검할 부위를 선택하세요</h2><p>3D 모델의 강조된 부위나 아래 목록에서 선택합니다.</p>
@@ -337,12 +345,36 @@ $("panel").addEventListener("click", (e) => {
   const b = e.target.closest("[data-action]");
   if (!b) return;
   const a = b.dataset.action;
-  if (a === "area") dispatch({ type: EVENTS.SELECT_AREA, id: b.dataset.id });
+  if (a === 'confirm-tire' && state.name === STATES.TIRE_PREVIEW && b.dataset.id === state.component) {
+    const next = updateTireInspection(userInspection, { type: 'CONFIRM', tireId: state.component, sessionId: b.dataset.session, at: Date.now() });
+    if (next !== userInspection) { userInspection = next; renderGuide('confirm'); }
+  }
+  else if (a === 'tire-summary') dispatch({ type: EVENTS.SHOW_TIRE_SUMMARY });
+  else if (['previous-tire', 'next-tire'].includes(a) && state.name === STATES.TIRE_PREVIEW) {
+    const index = TIRES.findIndex(t => t.id === state.component);
+    dispatch({ type: EVENTS.SELECT_TIRE, id: TIRES[(index + (a === 'next-tire' ? 1 : 3)) % 4].id });
+  }
+  else if (a === "area") dispatch({ type: EVENTS.SELECT_AREA, id: b.dataset.id });
   else if (a === "component") dispatch({ type: EVENTS.SELECT_COMPONENT, id: b.dataset.id });
   else if (a === "tire") dispatch({ type: EVENTS.SELECT_TIRE, id: b.dataset.id });
   else if (a === "handoff") dispatch({ type: EVENTS.REQUEST_HANDOFF });
   else if (a === "back") dispatch({ type: EVENTS.BACK });
   else if (a === "exit") dispatch({ type: EVENTS.EXIT });
+});
+function renderGuide(focus) {
+  const region = $('tireGuide');
+  if (!region) return;
+  const scroll = $('panel').scrollTop;
+  region.innerHTML = guideHtml(userInspection, state.component);
+  if (focus !== 'confirm') region.querySelector(`[data-check="${focus}"]:checked`)?.focus({ preventScroll: true });
+  else { const message = region.querySelector('[role="status"]'); message.tabIndex = -1; message.focus({ preventScroll: true }); }
+  $('panel').scrollTop = scroll;
+}
+$('panel').addEventListener('change', e => {
+  const input = e.target;
+  if (state.name !== STATES.TIRE_PREVIEW || input.dataset.tire !== state.component || !input.matches('input[data-check]')) return;
+  const next = updateTireInspection(userInspection, { type: 'ANSWER', tireId: state.component, sessionId: input.dataset.session, checkId: input.dataset.check, answer: input.value });
+  if (next !== userInspection) { userInspection = next; renderGuide(input.dataset.check); }
 });
 $("start").addEventListener("click", () => dispatch({ type: EVENTS.START }));
 $("back").addEventListener("click", () => dispatch({ type: EVENTS.BACK }));
@@ -369,7 +401,7 @@ function hitAt(x, y) {
 }
 function pickTarget(x, y) {
   const h = hitAt(x, y);
-  if ([STATES.INSPECTION_OVERVIEW, STATES.TIRE_SELECTION, STATES.TIRE_PREVIEW].includes(state.name) && h?.kind === 'tire') return { type: EVENTS.SELECT_TIRE, id: h.id };
+  if ([STATES.INSPECTION_OVERVIEW, STATES.TIRE_SELECTION, STATES.TIRE_PREVIEW, STATES.TIRE_SUMMARY].includes(state.name) && h?.kind === 'tire') return { type: EVENTS.SELECT_TIRE, id: h.id };
   if (state.name === STATES.INSPECTION_OVERVIEW && h?.kind === "hood") return { type: EVENTS.SELECT_AREA, id: "hood" };
   if ([STATES.COMPONENT_SELECTION, STATES.COMPONENT_PREVIEW, STATES.WASHER_SELECTED].includes(state.name)) {
     if (h?.kind === 'washer') return { type: EVENTS.SELECT_COMPONENT, id: 'washer-fluid-cap' };
@@ -555,6 +587,7 @@ window.__inspect = {
   get busy() { return Boolean(hoodTween || camTween); },
   get handoff() { return handoff; },
   tireStatus: () => tireStatus.state,
+  userInspection: () => userInspection,
   hoodPoint: () => screenPoint(M.hoodMeshes[0], false),
   capPoint: () => screenPoint(M.cap),
   hitAt,

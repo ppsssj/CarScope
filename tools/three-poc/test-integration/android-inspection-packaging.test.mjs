@@ -10,7 +10,7 @@ test('Android debug package follows the new inspection builder and every relativ
   assert.equal(r.status,0,r.stderr);
   const out=join(repo,'app/src/debug/assets/inspection');
   assert.ok(existsSync(join(out,'ioniq5-asset/inspection-components.mjs')));
-  for (const name of ['inspection-tires.mjs', 'tire-targets.mjs', 'tire-status.mjs']) {
+  for (const name of ['inspection-tires.mjs', 'tire-targets.mjs', 'tire-status.mjs', 'tire-inspection.mjs', 'tire-inspection-view.mjs']) {
     assert.equal(readFileSync(join(out,name),'utf8'),readFileSync(join(repo,'tools/three-poc',name),'utf8'),name);
   }
   const walk=dir=>readdirSync(dir,{withFileTypes:true}).flatMap(e=>e.isDirectory()?walk(join(dir,e.name)):[join(dir,e.name)]);

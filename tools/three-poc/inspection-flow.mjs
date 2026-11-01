@@ -14,11 +14,11 @@ export const STATES = Object.freeze({
   WASHER_SELECTED: 'WASHER_SELECTED',
   COMPONENT_PREVIEW: 'COMPONENT_PREVIEW',
   MOBILE_HANDOFF_READY: 'MOBILE_HANDOFF_READY',
-  TIRE_SELECTION: 'TIRE_SELECTION', TIRE_PREVIEW: 'TIRE_PREVIEW',
+  TIRE_SELECTION: 'TIRE_SELECTION', TIRE_PREVIEW: 'TIRE_PREVIEW', TIRE_SUMMARY: 'TIRE_SUMMARY',
 });
 
 export const EVENTS = Object.freeze({
-  START: 'START', SELECT_AREA: 'SELECT_AREA', HOOD_OPENED: 'HOOD_OPENED', HOOD_CLOSED: 'HOOD_CLOSED',
+  SHOW_TIRE_SUMMARY: 'SHOW_TIRE_SUMMARY', START: 'START', SELECT_AREA: 'SELECT_AREA', HOOD_OPENED: 'HOOD_OPENED', HOOD_CLOSED: 'HOOD_CLOSED',
   SELECT_COMPONENT: 'SELECT_COMPONENT', SELECT_TIRE: 'SELECT_TIRE', REQUEST_HANDOFF: 'REQUEST_HANDOFF', BACK: 'BACK', EXIT: 'EXIT',
 });
 
@@ -71,10 +71,12 @@ export function transition(state, event, ctx = {}) {
       if (type === E.BACK || type === E.EXIT) return to(S.IDLE, { area: null });
       return state;
     case S.TIRE_SELECTION:
+    case S.TIRE_SUMMARY:
     case S.TIRE_PREVIEW:
       if (type === E.SELECT_TIRE) return selectTire();
+      if (type === E.SHOW_TIRE_SUMMARY) return state.name === S.TIRE_SUMMARY ? state : to(S.TIRE_SUMMARY, { component: null });
       if (type === E.EXIT) return initialState();
-      if (type === E.BACK) return state.name === S.TIRE_PREVIEW
+      if (type === E.BACK) return [S.TIRE_PREVIEW, S.TIRE_SUMMARY].includes(state.name)
         ? to(S.TIRE_SELECTION, { component: null }) : to(S.INSPECTION_OVERVIEW, { area: null, component: null });
       return state;
     case S.HOOD_OPENING:
@@ -124,7 +126,7 @@ export function cameraGoal(state) {
   switch (state.name) {
     case S.IDLE: return 'home';
     case S.INSPECTION_OVERVIEW: return 'overview';
-    case S.TIRE_SELECTION: return 'tires';
+    case S.TIRE_SUMMARY: case S.TIRE_SELECTION: return 'tires';
     case S.TIRE_PREVIEW: return state.component;
     case S.HOOD_CLOSING: return state.afterClose === S.IDLE ? 'home' : 'overview';
     case S.HOOD_OPENING: case S.COMPONENT_SELECTION: return 'bay';

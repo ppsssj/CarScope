@@ -1,5 +1,17 @@
 # P3-A4 — 차량 점검 UI (Three.js)
 
+최신 타이어 흐름(P3-I3)은 [구현·검증 보고서](../../docs/p3-i3-tire-inspection.md)를 따른다. 아래 P3-A4 설명은 초기 단계의 기록이며, 현재는 기존 네 타이어와 P3-A6 네 부품을 함께 지원한다.
+
+## P3-I3 타이어 셀프 점검
+
+차량 점검 → 타이어 → 네 바퀴 중 선택 → 육안 체크리스트 3개 응답 → 결과 확정 → 이전/다음 타이어 → 점검 요약. 일부 타이어만 응답한 중간 요약도 열 수 있다. 요약의 앞/뒤·좌/우는 차량 진행 방향 기준이다.
+
+`tire-inspection.mjs`는 SDK와 독립된 immutable `USER_REPORTED` 세션 모델이다. 모든 항목에 응답해도 확정 전에는 IN_PROGRESS다. 완료 후 응답을 수정하면 완료 시각을 지우고 재확정을 요구한다. 점검 종료·페이지 재로드는 기록을 지우며, 서버·DB·storage API로 저장하지 않는다. 정상·안전·주행 가능 판정이나 압력 수치를 생성하지 않는다.
+
+`tire-inspection-view.mjs`는 체크리스트와 위치별 요약을 그린다. 기존 흐름에 `TIRE_SUMMARY`만 추가하며 카메라/OrbitControls, 고무 강조, mesh 매핑을 재사용한다. Pleos 상태는 접기 영역에서 확인하고 기존 endpoint·SDK 세션 계약을 유지한다. 모바일의 긴 타이어 폼·요약에서는 하단 버튼을 일반 스크롤로 배치해 입력 가림을 막는다.
+
+추가 검사: `node tools/three-poc/check-tire-inspection.mjs <외부-증거-폴더> http://127.0.0.1:8123/inspect.html?capture=1 420 860` (데스크톱은 `1600 1000`). Node 및 Android 자산 검사는 아래 기존 명령을 그대로 사용한다.
+
 `inspect.html`은 IONIQ 5 참조 모델 위에서 **차량 홈 → 차량 점검 → 보닛 → 워셔액 → 점검 방법 → 스마트폰 QR** 흐름을 한 화면에서 수행하는 제품형 PoC다. 기존 엔지니어링 화면 `ioniq5-hood.html`은 그대로 두며, 개발자 패널(`?dev=1` 또는 `` ` `` 키)에서 링크한다. Android `MainActivity`는 이 단계에서 바꾸지 않았다.
 
 ## 실행
