@@ -1,0 +1,28 @@
+<!doctype html><html lang="ko"><meta charset="utf-8"><title>P3-A6 geometry review</title>
+<style>body{margin:0;background:#edf0f2;color:#17232b;font:16px system-ui;display:grid;grid-template-columns:320px 1fr;height:100vh}aside{padding:24px;background:white;overflow:auto}h1{font-size:23px}button,select{font:inherit;padding:8px;margin:4px 0;width:100%}p{line-height:1.6}canvas{width:100%;height:100%;display:block}#view{min-width:0}pre{white-space:pre-wrap;font-size:12px}</style>
+<aside><h1>P3-A6 차량 점검 형상</h1><p>ESTIMATED · 데스크톱 형상 검토<br>실차 치수·장착·좌우 사양 UNVERIFIED</p>
+<select id="target" aria-label="점검 부품"><option value="">전체 부품</option><option value="coolant-reservoir">냉각수 리저버</option><option value="brake-fluid-reservoir">브레이크액 리저버</option><option value="battery-12v">12V 보조 배터리</option><option value="fuse-box">퓨즈박스</option></select>
+<button data-view="bay">보닛 60° · 전체</button><button data-view="top">위에서 보기 · 보닛 숨김</button><button data-view="side">옆에서 보기</button><button data-view="closed">닫힘 회귀</button><button id="cover">프렁크 덮개 0° / 60°</button>
+<p id="status">불러오는 중…</p><pre id="info">실제 수위·전기 상태를 표시하지 않습니다. LCW는 예약 영역으로 남습니다.</pre></aside><div id="view"></div>
+<script type="importmap">{"imports":{"three":"/three","/utils/BufferGeometryUtils.js":"/utils"}}</script>
+<script type="module">
+import * as T from 'three';import{GLTFLoader}from'/loader';
+const host=document.querySelector('#view'),renderer=new T.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});renderer.setPixelRatio(1);host.append(renderer.domElement);
+const scene=new T.Scene();scene.background=new T.Color('#e8edf0');scene.add(new T.HemisphereLight(0xffffff,0x69727a,2));const light=new T.DirectionalLight(0xffffff,3);light.position.set(2,6,4);scene.add(light);
+const camera=new T.PerspectiveCamera(38,1,0.01,50),loader=new GLTFLoader(),carPoint=p=>new T.Vector3(p[0]/100,p[2]/100,-p[1]/100);
+const report=await(await fetch('/report.json')).json();
+const [source,...variants]=await Promise.all(['/source.glb','/inspection-0.glb','/inspection-60.glb'].map(u=>loader.loadAsync(u)));
+scene.add(source.scene);variants.forEach(v=>scene.add(v.scene));variants[1].scene.visible=false;
+source.scene.updateMatrixWorld(true);const hood=source.scene.getObjectByName('Door_Front_0'),original=hood.matrixWorld.clone();hood.removeFromParent();scene.add(hood);hood.matrixAutoUpdate=false;
+let cover=0,view='bay';const axis=report.axes[0],pivot=carPoint(axis.point),direction=carPoint(axis.direction).normalize();
+function hoodAngle(deg){const m=new T.Matrix4().makeTranslation(...pivot.toArray()).multiply(new T.Matrix4().makeRotationAxis(direction,deg*Math.PI/180)).multiply(new T.Matrix4().makeTranslation(...pivot.clone().negate().toArray()));hood.matrix.copy(m.multiply(original));hood.matrixWorldNeedsUpdate=true;}
+function setView(name){view=name;if(name==='closed'){cover=0;variants[0].scene.visible=true;variants[1].scene.visible=false;}hood.visible=name!=='top';hoodAngle(name==='closed'?0:60);const focus=new T.Vector3(1.5,0.78,0);const positions={bay:[4.2,3,-3],top:[1.52,3.5,0],side:[1.5,1.45,-3.7],closed:[5.5,3,-4]};camera.position.fromArray(positions[name]);camera.up.set(0,1,0);camera.lookAt(focus);draw();}
+function draw(){const w=host.clientWidth,h=host.clientHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();renderer.render(scene,camera);}
+const highlight=[];
+function select(id){highlight.forEach(([m,c])=>m.material.emissive.copy(c));highlight.length=0;variants.forEach(v=>v.scene.traverse(m=>{if(m.isMesh&&m.userData.inspectionTarget===id){m.material=m.material.clone();highlight.push([m,m.material.emissive.clone()]);m.material.emissive.set('#5f390b');}}));document.querySelector('#info').textContent=id?JSON.stringify(report.meta.find(p=>p.id===id),null,2):'실제 수위·전기 상태를 표시하지 않습니다. LCW는 예약 영역으로 남습니다.';draw();}
+document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>setView(b.dataset.view));document.querySelector('#target').onchange=e=>select(e.target.value);
+document.querySelector('#cover').onclick=()=>{cover=cover?0:60;variants[0].scene.visible=cover===0;variants[1].scene.visible=cover===60;if(cover&&view==='closed')setView('bay');draw();};
+// Independent loaded-buffer bounds check in the browser's glTF metre frame.
+const rows=[];for(const p of report.stats.filter(p=>report.meta.some(m=>m.id===p.id))){const mesh=variants[0].scene.getObjectByName(p.id);if(!mesh)throw Error('missing '+p.id);variants[0].scene.updateMatrixWorld(true);const b=new T.Box3().setFromObject(mesh),lo=[b.min.x*100,-b.max.z*100,b.min.y*100],hi=[b.max.x*100,-b.min.z*100,b.max.y*100];const delta=Math.max(...lo.map((v,k)=>Math.abs(v-p.min[k])),...hi.map((v,k)=>Math.abs(v-p.max[k])));if(delta>0.0001)throw Error('bounds '+p.id);rows.push({id:p.id,deltaCm:delta});}
+window.__geometry={rows,setView,select,report,renderer,scene,camera};window.addEventListener('resize',draw);setView('bay');document.querySelector('#status').textContent=`${rows.length}개 점검 메시 · 충돌 검사 ${report.checks.length}행 · 결함 ${report.failures}건`;window.__geometry.ready=true;
+</script></html>
