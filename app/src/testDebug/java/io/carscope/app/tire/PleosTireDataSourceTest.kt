@@ -261,4 +261,26 @@ class PleosTireDataSourceTest {
         assertTrue(old.readJson().contains("STOPPED")); assertTrue(restored.readJson().contains("ATTACHED"))
         assertFalse(restored.readJson().contains("\"observedAt\":100"))
     }
+    @Test fun `UI generation changes on resume but duplicate start and read never initialize another pending SDK session`() {
+        val x=Fixture(); val owner=TireProbeOwner(x.source); val web=TireUiChannel(owner)
+        fun id(json: String) = Regex("\"sessionId\":\"([^\"]+)\"").find(json)!!.groupValues[1]
+        web.start(); x.worker.drain(); val first=web.readJson()
+        web.start(); x.worker.drain(); val second=web.readJson()
+        assertEquals(id(first),id(second)); assertTrue(first.contains("\"sequence\":1")); assertTrue(second.contains("\"sequence\":2"))
+        web.stop(); web.start(); x.worker.drain(); val resumed=web.readJson()
+        assertNotEquals(id(first),id(resumed)); assertTrue(resumed.contains("\"sequence\":1"))
+        assertEquals(1,x.sdk.initializes); assertEquals(0,x.sdk.releases)
+        x.worker.timeout(); assertTrue(web.readJson().contains("UNRESOLVED"))
+    }
+    @Test fun `unregister failure cannot be bypassed by a recreated web channel or an old probe stop`() {
+        val x=Fixture(); x.ready(); x.reply(); val owner=TireProbeOwner(x.source)
+        val probe=owner.attach(); owner.start(probe); x.worker.drain()
+        x.sdk.unsubscribeError=Exception("partial unregister failure")
+        val old=TireUiChannel(owner); old.start(); x.worker.drain(); old.stop()
+        val next=TireUiChannel(owner); next.start(); x.worker.drain()
+        owner.stop(probe); owner.detach(probe); old.stop(); x.worker.drain()
+        assertTrue(next.readJson().contains("\"connectionStatus\":\"ATTACHED\""))
+        assertTrue(next.readJson().contains("UNRESOLVED")); assertEquals(1,x.sdk.initializes)
+        assertEquals(0,x.sdk.releases); assertEquals(1,x.sdk.unregistered.size)
+    }
 }
