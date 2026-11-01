@@ -19,5 +19,6 @@ internal class TireProbeOwner(private val source: PleosTireDataSource) {
     @Synchronized fun owns(lease: Any) = current === lease
     @Synchronized fun snapshot(lease: Any): TireSnapshot =
         if (current === lease) source.readSnapshot() else TireSnapshot.empty(DataOrigin.PLEOS, "OWNER_SUPERSEDED")
+    @Synchronized fun ownedSnapshot(lease: Any): TireSnapshot? = if (current === lease) source.readSnapshot() else null
     fun diagnostics() = source.diagnostics
 }

@@ -17,7 +17,7 @@ import io.carscope.vehicle.tire.TireSnapshot
 class TireProbeActivity : Activity() {
     private val handler = Handler(Looper.getMainLooper())
     private lateinit var owner: TireProbeOwner
-    private lateinit var lease: Any
+    private var lease: Any? = null
     private lateinit var text: TextView
     private var last = ""
     private var active = false
@@ -26,22 +26,20 @@ class TireProbeActivity : Activity() {
     }
     override fun onCreate(state: Bundle?) {
         super.onCreate(state)
-        val app = applicationContext
-        owner = processOwner ?: TireProbeOwner(PleosTireDataSource({ SdkTireSession(app) }, log = { Log.i(TAG, it) }))
-            .also { processOwner = it }
-        lease = owner.attach()
+        owner = TireProcessOwner.get(applicationContext)
         text = TextView(this).apply { textSize = 14f; setPadding(24, 24, 24, 24); setTextIsSelectable(true) }
         setContentView(ScrollView(this).apply { addView(text) })
         Log.i(TAG, "lifecycle create restored=${state != null}")
     }
-    override fun onStart() { super.onStart(); active = true; Log.i(TAG, "lifecycle start"); owner.start(lease); handler.post(tick) }
-    override fun onStop() { active = false; handler.removeCallbacks(tick); owner.stop(lease); render(); Log.i(TAG, "lifecycle stop requested"); super.onStop() }
-    override fun onDestroy() { owner.detach(lease); Log.i(TAG, "lifecycle destroy; process owner retains unresolved cleanup"); super.onDestroy() }
+    override fun onStart() { super.onStart(); lease = owner.attach().also { owner.start(it) }; active = true; Log.i(TAG, "lifecycle start"); handler.post(tick) }
+    override fun onStop() { active = false; handler.removeCallbacks(tick); lease?.let { owner.stop(it) }; render(); Log.i(TAG, "lifecycle stop requested"); super.onStop() }
+    override fun onDestroy() { lease?.let { owner.detach(it) }; lease = null; Log.i(TAG, "lifecycle destroy; process owner retains unresolved cleanup"); super.onDestroy() }
 
     private fun render() {
-        if (!owner.owns(lease)) return // an old Activity must not overwrite the current probe file
+        val token = lease ?: return
+        if (!owner.owns(token)) return // an old Activity must not overwrite the current probe file
         val rows = JSONArray()
-        val snapshot = if (active) owner.snapshot(lease) else TireSnapshot.empty(DataOrigin.PLEOS, "SESSION_STOPPED")
+        val snapshot = if (active) owner.snapshot(token) else TireSnapshot.empty(DataOrigin.PLEOS, "SESSION_STOPPED")
         for (r in snapshot.readings) rows.put(JSONObject().apply {
             put("featureId", r.featureId); put("vehiclePartId", r.vehiclePartId); put("apiDomain", r.apiDomain)
             put("capabilityStatus", r.capabilityStatus.name); put("availabilityStatus", r.availabilityStatus.name)
@@ -68,7 +66,5 @@ class TireProbeActivity : Activity() {
     }
     companion object {
         private const val TAG = "CarScopeTire"
-        // Main-thread Activity lifecycle owns this field. Only applicationContext is captured.
-        private var processOwner: TireProbeOwner? = null
     }
 }
