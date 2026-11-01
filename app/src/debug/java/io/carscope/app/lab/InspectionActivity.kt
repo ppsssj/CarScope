@@ -5,6 +5,7 @@ import android.os.Bundle
 import java.io.File
 import io.carscope.app.tire.TireProcessOwner
 import io.carscope.app.tire.TireUiChannel
+import io.carscope.app.sync.InspectionSyncEntry
 
 /**
  * Debug-only P3-A5.2: the P3-A4 vehicle inspection flow (tools/three-poc/inspect.html) inside the Pleos AVD.
@@ -16,12 +17,14 @@ import io.carscope.app.tire.TireUiChannel
 class InspectionActivity : Activity() {
     private lateinit var screen: DebugWebScreen
     private lateinit var tireStatus: TireUiChannel
+    private lateinit var syncEntry: InspectionSyncEntry
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         tireStatus = TireUiChannel(TireProcessOwner.get(applicationContext))
         screen = DebugWebScreen(this, TAG, HOST, ROOT, mapOf("external/ioniq5.glb" to File(filesDir, DebugWebScreen.MODEL_PATH)), tireStatus::readJson)
-        setContentView(screen.create(intent.getStringExtra("query").orEmpty()))
+        syncEntry = InspectionSyncEntry(this)
+        setContentView(syncEntry.wrap(screen.create(intent.getStringExtra("query").orEmpty())))
     }
 
     override fun onResume() {
@@ -29,9 +32,11 @@ class InspectionActivity : Activity() {
         tireStatus.start()
         screen.resume()
         screen.signalTireStatus(true)
+        syncEntry.resume()
     }
 
     override fun onPause() {
+        syncEntry.pause()
         tireStatus.stop()
         screen.signalTireStatus(false)
         screen.pause(isFinishing, "window.__androidShell && window.__androidShell.closeScreen('finish')")

@@ -26,10 +26,11 @@ internal class ActivityFakeTransport : ConnectedSyncReceiverTransport {
     val expiry = System.currentTimeMillis() + 60000
     var accepted = 0; var cancelled = 0; var closed = false; var defer = false
     var late: (() -> Unit)? = null
+    var probeFailure: SyncFailure? = null
     var cancelFailure = false
     var result = false
     override fun creationAuthorized() = !closed
-    override fun checkConnection(callback: (SyncReply<Unit>) -> Unit): SyncCancellation { callback(SyncReply.Success(Unit)); return SyncCancellation {} }
+    override fun checkConnection(callback: (SyncReply<Unit>) -> Unit): SyncCancellation { callback(probeFailure?.let { SyncReply.Failure(it) } ?: SyncReply.Success(Unit)); return SyncCancellation {} }
     override fun create(callback: (SyncReply<CreatedSyncSession>) -> Unit): SyncCancellation {
         val reply = { callback(SyncReply.Success(CreatedSyncSession(HttpSamples.ID, ReceiverCredential(HttpSamples.receiver), InviteCredential(HttpSamples.invite), expiry - 30000, expiry))) }
         if (defer) late = reply else reply()
@@ -132,8 +133,24 @@ class SyncReceiverActivityTest {
         activity.clock = activity.fake.expiry - 30000 + 1
         shadowOf(Looper.getMainLooper()).idleFor(1, TimeUnit.SECONDS)
         assertNull(view<ImageView>(activity, "qr").drawable)
+        assertTrue(text(activity, "status").contains("QR 초대 만료"))
+        assertFalse(text(activity, "status").contains("EXPIRED"))
         activity.clock = activity.fake.expiry + 1; poll()
         assertTrue(text(activity, "status").contains("EXPIRED")); assertFalse(view<Button>(activity, "accept").isEnabled)
         builder.pause().stop().destroy()
     }
+    @Test fun `probe errors distinguish NETWORK TIMEOUT INVALID and success is not vehicle authentication`() {
+        val b = Robolectric.buildActivity(ReceiverFixtureActivity::class.java).setup(); val a = b.get()
+        for (failure in listOf(SyncFailure.NETWORK, SyncFailure.TIMEOUT, SyncFailure.INVALID)) {
+            a.fake.probeFailure = failure; view<Button>(a, "probe").performClick()
+            assertTrue(text(a, "connection").contains(failure.name))
+            assertFalse(text(a, "connection").contains("검증 성공"))
+        }
+        a.fake.probeFailure = null; view<Button>(a, "probe").performClick()
+        assertTrue(text(a, "connection").contains("HTTPS 응답 확인"))
+        assertTrue(text(a, "connection").contains("차량 인증과는 별개"))
+        assertTrue(text(a, "authentication").contains("실제 차량 인증 미구현"))
+        b.pause().stop().destroy()
+    }
+
 }
