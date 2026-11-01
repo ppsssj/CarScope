@@ -114,7 +114,7 @@ class SyncReceiverTest {
         assertEquals(ReceiverPhase.EXPIRED, f.owner.state.phase)
     }
     @Test fun `wrong digest wrong session and missing submitted result fail closed`() {
-        for (bad in listOf(view(SyncSessionState.RESULT_SUBMITTED, result, "sha256:wrong"), view(SyncSessionState.RESULT_SUBMITTED, result).copy(sessionId = "wrong"), view(SyncSessionState.RESULT_SUBMITTED))) {
+        for (bad in listOf(view(SyncSessionState.RESULT_SUBMITTED, result, "sha256:wrong"), view(SyncSessionState.RESULT_SUBMITTED, result).copy(sessionId = "wrong"), view(SyncSessionState.RESULT_SUBMITTED), view(SyncSessionState.ACCEPTED))) {
             val f = Fixture(); f.start(); f.transport.reply = SyncReply.Success(bad); f.owner.poll()
             assertEquals(ReceiverPhase.FAILED, f.owner.state.phase); assertEquals(SyncFailure.INVALID, f.owner.state.failure)
             assertFalse(f.owner.state.canAccept)

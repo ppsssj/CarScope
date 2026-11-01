@@ -50,7 +50,9 @@ internal class SyncReceiverClient(private val transport: SyncReceiverTransport, 
                 val terminalEmpty = view.sessionState !in listOf(SyncSessionState.CANCELLED, SyncSessionState.EXPIRED) || view.result == null
                 val monotonic = lastState !in listOf(SyncSessionState.RESULT_SUBMITTED, SyncSessionState.ACCEPTED) || view.sessionState !in listOf(SyncSessionState.CREATED, SyncSessionState.CLAIMED)
                 val immutable = submittedDigest == null || view.sessionState in listOf(SyncSessionState.CANCELLED, SyncSessionState.EXPIRED) || submittedDigest == view.resultDigest
-                if (view.sessionId != sessionId || view.taskId != "washer-fluid" || view.expiresAt != expiresAt || !resultValid || !requiredResult || !terminalEmpty || !monotonic || !immutable) {
+                val acceptedProof = view.sessionState != SyncSessionState.ACCEPTED ||
+                    (view.result != null || submittedDigest != null) && Regex("sha256:[0-9a-f]{64}").matches(view.resultDigest ?: "")
+                if (view.sessionId != sessionId || view.taskId != "washer-fluid" || view.expiresAt != expiresAt || !resultValid || !requiredResult || !terminalEmpty || !monotonic || !immutable || !acceptedProof) {
                     callback(SyncReply.Failure(SyncFailure.INVALID)); return@synchronized
                 }
                 if (view.sessionState in listOf(SyncSessionState.RESULT_SUBMITTED, SyncSessionState.ACCEPTED)) submittedDigest = view.resultDigest
