@@ -5,6 +5,7 @@ import io.carscope.vehicle.tire.*
 import java.util.concurrent.Executors
 import java.util.concurrent.RejectedExecutionException
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicLong
 
 internal data class TireCapability(val readable: Boolean, val areas: Set<TireId>, val access: String, val unverifiedAreas: Set<TireId> = emptySet())
 
@@ -34,6 +35,13 @@ internal class TireWorker : TireDispatcher {
     override fun close() { worker.shutdown() }
 }
 
+/** Local bookkeeping only; IDLE/CLOSED never assert remote service acknowledgement. */
+internal data class TireSessionDiagnostics(
+    val phase: String = "IDLE", val pendingSdkRequests: Int = 0, val timedOutSdkRequests: Int = 0,
+    val cleanupFailures: Int = 0, val releaseAttempted: Boolean = false, val restartRequested: Boolean = false,
+    val stopRequested: Boolean = false,
+)
+
 /** Serialized asynchronous cache. A stop invalidates ownership before unregistering anything. */
 internal class PleosTireDataSource(
     private val factory: () -> TireSession,
@@ -41,26 +49,50 @@ internal class PleosTireDataSource(
     private val clock: () -> Long = System::currentTimeMillis,
     private val log: (String) -> Unit = {},
 ) : TireDataSource {
-    private class Session(val sdk: TireSession) {
+    private class Session(val sdk: TireSession, val epoch: Long) {
         var accepting = true
         var pending = 0
+        var timedOut = 0
+        var cleanupFailures = 0
+        var releaseAttempted = false
         val registrations = mutableSetOf<TireId>()
         val revisions = TireId.entries.associateWith { 0L }.toMutableMap()
     }
     private var session: Session? = null
     private var wanted = false
     private var closed = false
+    private val epoch = AtomicLong()
+    @Volatile private var snapshotEpoch = 0L
     @Volatile private var snapshot = TireSnapshot.empty(DataOrigin.PLEOS)
-    override fun readSnapshot() = snapshot.at(clock())
+    @Volatile private var stopRequested = false
+    @Volatile private var sessionDiagnostics = TireSessionDiagnostics()
+    val diagnostics get() = sessionDiagnostics.copy(stopRequested = stopRequested)
+    override fun readSnapshot() = if (snapshotEpoch == epoch.get()) snapshot.at(clock())
+        else TireSnapshot.empty(DataOrigin.PLEOS, "SESSION_STOPPED")
 
-    fun start() = worker.execute { if (!closed) { wanted = true; if (session == null) open() } }
-    fun stop() = worker.execute { wanted = false; stopSession() }
-    fun close() = worker.execute { closed = true; wanted = false; stopSession(); if (session == null) worker.close() }
+    fun start() = worker.execute { if (!closed) { wanted = true; if (session == null) open(); diagnose() } }
+    fun stop() { stopRequested = true; epoch.incrementAndGet(); worker.execute { wanted = false; stopSession(); diagnose() } }
+    fun close() { stopRequested = true; epoch.incrementAndGet(); worker.execute { closed = true; wanted = false; stopSession(); diagnose(); if (session == null) worker.close() } }
+    private fun accepts(s: Session) = s.accepting && s.epoch == epoch.get()
+
+    private fun diagnose() {
+        val s = session
+        sessionDiagnostics = TireSessionDiagnostics(
+            phase = when {
+                s == null -> if (closed) "CLOSED" else "IDLE"
+                s.cleanupFailures > 0 || s.timedOut > 0 || (!s.accepting && s.pending > 0) -> "UNRESOLVED"
+                !s.accepting -> "STOPPING"
+                else -> "ACTIVE"
+            }, pendingSdkRequests = s?.pending ?: 0, timedOutSdkRequests = s?.timedOut ?: 0,
+            cleanupFailures = s?.cleanupFailures ?: 0, releaseAttempted = s?.releaseAttempted ?: false,
+            restartRequested = wanted && s?.accepting == false,
+        )
+    }
 
     private fun open() {
         snapshot = TireSnapshot.empty(DataOrigin.PLEOS)
         try {
-            val s = Session(factory()); session = s
+            val s = Session(factory(), epoch.get()); session = s; snapshotEpoch = s.epoch; stopRequested = false
             s.sdk.initialize()
             log("initialize returned; connection UNVERIFIED until a callback")
             for (feature in TireFeature.entries) request<TireCapability?>(s,
@@ -81,8 +113,8 @@ internal class PleosTireDataSource(
                                 try {
                                     s.sdk.subscribe(tire, { raw ->
                                         val receivedAt = clock()
-                                        worker.execute { if (s.accepting) { s.revisions[tire] = s.revisions.getValue(tire) + 1; publish(feature, tire, raw, receivedAt, "EVENT") } }
-                                    }, { error -> worker.execute { if (s.accepting) { s.revisions[tire] = s.revisions.getValue(tire) + 1; fail(feature, tire, error, false) } } })
+                                        worker.execute { if (accepts(s)) { s.revisions[tire] = s.revisions.getValue(tire) + 1; publish(feature, tire, raw, receivedAt, "EVENT") } }
+                                    }, { error -> worker.execute { if (accepts(s)) { s.revisions[tire] = s.revisions.getValue(tire) + 1; fail(feature, tire, error, false) } } })
                                     log("registered ${tire.vehiclePartId}; SDK call returned")
                                 } catch (e: Exception) { log("subscribe failed ${tire.vehiclePartId}: ${e.javaClass.simpleName}: ${e.message}") }
                             }
@@ -106,13 +138,13 @@ internal class PleosTireDataSource(
 
     private fun <T> request(s: Session, operation: ((T) -> Unit, (Exception) -> Unit) -> Unit,
                             failure: (Exception) -> Unit, complete: (T, Long) -> Unit) {
-        s.pending++
+        s.pending++; diagnose()
         var consumed = false
         var timedOut = false
         val cancel = worker.after(REQUEST_TIMEOUT_MILLIS) {
             if (!consumed) {
-                timedOut = true
-                if (s.accepting) failure(java.util.concurrent.TimeoutException("SDK callback not received in ${REQUEST_TIMEOUT_MILLIS}ms"))
+                timedOut = true; s.timedOut++; diagnose()
+                if (accepts(s)) failure(java.util.concurrent.TimeoutException("SDK callback not received in ${REQUEST_TIMEOUT_MILLIS}ms"))
                 log("callback timeout; SDK request remains pending (no public cancellation API)")
             }
         }
@@ -122,11 +154,11 @@ internal class PleosTireDataSource(
                 if (!consumed) {
                     consumed = true; cancel()
                     try {
-                        if (s.accepting && !timedOut) {
+                        if (accepts(s) && !timedOut) {
                             if (error != null) failure(error)
                             else { @Suppress("UNCHECKED_CAST") complete(value as T, receivedAt) }
                         }
-                    } finally { s.pending--; finishClose() }
+                    } finally { s.pending--; if (timedOut) s.timedOut--; finishClose(); diagnose() }
                 }
             }
         }
@@ -158,9 +190,10 @@ internal class PleosTireDataSource(
         if (invalidate) snapshot = TireSnapshot.empty(DataOrigin.PLEOS, "SESSION_STOPPED")
         val s = session ?: return
         s.accepting = false
+        diagnose()
         for (t in s.registrations.toList()) {
             try { s.sdk.unsubscribe(t); log("unsubscribe attempt returned ${t.vehiclePartId}; remote acknowledgement UNVERIFIED") }
-            catch (e: Exception) { log("unregister failed ${t.vehiclePartId}: ${e.message}") }
+            catch (e: Exception) { s.cleanupFailures++; log("unregister failed ${t.vehiclePartId}: ${e.message}; cleanup UNRESOLVED") }
         }
         s.registrations.clear()
         log("stopping pending=${s.pending}")
@@ -168,9 +201,11 @@ internal class PleosTireDataSource(
     }
     private fun finishClose() {
         val s = session ?: return
-        if (!s.accepting && s.pending == 0) {
+        if (!s.accepting && s.pending == 0 && s.cleanupFailures == 0 && !s.releaseAttempted) {
+            s.releaseAttempted = true
+            diagnose()
             try { s.sdk.release(); log("release returned; Service acknowledgement UNVERIFIED") }
-            catch (e: Exception) { log("release failed: ${e.message}") }
+            catch (e: Exception) { s.cleanupFailures++; diagnose(); log("release failed: ${e.message}; cleanup UNRESOLVED"); return }
             session = null
             if (closed) worker.close() else if (wanted) open()
         }

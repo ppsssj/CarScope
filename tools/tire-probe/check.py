@@ -8,6 +8,7 @@ from pathlib import Path
 import re
 import subprocess
 import tempfile
+import time
 import xml.etree.ElementTree as ET
 import zipfile
 
@@ -75,7 +76,7 @@ def boundary():
         with zipfile.ZipFile(file) as z:
             dex = b''.join(z.read(n) for n in z.namelist() if n.endswith('.dex'))
         debug = file.name == 'app-debug.apk'
-        for marker in (b'Lio/carscope/app/tire/TireProbeActivity;', b'Lio/carscope/app/tire/SdkTireSession;', b'Lio/carscope/app/tire/PleosTireDataSource;'):
+        for marker in (b'Lio/carscope/app/tire/TireProbeActivity;', b'Lio/carscope/app/tire/SdkTireSession;', b'Lio/carscope/app/tire/PleosTireDataSource;', b'Lio/carscope/app/tire/TireProbeOwner;', b'Lio/carscope/app/tire/TireSessionDiagnostics;'):
             assert (marker in dex) == debug, (file.name, marker)
     print('PASS: Tire probe, controller, SDK transport and new permissions debug-only; release permissions unchanged')
 
@@ -86,20 +87,55 @@ def health(serial, out):
         raise ValueError('Device evidence must stay outside the repository')
     out.mkdir(parents=True, exist_ok=True)
     result = {'collectedAt': datetime.now(timezone.utc).isoformat(), 'serial': serial, 'status': 'UNVERIFIED', 'sdkInitialization': 'NOT_RUN', 'capabilities': 'NOT_RUN', 'getters': 'NOT_RUN', 'events': 'NOT_RUN'}
+    result['gatePolicy'] = dict(maxLoad1PerCpu=1, maxLoad5PerCpu=1.5, minAvailableKiB=524288,
+                               maxAdbMs=1000, maxServiceMs=2000, requiredBoot='1', samples=3)
+    result['commands'] = []
     def adb(*args):
-        return subprocess.run(['adb', '-s', serial, *args], check=True, capture_output=True, text=True, timeout=8).stdout.strip()
+        started = time.monotonic()
+        try:
+            run = subprocess.run(['adb', '-s', serial, *args], capture_output=True, text=True, timeout=5)
+            result['commands'].append(dict(args=args, elapsedMs=round((time.monotonic()-started)*1000),
+                                           exitCode=run.returncode, stdout=run.stdout.strip(), stderr=run.stderr.strip()))
+            run.check_returncode()
+            return run.stdout.strip()
+        except subprocess.TimeoutExpired:
+            result['commands'].append(dict(args=args, elapsedMs=round((time.monotonic()-started)*1000), timeout=True))
+            raise
     try:
+        result['deviceState'] = adb('get-state')
         result['avd'] = adb('emu', 'avd', 'name')
+        result['bootCompleted'] = adb('shell', 'getprop', 'sys.boot_completed')
         result['cpus'] = adb('shell', 'cat', '/sys/devices/system/cpu/online')
         result['cpuCount'] = sum(int(part.split('-')[-1])-int(part.split('-')[0])+1 for part in result['cpus'].split(','))
-        result['loadavg'] = adb('shell', 'cat', '/proc/loadavg')
-        result['meminfo'] = '\n'.join(adb('shell', 'cat', '/proc/meminfo').splitlines()[:4])
-        result['status'] = 'BLOCKED' if float(result['loadavg'].split()[0]) > result['cpuCount'] else 'NOT_RUN'
-        result['reason'] = 'Read-only health check. Observed load above guest CPU count; no restart/install/start attempted.' if result['status'] == 'BLOCKED' else 'Health collection only; SDK runtime still requires the separate probe activity.'
-    except (subprocess.SubprocessError, OSError) as e:
+        result['meminfo'] = adb('shell', 'cat', '/proc/meminfo')
+        result['availableKiB'] = int(re.search(r'MemAvailable:\s+(\d+)', result['meminfo'])[1])
+        result['samples'] = []
+        for _ in range(3):
+            load = adb('shell', 'cat', '/proc/loadavg')
+            adb('shell', 'echo', 'CARSCOPE_HEALTH')
+            result['samples'].append(dict(load=load, adbMs=result['commands'][-1]['elapsedMs']))
+            time.sleep(1)
+        result['activityService'] = adb('shell', 'cmd', 'activity', 'get-current-user')
+        result['activityMs'] = result['commands'][-1]['elapsedMs']
+        result['packageService'] = adb('shell', 'cmd', 'package', 'list', 'packages', 'ai.pleos.playground.service.vehicle')
+        result['packageMs'] = result['commands'][-1]['elapsedMs']
+        result['status'] = 'PASS' if health_passes(result) else 'BLOCKED'
+        result['reason'] = 'Read-only gate only; SDK runtime not implied. No restart/install/start performed by this command.'
+    except (subprocess.SubprocessError, OSError, ValueError, IndexError, TypeError) as e:
         result['status'] = 'BLOCKED'; result['reason'] = type(e).__name__ + ': ' + str(e)
     (out/'health.json').write_text(json.dumps(result, indent=2), encoding='utf8')
     print(json.dumps(result, indent=2))
+
+
+def health_passes(r):
+    """Conservative probe budget, not an Android/OEM performance guarantee."""
+    return (r['deviceState'] == 'device' and r['avd'].splitlines()[0] == 'CarScope_Pleos_API34'
+            and r['bootCompleted'] == '1' and r['availableKiB'] >= 524288
+            and len(r['samples']) == 3 and all(
+                float(s['load'].split()[0]) <= r['cpuCount']
+                and float(s['load'].split()[1]) <= 1.5*r['cpuCount'] and s['adbMs'] <= 1000 for s in r['samples'])
+            and r['activityService'].isdigit() and 'package:ai.pleos.playground.service.vehicle' in r['packageService']
+            and r['activityMs'] <= 2000 and r['packageMs'] <= 2000)
 
 
 if __name__ == '__main__':
