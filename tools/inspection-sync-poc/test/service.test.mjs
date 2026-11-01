@@ -2,13 +2,14 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { SessionService, SyncError, STATES, DEFAULT_LIMITS, newToken } from '../src/sessions.mjs';
 import { MemorySessionStore } from '../src/session-store.mjs';
+import { testStore } from './store-fixture.mjs';
 import { PROTOCOL, PROTOCOL_VERSION, resultDigest } from '../src/protocol.mjs';
 import { startInspection, completeInspection } from '../../mobile-ar-poc/public/inspection-result.mjs';
 
 const setup = (limits) => {
   let t = Date.parse('2026-11-01T10:00:00Z');
   const clock = { now: () => t, advance: (ms) => { t += ms; } };
-  const store = new MemorySessionStore();
+  const store = testStore();
   return { clock, store, svc: new SessionService({ store, now: clock.now, limits }) };
 };
 const done = (status = 'OK') => completeInspection(startInspection(), status);
@@ -178,7 +179,7 @@ test('[18] restart policy: the memory store does not survive; old tokens resolve
 
 test('the service works against any store implementing the interface', async () => {
   const calls = [];
-  const inner = new MemorySessionStore();
+  const inner = testStore();
   const traced = new Proxy(inner, { get: (o, k) => (typeof o[k] === 'function' ? (...a) => { calls.push(k); return o[k](...a); } : o[k]) });
   const svc = new SessionService({ store: traced });
   const p = await paired(svc);

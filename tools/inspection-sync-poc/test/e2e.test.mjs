@@ -1,3 +1,4 @@
+import { LocalTestSessionCreationAuthorizer } from '../src/creation-authorizer.mjs';
 // Synthetic local E2E (one machine, loopback): receiver simulator -> session -> QR v2 -> phone client submits a
 // completed AR-01 record -> server ACK -> receiver views -> explicit accept -> phone sees ACCEPTED.
 // This is NOT a two-device verification.
@@ -10,7 +11,7 @@ import { resultDigest } from '../src/protocol.mjs';
 import { startInspection, completeInspection, noteAids, validateResult, STATES } from '../../mobile-ar-poc/public/inspection-result.mjs';
 
 test('E2E: pair, submit, ACK, view, accept, done', async () => {
-  const s = await startSyncServer({ port: 0, log: () => {} });
+  const s = await startSyncServer({ authorizer: new LocalTestSessionCreationAuthorizer(), port: 0, log: () => {} });
   try {
     const receiver = new ReceiverClient({ baseUrl: s.url });
     const session = await receiver.create('washer-fluid');
@@ -54,7 +55,7 @@ test('E2E: pair, submit, ACK, view, accept, done', async () => {
 });
 
 test('E2E: receiver declines -> cancel, result deleted, phone sees CANCELLED', async () => {
-  const s = await startSyncServer({ port: 0, log: () => {} });
+  const s = await startSyncServer({ authorizer: new LocalTestSessionCreationAuthorizer(), port: 0, log: () => {} });
   try {
     const receiver = new ReceiverClient({ baseUrl: s.url });
     const session = await receiver.create();
@@ -68,7 +69,7 @@ test('E2E: receiver declines -> cancel, result deleted, phone sees CANCELLED', a
 });
 
 test('E2E: claim response lost -> invite stays used, no token re-issued; recovery is a new QR from the vehicle', async () => {
-  const s = await startSyncServer({ port: 0, log: () => {} });
+  const s = await startSyncServer({ authorizer: new LocalTestSessionCreationAuthorizer(), port: 0, log: () => {} });
   try {
     const receiver = new ReceiverClient({ baseUrl: s.url });
     const first = await receiver.create();

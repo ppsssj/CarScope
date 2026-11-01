@@ -40,3 +40,12 @@ node_modules/
 *.parts
 !vehicle-core/src/main/resources/io/carscope/visualization/anatomy-car.parts
 *.glb
+
+# AR-02B-1: local databases, WAL journals and development certificates never belong in Git.
+*.sqlite
+*.sqlite-*
+*.db
+*.db-*
+*.pem
+*.csr
+*.srl
