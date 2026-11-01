@@ -26,7 +26,7 @@ const tag = '<script type="module" src="./inspect.js"></script>';
 if (!source.includes(tag)) throw new Error("inspect.html: page script tag not found");
 const { html, csp } = prepareLabHtml(source.replace(tag, `${tag}\n<script type="module" src="./android-inspect-shell.js"></script>`));
 writeFileSync(join(OUT, "index.html"), html);
-for (const file of ["inspect.js", "inspection-flow.mjs", "inspection-camera.mjs", "android-inspect-shell.js"]) cpSync(join(HERE, file), join(OUT, file));
+for (const file of ["inspect.js", "inspection-flow.mjs", "inspection-camera.mjs", "inspection-tires.mjs", "tire-targets.mjs", "android-inspect-shell.js"]) cpSync(join(HERE, file), join(OUT, file));
 
 // Geometry modules the page imports, followed transitively (layout + builders only: no model-derived data).
 const modules = new Set();
