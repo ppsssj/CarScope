@@ -72,3 +72,8 @@ XML: `vehicle-core/build/test-results/test/TEST-*.xml` (Tire 5, Pipeline 17, Ren
 SQLite race, AR-01 clock harness를 실행한다. Windows만 Edge 브라우저 두 종류를 실행한다.
 기존 Geometry CI는 변경하지 않는다. PR/최종 HEAD와 실제 CI 결과는 PR checks와 최종 보고에서 확인한다.
 workflow 정의만으로 Linux 검증 성공을 주장하지 않는다.
+
+최초 PR head `0e7b7ea`의 [CI 실행](https://github.com/ppsssj/CarScope/actions/runs/41294677204)은
+Linux PASS, Windows FAIL이었다. Windows runner의 새 OpenSSL이 음수 `-days`를 거부한 것이 원인이다.
+만료 검사를 생략하지 않고 `openssl ca`로 2020년의 유효한 시작/종료 구간을 가진 인증서를 발급하도록 수정했다.
+보정 후 결과는 최종 PR head의 checks로 구분한다.

@@ -53,7 +53,12 @@ function certificates() {
   writeFileSync(path.join(dir, 'extensions.cnf'), 'subjectAltName=DNS:localhost,IP:127.0.0.1\nbasicConstraints=critical,CA:FALSE\nkeyUsage=critical,digitalSignature,keyEncipherment\nextendedKeyUsage=serverAuth\n');
   run('req', '-x509', '-newkey', 'rsa:2048', '-nodes', '-keyout', 'ca.key', '-out', 'ca.pem', '-days', '2', '-subj', '/CN=CarScope Local Test CA');
   run('req', '-newkey', 'rsa:2048', '-nodes', '-keyout', 'server.key', '-out', 'server.csr', '-subj', '/CN=localhost');
-  for (const [name, days] of [['server', '1'], ['expired', '-1']]) run('x509', '-req', '-in', 'server.csr', '-CA', 'ca.pem', '-CAkey', 'ca.key', '-CAcreateserial', '-out', `${name}.pem`, '-days', days, '-extfile', 'extensions.cnf');
+  run('x509', '-req', '-in', 'server.csr', '-CA', 'ca.pem', '-CAkey', 'ca.key', '-CAcreateserial', '-out', 'server.pem', '-days', '1', '-extfile', 'extensions.cnf');
+  // Newer OpenSSL rejects a negative -days. Use a valid historical interval, not end < start.
+  writeFileSync(path.join(dir, 'index.txt'), '');
+  writeFileSync(path.join(dir, 'serial'), '1000\n');
+  writeFileSync(path.join(dir, 'ca.cnf'), '[ca]\ndefault_ca=local\n[local]\ndatabase=index.txt\nserial=serial\nnew_certs_dir=.\ncertificate=ca.pem\nprivate_key=ca.key\ndefault_md=sha256\npolicy=subject_policy\nx509_extensions=server_ext\n[subject_policy]\ncommonName=supplied\n[server_ext]\n' + readFileSync(path.join(dir, 'extensions.cnf'), 'utf8'));
+  run('ca', '-batch', '-notext', '-config', 'ca.cnf', '-in', 'server.csr', '-out', 'expired.pem', '-startdate', '200101000000Z', '-enddate', '200102000000Z');
   return { dir, ca: readFileSync(path.join(dir, 'ca.pem')), tlsKey: path.join(dir, 'server.key'), tlsCert: path.join(dir, 'server.pem'), expired: path.join(dir, 'expired.pem') };
 }
 function request(url, { ca, servername, method = 'GET', token, origin, body } = {}) {
