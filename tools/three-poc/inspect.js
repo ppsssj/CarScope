@@ -12,7 +12,9 @@ import { buildFrontCompartment, measureHoodSurface } from "./ioniq5-asset/front-
 import { buildFrunk } from "./ioniq5-asset/frunk.mjs";
 import { buildServiceComponents, SERVICE_MANUAL } from "./ioniq5-asset/service-components.mjs";
 import { buildInspectionComponents } from "./ioniq5-asset/inspection-components.mjs";
-import { componentDistance } from "./inspection-camera.mjs";
+import { componentDistance, boxDistance } from "./inspection-camera.mjs";
+import { TIRES, detachedTireInfo } from "./inspection-tires.mjs";
+import { resolveTireTargets, tireCameraDirection } from "./tire-targets.mjs";
 import { STATES, EVENTS, INSPECTION_AREAS, initialState, transition, hoodTarget, cameraGoal, areaOf, HOOD_OPEN_DEG } from "./inspection-flow.mjs";
 
 const params = new URLSearchParams(location.search);
@@ -58,10 +60,13 @@ const VIEWS = {
   overview: [new THREE.Vector3(0.7, 0.75, 0), [1, 0.62, -0.5], 6.0],
   bay: [toGltf([150, 0, 62]), [1.0, 1.35, -0.3], 3.4],
   washer: [toGltf([135, -40, 84]), [0.9, 1.9, 0.75], 2.5],
+  tires: [toGltf([0, 0, 52]), [0.22, 0.25, -1], 6.5],
 };
 
 // ---------- model state ----------
-const M = { hood: null, group: null, pivot: null, axis: null, hoodMeshes: [], outline: [], bay: new THREE.Group(), cap: null, washerMeshes: [], components: new Map(), angle: 0 };
+const M = { hood: null, group: null, pivot: null, axis: null, hoodMeshes: [], outline: [], bay: new THREE.Group(), cap: null, washerMeshes: [], components: new Map(), tires: new Map(), angle: 0 };
+const targetMeshes = id => M.components.get(id) ?? M.tires.get(id)?.meshes;
+function* targetGroups() { yield* M.components; for (const [id, t] of M.tires) yield [id, t.meshes]; }
 M.bay.name = "__p3a4_bay"; M.bay.visible = false; scene.add(M.bay);
 
 function hoodTriangles(root) {
@@ -172,16 +177,22 @@ function fitScale() {
 }
 function driveCamera(name, dur = 1100) {
   log('camera-target', { name, state: state.name });
-  const meshes = M.components.get(name);
+  const meshes = targetMeshes(name);
   let target, dir, dist;
-  if (meshes && name !== 'washer-fluid-cap') {
+  if (name === 'tires') {
+    const bounds = new THREE.Box3();
+    for (const t of M.tires.values()) bounds.union(t.bounds);
+    target = bounds.getCenter(new THREE.Vector3()); dir = VIEWS.tires[1];
+    dist = boxDistance(bounds.getSize(new THREE.Vector3()).toArray(), dir, camera.fov, innerWidth, innerHeight, panelBox());
+  } else if (meshes && name !== 'washer-fluid-cap') {
     const bounds = componentBounds(name), size = bounds.getSize(new THREE.Vector3());
     target = bounds.getCenter(new THREE.Vector3());
-    dir = [1.2, 2.8, Math.sign(target.z) * 0.55];
+    dir = M.tires.has(name) ? tireCameraDirection(name) : [1.2, 2.8, Math.sign(target.z) * 0.55];
     dist = componentDistance(size.toArray(), camera.fov, innerWidth, innerHeight, panelBox());
   } else [target, dir, dist] = VIEWS[name];
   controls.minDistance = meshes ? 0.55 : 1.3;
-  camTween = { name, fromPos: camera.position.clone(), fromTarget: controls.target.clone(), toTarget: target.clone(), toPos: target.clone().add(new THREE.Vector3(...dir).normalize().multiplyScalar(dist * (meshes ? 1 : fitScale()))), t0: performance.now(), dur: ms(dur) };
+  controls.maxDistance = name === 'tires' ? Math.max(11, dist) : 11;
+  camTween = { name, fromPos: camera.position.clone(), fromTarget: controls.target.clone(), toTarget: target.clone(), toPos: target.clone().add(new THREE.Vector3(...dir).normalize().multiplyScalar(dist * (meshes || name === 'tires' ? 1 : fitScale()))), t0: performance.now(), dur: ms(dur) };
   controls.enabled = false;
 }
 const ease = (t) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2);
@@ -192,37 +203,39 @@ function enter(prev) {
   const position = camera.position.clone(), target = controls.target.clone(), damping = controls.enableDamping;
   controls.enableDamping = false; controls.update();
   camera.position.copy(position); controls.target.copy(target); controls.update(); controls.enableDamping = damping;
-  if (prev.name === STATES.COMPONENT_SELECTION && [STATES.COMPONENT_PREVIEW, STATES.WASHER_SELECTED].includes(state.name)) {
-    selectionView = { position: camera.position.clone(), target: controls.target.clone(), scroll: $('panel').scrollTop, component: state.component, width: innerWidth, height: innerHeight };
+  if ((prev.name === STATES.COMPONENT_SELECTION && [STATES.COMPONENT_PREVIEW, STATES.WASHER_SELECTED].includes(state.name))
+    || ([STATES.TIRE_SELECTION, STATES.INSPECTION_OVERVIEW].includes(prev.name) && state.name === STATES.TIRE_PREVIEW)) {
+    selectionView = { position: camera.position.clone(), target: controls.target.clone(), scroll: $('panel').scrollTop, component: state.component, width: innerWidth, height: innerHeight, maxDistance: controls.maxDistance, goal: state.area === 'tires' ? 'tires' : 'bay' };
   }
   if (selectionView && state.component) selectionView.component = state.component;
   document.body.dataset.state = state.name;
   hovered = false;
   driveHood(hoodTarget(state));
   render();
-  if ([STATES.COMPONENT_PREVIEW, STATES.WASHER_SELECTED].includes(state.name)) {
+  if ([STATES.COMPONENT_PREVIEW, STATES.WASHER_SELECTED, STATES.TIRE_PREVIEW].includes(state.name)) {
     $('panel').scrollTop = 0;
     const title = $('panel').querySelector('h2');
     title.tabIndex = -1; title.focus({ preventScroll: true });
   }
   layout();
-  if (state.name === STATES.COMPONENT_SELECTION && selectionView) {
+  if ([STATES.COMPONENT_SELECTION, STATES.TIRE_SELECTION].includes(state.name) && selectionView) {
     controls.minDistance = 1.3;
     const saved = selectionView;
+    controls.maxDistance = saved.maxDistance;
     log('camera-restore', { position: saved.position.toArray(), width: innerWidth, height: innerHeight, savedWidth: saved.width, savedHeight: saved.height });
     if (saved.width === innerWidth && saved.height === innerHeight) {
-      camTween = { name: 'bay', fromPos: camera.position.clone(), fromTarget: controls.target.clone(), toPos: saved.position.clone(), toTarget: saved.target.clone(), t0: performance.now(), dur: ms(700) }; controls.enabled = false;
-    } else driveCamera('bay');
+      camTween = { name: saved.goal, fromPos: camera.position.clone(), fromTarget: controls.target.clone(), toPos: saved.position.clone(), toTarget: saved.target.clone(), t0: performance.now(), dur: ms(700) }; controls.enabled = false;
+    } else driveCamera(saved.goal);
     $('panel').scrollTop = saved.scroll;
     $('panel').querySelector(`[data-id="${saved.component}"]`)?.focus({ preventScroll: true });
   } else if (cameraGoal(state) !== cameraGoal(prev) || state.name === STATES.IDLE) driveCamera(cameraGoal(state));
-  if ([STATES.HOOD_CLOSING, STATES.IDLE].includes(state.name)) selectionView = null;
+  if ([STATES.HOOD_CLOSING, STATES.IDLE, STATES.INSPECTION_OVERVIEW].includes(state.name)) selectionView = null;
 }
 
 function componentBounds(id) {
   scene.updateMatrixWorld(true);
   const b = new THREE.Box3();
-  for (const mesh of M.components.get(id) ?? []) b.expandByObject(mesh);
+  for (const mesh of targetMeshes(id) ?? []) b.expandByObject(mesh, true);
   return b;
 }
 
@@ -231,12 +244,27 @@ const crumbs = { IDLE: "", INSPECTION_OVERVIEW: "차량 점검", HOOD_OPENING: "
 const hints = { INSPECTION_OVERVIEW: "강조된 보닛을 선택하세요", COMPONENT_SELECTION: "모델의 부품이나 목록을 선택하세요" };
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 const item = (x, action) => ['available', 'preview'].includes(x.status)
-  ? `<li><button type="button" class="item available ${x.status === 'preview' ? 'preview' : ''}" aria-pressed="${state.component === x.id}" data-action="${action}" data-id="${x.id}">${esc(x.label)}<span class="tag">${x.status === 'preview' ? '형상 보기' : '점검 가능'}</span></button></li>`
+  ? `<li><button type="button" class="item available ${x.status === 'preview' ? 'preview' : ''}" aria-pressed="${state.component === x.id}" data-action="${action}" data-id="${x.id}">${esc(x.label)}<span class="tag">${x.status === 'preview' || x.id === 'tires' ? '형상 보기' : '점검 가능'}</span></button></li>`
   : `<li><div class="item" aria-disabled="true">${esc(x.label)}<span class="tag">준비 중</span></div></li>`;
 
 function panelHtml() {
   const S = STATES;
   switch (state.name) {
+    case S.TIRE_SELECTION:
+      return `<div class="eyebrow">타이어 · 형상 탐색</div><h2>타이어 선택</h2><p>모델의 타이어·휠 또는 아래 목록을 선택하세요. 좌우는 차량 진행 방향 기준입니다.</p>
+        <ul class="items">${TIRES.map(t => item(t, 'tire')).join('')}</ul>
+        <p class="note">API 데이터 미연동 · 공기압 및 차량 상태를 표시하지 않습니다.</p>
+        <div class="actions"><button type="button" class="secondary" data-action="back">점검 부위로</button><button type="button" class="secondary" data-action="exit">점검 종료</button></div>`;
+    case S.TIRE_PREVIEW: {
+      const t = detachedTireInfo(state.component);
+      return `<div class="eyebrow">타이어 · 형상 탐색</div><h2>${esc(t.label)}</h2><span class="badge detached">데이터 미연동</span>
+        <dl class="tire-status"><dt>타이어 위치</dt><dd>${esc(t.label)} · 차량 진행 방향 기준</dd><dt>차량 부품 ID</dt><dd>${esc(t.vehiclePartId)}</dd>
+        <dt>데이터 출처</dt><dd>없음 · 미연동</dd><dt>API 지원 상태</dt><dd>${t.capabilityStatus} · 실제 지원 미검증</dd>
+        <dt>데이터 가용 상태</dt><dd>${t.availabilityStatus} · 미수신</dd><dt>최종 관측 시각</dt><dd>없음</dd></dl>
+        <p class="note">커뮤니티 GLB의 기존 타이어 형상입니다. 실차 형상 정확도와 API 값·단위는 미검증이며 공기압 및 정상·비정상을 판단하지 않습니다.</p>
+        <h3>다른 타이어 보기</h3><ul class="items">${TIRES.map(t => item(t, 'tire')).join('')}</ul>
+        <div class="actions"><button type="button" class="secondary" data-action="back">선택 해제 · 이전 시점으로</button><button type="button" class="secondary" data-action="exit">점검 종료</button></div>`;
+    }
     case S.INSPECTION_OVERVIEW: case S.HOOD_CLOSING:
       return `<div class="eyebrow">차량 점검</div><h2>점검할 부위를 선택하세요</h2><p>3D 모델의 강조된 부위나 아래 목록에서 선택합니다.</p>
         <ul class="items">${INSPECTION_AREAS.map((a) => item(a, "area")).join("")}</ul>
@@ -281,7 +309,7 @@ function panelHtml() {
 let toastTimer = null;
 function render() {
   $("panel").innerHTML = panelHtml();
-  $("crumb").textContent = state.name === STATES.COMPONENT_PREVIEW ? `차량 점검 › 보닛 › ${areaOf(state).components.find(c => c.id === state.component).label}` : crumbs[state.name];
+  $("crumb").textContent = state.area === 'tires' ? `차량 점검 › 타이어${state.component ? ' › ' + detachedTireInfo(state.component).label : ''}` : state.name === STATES.COMPONENT_PREVIEW ? `차량 점검 › 보닛 › ${areaOf(state).components.find(c => c.id === state.component).label}` : crumbs[state.name];
   const hint = hints[state.name];
   clearTimeout(toastTimer);
   $("toast").textContent = hint ?? "";
@@ -295,6 +323,7 @@ $("panel").addEventListener("click", (e) => {
   const a = b.dataset.action;
   if (a === "area") dispatch({ type: EVENTS.SELECT_AREA, id: b.dataset.id });
   else if (a === "component") dispatch({ type: EVENTS.SELECT_COMPONENT, id: b.dataset.id });
+  else if (a === "tire") dispatch({ type: EVENTS.SELECT_TIRE, id: b.dataset.id });
   else if (a === "handoff") dispatch({ type: EVENTS.REQUEST_HANDOFF });
   else if (a === "back") dispatch({ type: EVENTS.BACK });
   else if (a === "exit") dispatch({ type: EVENTS.EXIT });
@@ -316,6 +345,7 @@ function hitAt(x, y) {
   // Everything visible occludes: a closed hood hides the cap, the body hides the far side.
   const hit = ray.intersectObjects(scene.children, true).find((h) => { if (!h.object.isMesh) return false; for (let n = h.object; n; n = n.parent) if (!n.visible) return false; return true; });
   if (!hit) return null;
+  if (hit.object.userData.inspectionTire) return { kind: 'tire', id: hit.object.userData.inspectionTire };
   if (hit.object.userData.isHood) return { kind: "hood" };
   if (hit.object.userData.washer) return { kind: "washer" };
   if (hit.object.userData.inspectionTarget) return { kind: 'component', id: hit.object.userData.inspectionTarget };
@@ -323,6 +353,7 @@ function hitAt(x, y) {
 }
 function pickTarget(x, y) {
   const h = hitAt(x, y);
+  if ([STATES.INSPECTION_OVERVIEW, STATES.TIRE_SELECTION, STATES.TIRE_PREVIEW].includes(state.name) && h?.kind === 'tire') return { type: EVENTS.SELECT_TIRE, id: h.id };
   if (state.name === STATES.INSPECTION_OVERVIEW && h?.kind === "hood") return { type: EVENTS.SELECT_AREA, id: "hood" };
   if ([STATES.COMPONENT_SELECTION, STATES.COMPONENT_PREVIEW, STATES.WASHER_SELECTED].includes(state.name)) {
     if (h?.kind === 'washer') return { type: EVENTS.SELECT_COMPONENT, id: 'washer-fluid-cap' };
@@ -382,7 +413,7 @@ function paintHighlight(now) {
   for (const m of M.hoodMeshes) { m.material.emissive.setHex(hoodOn ? ACCENT : 0); m.material.emissiveIntensity = hoodOn ? 0.12 + 0.18 * pulse + (hovered ? 0.2 : 0) : 0; }
   for (const l of M.outline) l.visible = hoodOn;
   const capOn = [STATES.COMPONENT_SELECTION, STATES.WASHER_SELECTED, STATES.MOBILE_HANDOFF_READY].includes(state.name);
-  for (const [id, meshes] of M.components) for (const m of meshes) {
+  for (const [id, meshes] of targetGroups()) for (const m of meshes) {
     const selected = state.component === id;
     const washerHint = id === 'washer-fluid-cap' && capOn && m === M.cap;
     m.material.emissive.setHex(selected || washerHint ? ACCENT : 0);
@@ -435,6 +466,13 @@ new GLTFLoader().load(params.get("model") ?? "./external/ioniq5.glb", (gltf) => 
   const meshNodes = new Set(gltf.parser.json.nodes.filter((n) => n.mesh !== undefined).map((n) => n.name));
   let bodyMaterial = null;
   gltf.scene.traverse((o) => { if (!o.isMesh) return; o.material = o.material.clone(); const part = meshNodes.has(o.name) ? o.name : o.parent.name; if (part === "Body" && o.material.name === "Body") bodyMaterial = o.material; });
+  try { M.tires = resolveTireTargets(gltf.scene); }
+  catch (error) {
+    $('status').textContent = '타이어의 좌표·형상 매핑을 검증할 수 없습니다. 참조 GLB를 확인하세요.';
+    log('load-error', { message: String(error) });
+    return;
+  }
+  for (const [id, t] of M.tires) for (const mesh of t.pickMeshes) mesh.userData.inspectionTire = id;
   M.hood = gltf.scene.getObjectByName(H.HOOD_NODE);
   M.group = gltf.scene.getObjectByName(H.HOOD_GROUP);
   gltf.scene.updateMatrixWorld(true);
@@ -504,6 +542,7 @@ window.__inspect = {
   hitAt,
   componentPoint: (id) => { const v = componentBounds(id).getCenter(new THREE.Vector3()).project(camera); return { x: (v.x+1)*innerWidth/2, y: (1-v.y)*innerHeight/2, inFront: v.z<1 }; },
   componentInfo: () => [...M.components].map(([id, meshes]) => ({ id, meshes: meshes.map(m => ({ id: m.name, target: m.userData.inspectionTarget, highlighted: m.material.emissiveIntensity > 0, meta: m.userData.meta })), bounds: { min: componentBounds(id).min.toArray(), max: componentBounds(id).max.toArray() } })),
+  tireInfo: () => [...M.tires].map(([id, t]) => ({ id, node: t.node, panel: detachedTireInfo(id), meshes: t.meshes.map(m => ({ name: m.name, material: m.material.name, highlighted: m.material.emissiveIntensity > 0 && m.material.emissive.getHex() !== 0 })), wheelMeshes: t.pickMeshes.map(m => ({ name: m.name, material: m.material.name, highlighted: m.material.emissiveIntensity > 0 && m.material.emissive.getHex() !== 0 })), bounds: { min: t.bounds.min.toArray(), max: t.bounds.max.toArray() } })),
   cameraPose: () => ({ position: camera.position.toArray(), target: controls.target.toArray() }),
   zoom,
   view: () => ({ azimuthDeg: +THREE.MathUtils.radToDeg(controls.getAzimuthalAngle()).toFixed(1), polarDeg: +THREE.MathUtils.radToDeg(controls.getPolarAngle()).toFixed(1), distance: +camera.position.distanceTo(controls.target).toFixed(3) }),

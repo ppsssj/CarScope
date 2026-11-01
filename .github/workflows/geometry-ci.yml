@@ -61,8 +61,11 @@ jobs:
         run: npm test --prefix tools/anatomy-car
       - name: IONIQ 5 external-asset tooling (synthetic fixtures only; no third-party geometry in CI)
         run: node --test tools/ioniq5-asset/test/*.test.mjs
-      - name: P3-A4 inspection flow state machine and QR handoff contract
-        run: node --test tools/three-poc/test/*.test.mjs
+      - name: Inspection flow, tire picking and debug module packaging
+        run: |
+          npm ci --ignore-scripts --prefix tools/three-poc
+          node --test tools/three-poc/test/*.test.mjs
+          node --test tools/three-poc/test-integration/*.test.mjs
       - name: Verify GLB and sampled door collisions
         run: npm run verify --prefix tools/anatomy-car
       - name: Kotlin SVG state, ID, inset, accent and bounds contracts
