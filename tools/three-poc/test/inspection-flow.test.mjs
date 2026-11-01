@@ -65,7 +65,7 @@ test('the hood is closed in every state where it is not explicitly open', () => 
 
 test('planned components and a missing handoff are never active', () => {
   const sel = run([START, HOOD, OPENED]);
-  for (const c of INSPECTION_AREAS[0].components.filter((c) => c.status !== 'available')) assert.equal(transition(sel, { type: E.SELECT_COMPONENT, id: c.id }), sel, c.id);
+  for (const c of INSPECTION_AREAS[0].components.filter((c) => c.status === 'planned')) assert.equal(transition(sel, { type: E.SELECT_COMPONENT, id: c.id }), sel, c.id);
   const washer = run([START, HOOD, OPENED, WASHER]);
   assert.equal(transition(washer, QR, { handoffConfigured: false }), washer);
   assert.equal(transition(run([START]), { type: E.SELECT_AREA, id: 'tailgate' }).name, S.INSPECTION_OVERVIEW);
@@ -74,6 +74,23 @@ test('planned components and a missing handoff are never active', () => {
 test('component ids match the service geometry evidence', () => {
   assert.deepEqual(INSPECTION_AREAS[0].components.map((c) => c.id), SERVICE_EVIDENCE.map((e) => e.id));
   assert.deepEqual(INSPECTION_AREAS[0].components.filter((c) => c.status === 'available').map((c) => c.id), ['washer-fluid-cap']);
+  assert.deepEqual(INSPECTION_AREAS[0].components.filter(c => c.status === 'preview').map(c => c.id), ['coolant-reservoir','brake-fluid-reservoir','battery-12v','fuse-box']);
+});
+
+test('new geometry is preview only: repeated picks, switching, back, exit and late callbacks', () => {
+  const selection = run([START,HOOD,OPENED]);
+  for (const c of INSPECTION_AREAS[0].components.filter(c=>c.status==='preview')) {
+    const pick={type:E.SELECT_COMPONENT,id:c.id}, p=transition(selection,pick);
+    assert.equal(p.name,S.COMPONENT_PREVIEW);assert.equal(p.component,c.id);
+    assert.equal(hoodTarget(p),60);assert.equal(cameraGoal(p),c.id);
+    for(const ev of [pick,QR,OPENED,CLOSED,{type:'COMPLETE'},{type:E.SELECT_COMPONENT,id:'lcw-coolant-reservoir'}]) assert.equal(transition(p,ev,{handoffConfigured:true}),p);
+    assert.deepEqual(transition(p,BACK),selection);
+    assert.deepEqual(transition(transition(p,EXIT),CLOSED),initialState());
+    const washer=transition(p,WASHER);assert.equal(washer.name,S.WASHER_SELECTED);
+    assert.equal(transition(washer,QR,{handoffConfigured:true}).name,S.MOBILE_HANDOFF_READY);
+    assert.equal(transition(washer,pick).component,c.id);
+    for(const other of INSPECTION_AREAS[0].components.filter(o=>o.status==='preview'&&o.id!==c.id)) assert.equal(transition(p,{type:E.SELECT_COMPONENT,id:other.id}).component,other.id);
+  }
 });
 
 test('handoff uses the QR-AR contract and rejects unsafe origins', () => {

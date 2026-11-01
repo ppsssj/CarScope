@@ -133,7 +133,17 @@ try {
   n = events().length; tap(s.targets.areaHood);
   s = await settled(n, "COMPONENT_SELECTION", 90000);
   const tr = events().slice(n).find((e) => e.event === "transition" && e.from === "HOOD_OPENING");
-  check("hood-open", s.hoodAngle === 60 && s.targets.cap && s.targets.planned === 5, { hoodAngle: s.hoodAngle, plannedItems: s.targets.planned, openingFrameStats: tr?.frameStats });
+  // P3-A7: four formerly planned items now expose shape previews; LCW alone is planned.
+  check("hood-open", s.hoodAngle === 60 && s.targets.cap && s.targets.planned === 1, { hoodAngle: s.hoodAngle, plannedItems: s.targets.planned, openingFrameStats: tr?.frameStats });
+  for (const id of ['coolant-reservoir', 'brake-fluid-reservoir', 'battery-12v', 'fuse-box']) {
+    n = events().length; tap(s.targets.componentPoints[id]); s = await settled(n, 'COMPONENT_PREVIEW');
+    check(`component-3d-${id}`, s.component === id && s.hoodAngle === 60 && !s.targets.handoff, { component: s.component });
+    shot(`component-${id}`);
+    n = events().length; tap(s.targets.back); s = await settled(n, 'COMPONENT_SELECTION');
+    n = events().length; tap(s.targets.components[id]); s = await settled(n, 'COMPONENT_PREVIEW');
+    check(`component-list-${id}`, s.component === id && !s.targets.handoff, { component: s.component });
+    n = events().length; tap(s.targets.back); s = await settled(n, 'COMPONENT_SELECTION');
+  }
   await sleep(1500); shot("06-hood-open-components");
 
   // 6. Washer cap pick -> detail panel

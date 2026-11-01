@@ -88,6 +88,8 @@ function targets() {
     capLabel: q("#capButton"), qr: q(".qr img"), handoffLink: document.getElementById("handoffLink")?.getAttribute("href") ?? null,
     hood: api && window.__inspectReady ? pt(api.hoodPoint()) : null, cap: api && window.__inspectReady && api.state.name !== "IDLE" ? pt(api.capPoint()) : null,
     planned: [...document.querySelectorAll('#panel .item[aria-disabled="true"]')].length,
+    components: Object.fromEntries([...document.querySelectorAll('[data-action="component"]')].map(el => [el.dataset.id, rect(el)])),
+    componentPoints: api && window.__inspectReady ? Object.fromEntries(api.componentInfo().slice(1).map(g => [g.id, pt(api.componentPoint(g.id))])) : {},
   };
 }
 
@@ -111,11 +113,12 @@ setInterval(() => {
     report("ready", { msFromStart: Math.round(performance.now() - T0), webgl: gl ? gl.getParameter(gl.VERSION) : null, renderer: dbg ? gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL) : null, ...api.renderInfo, handoff: api.handoff, targets: targets() });
   }
   const name = api.state.name;
-  if (name !== lastState) { lastState = name; settledReported = null; }
+  const stateKey = `${name}:${api.state.component ?? ''}`;
+  if (stateKey !== lastState) { lastState = stateKey; settledReported = null; }
   // Once a state has settled (no hood/camera tween), publish where its controls are.
-  if (readyReported && !api.busy && settledReported !== name) {
-    settledReported = name;
-    report("settled", { state: name, hoodAngle: +api.hoodAngle.toFixed(2), view: api.view(), ...api.renderInfo, targets: targets() });
+  if (readyReported && !api.busy && settledReported !== stateKey) {
+    settledReported = stateKey;
+    report("settled", { state: name, component: api.state.component, hoodAngle: +api.hoodAngle.toFixed(2), view: api.view(), ...api.renderInfo, targets: targets() });
   }
 }, 200);
 document.addEventListener("visibilitychange", () => report("visibility", { hidden: document.hidden }));

@@ -11,6 +11,8 @@ import * as H from "./ioniq5-asset/hood.mjs";
 import { buildFrontCompartment, measureHoodSurface } from "./ioniq5-asset/front-compartment.mjs";
 import { buildFrunk } from "./ioniq5-asset/frunk.mjs";
 import { buildServiceComponents, SERVICE_MANUAL } from "./ioniq5-asset/service-components.mjs";
+import { buildInspectionComponents } from "./ioniq5-asset/inspection-components.mjs";
+import { componentDistance } from "./inspection-camera.mjs";
 import { STATES, EVENTS, INSPECTION_AREAS, initialState, transition, hoodTarget, cameraGoal, areaOf, HOOD_OPEN_DEG } from "./inspection-flow.mjs";
 
 const params = new URLSearchParams(location.search);
@@ -59,7 +61,7 @@ const VIEWS = {
 };
 
 // ---------- model state ----------
-const M = { hood: null, group: null, pivot: null, axis: null, hoodMeshes: [], outline: [], bay: new THREE.Group(), cap: null, washerMeshes: [], angle: 0 };
+const M = { hood: null, group: null, pivot: null, axis: null, hoodMeshes: [], outline: [], bay: new THREE.Group(), cap: null, washerMeshes: [], components: new Map(), angle: 0 };
 M.bay.name = "__p3a4_bay"; M.bay.visible = false; scene.add(M.bay);
 
 function hoodTriangles(root) {
@@ -120,7 +122,15 @@ function buildBay(bodyMaterial, closedHood) {
   for (const p of buildServiceComponents(shell).parts) {
     const mesh = meshFrom(p.triangles, new THREE.MeshStandardMaterial({ color: p.id === "washer-fluid-cap" ? 0x247dbc : 0xc8d3d7, roughness: 0.6 }), p.id, { washer: true, meta: p.meta });
     M.washerMeshes.push(mesh);
+    mesh.userData.inspectionTarget = 'washer-fluid-cap';
     if (p.id === "washer-fluid-cap") M.cap = mesh;
+  }
+  M.components.set('washer-fluid-cap', M.washerMeshes);
+  for (const p of buildInspectionComponents(shell).parts) {
+    const target = p.meta.inspectionTarget;
+    const mesh = meshFrom(p.triangles, new THREE.MeshStandardMaterial({ color: p.palettes[0] === 'paint' ? 0xc4bca9 : p.palettes[0] === 'trim' ? 0x30353c : 0x59616b, roughness: 0.78 }), p.id, { inspectionTarget: target, meta: p.meta });
+    if (!M.components.has(target)) M.components.set(target, []);
+    M.components.get(target).push(mesh);
   }
 }
 
@@ -140,7 +150,7 @@ function dispatch(event) {
 
 // Hood and camera are target-driven tweens: a new target restarts from the current pose, so a
 // cancel or a repeated click never jumps, and completion is reported back as a flow event.
-let hoodTween = null, camTween = null;
+let hoodTween = null, camTween = null, selectionView = null;
 function driveHood(target) {
   if (hoodTween?.to === target) return;
   // Already there: settled states need nothing; the opening/closing states still finish through the
@@ -161,27 +171,67 @@ function fitScale() {
   return Math.max(1, 1.25 / ((innerWidth - b.side) / Math.max(1, innerHeight - b.bottom)));
 }
 function driveCamera(name, dur = 1100) {
-  const [target, dir, dist] = VIEWS[name];
-  camTween = { name, fromPos: camera.position.clone(), fromTarget: controls.target.clone(), toTarget: target.clone(), toPos: target.clone().add(new THREE.Vector3(...dir).normalize().multiplyScalar(dist * fitScale())), t0: performance.now(), dur: ms(dur) };
+  log('camera-target', { name, state: state.name });
+  const meshes = M.components.get(name);
+  let target, dir, dist;
+  if (meshes && name !== 'washer-fluid-cap') {
+    const bounds = componentBounds(name), size = bounds.getSize(new THREE.Vector3());
+    target = bounds.getCenter(new THREE.Vector3());
+    dir = [1.2, 2.8, Math.sign(target.z) * 0.55];
+    dist = componentDistance(size.toArray(), camera.fov, innerWidth, innerHeight, panelBox());
+  } else [target, dir, dist] = VIEWS[name];
+  controls.minDistance = meshes ? 0.55 : 1.3;
+  camTween = { name, fromPos: camera.position.clone(), fromTarget: controls.target.clone(), toTarget: target.clone(), toPos: target.clone().add(new THREE.Vector3(...dir).normalize().multiplyScalar(dist * (meshes ? 1 : fitScale()))), t0: performance.now(), dur: ms(dur) };
   controls.enabled = false;
 }
 const ease = (t) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2);
 
 function enter(prev) {
+  clearTimeout(refit);
+  // Flush OrbitControls inertia without changing the current pose before a scripted move.
+  const position = camera.position.clone(), target = controls.target.clone(), damping = controls.enableDamping;
+  controls.enableDamping = false; controls.update();
+  camera.position.copy(position); controls.target.copy(target); controls.update(); controls.enableDamping = damping;
+  if (prev.name === STATES.COMPONENT_SELECTION && [STATES.COMPONENT_PREVIEW, STATES.WASHER_SELECTED].includes(state.name)) {
+    selectionView = { position: camera.position.clone(), target: controls.target.clone(), scroll: $('panel').scrollTop, component: state.component, width: innerWidth, height: innerHeight };
+  }
+  if (selectionView && state.component) selectionView.component = state.component;
   document.body.dataset.state = state.name;
   hovered = false;
   driveHood(hoodTarget(state));
   render();
+  if ([STATES.COMPONENT_PREVIEW, STATES.WASHER_SELECTED].includes(state.name)) {
+    $('panel').scrollTop = 0;
+    const title = $('panel').querySelector('h2');
+    title.tabIndex = -1; title.focus({ preventScroll: true });
+  }
   layout();
-  if (cameraGoal(state) !== cameraGoal(prev) || state.name === STATES.IDLE) driveCamera(cameraGoal(state));
+  if (state.name === STATES.COMPONENT_SELECTION && selectionView) {
+    controls.minDistance = 1.3;
+    const saved = selectionView;
+    log('camera-restore', { position: saved.position.toArray(), width: innerWidth, height: innerHeight, savedWidth: saved.width, savedHeight: saved.height });
+    if (saved.width === innerWidth && saved.height === innerHeight) {
+      camTween = { name: 'bay', fromPos: camera.position.clone(), fromTarget: controls.target.clone(), toPos: saved.position.clone(), toTarget: saved.target.clone(), t0: performance.now(), dur: ms(700) }; controls.enabled = false;
+    } else driveCamera('bay');
+    $('panel').scrollTop = saved.scroll;
+    $('panel').querySelector(`[data-id="${saved.component}"]`)?.focus({ preventScroll: true });
+  } else if (cameraGoal(state) !== cameraGoal(prev) || state.name === STATES.IDLE) driveCamera(cameraGoal(state));
+  if ([STATES.HOOD_CLOSING, STATES.IDLE].includes(state.name)) selectionView = null;
+}
+
+function componentBounds(id) {
+  scene.updateMatrixWorld(true);
+  const b = new THREE.Box3();
+  for (const mesh of M.components.get(id) ?? []) b.expandByObject(mesh);
+  return b;
 }
 
 // ---------- panel ----------
 const crumbs = { IDLE: "", INSPECTION_OVERVIEW: "차량 점검", HOOD_OPENING: "차량 점검 › 보닛", HOOD_CLOSING: "차량 점검", COMPONENT_SELECTION: "차량 점검 › 보닛", WASHER_SELECTED: "차량 점검 › 보닛 › 워셔액", MOBILE_HANDOFF_READY: "차량 점검 › 보닛 › 워셔액" };
-const hints = { INSPECTION_OVERVIEW: "강조된 보닛을 선택하세요", COMPONENT_SELECTION: "워셔액 캡을 선택하세요" };
+const hints = { INSPECTION_OVERVIEW: "강조된 보닛을 선택하세요", COMPONENT_SELECTION: "모델의 부품이나 목록을 선택하세요" };
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
-const item = (x, action) => x.status === "available"
-  ? `<li><button type="button" class="item available" data-action="${action}" data-id="${x.id}">${esc(x.label)}<span class="tag">점검 가능</span></button></li>`
+const item = (x, action) => ['available', 'preview'].includes(x.status)
+  ? `<li><button type="button" class="item available ${x.status === 'preview' ? 'preview' : ''}" aria-pressed="${state.component === x.id}" data-action="${action}" data-id="${x.id}">${esc(x.label)}<span class="tag">${x.status === 'preview' ? '형상 보기' : '점검 가능'}</span></button></li>`
   : `<li><div class="item" aria-disabled="true">${esc(x.label)}<span class="tag">준비 중</span></div></li>`;
 
 function panelHtml() {
@@ -195,10 +245,19 @@ function panelHtml() {
       return `<div class="eyebrow">보닛</div><h2>보닛을 여는 중</h2><p>차량 전방으로 이동합니다.</p><div class="progress"><i id="hoodProgress"></i></div>
         <div class="actions"><button type="button" class="secondary" data-action="back">취소</button></div>`;
     case S.COMPONENT_SELECTION:
-      return `<div class="eyebrow">보닛 · 전방 수납부</div><h2>점검 항목</h2><p>강조된 워셔액 캡을 선택하거나 목록에서 고르세요.</p>
+      return `<div class="eyebrow">보닛 · 전방 수납부</div><h2>점검 항목</h2><p>모델의 부품이나 목록에서 고르세요. 워셔액 외 항목은 추정 형상만 탐색할 수 있습니다.</p>
         <ul class="items">${areaOf(state).components.map((c) => item(c, "component")).join("")}</ul>
-        <p class="note">준비 중 항목은 공식 배치도에서 존재만 확인된 부품으로, 아직 형상과 점검 안내가 없습니다.</p>
+        <p class="note">밝은 베이지색 리저버와 무광 케이스는 추정 부품 모델입니다. 저전도 냉각수는 형상과 안내가 준비 중입니다.</p>
         <div class="actions"><button type="button" class="secondary" data-action="exit">점검 종료</button></div>`;
+    case S.COMPONENT_PREVIEW: {
+      const c = areaOf(state).components.find(c => c.id === state.component);
+      return `<div class="eyebrow">보닛 · 형상 탐색</div><h2>${esc(c.label)}</h2><span class="badge">추정 모델 · 점검 절차 미제공</span>
+        <ul class="accuracy"><li>모델 위치: 추정</li><li>형상 및 치수: 추정</li><li>실제 차량별 배치: 미검증</li><li>점검 및 정비 절차: 아직 제공하지 않음</li></ul>
+        <h3>모델에서의 위치 안내</h3><p>${esc(c.location)}에 배치한 추정 형상입니다. 좌우는 운전자가 전방을 보는 기준입니다.</p>
+        <p>형상과 배치를 살펴보는 화면입니다. 실제 차량의 정확한 위치나 상태를 나타내지 않습니다.</p>
+        <h3>다른 항목 보기</h3><ul class="items">${areaOf(state).components.map(c => item(c, 'component')).join('')}</ul>
+        <div class="actions"><button type="button" class="secondary" data-action="back">점검 목록과 이전 시점으로</button><button type="button" class="secondary" data-action="exit">점검 종료</button></div>`;
+    }
     case S.WASHER_SELECTED:
       return `<div class="eyebrow">보닛 · 워셔액</div><h2>워셔액 점검</h2><span class="badge">위치·형상 추정</span>
         <h3>점검 방법</h3><ol><li>평탄한 곳에 정차하고 차량 전원을 끕니다.</li><li>보닛을 열고 워셔 기호가 표시된 캡을 찾습니다.</li><li>캡을 열어 워셔액 양을 확인합니다.</li><li>부족하면 차량·기후에 맞는 워셔액을 보충하고 캡을 닫습니다.</li></ol>
@@ -222,7 +281,7 @@ function panelHtml() {
 let toastTimer = null;
 function render() {
   $("panel").innerHTML = panelHtml();
-  $("crumb").textContent = crumbs[state.name];
+  $("crumb").textContent = state.name === STATES.COMPONENT_PREVIEW ? `차량 점검 › 보닛 › ${areaOf(state).components.find(c => c.id === state.component).label}` : crumbs[state.name];
   const hint = hints[state.name];
   clearTimeout(toastTimer);
   $("toast").textContent = hint ?? "";
@@ -259,12 +318,16 @@ function hitAt(x, y) {
   if (!hit) return null;
   if (hit.object.userData.isHood) return { kind: "hood" };
   if (hit.object.userData.washer) return { kind: "washer" };
+  if (hit.object.userData.inspectionTarget) return { kind: 'component', id: hit.object.userData.inspectionTarget };
   return { kind: "other" };
 }
 function pickTarget(x, y) {
   const h = hitAt(x, y);
   if (state.name === STATES.INSPECTION_OVERVIEW && h?.kind === "hood") return { type: EVENTS.SELECT_AREA, id: "hood" };
-  if (state.name === STATES.COMPONENT_SELECTION && h?.kind === "washer") return { type: EVENTS.SELECT_COMPONENT, id: "washer-fluid-cap" };
+  if ([STATES.COMPONENT_SELECTION, STATES.COMPONENT_PREVIEW, STATES.WASHER_SELECTED].includes(state.name)) {
+    if (h?.kind === 'washer') return { type: EVENTS.SELECT_COMPONENT, id: 'washer-fluid-cap' };
+    if (h?.kind === 'component') return { type: EVENTS.SELECT_COMPONENT, id: h.id };
+  }
   return null;
 }
 let downAt = null, hovered = false;
@@ -273,6 +336,7 @@ renderer.domElement.addEventListener("pointerup", (e) => {
   if (downAt && Math.hypot(e.clientX - downAt[0], e.clientY - downAt[1]) < 5) { const ev = pickTarget(e.clientX, e.clientY); if (ev) dispatch(ev); }
   downAt = null;
 });
+renderer.domElement.addEventListener('pointercancel', () => { downAt = null; });
 renderer.domElement.addEventListener("pointermove", (e) => {
   if (e.buttons || !M.pivot) return;
   hovered = Boolean(pickTarget(e.clientX, e.clientY));
@@ -287,13 +351,19 @@ function layout() {
   else camera.setViewOffset(w, h, b.side / 2, b.bottom / 2, w, h);
   camera.updateProjectionMatrix();
 }
-let refit = null;
+let refit = null, framedViewport = [innerWidth, innerHeight];
 addEventListener("resize", () => {
   renderer.setSize(innerWidth, innerHeight);
   layout();
-  // Re-frame the current goal once the size settles (rotation, window drag), without fighting a running move.
+  // Retarget from the current pose after a resize, including a move already in progress.
   clearTimeout(refit);
-  refit = setTimeout(() => { if (!camTween) driveCamera(cameraGoal(state), 450); }, 180);
+  refit = setTimeout(() => {
+    // Mobile Chrome can emit transient resize events while capturing beyond the viewport.
+    // Only a persistent size change warrants replacing a saved view or an active camera goal.
+    if (framedViewport[0] === innerWidth && framedViewport[1] === innerHeight) return;
+    framedViewport = [innerWidth, innerHeight];
+    driveCamera(cameraGoal(state), 450);
+  }, 180);
 });
 
 // ---------- highlight and label ----------
@@ -312,7 +382,12 @@ function paintHighlight(now) {
   for (const m of M.hoodMeshes) { m.material.emissive.setHex(hoodOn ? ACCENT : 0); m.material.emissiveIntensity = hoodOn ? 0.12 + 0.18 * pulse + (hovered ? 0.2 : 0) : 0; }
   for (const l of M.outline) l.visible = hoodOn;
   const capOn = [STATES.COMPONENT_SELECTION, STATES.WASHER_SELECTED, STATES.MOBILE_HANDOFF_READY].includes(state.name);
-  if (M.cap) { M.cap.material.emissive.setHex(capOn ? ACCENT : 0); M.cap.material.emissiveIntensity = !capOn ? 0 : state.name === STATES.COMPONENT_SELECTION ? 0.25 + 0.45 * pulse + (hovered ? 0.3 : 0) : 0.6; }
+  for (const [id, meshes] of M.components) for (const m of meshes) {
+    const selected = state.component === id;
+    const washerHint = id === 'washer-fluid-cap' && capOn && m === M.cap;
+    m.material.emissive.setHex(selected || washerHint ? ACCENT : 0);
+    m.material.emissiveIntensity = selected ? 0.6 : washerHint ? 0.25 + 0.45 * pulse : 0;
+  }
   const label = $("capLabel");
   if (capOn && M.cap && M.bay.visible) {
     const p = screenPoint(M.cap);
@@ -427,6 +502,9 @@ window.__inspect = {
   hoodPoint: () => screenPoint(M.hoodMeshes[0], false),
   capPoint: () => screenPoint(M.cap),
   hitAt,
+  componentPoint: (id) => { const v = componentBounds(id).getCenter(new THREE.Vector3()).project(camera); return { x: (v.x+1)*innerWidth/2, y: (1-v.y)*innerHeight/2, inFront: v.z<1 }; },
+  componentInfo: () => [...M.components].map(([id, meshes]) => ({ id, meshes: meshes.map(m => ({ id: m.name, target: m.userData.inspectionTarget, highlighted: m.material.emissiveIntensity > 0, meta: m.userData.meta })), bounds: { min: componentBounds(id).min.toArray(), max: componentBounds(id).max.toArray() } })),
+  cameraPose: () => ({ position: camera.position.toArray(), target: controls.target.toArray() }),
   zoom,
   view: () => ({ azimuthDeg: +THREE.MathUtils.radToDeg(controls.getAzimuthalAngle()).toFixed(1), polarDeg: +THREE.MathUtils.radToDeg(controls.getPolarAngle()).toFixed(1), distance: +camera.position.distanceTo(controls.target).toFixed(3) }),
   dispose,
