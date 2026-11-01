@@ -110,15 +110,35 @@ AR-02의 차량 앱 동기화·점검 이력에서 다시 쓸 수 있도록 화�
 
 증거(캡처·결과 JSON)는 `C:\CarScope-External\qr-ar-01\ar-01\run5`–`run8`, `unsure-run1`–`unsure-run2`, 정적 빌드는 `...\ar-01\staging-build`, `staging-build-2`에 있다. 저장소에는 넣지 않았다.
 
+### 4.1 보호된 Preview 배포 결과 (2026-11-01)
+
+| 항목 | 결과 |
+| --- | --- |
+| Vercel 팀 / 프로젝트 | `ppsssj-projects` / `carscope-qr-ar-staging` (`prj_INDdBXXPy5QFnKbQR92akFYglofT`). 기존 프로젝트에 연결했고 새 프로젝트는 만들지 않음 |
+| 프로젝트 설정(실제 값) | Root Directory **`.`**(`tools/mobile-ar-poc`가 아님), Framework Other, Build `npm run build:staging`, Output `build/staging`, Install `npm ci --ignore-scripts`, Node 22.x. 그래서 `tools/mobile-ar-poc` 내용을 업로드 루트로 배포함 |
+| 배포 방식 | Vercel CLI 65.9.0, 계정 소유자 브라우저 로그인. `git archive <commit> tools/mobile-ar-poc`로 만든 저장소 밖 폴더에서 `vercel deploy --target=preview --scope ppsssj-projects`(`--prod` 없음). 업로드는 `package*.json`, `vercel.json`, `public/`, `staging/`로 제한. `vercel link`가 만든 `.env.local`(OIDC 토큰)은 업로드 전에 삭제 |
+| **Preview** | `dpl_BUGv5qyS8G6QvaLynpzfErdGoxhG` · https://carscope-qr-ar-staging-qbd4pucq0-ppsssj-projects.vercel.app · target preview · **READY** |
+| 배포된 Git SHA | `afa92fe59f3aaf6f0970cd508c6081b971c88fac`(PR #26). 서버의 `/build-info.json` revision과 일치. 제공되는 페이지·모듈·아이콘 10개 파일이 이 커밋과 **바이트 동일** |
+| HTTPS·보안 헤더 | 200, HSTS, CSP(`default-src 'none'` …), `Permissions-Policy: camera=(self), microphone=()`, `no-store`, `nosniff`, `no-referrer`, `noindex` |
+| 인증 보호 | 로그인하지 않은 요청은 `/`, `/app.mjs`, `/handoff.json`, `/qr.svg`, `/favicon.svg` 모두 Vercel SSO로 302. 보호 설정은 변경하지 않음 |
+| QR 실제 디코딩 | 서버의 `/qr.svg`를 렌더링해 jsQR로 디코드 → `https://carscope-qr-ar-staging-qbd4pucq0-ppsssj-projects.vercel.app/#v=1&task=washer-fluid`. **Preview 자신의 주소**이며 운영 주소가 아님. `/handoff.json`도 같은 값 |
+| 브라우저 확인 | Preview에서 받은 파일을 `vercel.json` 헤더(CSP 적용)로 로컬 제공하고 합성 카메라로 진행: 시작 → 위치 찾기 → 확인할 수 없음 → 완료, `UNSURE`·`USER_REPORTED`·`NOT_SENT`. **콘솔 오류 0, HTTP 오류 0**. Preview 출처를 헤드리스 브라우저로 직접 열려면 SSO 세션이나 보호 우회 비밀값이 필요한데, 보호 설정 변경이 금지라 직접 열지는 않음 |
+| Production 영향 | 없음. 배포 전후 모두 `dpl_B2WgK4MVekTj6m1pSPt7Szd4pW7R`(Ready), 별칭 `carscope-qr-ar-staging.vercel.app`, `carscope-qr-ar-staging-ppsssj-projects.vercel.app` 그대로. 운영 QR·Android QR 자산도 변경 없음 |
+
+진행 중 발견해 고친 것:
+- 첫 Preview(`dpl_H6L4JctwCCzawiEEFuAbJCFP3Yji`, 커밋 `c720076`)에서 브라우저가 자동으로 요청하는 `/favicon.ico`가 404였다. 흐름 중 유일한 콘솔 오류였다.
+- 같은 출처 SVG 아이콘을 추가하고(`afa92fe`) 다시 배포했다. 첫 Preview는 삭제하지 않았으며 위 배포로 대체됐다.
+- 이후 이 문서를 고친 커밋은 제공 파일에 영향이 없다(정적 출력에 `.md` 미포함).
+
 ### 미검증 (실제 기기)
 
 | 항목 | 상태 |
 | --- | --- |
-| 실제 스마트폰에서 AR-01 흐름 전체 | **NOT_RUN** |
+| 실제 스마트폰에서 AR-01 흐름 전체 | **NOT_RUN** — 이 PC에 연결된 실제 휴대폰 없음(ADB에는 Pleos 에뮬레이터만). 위 Preview URL로 사용자 검증 필요 |
 | 실제 후면 카메라에서 탭 위치 정합, 회전·앱 전환 후 동작 | NOT_RUN |
 | 실제 권한 거부 UI, iPhone Safari | NOT_RUN |
 | 워셔액 주입구 의미 인식 정확도 | UNVERIFIED (PoC와 같음) |
-| 보호된 Preview 배포 | **BLOCKED** — 이 작업 환경에 Vercel CLI·인증·연결 도구가 없음(아래 §5 절차). 기존 스테이징은 변경하지 않음 |
+| 보호된 Preview 배포 | **READY** (2026-11-01, 아래 §4.1) |
 
 QR-AR PoC 단계의 실기기 기록(Galaxy Z Flip8 / Android Chrome, 사용자 보고 13개 항목)은 [HTTPS_STAGING.md](HTTPS_STAGING.md)에 있다. 이는 **이전 화면**에 대한 결과이며 AR-01 화면의 결과가 아니다.
 
@@ -126,7 +146,7 @@ QR-AR PoC 단계의 실기기 기록(Galaxy Z Flip8 / Android Chrome, 사용자 
 
 ### 보호된 Preview 준비 (기존 스테이징에 영향 없음)
 
-현재 상태는 **BLOCKED**다. 이 작업 환경에는 Vercel CLI, 저장된 로그인, 토큰, 연결 도구가 없다. 로그인에는 브라우저 상호작용이 필요하다. 아래는 계정 소유자가 실행할 절차이며, 운영 별칭과 다른 서비스는 바꾸지 않는다.
+2026-11-01 이 절차로 배포했다(§4.1). 아래는 다시 배포할 때의 절차이며, 운영 별칭과 다른 서비스는 바꾸지 않는다. 실제 프로젝트의 Root Directory는 `.`이므로 `tools/mobile-ar-poc` 안에서 배포한다.
 
 | 항목 | 내용 |
 | --- | --- |
@@ -152,7 +172,8 @@ npx vercel@latest deploy --target preview
 
 | # | 동작 | PASS 조건 |
 | --- | --- | --- |
-| 1 | PC 화면 QR 스캔 | `…/#v=1&task=washer-fluid`로 열리고 "QR 작업 수신: 워셔액 점검" 표시 |
+| 0 | 휴대폰 브라우저로 Preview URL을 열고 Vercel 계정으로 로그인 | 로그인 후 시작 화면 표시. 로그인 전에는 Vercel 인증 화면 |
+| 1 | PC 화면 QR 스캔 | `…/#v=1&task=washer-fluid`로 열리고 "QR 작업 수신: 워셔액 점검" 표시. Preview QR은 Preview 자신의 주소 |
 | 2 | 카메라로 점검 시작 | 권한 요청(마이크 요청 없음) 후 **후면** 영상과 2단계 칩 표시 |
 | 3 | 주입구 부근을 비추고 탭 | 탭한 자리에 링·화살표·라벨. 다시 탭하면 이동, 해제하면 사라짐 |
 | 4 | 휴대폰을 움직임 | 표시가 화면에 남아 실제 위치와 어긋남을 확인(정상 동작). 안내 문구 확인 |
