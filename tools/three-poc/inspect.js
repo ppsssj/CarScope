@@ -385,6 +385,38 @@ new GLTFLoader().load(params.get("model") ?? "./external/ioniq5.glb", (gltf) => 
   log("load-error", { message: String(err?.message ?? err) });
 });
 
+/** Dolly toward/away from the orbit target (for hosts without wheel or pinch input, e.g. the Android AVD). */
+function zoom(factor) {
+  if (camTween) return null;
+  const offset = camera.position.clone().sub(controls.target);
+  offset.setLength(THREE.MathUtils.clamp(offset.length() * factor, controls.minDistance, controls.maxDistance));
+  camera.position.copy(controls.target).add(offset);
+  controls.update();
+  log("zoom", { factor, distance: +offset.length().toFixed(3) });
+  return offset.length();
+}
+
+let disposed = false;
+/** Release GPU resources. Hosts that tear the page down quickly (the Pleos home) call this before closing. */
+function dispose(reason) {
+  if (disposed) return null;
+  disposed = true;
+  renderer.setAnimationLoop(null);
+  controls.dispose();
+  const before = { ...renderer.info.memory }, seen = new Set();
+  let geometries = 0, materials = 0;
+  scene.traverse((o) => {
+    if (o.geometry) { o.geometry.dispose(); geometries++; }
+    for (const m of [].concat(o.material ?? [])) if (!seen.has(m)) { seen.add(m); m.dispose(); materials++; }
+  });
+  scene.environment?.dispose();
+  renderer.dispose();
+  renderer.forceContextLoss();
+  const out = { reason, geometries, materials, before, after: { ...renderer.info.memory } };
+  log("disposed", out);
+  return out;
+}
+
 // Test and developer hooks (no vehicle control here: a visual flow only).
 window.__inspect = {
   get state() { return state; },
@@ -395,4 +427,8 @@ window.__inspect = {
   hoodPoint: () => screenPoint(M.hoodMeshes[0], false),
   capPoint: () => screenPoint(M.cap),
   hitAt,
+  zoom,
+  view: () => ({ azimuthDeg: +THREE.MathUtils.radToDeg(controls.getAzimuthalAngle()).toFixed(1), polarDeg: +THREE.MathUtils.radToDeg(controls.getPolarAngle()).toFixed(1), distance: +camera.position.distanceTo(controls.target).toFixed(3) }),
+  dispose,
+  get renderInfo() { return { calls: renderer.info.render.calls, triangles: renderer.info.render.triangles, geometries: renderer.info.memory.geometries }; },
 };
