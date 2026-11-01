@@ -1,0 +1,24 @@
+name: Tire runtime harness CI
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  offline-guards:
+    name: Tire runtime guards (no emulator)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '22.16.0'
+      - name: Offline exact-target, health and evidence tests
+        run: |
+          python3 -B -m unittest discover -s tools/tire-probe/runtime -p 'test_*.py' -v
+          node --test tools/tire-probe/runtime/*.test.mjs
+          node --check tools/tire-probe/runtime/webview.mjs
