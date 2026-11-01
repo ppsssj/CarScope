@@ -24,5 +24,10 @@
             android:name=".lab.Ioniq5LabActivity"
             android:exported="true"
             android:label="CarScope IONIQ 5 WebGL lab" />
+        <!-- P3-A5.2: the P3-A4 inspection flow in a debug WebView; same hosting and model file as the lab. -->
+        <activity
+            android:name=".lab.InspectionActivity"
+            android:exported="true"
+            android:label="CarScope inspection (debug)" />
     </application>
 </manifest>
