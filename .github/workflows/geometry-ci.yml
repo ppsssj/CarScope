@@ -1,3 +1,4 @@
+
 name: Geometry CI
 
 on:
@@ -24,18 +25,22 @@ jobs:
       GRADLE_OPTS: -Dorg.gradle.workers.max=1 -Dorg.gradle.daemon=false
       ANDROID_HOME: ""
       ANDROID_SDK_ROOT: ""
+
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
           node-version: '22.16.0'
+
       - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
         with:
           distribution: temurin
           java-version: '17'
           overwrite-settings: false
+
       - name: Install exact Anatomy commit (no revision bypass)
         shell: bash
         run: |
@@ -47,26 +52,38 @@ jobs:
           git -C "$ANATOMY_HOME" checkout --detach FETCH_HEAD
           test "$(git -C "$ANATOMY_HOME" rev-parse HEAD)" = "$ANATOMY_SHA"
           test -z "$(git -C "$ANATOMY_HOME" status --porcelain)"
+
       - name: Install locked validator
         run: npm ci --ignore-scripts --prefix tools/anatomy-car
+
       - name: Generate SVG and run Anatomy audit
         run: |
           npm run build --prefix tools/anatomy-car
           git diff --exit-code -- vehicle-core/src/main/resources/io/carscope/visualization/anatomy-car.parts
+
       - name: Export GLB and geometry reports
         run: npm run export --prefix tools/anatomy-car
+
       - name: Generate and verify Envelope SUV independently of the original Sedan
         run: npm run envelope --prefix tools/anatomy-car
+
       - name: Unit and regression tests (including nonzero CLI failure cases)
         run: npm test --prefix tools/anatomy-car
+
       - name: IONIQ 5 external-asset tooling (synthetic fixtures only; no third-party geometry in CI)
         run: node --test tools/ioniq5-asset/test/*.test.mjs
+
       - name: Inspection flow, tire picking and debug module packaging
         run: |
           npm ci --ignore-scripts --prefix tools/three-poc
           node --test tools/three-poc/test/*.test.mjs
           node --test tools/three-poc/test-integration/*.test.mjs
+
+      - name: AR-02A inspection sync PoC (local server, tokens, state machine, client, synthetic E2E; no dependencies)
+        run: node --test tools/inspection-sync-poc/test/*.test.mjs
+
       - name: Verify GLB and sampled door collisions
         run: npm run verify --prefix tools/anatomy-car
+
       - name: Kotlin SVG state, ID, inset, accent and bounds contracts
         run: ./gradlew -PcoreOnly=true :vehicle-core:test --rerun-tasks --console=plain
