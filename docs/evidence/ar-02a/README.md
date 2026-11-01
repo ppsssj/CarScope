@@ -6,17 +6,17 @@ All results below are **SYNTHETIC / LOCAL**. Every component (server, receiver, 
 machine over loopback HTTP. **No two-device or real-vehicle verification has been done.** There was no phone, no
 vehicle, no hosted server, and no TLS certificate. No result here is a real-device result.
 
-Screenshots and transcripts are stored outside the repository, in `C:\CarScope-External\ar-02a\run-01..03\`. They
+Screenshots and transcripts are stored outside the repository, in `C:\CarScope-External\ar-02a\run-01..04\`. They
 contain no tokens: the invite is redacted in transcripts, and the screenshot shows no token because the page strips it
 before rendering.
 
 ## Commands
 
 ```
-node --test tools/inspection-sync-poc/test/*.test.mjs           # 39/39 pass (also runs in Geometry CI)
-SYNC_EVIDENCE_DIR=C:\CarScope-External\ar-02a\run-03 node tools/inspection-sync-poc/test/browser.mjs   # 10/10 checks
+node --test tools/inspection-sync-poc/test/*.test.mjs           # 48/48 pass (39 original + 8 race + 1 claim-loss E2E; also in Geometry CI)
+SYNC_EVIDENCE_DIR=C:\CarScope-External\ar-02a\run-04 node tools/inspection-sync-poc/test/browser.mjs   # 11/11 checks
 cd tools/mobile-ar-poc && npm run check && npm test             # AR-01: check OK, 31/31 pass
-POC_EVIDENCE_DIR=C:\CarScope-External\qr-ar-01\ar-02a-regression npm run test:browser   # AR-01 browser: PASS
+POC_EVIDENCE_DIR=C:\CarScope-External\qr-ar-01\ar-02a-regression-2 npm run test:browser   # AR-01 browser: PASS
 ```
 
 ## Required tests → where they are covered
@@ -56,6 +56,49 @@ Additional checks:
 - The debug page has a strict CSP and an allow-listed file set.
 - No token, session id, or inspection id appears in server logs.
 
+## Concurrency follow-up (review of e95e644)
+
+The review of `e95e644` raised three issues:
+
+- expiry could overwrite terminal states;
+- the count-then-insert capacity check could race;
+- a lost claim response needed a recovery path.
+
+Each was reproduced **before** fixing it. `test/race.test.mjs` was run against an unmodified `git archive e95e644`
+copy:
+
+| test | e95e644 | fixed |
+|---|---|---|
+| [1] expiry vs accept (accept read before the deadline, written after; sweep in between) | FAIL: `ACCEPTED -> EXPIRED`, accept had been reported | PASS |
+| [2] expiry vs cancel | FAIL: `CANCELLED -> EXPIRED` | PASS |
+| [3] stale expiry job (sweep snapshot before the accept, two instances with clock skew) | FAIL: `ACCEPTED -> EXPIRED`, accepted result wiped | PASS: ACCEPTED, result kept until `purgeResultAt` |
+| [4] stale expiry job vs CANCELLED | FAIL: `CANCELLED -> EXPIRED` | PASS |
+| [5] stale lazy expiry from a late reader | FAIL: `ACCEPTED -> EXPIRED` | PASS: the reader sees ACCEPTED |
+| [6] sweep ×2 + accept or cancel + duplicate submit + status, 300 seeded iterations across the expiry boundary | FAIL: 34 invariant violations (terminal overwritten; reported outcome ≠ final state) | PASS: 0 |
+| [7] 25 concurrent creates, `maxSessions` = 3 | FAIL: 25 created, 25 stored | PASS: 3 created, 22 `CAPACITY` |
+| [8] 20 × 30 concurrent creates with random store latency, `maxSessions` = 5 | FAIL | PASS: always 5 |
+
+Fixes:
+
+- Every write now re-checks its precondition and the clock inside one atomic store operation (`#transition()`).
+- Expiry is a conditional write that never touches terminal or not-yet-overdue sessions.
+- The purge and the tombstone delete are conditional.
+- `insert(session, { maxSessions })` checks capacity and inserts atomically.
+- The store contract and the guarantees a durable store must provide are documented in `src/session-store.mjs` and in
+  architecture §4.1 and §5.
+
+**Claim response lost** (`e2e` and browser):
+
+1. The server marks the invite CLAIMED, but the response is dropped (fetch wrapper in e2e; Playwright
+   `route.fetch()` then `route.abort()` in the browser).
+2. The phone is not paired and shows `FAILED_NETWORK` with retry allowed.
+3. The retry gets `ALREADY_CLAIMED`, shown as `REJECTED_CLOSED` with new-QR guidance. Further claims are disabled.
+4. Nothing can be sent.
+5. The vehicle cancels; the old invite then resolves to nothing, and the lost submit token gets 409.
+6. A new QR pairs and sends normally.
+
+No token is re-issued or re-sent. The screenshot is `run-04\04-claim-lost.png`.
+
 ## Synthetic local E2E
 
 `test/e2e.test.mjs` (in CI):
@@ -74,7 +117,8 @@ Additional checks:
 
 The decline path is also covered: cancel leads to the result being deleted and the phone seeing CANCELLED.
 
-**Browser** (`test/browser.mjs`, headless Edge, 390×844): 10 checks.
+**Browser** (`test/browser.mjs`, headless Edge, 390×844): 11 checks. They are the ten below plus the claim-loss
+check described above.
 
 - The invite is stripped from the address bar.
 - Send is disabled before pairing and before completion.

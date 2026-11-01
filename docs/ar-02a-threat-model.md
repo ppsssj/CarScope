@@ -34,6 +34,9 @@ Trust boundaries:
 | T13 | Network eavesdropping | The server refuses a non-loopback bind without TLS; HSTS is sent over TLS | server bind test |
 | T14 | Script injection on the debug page | Strict CSP (`default-src 'none'`, `script-src 'self'`); results are rendered with `textContent` only; the page is off unless `SYNC_DEBUG_PAGE=1` | server debug CSP, browser no-errors |
 | T15 | Rogue session creation, e.g. a fake "vehicle" | **Partially mitigated.** Only loopback callers may create. This is a stand-in, not vehicle authentication. | server loopback test |
+| T16 | A late or stale expiry overwriting a decision: ACCEPTED or CANCELLED turned into EXPIRED, an accepted result wiped early, or the caller told "accepted" while the stored state is EXPIRED | Expiry is a conditional write: it does nothing on terminal or not-yet-overdue sessions. Every transition checks the deadline at write time inside the atomic update. Purge and tombstone delete re-check their own conditions. | race [1]–[6] (forced interleavings, two-instance clock skew, 300-iteration fuzz) |
+| T17 | Concurrent creates overshooting the session cap (memory exhaustion) | Capacity check and insert form one atomic store operation (`insert(session, { maxSessions })`) | race [7][8] |
+| T18 | Lost claim response, and the temptation to "fix" it by re-sending the submit token, which would let a replayed invite obtain a valid token | No re-issue and no re-send. The retry gets `ALREADY_CLAIMED`. Recovery is an explicit cancel plus a new QR on the vehicle; cancel makes both the old invite and the lost submit token useless. | e2e "claim response lost", browser claim-loss check |
 
 ## Residual risks and explicit limits
 
@@ -45,6 +48,10 @@ Trust boundaries:
   on both screens is a candidate for AR-02B.
 - **Single process, memory only.** Rate limits and the session cap do not hold across instances. This must not be
   deployed to serverless or multi-instance hosting.
+- **Atomicity is proven for the memory store only.** A durable store must supply the transaction and conditional-write
+  guarantees listed in `src/session-store.mjs`. The race tests should be run against it before AR-02B uses it.
+- **A lost claim response costs the user a new QR.** This is deliberate, and safer than any form of token re-delivery.
+  A stuck `CLAIMED` session ends at the latest with the 30-min session expiry.
 - **No hosted TLS in this PR.** TLS support exists (`SYNC_TLS_CERT` / `SYNC_TLS_KEY`) but was not exercised with a
   real certificate. All tests ran over loopback HTTP.
 - **Receiver token at rest.** The simulator keeps it in memory only. The future Android receiver must not persist it in

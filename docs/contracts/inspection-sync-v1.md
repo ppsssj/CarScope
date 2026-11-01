@@ -143,5 +143,9 @@ CREATED --claim--> CLAIMED --submit--> RESULT_SUBMITTED --accept(digest)--> ACCE
 ```
 
 - `ACCEPTED`, `CANCELLED`, and `EXPIRED` are terminal.
-- Every transition is checked on the server, inside one atomic store update.
+- Every transition is checked on the server, inside one atomic store update. The deadline is evaluated at write time:
+  a request read before the deadline but written after it fails `SESSION_EXPIRED` and leaves the session EXPIRED.
+- Terminal states are never replaced, including by a late or stale expiry.
+- A lost `POST /v1/claim` response does not reopen the invite. The retry gets `ALREADY_CLAIMED`, and recovery is a new
+  session and QR from the vehicle (architecture §4.2).
 - Clients cannot set a state.

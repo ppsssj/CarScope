@@ -66,3 +66,42 @@ test('E2E: receiver declines -> cancel, result deleted, phone sees CANCELLED', a
     assert.equal((await phone.status()).sessionState, 'CANCELLED');
   } finally { await s.stop(); }
 });
+
+test('E2E: claim response lost -> invite stays used, no token re-issued; recovery is a new QR from the vehicle', async () => {
+  const s = await startSyncServer({ port: 0, log: () => {} });
+  try {
+    const receiver = new ReceiverClient({ baseUrl: s.url });
+    const first = await receiver.create();
+    const invite = first.fragment.split('invite=')[1];
+    // The request reaches the server (CREATED -> CLAIMED), the response is lost on the way back.
+    let lostBody = null;
+    const lossy = async (url, init) => { const res = await fetch(url, init); lostBody = await res.text(); throw new TypeError('network connection lost'); };
+    const phone = new SyncClient({ baseUrl: s.url, fetchImpl: lossy });
+    const c1 = await phone.claim(invite);
+    assert.deepEqual([c1.ok, c1.outcome], [false, TRANSPORT.FAILED_NETWORK]);
+    assert.equal(phone.paired, false, 'the phone holds no submit token');
+    assert.match(lostBody, /submitToken/, 'the server did issue one; it was lost in transit');
+    assert.equal((await receiver.view()).sessionState, 'CLAIMED');
+
+    // Retrying the same invite does not re-issue or re-expose anything.
+    const retry = new SyncClient({ baseUrl: s.url });
+    const c2 = await retry.claim(invite);
+    assert.deepEqual([c2.ok, c2.outcome, c2.code], [false, TRANSPORT.REJECTED_CLOSED, 'ALREADY_CLAIMED']);
+    assert.equal(retry.paired, false);
+    assert.equal((await retry.send(completeInspection(startInspection(), 'OK'))).transport, TRANSPORT.REJECTED_UNAUTHORIZED, 'nothing can be sent');
+
+    // Explicit recovery: the vehicle cancels the stuck session and shows a new QR.
+    await receiver.cancel();
+    const lostSubmitToken = JSON.parse(lostBody).submitToken;
+    const stale = await fetch(`${s.url}/v1/submissions`, { method: 'POST', headers: { Authorization: `Bearer ${lostSubmitToken}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ protocol: 'inspection-sync', protocolVersion: 1, result: completeInspection(startInspection(), 'OK') }) });
+    assert.equal(stale.status, 409, 'a lost submit token (if it ever leaked) is dead once the session is cancelled');
+    assert.equal((await new SyncClient({ baseUrl: s.url }).claim(invite)).outcome, TRANSPORT.REJECTED_UNAUTHORIZED, 'the old invite no longer resolves');
+
+    const second = new ReceiverClient({ baseUrl: s.url });
+    const fresh = await second.create();
+    const phone2 = new SyncClient({ baseUrl: s.url });
+    assert.equal((await phone2.claim(fresh.fragment.split('invite=')[1])).ok, true);
+    assert.equal((await phone2.send(completeInspection(startInspection(), 'OK'))).transport, TRANSPORT.SENT);
+  } finally { await s.stop(); }
+});

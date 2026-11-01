@@ -66,8 +66,14 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   console.log(`세션 생성 · 초대 만료 ${new Date(s.inviteExpiresAt).toLocaleTimeString('ko-KR')} · 세션 만료 ${new Date(s.expiresAt).toLocaleTimeString('ko-KR')}`);
   console.log('QR 내용(한 번만 표시, 공유하지 마세요):');
   console.log(args['mobile-base'] ? new URL(s.fragment, args['mobile-base']).href : s.fragment);
-  const v = await receiver.waitForResult({ timeoutMs: Number(args.wait ?? 600) * 1000 });
-  if (v.sessionState !== 'RESULT_SUBMITTED') { console.log(`세션 종료: ${v.sessionState}`); process.exit(1); }
+  let v;
+  try { v = await receiver.waitForResult({ timeoutMs: Number(args.wait ?? 600) * 1000 }); } catch (e) {
+    // No result in time (e.g. the phone never got its claim response). Close this session; recovery is a new QR.
+    await receiver.cancel().catch(() => {});
+    console.log(`결과를 받지 못했습니다 (${e.message}). 세션을 취소했습니다. 휴대폰 연결이 끊겼다면 다시 실행해 새 QR을 발급하세요.`);
+    process.exit(1);
+  }
+  if (v.sessionState !== 'RESULT_SUBMITTED') { console.log(`세션 종료: ${v.sessionState}. 새 QR이 필요하면 다시 실행하세요.`); process.exit(1); }
   console.log(describeReceived(v));
   let ok = Boolean(args['auto-accept']);
   if (!ok) { const rl = createInterface({ input: process.stdin, output: process.stdout }); ok = /^y(es)?$/i.test((await rl.question('이 결과를 수락할까요? (y/N) ')).trim()); rl.close(); }

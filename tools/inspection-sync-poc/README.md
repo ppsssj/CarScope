@@ -20,7 +20,7 @@ For details, see [docs/ar-02a-sync-architecture.md](../../docs/ar-02a-sync-archi
 ## Run
 
 ```
-npm test                                   # unit, HTTP and synthetic E2E (39 tests)
+npm test                                   # unit, HTTP, race and synthetic E2E (48 tests)
 npm run check                              # syntax check
 SYNC_DEBUG_PAGE=1 npm run serve            # http://127.0.0.1:4180, debug phone page at /debug#v=2&task=…&invite=…
 npm run receiver -- --mobile-base=http://127.0.0.1:4180/debug

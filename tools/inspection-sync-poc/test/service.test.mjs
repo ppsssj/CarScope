@@ -183,5 +183,5 @@ test('the service works against any store implementing the interface', async () 
   const svc = new SessionService({ store: traced });
   const p = await paired(svc);
   await svc.submit(p.submitToken, env(done()));
-  for (const m of ['insert', 'get', 'idByTokenHash', 'update', 'count']) assert.ok(calls.includes(m), m);
+  for (const m of ['insert', 'get', 'idByTokenHash', 'update']) assert.ok(calls.includes(m), m);
 });

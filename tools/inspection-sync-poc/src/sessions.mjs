@@ -8,6 +8,11 @@
 // one-time `invite` from the QR and exchanges it for a `submit` token (submit + read its own status, never the result
 // view). Only SHA-256 hashes of tokens are stored. One session carries at most one result; a different result is a
 // conflict, the identical one is an idempotent duplicate.
+//
+// Concurrency rule: a read only locates a session. Every write (transition, expiry, purge, tombstone delete, capacity
+// check) re-evaluates its precondition AND the clock inside one atomic store operation, so a decision taken on an
+// earlier read (another request, a sweep snapshot, a late timer) can never overwrite a newer state. Terminal states
+// (ACCEPTED, CANCELLED, EXPIRED) are final: nothing replaces them.
 import { createHash, randomBytes, randomUUID } from 'node:crypto';
 import { ERRORS, PROTOCOL, PROTOCOL_VERSION, SUPPORTED_TASKS, TOKEN_BYTES, checkEnvelope, isToken, resultDigest } from './protocol.mjs';
 
@@ -28,6 +33,11 @@ export class SyncError extends Error {
 const fail = (code, status) => { throw new SyncError(code, status); };
 const failClosed = (state) => (state === STATES.EXPIRED ? fail(ERRORS.SESSION_EXPIRED, 410) : fail(ERRORS.SESSION_CLOSED, 409));
 
+/** Overdue = not yet terminal and past the session deadline (or, while unclaimed, past the invite deadline). */
+const isOverdue = (x, t) => !TERMINAL.has(x.state) && (t > x.expiresAt || (x.state === STATES.CREATED && t > x.inviteExpiresAt));
+/** EXPIRED drops the result at once; the digest stays so a late accept is answered SESSION_EXPIRED, not CONFLICT. */
+const expiredCopy = (x, t) => ({ ...x, state: STATES.EXPIRED, endedAt: t, result: null });
+
 export const newToken = () => randomBytes(TOKEN_BYTES).toString('base64url');
 export const hashToken = (token) => createHash('sha256').update(token, 'utf8').digest('hex');
 
@@ -36,18 +46,11 @@ export class SessionService {
     this.store = store; this.now = now; this.limits = { ...DEFAULT_LIMITS, ...limits }; this.newId = newId; this.token = token;
   }
 
-  // Every transition re-checks its precondition inside store.update() (atomic per session) and throws there to abort,
-  // so two concurrent requests can never both pass a check made on an earlier read.
-
   // ---------- vehicle receiver ----------
 
   /** New pairing session. Returns both tokens exactly once; only their hashes are kept. */
   async create({ taskId }) {
     if (!SUPPORTED_TASKS.includes(taskId)) fail(ERRORS.BAD_REQUEST, 400);
-    if (await this.store.count() >= this.limits.maxSessions) {
-      await this.sweep();
-      if (await this.store.count() >= this.limits.maxSessions) fail(ERRORS.CAPACITY, 503);
-    }
     const t = this.now(), receiver = this.token(), invite = this.token();
     const session = {
       id: this.newId(), taskId, state: STATES.CREATED, createdAt: t,
@@ -55,7 +58,12 @@ export class SessionService {
       receiverHash: hashToken(receiver), inviteHash: hashToken(invite), submitHash: null,
       result: null, resultDigest: null, inspectionId: null, receivedAt: null, acceptedAt: null, endedAt: null, purgeResultAt: null,
     };
-    await this.store.insert(session);
+    // Capacity check and insert are one atomic store operation (no count-then-insert gap).
+    const cap = { maxSessions: this.limits.maxSessions };
+    if (!(await this.store.insert(session, cap))) {
+      await this.sweep();
+      if (!(await this.store.insert(session, cap))) fail(ERRORS.CAPACITY, 503);
+    }
     return { sessionId: session.id, taskId, receiverToken: receiver, inviteToken: invite, inviteExpiresAt: session.inviteExpiresAt, expiresAt: session.expiresAt };
   }
 
@@ -71,8 +79,7 @@ export class SessionService {
   /** Explicit acceptance of the exact result the receiver saw (by digest). */
   async accept(sessionId, receiverToken, digest) {
     const s = await this.#receiverSession(sessionId, receiverToken);
-    const t = this.now();
-    await this.#update(s.id, (x) => {
+    await this.#transition(s.id, (x, t) => {
       if (x.state === STATES.ACCEPTED && x.resultDigest === digest) return x; // idempotent repeat
       if (TERMINAL.has(x.state)) failClosed(x.state);
       if (x.state !== STATES.RESULT_SUBMITTED) fail(ERRORS.INVALID_STATE, 409);
@@ -82,11 +89,10 @@ export class SessionService {
     return this.view(sessionId, receiverToken);
   }
 
-  /** Receiver ends the session; any submitted result is deleted at once. */
+  /** Receiver ends the session; any submitted result is deleted at once and the invite stops resolving. */
   async cancel(sessionId, receiverToken) {
     const s = await this.#receiverSession(sessionId, receiverToken);
-    const t = this.now();
-    await this.#update(s.id, (x) => {
+    await this.#transition(s.id, (x, t) => {
       if (x.state === STATES.CANCELLED) return x;
       if (TERMINAL.has(x.state)) failClosed(x.state);
       return { ...x, state: STATES.CANCELLED, endedAt: t, result: null, resultDigest: null, inviteHash: null };
@@ -96,15 +102,18 @@ export class SessionService {
 
   // ---------- phone ----------
 
-  /** One-time: the invite from the QR becomes a submit token. A second claim of the same invite is refused. */
+  /**
+   * One-time: the invite from the QR becomes a submit token. A second claim of the same invite is refused, also when
+   * the first claim's response was lost: the submit token is never re-issued or re-sent. Recovery is a new session
+   * (new QR) from the vehicle side; see docs/ar-02a-sync-architecture.md.
+   */
   async claim(inviteToken) {
     const s = await this.#byToken('invite', inviteToken);
-    const submit = this.token(), t = this.now();
+    const submit = this.token();
     // The invite hash stays indexed so a replay answers ALREADY_CLAIMED instead of NOT_FOUND.
-    await this.#update(s.id, (x) => {
+    await this.#transition(s.id, (x) => {
       if (TERMINAL.has(x.state)) failClosed(x.state);
       if (x.state !== STATES.CREATED) fail(ERRORS.ALREADY_CLAIMED, 409);
-      if (t > x.inviteExpiresAt) fail(ERRORS.SESSION_EXPIRED, 410); // marked EXPIRED by the next read or sweep
       return { ...x, state: STATES.CLAIMED, submitHash: hashToken(submit) };
     });
     return { submitToken: submit, taskId: s.taskId, sessionState: STATES.CLAIMED, expiresAt: s.expiresAt };
@@ -117,9 +126,8 @@ export class SessionService {
     const problems = checkEnvelope(envelope, s.taskId);
     if (problems.length) fail(problems.some((p) => p.includes('task mismatch')) ? ERRORS.TASK_MISMATCH : ERRORS.INVALID_RESULT, 422);
     const digest = await resultDigest(envelope.result);
-    const t = this.now();
     let duplicate = false;
-    const next = await this.#update(s.id, (x) => {
+    const next = await this.#transition(s.id, (x, t) => {
       if (TERMINAL.has(x.state)) failClosed(x.state);
       if (x.state === STATES.RESULT_SUBMITTED) {
         if (digest !== x.resultDigest) fail(ERRORS.CONFLICT, 409); // never overwrite a submitted result
@@ -140,23 +148,63 @@ export class SessionService {
 
   // ---------- housekeeping ----------
 
-  /** Expire overdue sessions, purge results past retention, drop old tombstones. Returns counts. */
+  /**
+   * Expire overdue sessions, purge results past retention, drop old tombstones. The snapshot from all() only nominates
+   * candidates; each action re-checks its condition inside its own atomic write, so a stale snapshot is harmless.
+   */
   async sweep() {
-    const t = this.now(), out = { expired: 0, purged: 0, deleted: 0 };
-    for (const s of await this.store.all()) {
-      if (!TERMINAL.has(s.state) && (t > s.expiresAt || (s.state === STATES.CREATED && t > s.inviteExpiresAt))) { await this.#expire(s.id); out.expired++; continue; }
-      if (s.result && s.purgeResultAt && t > s.purgeResultAt) { await this.store.update(s.id, (x) => ({ ...x, result: null })); out.purged++; }
-      if (TERMINAL.has(s.state) && s.endedAt && t > s.endedAt + this.limits.tombstoneMs) { await this.store.delete(s.id); out.deleted++; }
+    const out = { expired: 0, purged: 0, deleted: 0 };
+    for (const snap of await this.store.all()) {
+      if (isOverdue(snap, this.now())) {
+        if ((await this.#expire(snap.id)).changed) out.expired++;
+        continue;
+      }
+      if (snap.result && snap.purgeResultAt) {
+        let purged = false;
+        await this.store.update(snap.id, (x) => {
+          if (!(x.result && x.purgeResultAt && this.now() > x.purgeResultAt)) return x;
+          purged = true;
+          return { ...x, result: null };
+        });
+        if (purged) out.purged++;
+      }
+      if (TERMINAL.has(snap.state) && snap.endedAt) {
+        const gone = await this.store.delete(snap.id, (x) => TERMINAL.has(x.state) && x.endedAt && this.now() > x.endedAt + this.limits.tombstoneMs);
+        if (gone) out.deleted++;
+      }
     }
     return out;
   }
 
   // ---------- internals ----------
 
-  async #update(id, mutate) {
-    const next = await this.store.update(id, mutate);
+  /**
+   * Atomic transition: inside the store write, first the deadline is checked against the clock *now*; an overdue session
+   * is written as EXPIRED and the request fails SESSION_EXPIRED. Otherwise apply(x, t) validates and returns the next
+   * state, or throws to abort without writing.
+   */
+  async #transition(id, apply) {
+    let expiredNow = false;
+    const next = await this.store.update(id, (x) => {
+      const t = this.now();
+      if (isOverdue(x, t)) { expiredNow = true; return expiredCopy(x, t); }
+      return apply(x, t);
+    });
     if (!next) fail(ERRORS.NOT_FOUND, 404); // deleted by a sweep in between
+    if (expiredNow) fail(ERRORS.SESSION_EXPIRED, 410);
     return next;
+  }
+
+  /** Conditional expiry: a no-op unless the session is still non-terminal and overdue at write time. */
+  async #expire(id) {
+    let changed = false;
+    const next = await this.store.update(id, (x) => {
+      const t = this.now();
+      if (!isOverdue(x, t)) return x;
+      changed = true;
+      return expiredCopy(x, t);
+    });
+    return { next, changed };
   }
 
   async #byToken(kind, token) {
@@ -176,15 +224,12 @@ export class SessionService {
     return this.#lazyExpire(s);
   }
 
+  /** Reads report EXPIRED as soon as the deadline passed; the write itself is conditional (see #expire). */
   async #lazyExpire(s) {
-    if (!TERMINAL.has(s.state) && this.now() > s.expiresAt) return this.#expire(s.id);
-    if (s.state === STATES.CREATED && this.now() > s.inviteExpiresAt) return this.#expire(s.id);
-    return s;
-  }
-
-  async #expire(id) {
-    const t = this.now();
-    return this.store.update(id, (x) => ({ ...x, state: STATES.EXPIRED, endedAt: t, result: null, resultDigest: x.resultDigest }));
+    if (!isOverdue(s, this.now())) return s;
+    const { next } = await this.#expire(s.id);
+    if (!next) fail(ERRORS.NOT_FOUND, 404);
+    return next;
   }
 
   #receipt(s) {

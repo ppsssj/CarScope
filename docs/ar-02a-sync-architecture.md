@@ -104,6 +104,47 @@ What AR-02A is **not**:
 | 2xx without a matching receipt | – | treated as a failure, never SENT |
 | Submit after ACCEPTED or CANCELLED | 409 `SESSION_CLOSED` | `REJECTED_CLOSED` |
 | Submit after expiry | 410 `SESSION_EXPIRED` | `REJECTED_EXPIRED` |
+| Claim response lost: the server marked the invite used, but the phone never received its submit token | Session stays `CLAIMED`; a retried claim gets 409 `ALREADY_CLAIMED`. The submit token is **never** re-issued or re-sent. | Claim: `FAILED_NETWORK`, then retry gives `REJECTED_CLOSED` and the page tells the user to get a new QR |
+
+### 4.1 Concurrency rules
+
+A read only locates a session. Every write re-evaluates its precondition **and the clock** inside one atomic store
+operation (`#transition()` in `sessions.mjs`). This covers transitions, expiry, result purge, tombstone delete, and
+the capacity check. As a result:
+
+- **Terminal states are final.** ACCEPTED, CANCELLED and EXPIRED are never replaced. An expiry decided earlier by a
+  request, a sweep snapshot, or a delayed timer is conditional: it does nothing unless the session is *still*
+  non-terminal and overdue *at write time*.
+- **The deadline is enforced at write time.** A transition whose read happened before the deadline but whose write
+  lands after it does not commit. The session is written as EXPIRED and the caller gets `SESSION_EXPIRED`. What a
+  caller is told always equals the stored final state; for example, an accept is never reported while the session
+  ends EXPIRED.
+- **Expiry does not conflict with retention.** EXPIRED and CANCELLED drop the result in the same write. ACCEPTED keeps
+  the result until `purgeResultAt`, and a stale expiry can no longer wipe it early. The purge and tombstone delete
+  re-check their own conditions at write time.
+- **Capacity is checked in the insert.** `insert(session, { maxSessions })` checks capacity and inserts in one atomic
+  step, so concurrent creates cannot overshoot `maxSessions`.
+- **Racing writes:** racing claims of one invite produce exactly one submit token. Racing submits of different
+  records store exactly one record.
+
+All of these are reproduced in `test/race.test.mjs` with forced interleavings and a seeded fuzz across the expiry
+boundary. All 8 cases failed before the fix; see the evidence README.
+
+### 4.2 Recovery when the claim response is lost
+
+The invite stays one-time even when its response was lost, because the server cannot tell a lost response from a
+replay by someone else. The procedure is explicit and driven by the user:
+
+1. **Phone.** The first claim shows "연결에 실패했습니다… 다시 시도했을 때 '이미 사용됨'이 나오면 새 QR이 필요합니다", and
+   retry is allowed. If the retry returns `ALREADY_CLAIMED`, the page shows "이 QR은 이미 사용되었거나
+   종료되었습니다. 차량 화면에서 기존 요청을 취소하고 새 QR을 발급받아 다시 스캔하세요" and disables further claims.
+2. **Vehicle.** The receiver sees the session stuck in `CLAIMED` with no result. The user cancels it, which deletes
+   the session data and makes the old invite and the lost submit token useless. Then the receiver creates a new
+   session and shows a new QR. The receiver CLI does this cancel automatically when its wait times out, and prints
+   the guidance to start again.
+3. **Phone.** The user scans the new QR and the normal flow continues.
+
+Nothing in this procedure re-exposes a token or relaxes the one-time rule.
 
 ## 5. Storage and expiry policy
 
@@ -117,8 +158,18 @@ What AR-02A is **not**:
 - **Restart policy:** the memory store does not survive a restart. Every token held before the restart then resolves to
   404, which the phone shows as `REJECTED_UNAUTHORIZED`. The phone is never told SENT for a result the server no
   longer has, and a receiver can never accept stale data.
-- **Store interface:** a durable store must implement `update()` atomically (a transaction or conditional write) and
-  must index only token hashes. `MemorySessionStore` must not back a multi-instance or serverless deployment.
+- **Store interface and guarantees** (the full text is in `src/session-store.mjs`). A durable store must provide all
+  of the following, linearizable per session:
+  - `update(id, mutate)` is atomic. Use a transaction, or compare-and-set on a version column. `mutate` may be
+    re-run on retry, so it must be a pure function of the stored value and the clock.
+  - `insert(session, { maxSessions })` checks capacity and inserts in one transaction, for example with a counter row
+    in the same transaction or with SERIALIZABLE isolation. Session id and every token hash have unique constraints.
+  - `delete(id, predicate)` is a single conditional delete.
+  - Token-hash indexes change in the same transaction as the row.
+  - Only token hashes are indexed.
+
+  `MemorySessionStore` meets these guarantees only inside one process, because no store method awaits. It must not
+  back a multi-instance or serverless deployment.
 
 ## 6. Receiver authentication: scope and limits
 

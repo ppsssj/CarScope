@@ -77,8 +77,32 @@ try {
   assert.equal(await page.isDisabled('#claim'), true);
   pass('reload cannot re-pair (invite no longer in the URL)');
 
-  assert.deepEqual(errors, []);
-  pass('no page or console errors');
+  // Claim response lost: the server marks the invite used, the page never gets the submit token.
+  const lossPage = await browser.newPage({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2 });
+  lossPage.on('pageerror', (e) => errors.push(String(e)));
+  const lossReceiver = new ReceiverClient({ baseUrl: server.url });
+  const ls = await lossReceiver.create();
+  let dropped = 0;
+  await lossPage.route('**/v1/claim', async (route) => {
+    if (dropped++ === 0) { await route.fetch(); await route.abort('failed'); } else await route.continue();
+  });
+  await lossPage.goto(`${server.url}/debug${ls.fragment}`);
+  await lossPage.waitForFunction(() => window.__syncDebug);
+  await lossPage.click('#claim');
+  await lossPage.waitForFunction(() => document.getElementById('claim-status').textContent.includes('FAILED_NETWORK'));
+  assert.equal((await lossReceiver.view()).sessionState, 'CLAIMED', 'server did claim');
+  assert.equal(await lossPage.isDisabled('#claim'), false, 'network failure: retry allowed');
+  await lossPage.click('#claim');
+  await lossPage.waitForFunction(() => document.getElementById('claim-status').textContent.includes('REJECTED_CLOSED'));
+  assert.match(await lossPage.textContent('#claim-status'), /REJECTED_CLOSED.*이미 사용되었거나.*새 QR/);
+  assert.equal(await lossPage.isDisabled('#claim'), true, 'no further retry on the used invite');
+  assert.equal(await lossPage.isDisabled('#send'), true, 'never paired, nothing can be sent');
+  pass('claim response lost: retry gets "already used" + new-QR guidance, invite stays one-time');
+  await lossPage.screenshot({ path: path.join(output, '04-claim-lost.png'), fullPage: true });
+  await lossPage.close();
+
+  assert.deepEqual(errors.filter((e) => !/Failed to load resource: net::ERR_FAILED/.test(e)), []);
+  pass('no page or console errors (except the deliberately dropped claim response)');
   await writeFile(path.join(output, 'summary.json'), JSON.stringify({
     kind: 'SYNTHETIC_LOCAL_BROWSER (headless Edge, loopback server, one machine; not a two-device test)',
     checks, receiverDisplay: shown.split('\n'), submissionRequests: submissions.length,
