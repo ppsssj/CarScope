@@ -2,31 +2,123 @@
 <html lang="ko">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>CarScope · 워셔액 주입구 탐색 PoC</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>CarScope · 워셔액 셀프 점검</title>
   <link rel="stylesheet" href="/style.css">
   <script type="module" src="/app.mjs"></script>
 </head>
-<body>
+<body data-step="intro">
+<header class="bar">
+  <div class="bar-row">
+    <p class="brand">CarScope <span>워셔액 셀프 점검</span></p>
+    <button id="cancel" type="button" class="ghost" hidden>점검 취소</button>
+  </div>
+  <ol id="progress" aria-label="진행 단계">
+    <li data-n="1">시작</li><li data-n="2">위치 찾기</li><li data-n="3">셀프 점검</li><li data-n="4">결과</li>
+  </ol>
+</header>
+
 <main>
-  <header><p>CarScope / QR-AR-01 / 독립 실험</p><h1>워셔액 주입구 탐색</h1></header>
-  <p class="notice"><strong>실물 식별 정확도 미검증</strong> · 파란색 영역만 찾는 실험입니다. 표시된 후보를 워셔액 주입구로 확정하지 마세요. 화면 오버레이는 3D 공간에 고정되지 않습니다.</p>
-  <p id="handoff-status" role="status"></p>
-  <section aria-labelledby="camera-heading">
-    <h2 id="camera-heading">1. 스마트폰 카메라로 후보 찾기</h2>
-    <p>안전하게 주차하고 전원을 끈 뒤, 차량 설명서에 따라 보닛을 여세요. 움직이는 부품이나 뜨거운 부품에 접근하지 마세요.</p>
-    <div class="controls"><button id="start" type="button">카메라 시작</button><button id="stop" type="button" disabled>카메라 중지</button><button id="manual" type="button">수동 안내 보기</button></div>
+  <div id="cancel-confirm" class="card warn" role="alertdialog" aria-labelledby="cancel-title" hidden>
+    <p id="cancel-title"><strong>점검을 취소할까요?</strong> 진행 중인 점검은 결과 없이 종료됩니다.</p>
+    <div class="row"><button id="cancel-no" type="button">계속 점검</button><button id="cancel-yes" type="button" class="danger">점검 취소</button></div>
+  </div>
+  <p id="handoff-status" class="pill" role="status"></p>
+
+  <!-- STEP 1 -->
+  <section id="step-intro" class="step" aria-labelledby="intro-title">
+    <h1 id="intro-title">워셔액 점검</h1>
+    <p>워셔액 주입구 위치를 스마트폰 화면으로 찾고, 워셔액 상태를 <strong>직접 확인</strong>해 결과를 기록합니다. 카메라는 위치를 찾는 보조 수단이며 상태를 판정하지 않습니다.</p>
+    <p class="notice"><strong>실물 식별 정확도 미검증</strong> · 화면의 파란색 후보는 색상만 본 표시이며 워셔액 주입구로 확정하지 않습니다. 위치 표시는 3D 공간에 고정되지 않습니다.</p>
+    <h2>시작 전에</h2>
+    <ul class="tight">
+      <li>안전한 곳에 정차하고 차량 전원을 끈 뒤, 차량 설명서에 따라 보닛을 여세요.</li>
+      <li>움직이는 부품, 뜨거운 부품, 주황색 고전압 케이블에 손대지 마세요.</li>
+      <li>영상은 이 기기 안에서만 처리하며 저장·업로드하지 않습니다.</li>
+    </ul>
+    <button id="manual-start" type="button" class="link-button">카메라 없이 점검하기</button>
+    <details id="pc-qr">
+      <summary>PC 화면에서 스마트폰으로 이어서 보기</summary>
+      <p>스마트폰 기본 카메라로 아래 QR을 스캔하세요. QR은 차량 정보나 실시간 상태를 전달하지 않습니다.</p>
+      <div id="qr"></div><a id="handoff-link" hidden>스마트폰 연결 주소 열기</a><p id="qr-status">QR 설정 확인 중…</p>
+    </details>
+  </section>
+
+  <!-- Camera stage: shared by STEP 2 (locate) and STEP 3 (check) -->
+  <section id="camera" class="step" aria-labelledby="camera-title">
+    <h2 id="camera-title" class="visually-hidden">카메라 안내</h2>
+    <div id="stage">
+      <video id="video" autoplay muted playsinline aria-label="카메라 영상"></video>
+      <canvas id="overlay" aria-label="후보와 내가 지정한 위치 표시"></canvas>
+      <p id="stage-chip" class="chip" aria-hidden="true"></p>
+      <p id="placeholder">카메라가 꺼져 있습니다.</p>
+    </div>
     <p id="status" role="status" aria-live="polite">카메라 대기 · 영상은 기기 안에서만 처리합니다.</p>
-    <div id="stage"><video id="video" autoplay muted playsinline aria-label="카메라 영상"></video><canvas id="overlay" aria-label="미검증 후보 오버레이"></canvas><p id="placeholder">카메라를 시작하면 여기에 영상이 표시됩니다.</p></div>
-    <p>최대 3개 후보 · 파란 캡이 아니거나 빛·가림·배경색이 다르면 놓치거나 잘못 표시할 수 있습니다. 이미지 저장·업로드 기능은 없습니다.</p>
+    <div class="row">
+      <button id="start" type="button">카메라 시작</button>
+      <button id="stop" type="button" disabled>카메라 중지</button>
+      <button id="clear-mark" type="button" disabled>위치 지정 해제</button>
+    </div>
+    <p class="fine">파란 점선 상자는 색상 후보(미검증)입니다. 워셔액 주입구를 찾으면 <strong>화면을 탭해 직접 위치를 지정</strong>하세요. 표시는 화면에 고정된 2D 표시라 휴대폰을 움직이면 실제 위치와 어긋날 수 있습니다.</p>
   </section>
-  <section id="guidance" aria-labelledby="manual-heading" tabindex="-1">
-    <h2 id="manual-heading">2. 찾지 못했거나 확신이 없을 때</h2>
-    <ol><li>차량의 정확한 연식·모델에 맞는 사용설명서에서 “워셔액” 항목과 주입구 위치를 확인하세요. 이 PoC는 차종별 위치를 알지 못합니다.</li><li>캡의 앞유리와 분사 모양 워셔 표시를 직접 확인하세요. 파란색만으로 판단하지 마세요.</li><li>냉각수·브레이크액 등 다른 주입구와 혼동할 수 있습니다. 위치나 표시가 불명확하면 열거나 주입하지 말고 제조사 서비스에 문의하세요.</li></ol>
-    <p>수동 안내는 탐지 성공이나 주입 승인 판정이 아닙니다.</p>
+
+  <!-- STEP 2 -->
+  <section id="step-locate" class="step">
+    <p>주입구 근처를 비추고, 앞유리·분사 모양 표시가 있는 캡을 찾으면 화면을 탭하세요. 찾기 어렵거나 카메라를 쓸 수 없으면 카메라 없이 진행할 수 있습니다.</p>
+    <button id="locate-manual" type="button" class="link-button">카메라 없이 다음 단계로</button>
   </section>
-  <section aria-labelledby="qr-heading"><h2 id="qr-heading">스마트폰으로 이어서 보기</h2><p>PC에서는 아래 QR을 스마트폰 기본 카메라로 스캔하세요. QR은 차량 정보나 실시간 상태를 전달하지 않습니다.</p><div id="qr"></div><a id="handoff-link" hidden>스마트폰 연결 주소 열기</a><p id="qr-status">QR 설정 확인 중…</p></section>
-  <noscript>이 PoC의 카메라와 QR 연결에는 JavaScript가 필요합니다. 위 수동 안내를 이용하세요.</noscript>
+
+  <!-- STEP 3 -->
+  <section id="step-check" class="step" aria-labelledby="check-title">
+    <h2 id="check-title">셀프 점검</h2>
+    <p class="card warn"><strong>위치가 확실하지 않으면 캡을 열지 마세요.</strong> 냉각수·브레이크액 등 다른 액체 주입구와 혼동할 수 있습니다.</p>
+    <fieldset id="checklist"><legend>하나씩 직접 확인하고 표시하세요</legend></fieldset>
+  </section>
+
+  <!-- STEP 4a -->
+  <section id="step-result" class="step" aria-labelledby="result-title">
+    <h2 id="result-title">점검 결과 선택</h2>
+    <p>직접 확인한 상태를 고르세요. 카메라는 워셔액 양을 판정하지 않습니다.</p>
+    <div id="choices" role="radiogroup" aria-labelledby="result-title">
+      <button type="button" role="radio" aria-checked="false" data-status="OK"><strong>정상 확인</strong><span>워셔액이 충분한 것을 직접 확인했습니다.</span></button>
+      <button type="button" role="radio" aria-checked="false" data-status="NEEDS_REFILL"><strong>보충 필요</strong><span>워셔액이 부족해 보충이 필요합니다.</span></button>
+      <button type="button" role="radio" aria-checked="false" data-status="UNSURE"><strong>확인 불가</strong><span>위치나 상태를 확실히 확인하지 못했습니다.</span></button>
+    </div>
+  </section>
+
+  <!-- STEP 4b -->
+  <section id="step-confirm" class="step" aria-labelledby="confirm-title">
+    <h2 id="confirm-title">결과를 확정할까요?</h2>
+    <dl id="confirm-summary" class="summary"></dl>
+    <p class="fine">확정한 뒤에는 이 점검의 결과를 바꿀 수 없습니다. 다른 결과가 필요하면 새 점검을 시작하세요.</p>
+  </section>
+
+  <!-- STEP 4c -->
+  <section id="step-done" class="step" aria-labelledby="done-title">
+    <h2 id="done-title">점검 완료</h2>
+    <dl id="done-summary" class="summary"></dl>
+    <p id="done-follow" class="card"></p>
+    <p class="card muted" id="done-sync">이 결과는 <strong>이 휴대폰 화면에서만 확정</strong>되었습니다. 차량 앱으로 전송되거나 점검 이력에 저장되지 않았습니다.</p>
+    <details><summary>결과 데이터 보기</summary><pre id="result-json"></pre></details>
+  </section>
+
+  <!-- Manual guide: available at every step -->
+  <section id="guidance" class="step card" aria-labelledby="manual-heading" tabindex="-1">
+    <h2 id="manual-heading">수동 점검 안내</h2>
+    <ol>
+      <li>차량의 정확한 연식·모델에 맞는 사용설명서에서 “워셔액” 항목과 주입구 위치를 확인하세요. 이 화면은 차종별 위치를 알지 못합니다.</li>
+      <li>캡의 앞유리와 분사 모양 워셔 표시를 직접 확인하세요. 파란색만으로 판단하지 마세요.</li>
+      <li>냉각수·브레이크액 등 다른 주입구와 혼동할 수 있습니다. 위치나 표시가 불명확하면 열거나 주입하지 말고 제조사 서비스에 문의하세요.</li>
+    </ol>
+    <p class="fine">수동 안내는 탐지 성공이나 주입 승인 판정이 아닙니다.</p>
+  </section>
+  <noscript>이 점검 화면에는 JavaScript가 필요합니다. 위 수동 점검 안내를 이용하세요.</noscript>
 </main>
+
+<footer class="actions">
+  <button id="back" type="button" class="secondary">뒤로</button>
+  <button id="manual" type="button" class="secondary">수동 안내 보기</button>
+  <button id="primary" type="button" class="primary">카메라로 점검 시작</button>
+</footer>
 </body>
 </html>
