@@ -1,3 +1,4 @@
+import { LocalTestSessionCreationAuthorizer } from '../src/creation-authorizer.mjs';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { SyncClient, TRANSPORT, takeInviteFromLocation } from '../public/sync-client.mjs';
@@ -127,7 +128,7 @@ test('the invite fragment is removed from the address bar on read', () => {
 });
 
 test('[15] against the real server: server down -> FAILED_NETWORK, after restart the stale token is rejected, not silently SENT', async () => {
-  const s = await startSyncServer({ port: 0, log: () => {} });
+  const s = await startSyncServer({ authorizer: new LocalTestSessionCreationAuthorizer(), port: 0, log: () => {} });
   const create = await (await fetch(`${s.url}/v1/sessions`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{"taskId":"washer-fluid"}' })).json();
   const c = new SyncClient({ baseUrl: s.url, sleep: noSleep, retries: 1 });
   assert.equal((await c.claim(create.inviteToken)).ok, true);
@@ -135,6 +136,6 @@ test('[15] against the real server: server down -> FAILED_NETWORK, after restart
   await s.stop();
   const r = done();
   assert.equal((await c.send(r)).transport, TRANSPORT.FAILED_NETWORK);
-  const s2 = await startSyncServer({ port: Number(port), log: () => {} });
+  const s2 = await startSyncServer({ authorizer: new LocalTestSessionCreationAuthorizer(), port: Number(port), log: () => {} });
   try { assert.equal((await c.send(r)).transport, TRANSPORT.REJECTED_UNAUTHORIZED); } finally { await s2.stop(); }
 });

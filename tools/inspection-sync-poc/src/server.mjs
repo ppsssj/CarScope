@@ -1,8 +1,8 @@
-// AR-02A local sync server (PoC). Node built-ins only. Binds to loopback by default; a non-loopback bind requires TLS.
-// It is NOT a deployable service: the session store is in memory, session creation is limited to loopback callers
-// (stand-in for real vehicle authentication, AR-02B), and there is no public endpoint.
+// Local sync foundation. Memory by default, optional experimental single-host SQLite; not production-ready.
+// Session creation defaults to denial. Local synthetic tests must explicitly inject a test authorizer.
+// Non-loopback binds require TLS and reject test authorizers/debug pages. No public deployment is configured.
 //
-//   POST /v1/sessions                    create (loopback only)        body { taskId }
+//   POST /v1/sessions                    create (authorizer required)  body { taskId }
 //   GET  /v1/sessions/:id                receiver view                 Authorization: Bearer <receiverToken>
 //   POST /v1/sessions/:id/accept         receiver accepts              Authorization: Bearer <receiverToken>  body { resultDigest }
 //   POST /v1/sessions/:id/cancel         receiver cancels              Authorization: Bearer <receiverToken>
@@ -18,6 +18,7 @@ import { ERRORS } from './protocol.mjs';
 import { SessionService, SyncError } from './sessions.mjs';
 import { MemorySessionStore } from './session-store.mjs';
 import { RateLimiter } from './rate-limit.mjs';
+import { ProductionSessionCreationAuthorizer, LocalTestSessionCreationAuthorizer } from './creation-authorizer.mjs';
 
 export const MAX_BODY_BYTES = 16 * 1024;
 const API_HEADERS = {
@@ -25,7 +26,6 @@ const API_HEADERS = {
   'Referrer-Policy': 'no-referrer', 'Content-Security-Policy': "default-src 'none'; frame-ancestors 'none'",
 };
 const PAGE_CSP = "default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'";
-const LOOPBACK = new Set(['127.0.0.1', '::1', '::ffff:127.0.0.1']);
 
 // Debug page files (served only when debugPage is on). Paths mirror the module layout so relative imports resolve.
 const root = new URL('../', import.meta.url);
@@ -77,7 +77,7 @@ async function readJson(req) {
  * @param {boolean} [o.debugPage]         serve the debug page and its modules
  * @param {boolean} [o.tls]               add HSTS when served over TLS
  */
-export function createSyncHandler({ service, limiter = new RateLimiter(), log = () => {}, allowedOrigin = null, debugPage = false, tls = false }) {
+export function createSyncHandler({ service, limiter = new RateLimiter(), authorizer = new ProductionSessionCreationAuthorizer(), log = () => {}, allowedOrigin = null, debugPage = false, tls = false }) {
   return async (req, res) => {
     const started = Date.now();
     const url = new URL(req.url, 'http://localhost');
@@ -88,6 +88,8 @@ export function createSyncHandler({ service, limiter = new RateLimiter(), log = 
     const send = (code, body) => { status = code; res.writeHead(code, headers); res.end(body === undefined ? undefined : JSON.stringify(body)); };
     try {
       const client = req.socket.remoteAddress ?? 'unknown';
+      const aggregate = await limiter.check(client, 'client');
+      if (!aggregate.ok) { headers['Retry-After'] = String(aggregate.retryAfterS); send(429, { error: { code: ERRORS.RATE_LIMITED } }); return; }
       if (req.method === 'OPTIONS') {
         if (!(allowedOrigin && origin === allowedOrigin)) { routeName = 'OPTIONS (preflight)'; send(403, { error: { code: ERRORS.FORBIDDEN } }); return; }
         Object.assign(headers, { 'Access-Control-Allow-Methods': 'GET, POST', 'Access-Control-Allow-Headers': 'Authorization, Content-Type', 'Access-Control-Max-Age': '600' });
@@ -95,7 +97,7 @@ export function createSyncHandler({ service, limiter = new RateLimiter(), log = 
       }
       if (debugPage && req.method === 'GET' && STATIC.has(url.pathname)) {
         routeName = `GET ${url.pathname}`;
-        const rl = limiter.check(client, 'static');
+        const rl = await limiter.check(client, 'static');
         if (!rl.ok) { headers['Retry-After'] = String(rl.retryAfterS); send(429, { error: { code: ERRORS.RATE_LIMITED } }); return; }
         const [file, type] = STATIC.get(url.pathname);
         const body = await readFile(new URL(file, root));
@@ -113,12 +115,17 @@ export function createSyncHandler({ service, limiter = new RateLimiter(), log = 
       const [, re, cls, name] = route;
       routeName = name;
       if (url.search) throw new SyncError(ERRORS.BAD_REQUEST, 400); // nothing travels in query strings
-      const rl = limiter.check(client, cls);
+      const rl = await limiter.check(client, cls);
       if (!rl.ok) { headers['Retry-After'] = String(rl.retryAfterS); send(429, { error: { code: ERRORS.RATE_LIMITED } }); return; }
+      const token = bearer(req);
+      if (token) {
+        const tokenLimit = await limiter.check(token, 'token');
+        if (!tokenLimit.ok) { headers['Retry-After'] = String(tokenLimit.retryAfterS); send(429, { error: { code: ERRORS.RATE_LIMITED } }); return; }
+      }
       const id = re.exec(url.pathname)[1];
       switch (name) {
         case 'POST /v1/sessions': {
-          if (!LOOPBACK.has(client)) throw new SyncError(ERRORS.FORBIDDEN, 403); // vehicle auth is AR-02B
+          if ((await authorizer.authorize({ token: bearer(req), remoteAddress: client, secure: Boolean(req.socket.encrypted) })) !== true) throw new SyncError(ERRORS.FORBIDDEN, 403);
           const body = await readJson(req);
           send(201, await service.create({ taskId: body.taskId }));
           return;
@@ -146,21 +153,31 @@ export function createSyncHandler({ service, limiter = new RateLimiter(), log = 
 }
 
 /** Start a server; returns { server, service, stop }. */
-export async function startSyncServer({ host = '127.0.0.1', port = 4180, store = new MemorySessionStore(), now, limits, rates, tlsCert, tlsKey, allowedOrigin = null, debugPage = false, log = console.log, sweepMs = 30_000 } = {}) {
+export async function startSyncServer({ host = '127.0.0.1', port = 4180, store = new MemorySessionStore(), now, limits, rates, limiter, authorizer = new ProductionSessionCreationAuthorizer(), tlsCert, tlsKey, allowedOrigin = null, debugPage = false, log = console.log, sweepMs = 30_000 } = {}) {
   const loopbackHost = ['127.0.0.1', '::1', 'localhost'].includes(host);
   if (!loopbackHost && !(tlsCert && tlsKey)) throw new Error('Refusing a non-loopback bind without TLS (set SYNC_TLS_CERT and SYNC_TLS_KEY)');
+  if (Boolean(tlsCert) !== Boolean(tlsKey)) throw new Error('Both TLS certificate and key are required');
+  if (!loopbackHost && (authorizer.testOnly || debugPage)) throw new Error('Test authorizers and debug pages require a loopback bind');
   const service = new SessionService({ store, now, limits });
-  const handler = createSyncHandler({ service, limiter: new RateLimiter({ rates, now }), log, allowedOrigin, debugPage, tls: Boolean(tlsCert) });
+  await service.sweep(); // reconcile overdue/retained rows before accepting any request after restart
+  const handler = createSyncHandler({ service, limiter: limiter ?? new RateLimiter({ rates, now }), authorizer, log, allowedOrigin, debugPage, tls: Boolean(tlsCert) });
   const server = tlsCert ? https.createServer({ cert: await readFile(tlsCert), key: await readFile(tlsKey) }, handler) : http.createServer(handler);
   server.headersTimeout = 10_000; server.requestTimeout = 15_000;
-  await new Promise((resolve) => server.listen(port, host, resolve));
-  const timer = setInterval(() => service.sweep().catch(() => {}), sweepMs); timer.unref();
+  await new Promise((resolve, reject) => { server.once('error', reject); server.listen(port, host, resolve); });
+  const timer = setInterval(() => service.sweep().catch(() => log('housekeeping failed')), sweepMs); timer.unref();
   return { server, service, store, url: `${tlsCert ? 'https' : 'http'}://${host === '::1' ? '[::1]' : host}:${server.address().port}`, stop: () => { clearInterval(timer); return new Promise((r) => server.close(r)); } };
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  const { SYNC_HOST, SYNC_PORT, SYNC_TLS_CERT, SYNC_TLS_KEY, SYNC_ALLOWED_ORIGIN, SYNC_DEBUG_PAGE } = process.env;
+  const { SYNC_HOST, SYNC_PORT, SYNC_TLS_CERT, SYNC_TLS_KEY, SYNC_ALLOWED_ORIGIN, SYNC_DEBUG_PAGE, SYNC_DB_PATH, SYNC_LOCAL_TEST_AUTH } = process.env;
+  let store, limiter;
+  if (SYNC_DB_PATH) {
+    const { SQLiteSessionStore, SQLiteRateLimiter } = await import('./sqlite-store.mjs');
+    store = new SQLiteSessionStore({ filename: SYNC_DB_PATH });
+    limiter = new SQLiteRateLimiter({ store });
+  }
   const s = await startSyncServer({ host: SYNC_HOST || '127.0.0.1', port: Number(SYNC_PORT || 4180), tlsCert: SYNC_TLS_CERT, tlsKey: SYNC_TLS_KEY,
+    store, limiter, authorizer: SYNC_LOCAL_TEST_AUTH === '1' ? new LocalTestSessionCreationAuthorizer() : undefined,
     allowedOrigin: SYNC_ALLOWED_ORIGIN || null, debugPage: SYNC_DEBUG_PAGE === '1' });
-  console.log(`inspection-sync PoC on ${s.url} · store=${s.store.kind} (sessions are lost on restart) · debug page ${SYNC_DEBUG_PAGE === '1' ? 'on at /debug' : 'off'}`);
+  console.log(`inspection-sync PoC on ${s.url} · store=${s.store.kind} · creation=${SYNC_LOCAL_TEST_AUTH === '1' ? 'LOCAL TEST ONLY' : 'DENIED'} · debug page ${SYNC_DEBUG_PAGE === '1' ? 'on at /debug' : 'off'}`);
 }

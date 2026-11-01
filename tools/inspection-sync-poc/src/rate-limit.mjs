@@ -1,5 +1,7 @@
 // Fixed-window request limiter per client key and route class. In-memory, single process (like the session store).
 export const DEFAULT_RATES = Object.freeze({
+  client: { limit: 300, windowMs: 60_000 },
+  token: { limit: 120, windowMs: 60_000 },
   create: { limit: 10, windowMs: 60_000 },
   claim: { limit: 20, windowMs: 60_000 },
   submit: { limit: 30, windowMs: 60_000 },
@@ -19,6 +21,7 @@ export class RateLimiter {
     let w = this.#windows.get(key);
     if (!w || t >= w.start + rate.windowMs) {
       if (this.#windows.size >= this.maxKeys) this.#prune(t);
+      if (this.#windows.size >= this.maxKeys) return { ok: false, retryAfterS: Math.ceil(rate.windowMs / 1000) };
       w = { start: t, count: 0 };
       this.#windows.set(key, w);
     }

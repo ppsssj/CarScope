@@ -1,0 +1,55 @@
+name: Inspection sync infrastructure CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  sync-tests:
+    name: Sync contracts, SQLite and TLS (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: tools/inspection-sync-poc
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '22.16.0'
+      - run: npm run check
+      - run: npm run test:legacy
+      - run: npm test
+      - run: npm run test:sqlite
+      - name: Install existing AR-01 test dependencies
+        run: npm ci --ignore-scripts
+        working-directory: tools/mobile-ar-poc
+      - name: All original AR-01 unit tests with explicit fixture clock
+        run: npm run test:ar01
+      - name: AR-02A Edge browser regression
+        if: runner.os == 'Windows'
+        run: npm run test:browser
+        env:
+          SYNC_EVIDENCE_DIR: C:/CarScope-External/ar-02b1/ci/sync-browser
+      - name: AR-01 Edge browser regression
+        if: runner.os == 'Windows'
+        run: npm run test:browser
+        working-directory: tools/mobile-ar-poc
+        env:
+          POC_EVIDENCE_DIR: C:/CarScope-External/qr-ar-01/ar-02b1-ci

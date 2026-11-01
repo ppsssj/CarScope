@@ -1,3 +1,4 @@
+import { LocalTestSessionCreationAuthorizer } from '../src/creation-authorizer.mjs';
 // AR-02A browser check of the debug page (synthetic, headless Edge, one machine). Not a real-device verification.
 // Requires tools/mobile-ar-poc dependencies (npm ci there). Evidence (screenshots, summary) goes to
 // SYNC_EVIDENCE_DIR, which must be outside the repository, e.g. C:\CarScope-External\ar-02a\<run>.
@@ -15,7 +16,7 @@ const output = process.env.SYNC_EVIDENCE_DIR;
 if (!output || !path.resolve(output).toLowerCase().startsWith('c:\\carscope-external\\')) throw new Error('Set SYNC_EVIDENCE_DIR to a run directory under C:\\CarScope-External\\ar-02a\\');
 await mkdir(output, { recursive: true });
 
-const server = await startSyncServer({ port: 0, debugPage: true, log: () => {} });
+const server = await startSyncServer({ authorizer: new LocalTestSessionCreationAuthorizer(), port: 0, debugPage: true, log: () => {} });
 const browser = await chromium.launch({ channel: 'msedge', headless: true });
 const checks = [];
 const pass = (name) => { checks.push(name); console.log(`ok - ${name}`); };

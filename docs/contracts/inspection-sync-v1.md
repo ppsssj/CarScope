@@ -1,6 +1,9 @@
 # Contract: inspection-sync v1 (AR-02A)
 
 Status: **PoC contract**, implemented in `tools/inspection-sync-poc/` and run only on a local machine. No public endpoint exists.
+AR-02B-1 keeps this payload/state contract but replaces the historical loopback create stand-in with an injected
+creation authorizer that **denies by default**, including loopback. Only explicit local test configuration enables
+the historical stand-in; real vehicle authentication remains blocked. See [authentication design](../ar-02b1-authentication-design.md).
 The AR-01 result record (schema v1, `tools/mobile-ar-poc/public/inspection-result.mjs`) is reused **unchanged**; this
 contract only wraps and transports it.
 

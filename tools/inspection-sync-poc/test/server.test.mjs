@@ -1,3 +1,4 @@
+import { LocalTestSessionCreationAuthorizer } from '../src/creation-authorizer.mjs';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { startSyncServer, createSyncHandler, MAX_BODY_BYTES } from '../src/server.mjs';
@@ -12,7 +13,7 @@ const env = (result) => ({ protocol: PROTOCOL, protocolVersion: PROTOCOL_VERSION
 
 async function withServer(opts, fn) {
   const lines = [];
-  const s = await startSyncServer({ port: 0, log: (l) => lines.push(l), ...opts });
+  const s = await startSyncServer({ authorizer: new LocalTestSessionCreationAuthorizer(), port: 0, log: (l) => lines.push(l), ...opts });
   const call = async (method, path, { token, body, raw, headers = {} } = {}) => {
     const res = await fetch(s.url + path, {
       method,
@@ -100,14 +101,14 @@ test('[17] oversize payload -> 413, request floods -> 429 with Retry-After', () 
 }));
 
 test('session creation is loopback-only (vehicle auth stand-in); non-loopback bind needs TLS', async () => {
-  const handler = createSyncHandler({ service: new SessionService({ store: new MemorySessionStore() }) });
+  const handler = createSyncHandler({ authorizer: new LocalTestSessionCreationAuthorizer(), service: new SessionService({ store: new MemorySessionStore() }) });
   const fakeReq = (remoteAddress) => Object.assign((async function* () { yield Buffer.from(JSON.stringify({ taskId: 'washer-fluid' })); })(), {
     method: 'POST', url: '/v1/sessions', headers: { 'content-type': 'application/json' }, socket: { remoteAddress },
   });
   const run = (addr) => new Promise((resolve) => { handler(fakeReq(addr), { writeHead: (code) => resolve(code), end() {} }); });
   assert.equal(await run('192.168.0.23'), 403);
   assert.equal(await run('127.0.0.1'), 201);
-  await assert.rejects(startSyncServer({ host: '0.0.0.0', port: 0, log: () => {} }), /without TLS/);
+  await assert.rejects(startSyncServer({ authorizer: new LocalTestSessionCreationAuthorizer(), host: '0.0.0.0', port: 0, log: () => {} }), /without TLS/);
 });
 
 test('CORS only for one exact opt-in origin', () => withServer({ allowedOrigin: 'https://phone.example' }, async ({ call }) => {

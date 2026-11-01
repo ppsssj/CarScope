@@ -3,7 +3,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { SessionService, STATES } from '../src/sessions.mjs';
-import { MemorySessionStore } from '../src/session-store.mjs';
+import { testStore } from './store-fixture.mjs';
 import { PROTOCOL, PROTOCOL_VERSION, resultDigest } from '../src/protocol.mjs';
 import { startInspection, completeInspection } from '../../mobile-ar-poc/public/inspection-result.mjs';
 
@@ -16,7 +16,7 @@ const METHODS = ['insert', 'get', 'idByTokenHash', 'update', 'delete', 'all', 'c
  * Store wrapper: hold(method, {after}) pauses the next call of that method before (or after) it runs; every update is
  * also checked for the invariant "a terminal state is never replaced by another state".
  */
-function controlledStore({ inner = new MemorySessionStore(), yields = null } = {}) {
+function controlledStore({ inner = testStore(), yields = null } = {}) {
   const gates = [], violations = [];
   const store = { kind: inner.kind };
   for (const m of METHODS) {
