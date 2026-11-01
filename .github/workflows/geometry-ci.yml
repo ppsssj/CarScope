@@ -63,6 +63,8 @@ jobs:
         run: node --test tools/ioniq5-asset/test/*.test.mjs
       - name: P3-A4 inspection flow state machine and QR handoff contract
         run: node --test tools/three-poc/test/*.test.mjs
+      - name: AR-02A inspection sync PoC (local server, tokens, state machine, client, synthetic E2E; no dependencies)
+        run: node --test tools/inspection-sync-poc/test/*.test.mjs
       - name: Verify GLB and sampled door collisions
         run: npm run verify --prefix tools/anatomy-car
       - name: Kotlin SVG state, ID, inset, accent and bounds contracts

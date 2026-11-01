@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <title>CarScope · 점검 결과 동기화 (디버그)</title>
+  <link rel="icon" href="/public/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/public/debug.css">
+  <script type="module" src="/public/debug.mjs"></script>
+</head>
+<body>
+<main>
+  <p class="tag">AR-02A 디버그 화면 · 로컬 동기화 서버 전용 · 운영 점검 화면 아님</p>
+  <h1>워셔액 점검 결과 전송</h1>
+  <p id="pairing" role="status">QR v2 초대 확인 중…</p>
+  <section>
+    <h2>1. 페어링</h2>
+    <button id="claim" type="button" disabled>차량과 페어링</button>
+    <p id="claim-status" role="status"></p>
+  </section>
+  <section>
+    <h2>2. 점검 결과 (AR-01 모듈로 생성)</h2>
+    <div class="row" role="radiogroup" aria-label="결과">
+      <label><input type="radio" name="status" value="OK" checked> 정상 확인</label>
+      <label><input type="radio" name="status" value="NEEDS_REFILL"> 보충 필요</label>
+      <label><input type="radio" name="status" value="UNSURE"> 확인 불가</label>
+    </div>
+    <button id="complete" type="button">점검 완료로 확정</button>
+    <pre id="record"></pre>
+  </section>
+  <section>
+    <h2>3. 전송</h2>
+    <button id="send" type="button" disabled>결과 전송</button>
+    <p>전송 상태: <strong id="transport">NOT_SENT</strong></p>
+    <p id="send-detail" role="status"></p>
+    <button id="status" type="button" disabled>차량 수락 여부 확인</button>
+    <p id="session-state" role="status"></p>
+  </section>
+</main>
+</body>
+</html>
