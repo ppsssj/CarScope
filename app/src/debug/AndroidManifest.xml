@@ -3,7 +3,11 @@
      test AVD; none of these activities has a launcher entry or exists in release builds. -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.car.permission.CAR_INFO" />
+    <!-- P3-V1 read-only Tire probe only; these permissions never enter the release manifest. -->
+    <uses-permission android:name="pleos.car.permission.CAR_SAFETY" />
+    <uses-permission android:name="pleos.car.permission.PRIVATE_CAR_SAFETY" />
     <application>
+        <activity android:name=".tire.TireProbeActivity" android:exported="true" android:label="CarScope Tire API probe (debug)" />
         <uses-library android:name="android.car" android:required="false" />
         <activity
             android:name=".identity.VehicleIdentityActivity"
