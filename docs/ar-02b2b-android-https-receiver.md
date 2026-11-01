@@ -41,7 +41,7 @@ Activity는 앱 private files의 `sync-endpoint.json`만 읽는다. 정확한 �
 | Gson | 2.15.0 / debugImplementation | Apache-2.0, Strictness.STRICT streaming reader로 직접 allow-list 검증. reflection 모델 변환/타입 강제 변환을 사용하지 않음 |
 | Robolectric | 4.16 / testDebugImplementation | MIT, JDK17/현재 AGP에서 실행 검증. 테스트 전용이며 Runtime APK에 포함되지 않음 |
 
-공식 근거: [ZXing releases](https://github.com/zxing/zxing/releases), [ZXing license](https://github.com/zxing/zxing/blob/master/LICENSE), [Gson](https://github.com/google/gson), [Gson strict parsing](https://github.com/google/gson/blob/main/Troubleshooting.md), [Gson license](https://github.com/google/gson/blob/main/LICENSE), [Robolectric compatibility](https://robolectric.org/compatibility/), [Robolectric license](https://github.com/robolectric/robolectric/blob/master/LICENSE). 버전 고정과 테스트는 향후 취약점 모니터링을 대체하지 않는다. HTTP 라이브러리는 추가하지 않았다.
+공식 근거: [ZXing releases](https://github.com/zxing/zxing/releases), [ZXing license](https://github.com/zxing/zxing/blob/master/LICENSE), [Gson](https://github.com/google/gson), [Gson strict parsing](https://github.com/google/gson/blob/main/Troubleshooting.md), [Gson license](https://github.com/google/gson/blob/main/LICENSE), [Robolectric compatibility](https://robolectric.org/compatibility_table/), [Robolectric license](https://github.com/robolectric/robolectric/blob/master/LICENSE). 버전 고정과 테스트는 향후 취약점 모니터링을 대체하지 않는다. HTTP 라이브러리는 추가하지 않았다.
 
 `check-boundary.py`는 merged manifest, Debug/Release APK와 Release AAB DEX를 검사한다. receiver/decoder/transport/QRWriter는 Debug에만, INTERNET도 Debug에만 존재한다. 양 variant cleartext=false를 유지한다. 테스트 fixture/provider는 모든 APK/AAB에서 제외된다. 기존 SDK의 Release transitive Gson 존재 여부를 이 검사로 부정하지 않는다.
 
