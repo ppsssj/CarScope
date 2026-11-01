@@ -94,7 +94,7 @@ open class SyncReceiverActivity : Activity() {
             check = connectionTransport.checkConnection { reply ->
                 probe.isEnabled = true
                 connection.text = if (reply is SyncReply.Success) "HTTPS 응답 확인 · 서버 인증서 검증 성공 · 차량 인증과는 별개입니다."
-                    else "서비스 연결 실패 · 인증서/네트워크/설정을 확인하세요."
+                    else "서비스 연결 실패 · ${failureMessage((reply as SyncReply.Failure).reason)}"
             }
         }
         create.setOnClickListener { controller.create(endpoint.mobileRoot) }
@@ -111,7 +111,9 @@ open class SyncReceiverActivity : Activity() {
     private fun render(state: SyncReceiverState) {
         if (stopped) return
         status.text = when (state.phase) {
-            ReceiverPhase.WAITING -> "WAITING · 스마트폰 사용자 점검 대기"
+            ReceiverPhase.WAITING -> if (state.qr == null && state.inviteExpiresAt?.let { now() > it } == true)
+                "WAITING · QR 초대 만료 · 새 스캔 불가. 이미 연결된 점검은 계속 기다립니다. 새 QR이 필요하면 취소 후 다시 요청하세요."
+                else "WAITING · 스마트폰 사용자 점검 대기"
             ReceiverPhase.RESULT_SUBMITTED -> "RESULT_SUBMITTED · 서버 수신 확인 · 사용자 수락 전"
             ReceiverPhase.ACCEPTED -> "ACCEPTED · 사용자 보고 결과 수락 완료"
             ReceiverPhase.CANCELLED -> "CANCELLED · 서버 취소 확인"
@@ -119,7 +121,7 @@ open class SyncReceiverActivity : Activity() {
             ReceiverPhase.FAILED -> "FAILED · 연결 또는 응답을 확인할 수 없습니다."
             ReceiverPhase.CLOSED -> "CLOSED · 이 화면의 연결을 종료했습니다. 원격 취소를 확인한 것은 아닙니다."
             else -> state.phase.name
-        } + if (state.failure != null) "\n요청 실패: ${state.failure.name} · 취소/수락 성공이 아닙니다." else ""
+        } + if (state.failure != null) "\n요청 실패: ${failureMessage(state.failure)} · 취소/수락 성공이 아닙니다." else ""
         summary.text = state.result?.let { result ->
             val label = when (result.status) { ReportedStatus.OK -> "정상으로 보고"; ReportedStatus.NEEDS_REFILL -> "보충 필요"; ReportedStatus.UNSURE -> "확인 불가" }
             "워셔액 셀프 점검\n사용자 보고 결과: $label\n완료 시각: ${result.completedAt}\nSELF · USER_REPORTED\n실제 차량 센서 진단이 아닙니다."
@@ -136,6 +138,12 @@ open class SyncReceiverActivity : Activity() {
         accept.isEnabled = state.canAccept; cancel.isEnabled = state.canCancel; retry.isEnabled = state.retryAvailable && !state.busy
     }
     private fun clearQr() { image.setImageDrawable(null); image.visibility = View.GONE; qrBitmap?.recycle(); qrBitmap = null; shownQr = null }
+    private fun failureMessage(failure: SyncFailure): String = when (failure) {
+        SyncFailure.NETWORK -> "NETWORK · 네트워크 또는 인증서 연결을 확인하세요."
+        SyncFailure.TIMEOUT -> "TIMEOUT · 응답 시간이 초과됐습니다. 처리 성공을 확인하지 못했습니다."
+        SyncFailure.INVALID -> "INVALID · 서버 응답 또는 Digest 검증에 실패했습니다. 수락할 수 없습니다."
+        else -> failure.name
+    }
     override fun onStop() {
         stopped = true; generation++; handler.removeCallbacksAndMessages(null); check?.cancel(); check = null
         owner?.close(); owner = null; transport?.close(); transport = null; clearQr()
