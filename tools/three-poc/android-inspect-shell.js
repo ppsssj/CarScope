@@ -5,6 +5,8 @@
 //  - zoom buttons (no wheel/pinch on the AVD);
 //  - JSON event lines `CARSCOPE_INSPECT {...}` for logcat: flow transitions, on-screen targets for automation,
 //    frame statistics per state, blocked external links, errors.
+import { enableTireStatus } from './tire-status.mjs';
+enableTireStatus();
 const I = () => window.__inspect;
 const T0 = performance.now();
 const report = (event, data = {}) => console.log(`CARSCOPE_INSPECT ${JSON.stringify({ event, t: Math.round(performance.now() - T0), ...data })}`);

@@ -38,10 +38,18 @@ const ROOTS = [
 // P3-A4: the inspection UI's mobile handoff. The origin is configuration, never a constant in the page.
 const handoff = handoffTarget(process.env.CARSCOPE_QR_AR_BASE_URL);
 const handoffQr = handoff.configured ? await QRCode.toString(handoff.url, { type: "svg", margin: 2, errorCorrectionLevel: "M" }) : null;
+// Explicit local synthetic UI test only. No native endpoint fallback and no bundled fixture.
+const tireFixture = process.env.CARSCOPE_TIRE_UI_FIXTURE ? resolve(process.env.CARSCOPE_TIRE_UI_FIXTURE) : null;
 const TYPES ={ ".html": "text/html", ".js": "text/javascript", ".mjs": "text/javascript", ".glb": "model/gltf-binary", ".json": "application/json", ".svg": "image/svg+xml" };
 const port = Number(process.env.PORT ?? 8095);
 createServer(async (req, res) => {
   const url = decodeURIComponent(new URL(req.url, "http://x").pathname);
+  if (url === '/tire-status.json' && tireFixture && req.method === 'GET') {
+    try {
+      const body = await readFile(tireFixture);
+      res.writeHead(200, { 'content-type': 'application/json', 'cache-control': 'no-store' }); return res.end(body);
+    } catch { res.writeHead(503); return res.end('Unavailable'); }
+  }
   if (url === "/inspection-handoff.json") {
     res.writeHead(200, { "content-type": "application/json", "cache-control": "no-store" });
     return res.end(JSON.stringify({ configured: handoff.configured, url: handoff.url, reason: handoff.reason }));
