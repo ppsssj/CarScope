@@ -49,6 +49,7 @@ button:disabled { opacity: .45; cursor: default; }
 .ghost { min-height: 40px; padding: 6px 12px; border-color: var(--line); color: var(--danger); }
 .danger { background: var(--danger); border-color: var(--danger); color: #fff; }
 .link-button { border: none; background: none; color: var(--brand); text-decoration: underline; padding: 8px 0; }
+.unsure { display: block; width: 100%; margin: 10px 0; border: 2px dashed #8796a7; background: var(--card); color: var(--ink); font-weight: 600; }
 
 /* Steps */
 .step { display: none; }

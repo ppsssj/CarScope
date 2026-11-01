@@ -1,0 +1,4 @@
+# Vercel CLI project link (created by `vercel link` for a Preview deploy): never commit.
+.vercel/
+# Local static staging output.
+build/

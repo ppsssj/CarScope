@@ -153,3 +153,45 @@ test('the QR v1 contract is unchanged and carries no vehicle or session identifi
     assert.equal(parseHandoff(hash).valid, false, hash);
   }
 });
+
+test('"확인할 수 없음" from locate or check confirms UNSURE without ticking anything', () => {
+  // From the camera step, nothing checked at all.
+  const fromLocate = run([{ type: 'START', camera: true }, { type: 'CANNOT_CONFIRM' }]);
+  assert.equal(fromLocate.step, 'confirm');
+  assert.equal(fromLocate.choice, 'UNSURE');
+  assert.deepEqual(Object.values(fromLocate.checks), [false, false, false], 'no item is ticked on the user\'s behalf');
+  // From the checklist with only one item really checked: that one stays, the others stay unchecked.
+  const fromCheck = run([{ type: 'START', camera: false }, { type: 'TOGGLE', id: 'parked', value: true }, { type: 'CANNOT_CONFIRM' }]);
+  assert.equal(fromCheck.step, 'confirm');
+  assert.deepEqual(fromCheck.checks, { parked: true, located: false, observed: false });
+  const done = reduce(fromCheck, { type: 'CONFIRM' }, ctx);
+  assert.equal(done.step, 'done');
+  assert.equal(done.record.status, 'UNSURE');
+  assert.equal(done.record.confirmation, 'USER_REPORTED');
+  assert.deepEqual(validateResult(done.record), [], 'same schema v1 record, no extra field');
+  assert.ok(!('checks' in done.record) && !('unsureFrom' in done.record));
+});
+
+test('back from an UNSURE confirm returns to where it came from and clears the choice', () => {
+  const locate = run([{ type: 'START', camera: true }, { type: 'CANNOT_CONFIRM' }, { type: 'BACK' }]);
+  assert.equal(locate.step, 'locate'); assert.equal(locate.choice, null); assert.equal(locate.unsureFrom, null);
+  const check = run([{ type: 'START', camera: false }, { type: 'CANNOT_CONFIRM' }, { type: 'BACK' }]);
+  assert.equal(check.step, 'check'); assert.equal(check.choice, null);
+  // After going back, the normal gate still applies: no result step without all three items.
+  assert.equal(reduce(check, { type: 'TO_RESULT' }, ctx), check);
+});
+
+test('"확인할 수 없음" is ignored outside locate/check; the OK/NEEDS_REFILL gate is unchanged', () => {
+  for (const s of [initialState(), run([{ type: 'START', camera: false }, ...checkAll, { type: 'TO_RESULT' }])]) {
+    assert.equal(reduce(s, { type: 'CANNOT_CONFIRM' }, ctx), s, s.step);
+  }
+  const done = run([{ type: 'START', camera: false }, { type: 'CANNOT_CONFIRM' }, { type: 'CONFIRM' }]);
+  assert.equal(reduce(done, { type: 'CANNOT_CONFIRM' }, ctx), done);
+  // The only way to OK or NEEDS_REFILL is still through every checklist item and the result step.
+  const partial = run([{ type: 'START', camera: false }, { type: 'TOGGLE', id: 'parked', value: true }, { type: 'TOGGLE', id: 'located', value: true }]);
+  assert.equal(reduce(partial, { type: 'TO_RESULT' }, ctx), partial);
+  assert.equal(reduce(partial, { type: 'SELECT', status: 'OK' }, ctx), partial);
+  const viaResult = run([{ type: 'START', camera: false }, ...checkAll, { type: 'TO_RESULT' }, { type: 'SELECT', status: 'UNSURE' }, { type: 'TO_CONFIRM' }]);
+  assert.equal(viaResult.unsureFrom, null);
+  assert.equal(run([{ type: 'BACK' }], viaResult).step, 'result', 'the normal confirm still goes back to the result step');
+});

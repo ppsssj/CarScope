@@ -221,6 +221,34 @@ try {
   assert.equal(await page.evaluate(() => fixtureStreams.length), streamsBefore, 'manual path never opened the camera');
   pass('manual path produces OK and UNSURE records with new ids and no camera use; OK text disclaims certification');
 
+  // ---------- "확인할 수 없음": UNSURE without ticking the checklist ----------
+  await primary().click(); assert.equal(await step(), 'intro');
+  await primary().click();
+  await page.waitForFunction(() => document.getElementById('status').textContent.includes('파란색 후보'));
+  await page.locator('#unsure-locate').click();
+  assert.equal(await step(), 'confirm');
+  assert.equal(await page.locator('#confirm-unsure').isVisible(), true);
+  assert.match(await page.locator('#confirm-summary').textContent(), /확인 불가.*확인하지 못함/);
+  assert.equal(await tracksEnded(), true, 'camera stops on the confirm step');
+  await page.screenshot({ path: path.join(output, '11-unsure-confirm.png'), fullPage: true });
+  await page.locator('#back').click();
+  assert.equal(await step(), 'locate', 'back returns to the camera step');
+  assert.equal((await S()).choice, null);
+  await page.locator('#locate-manual').click();
+  assert.equal(await step(), 'check');
+  await boxes.nth(0).check();
+  await page.locator('#unsure-check').click();
+  assert.equal(await step(), 'confirm');
+  await primary().dblclick();
+  await page.waitForFunction(() => document.body.dataset.step === 'done' && !document.getElementById('primary').disabled, null, { timeout: 3000 });
+  const unsure = JSON.parse(await page.locator('#result-json').textContent());
+  assert.deepEqual(validateResult(unsure), []);
+  assert.equal(unsure.status, 'UNSURE'); assert.equal(unsure.confirmation, 'USER_REPORTED');
+  assert.deepEqual((await S()).checks, { parked: true, located: false, observed: false }, 'unchecked items stay unchecked');
+  assert.match(await page.locator('#done-follow').textContent(), /캡을 열거나 액체를 넣지 마세요/);
+  await page.screenshot({ path: path.join(output, '12-unsure-done.png'), fullPage: true });
+  pass('"확인할 수 없음" from locate and check: UNSURE confirm with notice, back to origin, USER_REPORTED record, checklist untouched');
+
   // ---------- cancel mid-flow ----------
   await primary().click(); assert.equal(await step(), 'intro');
   await primary().click();

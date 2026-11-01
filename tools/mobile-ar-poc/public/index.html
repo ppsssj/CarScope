@@ -66,6 +66,7 @@
   <section id="step-locate" class="step">
     <p>주입구 근처를 비추고, 앞유리·분사 모양 표시가 있는 캡을 찾으면 화면을 탭하세요. 찾기 어렵거나 카메라를 쓸 수 없으면 카메라 없이 진행할 수 있습니다.</p>
     <button id="locate-manual" type="button" class="link-button">카메라 없이 다음 단계로</button>
+    <button id="unsure-locate" type="button" class="unsure">주입구를 찾을 수 없음 · ‘확인 불가’로 기록</button>
   </section>
 
   <!-- STEP 3 -->
@@ -73,6 +74,8 @@
     <h2 id="check-title">셀프 점검</h2>
     <p class="card warn"><strong>위치가 확실하지 않으면 캡을 열지 마세요.</strong> 냉각수·브레이크액 등 다른 액체 주입구와 혼동할 수 있습니다.</p>
     <fieldset id="checklist"><legend>하나씩 직접 확인하고 표시하세요</legend></fieldset>
+    <p class="fine">확인하지 못한 항목은 표시하지 마세요. 끝까지 확인할 수 없다면 아래 버튼으로 ‘확인 불가’를 기록합니다.</p>
+    <button id="unsure-check" type="button" class="unsure">확인할 수 없음 · ‘확인 불가’로 기록</button>
   </section>
 
   <!-- STEP 4a -->
@@ -90,6 +93,7 @@
   <section id="step-confirm" class="step" aria-labelledby="confirm-title">
     <h2 id="confirm-title">결과를 확정할까요?</h2>
     <dl id="confirm-summary" class="summary"></dl>
+    <p id="confirm-unsure" class="card warn" hidden>체크리스트를 모두 확인하지 않고 <strong>확인 불가</strong>로 기록합니다. 표시하지 않은 항목은 확인한 것으로 기록되지 않습니다. 위치나 상태를 확인할 수 없다면 캡을 열거나 액체를 넣지 마세요.</p>
     <p class="fine">확정한 뒤에는 이 점검의 결과를 바꿀 수 없습니다. 다른 결과가 필요하면 새 점검을 시작하세요.</p>
   </section>
 

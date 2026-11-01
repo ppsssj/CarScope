@@ -193,8 +193,10 @@ function render() {
   $('manual-start').disabled = !handoff.valid;
   for (const box of $('checklist').querySelectorAll('input')) box.checked = state.checks[box.value];
   for (const b of $('choices').querySelectorAll('button')) b.setAttribute('aria-checked', String(b.dataset.status === state.choice));
+  $('confirm-unsure').hidden = !(state.step === 'confirm' && state.unsureFrom);
   if (state.step === 'confirm') {
-    summary($('confirm-summary'), [['점검 항목', '워셔액'], ['선택한 결과', STATUS_TEXT[state.choice].label, `status-${state.choice}`], ['점검 방식', '셀프 점검 (SELF)'], ['확인 근거', '사용자 직접 확인']]);
+    summary($('confirm-summary'), [['점검 항목', '워셔액'], ['선택한 결과', STATUS_TEXT[state.choice].label, `status-${state.choice}`], ['점검 방식', '셀프 점검 (SELF)'],
+      ['확인 근거', state.unsureFrom ? '사용자 보고 · 확인하지 못함' : '사용자 직접 확인']]);
   }
   if (state.step === 'done') {
     const r = state.record, problems = validateResult(r);
@@ -228,6 +230,8 @@ $('primary').addEventListener('click', () => {
 });
 $('manual-start').addEventListener('click', () => dispatch({ type: 'START', camera: false }));
 $('locate-manual').addEventListener('click', () => dispatch({ type: 'TO_CHECK', manual: true }));
+// "확인할 수 없음": straight to confirming UNSURE; the checklist is left exactly as the user marked it.
+for (const id of ['unsure-locate', 'unsure-check']) $(id).addEventListener('click', () => dispatch({ type: 'CANNOT_CONFIRM' }));
 $('start').addEventListener('click', () => startCamera());
 $('stop').addEventListener('click', () => stop());
 $('back').addEventListener('click', () => dispatch({ type: 'BACK' }));

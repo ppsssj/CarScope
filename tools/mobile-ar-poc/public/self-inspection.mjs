@@ -1,6 +1,8 @@
 // AR-01: washer-fluid self-inspection steps as a pure state machine (no DOM, no camera), shared by the page and tests.
 // intro -> locate (camera aid, optional) -> check (user checklist) -> result (user choice) -> confirm -> done.
 // Events that do not apply return the same state object, so double taps and late callbacks cannot skip a step.
+// "확인할 수 없음" (CANNOT_CONFIRM) from locate/check jumps to the confirm step with UNSURE: a user who could not find
+// the filler or see the level reports that honestly instead of ticking items they did not check.
 import { startInspection, noteAids, completeInspection, STATUSES } from './inspection-result.mjs';
 
 export const STEPS = Object.freeze(['intro', 'locate', 'check', 'result', 'confirm', 'done']);
@@ -11,7 +13,7 @@ export const CHECK_ITEMS = Object.freeze([
 ]);
 
 const noChecks = () => Object.freeze(Object.fromEntries(CHECK_ITEMS.map((c) => [c.id, false])));
-export const initialState = () => Object.freeze({ step: 'intro', mode: null, checks: noChecks(), choice: null, record: null });
+export const initialState = () => Object.freeze({ step: 'intro', mode: null, checks: noChecks(), choice: null, record: null, unsureFrom: null });
 export const allChecked = (state) => CHECK_ITEMS.every((c) => state.checks[c.id]);
 
 /**
@@ -35,6 +37,9 @@ export function reduce(state, event, ctx = {}) {
       if (state.step !== 'check' || !(event.id in state.checks)) return state;
       return to({ checks: Object.freeze({ ...state.checks, [event.id]: event.value ?? !state.checks[event.id] }) });
     }
+    case 'CANNOT_CONFIRM': // never touches the checklist; OK/NEEDS_REFILL still require every item via TO_RESULT
+      if (state.step !== 'locate' && state.step !== 'check') return state;
+      return to({ step: 'confirm', choice: 'UNSURE', unsureFrom: state.step });
     case 'TO_RESULT':
       if (state.step !== 'check' || !allChecked(state)) return state;
       return to({ step: 'result' });
@@ -43,7 +48,7 @@ export function reduce(state, event, ctx = {}) {
       return to({ choice: event.status });
     case 'TO_CONFIRM':
       if (state.step !== 'result' || !state.choice) return state;
-      return to({ step: 'confirm' });
+      return to({ step: 'confirm', unsureFrom: null });
     case 'CONFIRM': // the only place a completed record is created; a second CONFIRM finds step 'done' and is ignored
       if (state.step !== 'confirm' || !state.choice) return state;
       return to({ step: 'done', record: completeInspection(state.record, state.choice, ctx) });
@@ -52,7 +57,7 @@ export function reduce(state, event, ctx = {}) {
         case 'locate': return initialState(); // leaving before any check discards the attempt
         case 'check': return state.mode === 'camera' ? to({ step: 'locate' }) : initialState();
         case 'result': return to({ step: 'check' });
-        case 'confirm': return to({ step: 'result' });
+        case 'confirm': return state.unsureFrom ? to({ step: state.unsureFrom, choice: null, unsureFrom: null }) : to({ step: 'result' });
         default: return state; // intro: nothing before; done: the result is final
       }
     case 'CANCEL': // abandon an unfinished attempt: no completed record exists for it
