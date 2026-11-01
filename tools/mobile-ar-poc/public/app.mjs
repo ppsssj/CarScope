@@ -8,10 +8,11 @@ import { reduce, initialState, allChecked, progressOf, CHECK_ITEMS } from './sel
 import { validateResult, STATUS_TEXT } from './inspection-result.mjs';
 import { tapToVideoPoint, videoPointToStage, drawMarker } from './marker.mjs';
 
+// Both entries use the same AR-01 flow; only the isolated development entry supplies sync callbacks.
+export async function startInspectionPage({ handoff = parseHandoff(location.hash), onComplete = () => {}, onRestart = () => {} } = {}) {
 const $ = id => document.getElementById(id);
 const video = $('video'), overlay = $('overlay'), ctx = overlay.getContext('2d');
 const frame = document.createElement('canvas'), frameContext = frame.getContext('2d', { willReadFrequently: true });
-const handoff = parseHandoff(location.hash);
 let state = initialState();
 let timer = null, lastStatus = '', misses = 0, request = 0, lastVideoTime = -1, lastFrameAt = 0;
 let candidates = [], mark = null, markVideoSize = null;
@@ -150,6 +151,8 @@ function dispatch(event) {
   const cameraStep = (state.step === 'locate' || state.step === 'check') && state.mode === 'camera';
   if (!cameraStep && (cameraRunning() || camera.stream)) stop(state.step === 'intro' ? '카메라 중지' : '다음 단계로 이동해 카메라를 중지했습니다.');
   render();
+  if (prev.step !== 'done' && state.step === 'done') onComplete(state.record);
+  if (prev.step === 'done' && state.step === 'intro') onRestart();
   if (prev.step !== state.step) {
     scrollTo(0, 0); // each step starts at the top (camera stage under the header, actions at the bottom)
     // Move focus to the new step's heading only when the step changes (not on every checkbox toggle).
@@ -268,3 +271,6 @@ try {
     $('qr-status').textContent = '스마트폰에서 인증서를 신뢰하고 이 주소에 접근할 수 있어야 합니다.';
   }
 } catch { $('qr-status').textContent = 'QR 설정을 읽지 못했습니다. 수동 안내를 사용할 수 있습니다.'; }
+
+return { get state() { return state; } };
+}

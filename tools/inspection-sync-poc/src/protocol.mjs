@@ -85,6 +85,7 @@ export const RECEIPT_FIELDS = Object.freeze(['protocol', 'protocolVersion', 'ins
 /** A receipt is valid for `result` only if it names the same inspection and the same digest. */
 export async function receiptMatches(receipt, result) {
   if (!receipt || typeof receipt !== 'object') return false;
+  if (Object.keys(receipt).length !== RECEIPT_FIELDS.length || !Number.isFinite(receipt.receivedAt) || receipt.receivedAt < 0) return false;
   if (Object.keys(receipt).some((k) => !RECEIPT_FIELDS.includes(k))) return false;
   if (receipt.protocol !== PROTOCOL || receipt.protocolVersion !== PROTOCOL_VERSION) return false;
   if (receipt.inspectionId !== result.inspectionId) return false;

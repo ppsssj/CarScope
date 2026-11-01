@@ -33,13 +33,13 @@ jobs:
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
           node-version: '22.16.0'
+      - name: Install existing AR-01 test dependencies
+        run: npm ci --ignore-scripts
+        working-directory: tools/mobile-ar-poc
       - run: npm run check
       - run: npm run test:legacy
       - run: npm test
       - run: npm run test:sqlite
-      - name: Install existing AR-01 test dependencies
-        run: npm ci --ignore-scripts
-        working-directory: tools/mobile-ar-poc
       - name: All original AR-01 unit tests with explicit fixture clock
         run: npm run test:ar01
       - name: AR-02A Edge browser regression
@@ -53,3 +53,8 @@ jobs:
         working-directory: tools/mobile-ar-poc
         env:
           POC_EVIDENCE_DIR: C:/CarScope-External/qr-ar-01/ar-02b1-ci
+      - name: Integrated mobile QR v2 Edge E2E
+        if: runner.os == 'Windows'
+        run: npm run test:mobile-browser
+        env:
+          SYNC_EVIDENCE_DIR: C:/CarScope-External/ar-02b2/ci/mobile-browser

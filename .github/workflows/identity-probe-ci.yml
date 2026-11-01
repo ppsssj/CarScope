@@ -39,6 +39,8 @@ jobs:
         run: ./gradlew :app:testDebugUnitTest :app:assembleDebug :app:assembleRelease :app:bundleRelease :app:lintDebug --rerun-tasks --console=plain --max-workers=1 -Pkotlin.compiler.execution.strategy=in-process
       - name: Verify debug-only APK and manifest boundary
         run: python3 tools/identity-probe/check.py build-contract
+      - name: Verify sync receiver Debug and Release boundary
+        run: python3 tools/inspection-sync-poc/android/check-boundary.py
       - name: Summarize JVM test evidence
         run: |
           python3 - <<'PY'
