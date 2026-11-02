@@ -1,4 +1,4 @@
-﻿// Local geometry review only; no inspection UI, SDK or Android routes.
+// Local geometry review only; no inspection UI, SDK or Android routes.
 import {createServer} from 'node:http';
 import {readFile} from 'node:fs/promises';
 import {resolve,dirname,join} from 'node:path';
@@ -24,4 +24,3 @@ createServer(async(req,res)=>{
   try{const bytes=await readFile(entry[0]);res.writeHead(200,{'content-type':entry[1],'cache-control':'no-store'});res.end(bytes);}
   catch{res.writeHead(404);res.end();}
 }).listen(Number(args.port??8106),'127.0.0.1',()=>console.log(`Front wiper geometry review http://127.0.0.1:${args.port??8106}/`));
-
