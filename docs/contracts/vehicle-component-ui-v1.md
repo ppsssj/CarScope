@@ -6,8 +6,8 @@ SDK 2.3.2의 공개 조회 선언과 합성 검증 범위다. 실제 차량 지�
 | --- | --- | --- | --- |
 | `safety.washer-fluid-warning` | `washer-fluid-cap` | Safety.checkLowWasherFluidWarningStateCapabilities / hasLowWasherFluidWarning, Boolean? | 기존 워셔액 상세, SDK true/false 보고만. false를 차량 정상/액량 충분으로 변환하지 않음 |
 | `safety.brake-fluid-level` | `brake-fluid-reservoir` | Safety.checkBrakeFluidLevelStateCapabilities / getBrakeFluidLevelState, OilLevelState? | 기존 브레이크액 형상 상세. 선언된 LOW/HIGH/NORMAL/CRITICALLY_LOW를 SDK enum으로만 표시. NORMAL도 안전 판정이 아님 |
-| `ev-battery.soc` | `ev-battery.pack` | EvBattery.checkEvBatteryStateOfChargeCapabilities / getEvBatteryStateOfCharge, Int? | 데이터/캐시/JSON만. 단위·범위 UNVERIFIED, `%`·0~100 범위·배터리 건강도 추정 금지 |
-| `ev-battery.charge-switch` | `ev-battery.pack` | EvBattery.checkEvChargeSwitchCapabilities / getEvChargeSwitchState, Boolean? | 데이터/캐시/JSON만. switch 보고이며 실제 충전 진행/완료/전력 상태로 사용 금지 |
+| `ev-battery.soc` | `ev-battery.pack` | EvBattery.checkEvBatteryStateOfChargeCapabilities / getEvBatteryStateOfCharge, Int? | 데이터/캐시/JSON 및 P4-B2 하부 보기 패널. 단위·범위 UNVERIFIED, `%`·0~100 범위·배터리 건강도 추정 금지 |
+| `ev-battery.charge-switch` | `ev-battery.pack` | EvBattery.checkEvChargeSwitchCapabilities / getEvChargeSwitchState, Boolean? | 데이터/캐시/JSON 및 P4-B2 하부 보기 패널. switch 보고이며 실제 충전 진행/완료/전력 상태로 사용 금지 |
 
 Safety의 위 메서드와 register/unregister는 `pleos.car.permission.CAR_SAFETY`, 위 EV 메서드와 SoC register/unregister는 `pleos.car.permission.CAR_ENERGY`다. READ/READ_WRITE capability만 읽으며 제어/SET/CONTROL 권한은 추가하지 않는다. brake는 capability의 advertised enum 집합도 확인한다. 공개 listener는 washer/brake/SoC에만 등록한다. charge-switch listener는 만들어 내지 않는다.
 
@@ -36,4 +36,4 @@ ATTACHED의 source는 모두 PLEOS 또는 모두 MOCK이다. Native 일반 경�
 
 Web client는 단일 in-flight 요청과 완료 후 1초 polling, 3초 fetch abort를 사용한다. 이것은 SDK 호출/취소가 아니다. inactive/hidden/dispose에서 abort와 request generation 무효화로 늦은 응답을 버린다. 데이터 변경은 상세의 상태 영역만 갱신하고 선택/Geometry/카메라/USER_REPORTED 기록을 재생성하지 않는다. API 데이터 출처와 기존 모델의 ESTIMATED/UNVERIFIED 정확도 안내는 서로 독립이다.
 
-Desktop 합성 실행은 loopback 서버의 `CARSCOPE_COMPONENT_UI_FIXTURE`와 `?componentStatus=fixture`를 명시해야 한다. 파일의 모든 행이 MOCK이어야 한다. fixture와 외부 GLB는 Android/Release에 포함하지 않는다. Android shell은 Native cache client만 활성화한다. EV pack 형상·선택 UI는 모델 PR 병합 후 별도 통합 PR에서 연결한다.
+Desktop 합성 실행은 loopback 서버의 `CARSCOPE_COMPONENT_UI_FIXTURE`와 `?componentStatus=fixture`를 명시해야 한다. 파일의 모든 행이 MOCK이어야 한다. fixture와 외부 GLB는 Android/Release에 포함하지 않는다. Android shell은 Native cache client만 활성화한다. EV pack 선택 UI는 A의 모델 PR #44 병합 후 P4-B2 별도 통합 PR에서 연결하며 wire v1과 데이터 의미는 변경하지 않는다.
