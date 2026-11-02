@@ -1,0 +1,35 @@
+<!doctype html><html lang="ko"><meta charset="utf-8"><title>P4-A3 charging port geometry review</title>
+<style>body{margin:0;background:#e8edf0;color:#223441;font:16px system-ui;display:grid;grid-template-columns:350px 1fr;height:100vh}aside{padding:24px;background:white;overflow:auto}h1{font-size:24px}p{line-height:1.6}button{display:block;width:100%;min-height:44px;margin:8px 0;font:inherit}pre{white-space:pre-wrap;font-size:12px}#view{min-width:0}canvas{display:block;width:100%;height:100%}</style>
+<aside><h1>EV 충전구 형상 검토</h1><p>ESTIMATED_GEOMETRY<br>우측 후방 · 정적 닫힘 설명도<br>치수·힌지축·실차 장착 미검증</p>
+<button data-view="vehicle">차량 전체 · 원래 시점</button><button data-view="focus">충전구 가까이 보기</button><button data-view="frame">외곽 프레임 가까이 보기</button><button data-view="isolated">충전구만 보기</button>
+<button id="flap">덮개 숨김 / 표시 (검토용)</button><button id="clear">선택 해제</button>
+<p id="status">모델 불러오는 중</p><p>덮개 숨김은 OPEN 상태가 아닙니다. 원본 차체는 절삭하지 않았으며 소켓·배선·개방 동작을 표현하지 않습니다.</p><pre id="info"></pre></aside><div id="view"></div>
+<script type="importmap">{"imports":{"three":"/three","/utils/BufferGeometryUtils.js":"/utils"}}</script><script type="module">
+import * as T from 'three';import{GLTFLoader}from'/loader';
+const host=document.querySelector('#view'),renderer=new T.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});renderer.setPixelRatio(1);host.append(renderer.domElement);
+const scene=new T.Scene();scene.background=new T.Color('#e8edf0');scene.add(new T.HemisphereLight(0xffffff,0x697581,3));const light=new T.DirectionalLight(0xffffff,3);light.position.set(-3,4,4);scene.add(light);
+const camera=new T.PerspectiveCamera(38,1,.01,40),loader=new GLTFLoader();
+const [source,charge,report]=await Promise.all([loader.loadAsync('/source.glb'),loader.loadAsync('/charge.glb'),fetch('/report.json').then(r=>r.json())]);scene.add(source.scene,charge.scene);scene.updateMatrixWorld(true);
+const parts=new Map(),rows=[];charge.scene.traverse(n=>{if(n.isMesh)parts.set(n.userData.partId,n);});
+for(const p of report.model.parts){const mesh=parts.get(p.id);if(!mesh)throw Error('missing part metadata '+p.id);const b=new T.Box3().setFromObject(mesh),lo=[b.min.x*100,-b.max.z*100,b.min.y*100],hi=[b.max.x*100,-b.min.z*100,b.max.y*100],delta=Math.max(...lo.map((x,k)=>Math.abs(x-p.bounds.min[k])),...hi.map((x,k)=>Math.abs(x-p.bounds.max[k])));if(delta>0.0001)throw Error('bounds '+p.id);rows.push({id:p.id,deltaCm:delta});}
+const originals=[];source.scene.traverse(n=>originals.push({object:n,matrix:n.matrix.toArray()}));
+const gltf=p=>new T.Vector3(p[0]/100,p[2]/100,-p[1]/100),l=report.model.layout;
+const center=gltf(report.model.bounds.center),normal=gltf(l.normal).normalize();
+const framePoint=gltf(l.origin.map((x,k)=>x+(-8*.94)*l.u[k]+(-10*.94)*l.v[k]+(report.support.distance+.55)*l.normal[k]));
+let selected=null,view='vehicle';
+function draw(){renderer.setSize(host.clientWidth,host.clientHeight,false);camera.aspect=host.clientWidth/host.clientHeight;camera.updateProjectionMatrix();scene.updateMatrixWorld(true);camera.updateMatrixWorld(true);renderer.render(scene,camera);}
+function setView(name){view=name;source.scene.visible=name!=='isolated';const target=name==='frame'?framePoint:center;
+  if(name==='vehicle'){camera.position.set(-5.5,3.5,5.5);camera.lookAt(new T.Vector3(0,.8,0));}
+  else{camera.position.copy(target).addScaledVector(normal,name==='isolated'?.8:1.25);camera.position.y+=name==='frame'?0:.18;camera.lookAt(target);}draw();}
+function select(id){selected=id;for(const [key,m]of parts)m.material.emissive.set(key===id?'#613704':'#000000');document.querySelector('#info').textContent=id?JSON.stringify(parts.get(id).userData,null,2):'ev-charge.port / ev-charge.flap · 형상 검토 전용 · SDK 상태 없음';draw();}
+const ray=new T.Raycaster();function pick(x,y){ray.setFromCamera(new T.Vector2(x,y),camera);
+  const hits=ray.intersectObjects([...(source.scene.visible?[source.scene]:[]),...([...parts.values()].filter(p=>p.visible))],true);
+  const id=hits[0]?.object.userData.partId;return parts.has(id)?id:null;}
+renderer.domElement.onclick=e=>{const r=renderer.domElement.getBoundingClientRect();select(pick((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1));};
+document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>setView(b.dataset.view));document.querySelector('#clear').onclick=()=>select(null);
+document.querySelector('#flap').onclick=()=>{const m=parts.get('ev-charge.flap');m.visible=!m.visible;select(null);};
+window.addEventListener('resize',draw);setView('vehicle');select(null);
+const vehiclePose={position:camera.position.toArray(),quaternion:camera.quaternion.toArray()};
+window.__charge={ready:true,renderer,scene,camera,parts,source,report,rows,originals,vehiclePose,setView,select,pick,get selected(){return selected;},get view(){return view;}};
+document.querySelector('#status').textContent=`2 parts · 68 triangles · 충돌 ${report.failures}건`;
+</script></html>
