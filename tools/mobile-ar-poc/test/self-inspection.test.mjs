@@ -64,7 +64,7 @@ test('validation rejects extra or sensitive fields and malformed values', () => 
 });
 
 test('ids are random per attempt (UUID v4) and aids record booleans only', () => {
-  const a = startInspection(), b = startInspection();
+  const a = startInspection({now:ctx.now}), b = startInspection({now:ctx.now});
   assert.notEqual(a.inspectionId, b.inspectionId);
   assert.deepEqual(validateResult(a), []);
   const marked = noteAids(a, { cameraUsed: true, locationMarked: true, x: 0.3 });

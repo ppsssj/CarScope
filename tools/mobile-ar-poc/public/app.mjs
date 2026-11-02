@@ -7,10 +7,20 @@ import { CameraSession, cameraError } from './camera.mjs';
 import { reduce, initialState, allChecked, progressOf, CHECK_ITEMS } from './self-inspection.mjs';
 import { validateResult, STATUS_TEXT } from './inspection-result.mjs';
 import { tapToVideoPoint, videoPointToStage, drawMarker } from './marker.mjs';
+import {isTireTask,parseInspectionHandoff,taskLinks} from './inspection-tasks.mjs';
+import {prepareTirePage,startTireInspectionPage} from './tire-page.mjs';
+import {renderSummary as summary} from './inspection-ui.mjs';
+
+export function prepareInspectionPage(handoff){if(handoff.valid&&isTireTask(handoff.task))prepareTirePage(handoff.task,{locked:handoff.source==='qr-sync'});}
+export async function startInspectionPage(options={}){const handoff=options.handoff??parseInspectionHandoff(location.hash);
+  if(handoff.valid&&isTireTask(handoff.task)){if(!document.body.dataset.tire)prepareInspectionPage(handoff);return startTireInspectionPage({...options,handoff});}
+  return startWasherInspectionPage({...options,handoff});
+}
 
 // Both entries use the same AR-01 flow; only the isolated development entry supplies sync callbacks.
-export async function startInspectionPage({ handoff = parseHandoff(location.hash), onComplete = () => {}, onRestart = () => {} } = {}) {
+async function startWasherInspectionPage({ handoff = parseHandoff(location.hash), onComplete = () => {}, onRestart = () => {} } = {}) {
 const $ = id => document.getElementById(id);
+if(handoff.source!=='qr-sync'){const nav=document.createElement('nav');nav.className='task-links';nav.setAttribute('aria-label','다른 부품 점검');for(const t of taskLinks()){const a=document.createElement('a');a.href=t.href;a.textContent=t.label;nav.append(a);}$('step-intro').append(nav);}
 const video = $('video'), overlay = $('overlay'), ctx = overlay.getContext('2d');
 const frame = document.createElement('canvas'), frameContext = frame.getContext('2d', { willReadFrequently: true });
 let state = initialState();
@@ -162,13 +172,6 @@ function dispatch(event) {
 }
 
 const fmt = (iso) => new Date(iso).toLocaleString('ko-KR', { dateStyle: 'medium', timeStyle: 'medium' });
-function summary(dl, rows) {
-  dl.replaceChildren(...rows.flatMap(([k, v, cls]) => {
-    const dt = document.createElement('dt'), dd = document.createElement('dd');
-    dt.textContent = k; dd.textContent = v; if (cls) dd.className = cls;
-    return [dt, dd];
-  }));
-}
 
 const PRIMARY = {
   intro: ['카메라로 점검 시작', () => true],
