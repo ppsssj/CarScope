@@ -2,18 +2,41 @@
 
 **Interactive 3D vehicle inspection, from the car to your phone camera.**
 
+<p align="center">
+  <img src="docs/visuals/readme/hero-vehicle.webp" width="860" alt="CarScope 차량 점검 UI 홈 화면: 다크 배경 중앙의 IONIQ 5 참조 모델과 차량 점검 버튼">
+</p>
+<p align="center"><sub>P3-A4 차량 점검 UI 홈 화면 (<code>tools/three-poc/inspect.html</code>, 로컬 Chrome 실제 캡처). 차량 모델: “Hyundai Ioniq 5” © 2022 andikapratamaw, <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>. OpenX Assets 수정본을 CarScope에서 변환·렌더링했습니다. <a href="#model-references--attribution">출처 자세히</a></sub></p>
+
 CarScope는 3D 차량에서 부위를 선택하고, 네 타이어의 육안 응답을 기록·확정한 뒤 요약을 검토하는 차량 점검 프로토타입입니다. 워셔액은 기존 안내와 QR 스마트폰 점검으로 이어집니다. 사용자 기록과 Android Automotive OS(AAOS)/Pleos SDK의 **읽기 전용 상태 관측**을 구분합니다.
 
 Debug 점검 화면은 워셔액 경고·브레이크액 레벨과 EV 배터리 SoC·충전 스위치를 [Native 캐시의 제한된 상태 계약](docs/contracts/vehicle-component-ui-v1.md)으로 표시합니다. [EV 하부 보기](docs/p4-b2-ev-status-ui.md)는 기존 추정 외함 모델을 사용하며 API 출처와 형상 신뢰도를 구분합니다. 실차 지원·권한·수신과 SoC 단위·범위는 미검증이고, 충전 스위치는 충전 진행 상태를 뜻하지 않습니다.
 
-<p align="center">
-  <img src="docs/visuals/p3-a4/hero-home.webp" width="860" alt="CarScope 차량 점검 UI 홈 화면: 다크 배경 중앙의 IONIQ 5 참조 모델과 차량 점검 버튼">
-</p>
-<p align="center"><sub>P3-A4 차량 점검 UI 홈 화면 (<code>tools/three-poc/inspect.html</code>, 로컬 Chrome 실제 캡처). 차량 모델: “Hyundai Ioniq 5” © 2022 andikapratamaw, <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>. OpenX Assets 수정본을 CarScope에서 변환·렌더링했습니다. <a href="#model-references--attribution">출처 자세히</a></sub></p>
-
 > **현재 범위:** 같은 3D 점검 UI를 브라우저와 Android **Debug InspectionActivity**에 패키징합니다. 네 타이어 USER_REPORTED 기록, 전체 요약, Native 워셔액 수신 화면 진입이 구현돼 있습니다. Release의 기본 화면은 기존 정적 SVG이며 Debug 3D/외부 GLB를 포함하지 않습니다. **최신 통합 Android 실측은 별도 최종 검증 단계로 연기**했습니다. 보닛/서비스 부품은 추정·시뮬레이션이고 QR-AR은 실제 주입구를 의미적으로 인식하지 않습니다.
 
 [차량 점검 UI](tools/three-poc/INSPECTION_UI.md) · [제품 흐름·보존 정책 설계](docs/p4-a1-inspection-product-flow.md) · [QR-AR 검증](tools/mobile-ar-poc/HTTPS_STAGING.md) · [Android/Pleos 연동](docs/pleos-sdk-integration.md) · [개발 로드맵](docs/roadmap.md)
+
+## Product Gallery
+
+**차량에서 부위를 이해하고, 모바일에서 보이는 내용을 직접 기록합니다.** 아래는 기존 구현을 실행한 Chrome 캡처입니다. 상태 패널은 MOCK fixture, 모바일 카메라는 합성 영상이며 실차 센서 수신·실제 스마트폰 촬영의 증거가 아닙니다. 이미지를 누르면 크게 볼 수 있습니다.
+
+| 보닛을 열어 점검 부위 탐색 | 네 타이어의 개별 육안 기록 |
+| --- | --- |
+| [![보닛 개방 시뮬레이션과 워셔액 캡 강조 화면](docs/visuals/readme/hood-open.webp)](docs/visuals/readme/hood-open.webp) | [![앞 왼쪽 타이어 강조와 사용자 육안 응답 체크리스트](docs/visuals/readme/tire-inspection.webp)](docs/visuals/readme/tire-inspection.webp) |
+| 추정 전방 구획과 워셔액 위치 안내. 실제 OEM 힌지·정비 절차를 재현한 형상은 아닙니다. | 바퀴별 응답 → 확정·수정 → 요약. **USER_REPORTED**, 정상·안전 판정이 아닙니다. |
+
+| EV 충전구 선택과 상태 분리 | 전면 와이퍼 선택과 상태 표시 |
+| --- | --- |
+| [![우측 후방 충전구의 추정 형상 강조와 MOCK SDK 상태 패널](docs/visuals/readme/charge-port.webp)](docs/visuals/readme/charge-port.webp) | [![전면 와이퍼의 추정 형상 강조와 MOCK 상태 패널](docs/visuals/readme/wiper-selection.webp)](docs/visuals/readme/wiper-selection.webp) |
+| 정적 닫힘 형상과 SDK 보고를 분리합니다. 충전구 위치·개방 각도·충전 가능 여부의 실측 증거가 아닙니다. | 선택·강조된 와이퍼는 정적 추정 형상입니다. 동작 상태를 블레이드 마모 판정으로 해석하지 않습니다. |
+
+| 전조등 영역 선택과 전역 상태 | 모바일 카메라 보조와 결과 확정 |
+| --- | --- |
+| [![전조등 렌즈 영역 강조와 좌우 공통 MOCK 조명 상태 패널](docs/visuals/readme/headlight-selection.webp)](docs/visuals/readme/headlight-selection.webp) | [![왼쪽은 타이어 합성 카메라 영상의 수동 2D 위치 표시, 오른쪽은 EV 충전구 사용자 보고 확정 화면을 나란히 편집한 이미지](docs/visuals/readme/mobile-assistance.webp)](docs/visuals/readme/mobile-assistance.webp) |
+| 기존 조명 메시를 재사용합니다. 전역 조명 보고는 좌·우 개별 센서값이나 실제 점등 효과가 아닙니다. | 기존 모바일 캡처 2장의 편집본. **수동 2D 표시**, 자동 객체 인식·공간 추적·정밀 측정은 없습니다. |
+
+3D 이미지: “Hyundai Ioniq 5” © 2022 [andikapratamaw](https://sketchfab.com/andikapratamaw), [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/); OpenX Assets 수정 © 2026 Dogan Ulus. CarScope 변환·추정 Geometry·UI 렌더링, README용 축소·WebP 변환. [이미지별 출처·변환·검토 기록](docs/visuals/readme/README.md).
+
+구현·검증 근거: [충전구 3D](docs/p4-b3-charge-port-ui.md) · [와이퍼·조명](docs/p5-b1-vehicle-api-integration.md) · [타이어 모바일](docs/p5-a1-tire-mobile-ar.md) · [충전구 모바일](docs/p5-a2-charge-port-mobile-ar.md). 모바일 Node 동기화와 실제 Android Native 수신·실기기 검증은 해당 문서의 범위를 구분합니다.
 
 ## Features
 
@@ -182,7 +205,7 @@ IONIQ 5 참조 형상은 **현대자동차 공식 CAD가 아닌 커뮤니티 모
 - 원본 모델: “Hyundai Ioniq 5” © 2022 [andikapratamaw](https://sketchfab.com/andikapratamaw), [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)
 - 수정본: [OpenX Assets](https://github.com/vevalabs/openx-assets) © 2026 Dogan Ulus, `MPL-2.0 AND CC-BY-4.0`
 - 변경 사항: CarScope가 형식을 변환하고(`.blend` → GLB), 점검 UI에서 렌더링했습니다. 보닛 회전, 전방 구획·프렁크·워셔액 주입구 형상(CarScope 추정 Geometry), 강조·라벨·UI 패널을 더했습니다.
-- 적용 이미지: `docs/visuals/p3-a4/`의 점검 UI 캡처 5장과 `docs/visuals/p2-a6/`의 렌더 3장. 이 이미지를 재사용할 때도 위 저작자 표시와 라이선스 링크를 함께 표시해야 합니다.
+- 적용 이미지: `docs/visuals/p3-a4/`의 점검 UI 캡처 5장과 `docs/visuals/p2-a6/`의 렌더 3장, `docs/visuals/readme/`의 3D 렌더 캡처 6장(Hero 포함). 이 이미지를 재사용할 때도 위 저작자 표시와 라이선스 링크를 함께 표시해야 합니다. 새 모바일 편집본은 별도의 CarScope UI·합성 영상 캡처이며 3D 모델을 포함하지 않습니다.
 
 자세한 출처와 커밋 정책은 [IONIQ 5 자산 문서](docs/p2-a6-ioniq5-asset.md)에 있습니다. CarScope는 Hyundai와 관련이 없으며, 이 자료는 Hyundai의 보증이나 공식 인증을 뜻하지 않습니다. 차량 디자인과 상표는 각 권리자에게 있습니다.
 

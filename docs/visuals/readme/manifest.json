@@ -1,0 +1,159 @@
+{
+  "base": "e9cb10901c21a0958c2c26a98c4c75ad26fde7f1",
+  "encoder": "Pillow 12.0.0",
+  "images": [
+    {
+      "file": "hero-vehicle.webp",
+      "sources": [
+        {
+          "path": "docs/visuals/p3-a4/hero-home.webp",
+          "sha256": "ceabdd94e85d8b0f65db18657430230c1a3ed891ef300eab2f3d32fea4a6773d",
+          "pixels": [
+            1140,
+            670
+          ]
+        }
+      ],
+      "pixels": [
+        1140,
+        670
+      ],
+      "bytes": 37082,
+      "edit": "RGB, proportional resize up to 1280x900, WebP quality 88; no crop"
+    },
+    {
+      "file": "hood-open.webp",
+      "sources": [
+        {
+          "path": "docs/visuals/p3-a4/flow-2-hood-open-components.webp",
+          "sha256": "0582facef786b9a8a18375293c9e6c174fe80105bde88b136f68fbc00bf25aa0",
+          "pixels": [
+            1440,
+            900
+          ]
+        }
+      ],
+      "pixels": [
+        1280,
+        800
+      ],
+      "bytes": 59550,
+      "edit": "RGB, proportional resize up to 1280x900, WebP quality 88; no crop"
+    },
+    {
+      "file": "tire-inspection.webp",
+      "sources": [
+        {
+          "path": "C:/CarScope-External/p4-a1/20261102-run02/browser-tire-inspection-1600/02-checklist-completed.png",
+          "sha256": "08f8dfcbbe5e659f00a41f0222618b2d7787b8432b05872ea64f605a3b05bca1",
+          "pixels": [
+            1608,
+            1008
+          ]
+        }
+      ],
+      "pixels": [
+        1280,
+        802
+      ],
+      "bytes": 61862,
+      "edit": "RGB, proportional resize up to 1280x900, WebP quality 88; no crop"
+    },
+    {
+      "file": "charge-port.webp",
+      "sources": [
+        {
+          "path": "C:/CarScope-External/p5-b1/charge-browser/00-static-geometry.png",
+          "sha256": "e8a8814bdec5edb63a96bd2fc71f9730217aa0bb9ab899c3528836bb4c2fbc4d",
+          "pixels": [
+            1608,
+            1008
+          ]
+        }
+      ],
+      "pixels": [
+        1280,
+        802
+      ],
+      "bytes": 67462,
+      "edit": "RGB, proportional resize up to 1280x900, WebP quality 88; no crop"
+    },
+    {
+      "file": "wiper-selection.webp",
+      "sources": [
+        {
+          "path": "C:/CarScope-External/p5-b1/browser-final/01-wiper-sdk-on.png",
+          "sha256": "7a9d60241b078e89e6665ff43de3ec6799760cf0a35a86c0ab31c258824237b3",
+          "pixels": [
+            1608,
+            1008
+          ]
+        }
+      ],
+      "pixels": [
+        1280,
+        802
+      ],
+      "bytes": 55098,
+      "edit": "RGB, proportional resize up to 1280x900, WebP quality 88; no crop"
+    },
+    {
+      "file": "headlight-selection.webp",
+      "sources": [
+        {
+          "path": "C:/CarScope-External/p5-b1/browser-final/02-light-sdk-global.png",
+          "sha256": "c7e2145ef8906235beadc46980befc8dd3549d98c0477f55823cc9973ab3a015",
+          "pixels": [
+            1608,
+            1008
+          ]
+        }
+      ],
+      "pixels": [
+        1280,
+        802
+      ],
+      "bytes": 46176,
+      "edit": "RGB, proportional resize up to 1280x900, WebP quality 88; no crop"
+    },
+    {
+      "file": "mobile-assistance.webp",
+      "sources": [
+        {
+          "path": "C:/CarScope-External/qr-ar-01/p5-a1/20261103-run02/tires/02-camera-marker.png",
+          "sha256": "9c1cc7375ad7bdfc0fb328a9fe7c5c068f99276eba670cdea5f7de06e168bb9b",
+          "pixels": [
+            390,
+            1040
+          ],
+          "crop": [
+            0,
+            0,
+            390,
+            844
+          ]
+        },
+        {
+          "path": "C:/CarScope-External/qr-ar-01/p5-a2/20261103-types-final/mobile/charge/01-confirmed.png",
+          "sha256": "e5419ab6fda7ceaa26af6e04fa4afa417c72e765685ac3bfea1c5039e1dd4cc1",
+          "pixels": [
+            390,
+            844
+          ],
+          "crop": [
+            0,
+            0,
+            390,
+            844
+          ]
+        }
+      ],
+      "pixels": [
+        1200,
+        750
+      ],
+      "bytes": 62664,
+      "edit": "Two existing captures; top 390x844 viewport crops, proportional resize, dark matte; WebP quality 90. No fabricated UI."
+    }
+  ]
+}
