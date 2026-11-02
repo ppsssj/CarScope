@@ -25,3 +25,5 @@ PR #41 및 다른 작업 사본 변경 없음. geometry/GLB/Anatomy/core/Sync �
 작업 도중 A의 모델 PR #44가 main `5c06646`에 병합되어 충돌 없이 반영했다. A의 파일을 수정하지 않았다. EV 선택/UI는 모델 병합 후 별도 후속 PR로 연결한다.
 
 후속 UI PR: [#46](https://github.com/ppsssj/CarScope/pull/46). #45를 base로 하는 별도 PR이며 승인·병합 전 main으로의 자동 통합은 없다.
+
+최종 코드 검토에서 capability가 LOW만 광고하고 SDK가 ERROR를 반환하는 조합은 일반 invalid enum 분기가 앞서 UNVERIFIED가 됨을 확인했다. 명시적 SDK ERROR를 우선하여 값/시각을 비우도록 수정했고 기존 capability 회귀에 이 조합의 assertion을 추가했다. 실차 실패 관측이 아닌 합성 경계 검증이다. 최종 CI는 이 수정 후 HEAD로 확인한다.
