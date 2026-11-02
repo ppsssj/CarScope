@@ -1,6 +1,40 @@
 # P3-I4 — Android 통합 Tire Runtime 검증
 
-2026-11-02 KST. **실제 Android 통합 Runtime은 BLOCKED**다. 실행 중인 대상 AVD가 없어 부팅·설치·Activity 조작·SDK 호출을 수행하지 않았다. 아래 오프라인 검증은 Android WebView/Pleos 실측을 대신하지 않는다.
+2026-11-02 KST. **실제 Android 통합 Runtime은 BLOCKED**다. 최초 실행은 AVD 부재였고, 사용자 수동 부팅 후 재개에서는 대상 연결을 확인했으나 기존 Health Gate의 CPU/load 및 단일 SystemUI PID 조건을 충족하지 못했다. 설치·Activity 조작·SDK 호출은 수행하지 않았다. 아래 오프라인 검증은 Android WebView/Pleos 실측을 대신하지 않는다.
+
+## 수동 부팅 후 재개 — 2026-11-02 15:34 KST
+
+Worktree `C:\dev\CarScope-p3i4-avd`, branch `test/p3-i4-avd-integration`, clean HEAD `268eae7660309ec91c2cdfc3cc030b5ba4bfc6ea`가 PR #41의 원격 HEAD와 일치했다. fetch 후 `origin/main`은 기존 `7a4c77a60485146cf5baef248390fec46b53d608`다. PR은 Draft이며 이 HEAD의 기존 CI 7/7 SUCCESS를 확인했다. CI는 실제 AVD 검증과 별개다.
+
+기존 도구를 변경 없이 새 외부 폴더에서 실행했다.
+
+```powershell
+python -B tools/tire-probe/runtime/run.py --sdk=C:/Android/Sdk --serial=emulator-5554 --out=C:/CarScope-External/p3-i4/20261102-resume-01/health
+```
+
+| Gate 항목 | 새 실제 관측 | 판정 |
+|---|---|---|
+| 시각 / 연결 | `2026-11-02T06:34:52.722024+00:00`, `emulator-5554 device`, model `Connect_on_x86_64_emulator` | PASS |
+| 대상 / boot / API | `CarScope_Pleos_API34`, `sys.boot_completed=1`, API34, current user10 | PASS |
+| WebView | `ai.pleos.android.webview`, `131.0.6752.0` | PASS — 현재 provider 조회 |
+| Vehicle Service | `ai.pleos.playground.service.vehicle`, version `2.3.22`, user10 enabled | PASS — package inventory만, SDK 수신 아님 |
+| 메모리 / 저장 공간 | MemAvailable `2,262,020 KiB`, /data available `7,560,316 KiB` | PASS — 최소 512MiB / 256MiB 충족 |
+| CPU/load 표본1 | 2 vCPU, `12.12 / 8.60 / 3.66` | BLOCKED |
+| CPU/load 표본2 | `12.12 / 8.60 / 3.66` | BLOCKED |
+| CPU/load 표본3 | `11.87 / 8.60 / 3.69` | BLOCKED |
+| ADB echo / service 응답 | echo `250 / 94 / 94 ms`, service 조회 `156 / 110 / 750 / 140 ms` | PASS — 각각 ≤1s / ≤2s |
+| SystemUI 표본 | 세 표본 모두 `1096 1600` | BLOCKED — 기존 단일 숫자 PID 조건 불충족 |
+| 최근 선택 로그 | `systemUiFatal=false`, 해당 필터/최근 200줄 결과 비어 있음 | 수집 범위 내 오류 흔적 없음. 전체 안정성 보증 아님 |
+| 최종 Health Gate | `SystemUI not stable over three samples`, `CPU/load or ADB response budget exceeded` | **BLOCKED** |
+| 기존 APK preflight | PASS, SHA256 `a62dd72b94d21c7ba6bfebea5729e9c4ea9fdcb6e4015b21218a12a60ed6ada8` | 정적 APK 검사만 |
+
+기존 load 예산은 1분 load≤2, 5분 load≤3이며 두 항목 모두 초과했다. 이는 CPU 사용률 백분율이나 CarScope 성능 수치가 아니다. SystemUI의 두 PID 문자열은 세 표본에서 같으므로 실제 PID 변경·재시작·crash를 관측했다고 주장하지 않는다. 다중 사용자별 프로세스인지 등 원인은 이번에 진단하지 않았고, PID를 임의 선택하거나 단일 PID 기준을 완화하지 않았다. load 초과는 이와 독립적인 차단 사유다.
+
+Health Gate가 PASS일 때만 Runtime을 수행하라는 조건에 따라 `--run`/`--install`, app-private GLB 주입, 앱 소유권 조회·설치·실행·입력·forward·SDK 호출을 진행하지 않았다. 기존 도구가 수행한 APK preflight 외 추가 APK/GLB hash 재검증과 빌드는 NOT_RUN이며 이전 GLB hash를 새 실행으로 재사용하지 않는다. 에뮬레이터/SystemUI/Vehicle Service/다른 Codex 프로세스를 재시작·종료하지 않았다.
+
+이번 재개의 실제 3D 렌더·네 타이어 선택/강조·체크리스트 확정/수정/재확정·요약, Native Receiver 진입/Back·WebView/Tire lease 복원, 실제 SDK capability/cache/listener/observedAt/STALE/원격 정리 확인은 모두 **BLOCKED — Health Gate 미통과**다. 오류 주입·회전·장시간 성능 측정·실차·폰 Sync E2E는 **NOT_RUN**이다. Vehicle Service 설치/활성화 조회를 실제 capability 또는 data callback 성공으로 해석하지 않는다.
+
+새 원본은 `C:\CarScope-External\p3-i4\20261102-resume-01\health\{health,commands,apk-preflight,results}.json`에 보존했다. 아래 최초 오프라인·AVD 부재 기록은 이 재개 실행과 구분한다. 앱/공식 Harness 및 Codex B의 Worktree·서버·Sync 코드는 변경하지 않았다. **READY_TO_MERGE: NO**를 유지하고 PR #41은 Draft로 둔다.
 
 ## 기준과 범위
 
@@ -109,11 +143,11 @@ python -B tools/tire-probe/runtime/run.py --sdk=C:/Android/Sdk --out=C:/CarScope
 
 브라우저는 `CARSCOPE_IONIQ5_GLB`에 같은 GLB, `CARSCOPE_QR_AR_BASE_URL=https://inspection.example.test/`, `PORT=8127`을 이 서버 프로세스에만 지정하고 `node tools/three-poc/serve.mjs`로 실행했다. 별도 터미널에서 `node tools/three-poc/<표의 검사>.mjs <새 외부 증거 폴더> 'http://127.0.0.1:8127/inspect.html?capture=1' <width> <height>`를 실행한다. 다른 작업 서버의 port/process를 재사용·종료하지 않는다.
 
-## 실제 AVD Runtime 시나리오
+## 실제 AVD Runtime 시나리오 — 최초 실행 및 재개 후 잔여 조건
 
 | 범위 | 판정 | 실제 관측 / 잔여 조건 |
 |---|---|---|
-| A: InspectionActivity 시작·WebView 렌더·외부 GLB | BLOCKED | 연결 AVD 없음. APK 정적 검사/데스크톱 Chrome과 구분 |
+| A: InspectionActivity 시작·WebView 렌더·외부 GLB | BLOCKED | 최초 AVD 없음 → 재개는 연결됐으나 Health Gate 미통과. APK 정적 검사/데스크톱 Chrome과 구분 |
 | A: WebGL 오류·프레임 상태 | BLOCKED | Android 화면/로그/프레임 미수집, 성능 수치 없음 |
 | B: 4개 타이어 선택·Raycast·Highlight·카메라 이동/복원 | BLOCKED | 실제 Android 입력·픽셀 미관측 |
 | B: 체크리스트·확정·수정·재확정 | BLOCKED | 실제 Android WebView 미관측 |
@@ -137,7 +171,7 @@ python -B tools/tire-probe/runtime/run.py --sdk=C:/Android/Sdk --out=C:/CarScope
 
 ## 결함·충돌·후속 판정
 
-실제 Android 오류는 관측할 기기가 없어 확인하지 못했다. 이 사유로 앱 수정이나 Runtime Harness의 검증되지 않은 양성 경로 확장을 하지 않았다. Codex B 소유 Sync/공유 Kotlin/Manifest/Gradle/서버/모바일 파일 변경은 0이며 다른 Worktree에 쓰지 않았다. 파일 변경 충돌은 없고, 다른 Codex의 현재 원격 작업 상태는 확인했다고 주장하지 않는다.
+실제 앱 오류는 Runtime 진입 조건 미충족으로 확인하지 못했다. 재개에서는 실제 guest inventory와 Health Gate 차단 근거만 수집했다. 이 사유로 앱 수정이나 Runtime Harness의 검증되지 않은 양성 경로 확장을 하지 않았다. Codex B 소유 Sync/공유 Kotlin/Manifest/Gradle/서버/모바일 파일 변경은 0이며 다른 Worktree에 쓰지 않았다. 파일 변경 충돌은 없고, 다른 Codex의 현재 원격 작업 상태는 확인했다고 주장하지 않는다.
 
 **FAIL 이력:** 로컬 증거 수집 보조 스크립트가 APK의 존재하지 않는 `inspect.css`를 요청해 KeyError로 중단됐다. 실제 빌더는 CSS를 HTML에 유지하고 9개 JS 모듈을 복사한다. 빌더의 정확한 목록으로 보조 검사만 수정한 뒤 9개 소스 및 전체 생성 자산의 바이트 대조가 PASS했다. `archive-initial-failure.json`에 이 오류를 보존했다. 제품 결함이나 APK 빌드 실패는 아니며 앱/공식 검사 기준을 변경하지 않았다. 그 외 실행한 제품/오프라인 gate의 FAIL은 없다.
 
