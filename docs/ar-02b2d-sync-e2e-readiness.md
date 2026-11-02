@@ -91,7 +91,7 @@ node tools/inspection-sync-poc/bin/host-readiness.mjs --api-origin https://api.e
 python tools/inspection-sync-poc/android/device-readiness.py --sdk C:/Android/Sdk --serial <확인한emulator-serial> --report <외부run>/device-readiness.json
 openssl s_client -connect <host>:443 -servername <DNS-host> -verify_hostname <DNS-host> -verify_return_error -showcerts
 # 외부 endpoint.json: 정확히 apiOrigin/mobileRoot 두 HTTPS root 문자열. 인증 값 없음.
-Get-Content -Raw <외부endpoint.json> | adb -s <확인한serial> shell run-as io.carscope.app sh -c 'cat > files/sync-endpoint.json'
+Get-Content -Raw <외부endpoint.json> | adb -s <확인한serial> shell "run-as io.carscope.app sh -c 'cat > files/sync-endpoint.json'"
 # private 파일 쓰기는 인증을 제공하지 않는다. Native 화면으로 설정을 검증하고 자동 실행하지 않는다.
 ```
 
