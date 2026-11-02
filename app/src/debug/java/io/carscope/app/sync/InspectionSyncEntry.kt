@@ -11,7 +11,7 @@ import android.widget.LinearLayout
 internal class InspectionSyncEntry(private val activity: Activity) {
     private var opening = false
     private val button = Button(activity).apply {
-        text = "워셔액 점검 결과 수신 (Debug)"
+        text = "워셔액·타이어 점검 결과 수신 (Debug)"
         tag = "inspection-sync-entry"
         minHeight = 64
         setOnClickListener {

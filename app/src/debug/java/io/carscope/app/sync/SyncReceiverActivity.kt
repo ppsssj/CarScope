@@ -7,6 +7,8 @@ import android.os.Handler
 import android.os.Looper
 import android.view.View
 import android.view.WindowManager
+import android.widget.ArrayAdapter
+import android.widget.Spinner
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.LinearLayout
@@ -26,6 +28,7 @@ open class SyncReceiverActivity : Activity() {
     private var stopped = true
     private var qrBitmap: Bitmap? = null
     private var shownQr: SyncQrPayload? = null
+    private lateinit var task: Spinner
     private lateinit var status: TextView
     private lateinit var connection: TextView
     private lateinit var expiry: TextView
@@ -55,15 +58,19 @@ open class SyncReceiverActivity : Activity() {
         val column = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(24, 24, 24, 24) }
         fun text(value: String, tagValue: String): TextView = TextView(this).apply { text = value; textSize = 18f; tag = tagValue; setPadding(0, 10, 0, 10); column.addView(this) }
         fun button(value: String, tagValue: String): Button = Button(this).apply { text = value; tag = tagValue; minHeight = 64; column.addView(this) }
-        text("CarScope 워셔액 셀프 점검", "title").textSize = 24f
+        text("CarScope 모바일 셀프 점검", "title").textSize = 24f
         text("사용자가 직접 확인한 보고입니다. 실제 차량 센서 진단이나 차량 상태 보증이 아닙니다.", "notice")
         connection = text("연결 설정 미완료", "connection")
         text("실제 차량 인증 미구현 · 생성 권한이 없으면 세션을 만들 수 없습니다.", "authentication")
         probe = button("서비스 연결 확인", "probe")
+        task = Spinner(this).apply {
+            tag = "task"; isSaveEnabled = false; contentDescription = "모바일 점검 요청 부품"
+            adapter = ArrayAdapter(this@SyncReceiverActivity, android.R.layout.simple_spinner_dropdown_item, SyncTasks.labels)
+        }; column.addView(task)
         create = button("점검 요청 생성", "create")
         status = text("IDLE · 새 요청을 준비하세요.", "status")
         expiry = text("", "expiry")
-        image = ImageView(this).apply { tag = "qr"; contentDescription = "워셔액 점검 초대 QR · 공유하지 마세요"; visibility = View.GONE; isSaveEnabled = false }
+        image = ImageView(this).apply { tag = "qr"; contentDescription = "모바일 점검 초대 QR · 공유하지 마세요"; visibility = View.GONE; isSaveEnabled = false }
         column.addView(image, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 512))
         summary = text("점검 결과 수신 전", "result")
         accept = button("이 결과 수락", "accept")
@@ -97,7 +104,7 @@ open class SyncReceiverActivity : Activity() {
                     else "서비스 연결 실패 · ${failureMessage((reply as SyncReply.Failure).reason)}"
             }
         }
-        create.setOnClickListener { controller.create(endpoint.mobileRoot) }
+        create.setOnClickListener { controller.create(endpoint.mobileRoot, SyncTasks.all[task.selectedItemPosition]) }
         accept.setOnClickListener { controller.accept() }; cancel.setOnClickListener { controller.cancel() }; retry.setOnClickListener { controller.retryPolling() }
         render(controller.state)
         val tick = object : Runnable {
@@ -123,8 +130,18 @@ open class SyncReceiverActivity : Activity() {
             else -> state.phase.name
         } + if (state.failure != null) "\n요청 실패: ${failureMessage(state.failure)} · 취소/수락 성공이 아닙니다." else ""
         summary.text = state.result?.let { result ->
-            val label = when (result.status) { ReportedStatus.OK -> "정상으로 보고"; ReportedStatus.NEEDS_REFILL -> "보충 필요"; ReportedStatus.UNSURE -> "확인 불가" }
-            "워셔액 셀프 점검\n사용자 보고 결과: $label\n완료 시각: ${result.completedAt}\nSELF · USER_REPORTED\n실제 차량 센서 진단이 아닙니다."
+            val detail = when (result) {
+                is CompletedInspection -> when (result.status) {
+                    ReportedStatus.OK -> "정상으로 보고"; ReportedStatus.NEEDS_REFILL -> "보충 필요"; ReportedStatus.UNSURE -> "확인 불가"
+                }
+                is CompletedTireInspection -> {
+                    fun answer(value: TireResponse) = when (value) {
+                        TireResponse.FOUND -> "발견 보고"; TireResponse.NOT_FOUND -> "보이는 범위에서 발견하지 못함"; TireResponse.UNABLE -> "확인 불가"
+                    }
+                    "손상: ${answer(result.damage)}\n이물질: ${answer(result.debris)}\n불균일 마모: ${answer(result.wear)}\n종합: ${result.statusName}"
+                }
+            }
+            "${SyncTasks.label(result.taskId)} 셀프 점검\n사용자 보고 결과: $detail\n완료 시각: ${result.completedAt}\nSELF · USER_REPORTED\n실제 차량 센서 진단이 아닙니다. 안전·정상·주행 가능 판정이 아닙니다."
         } ?: state.summary()
         fun format(value: Long?) = value?.let { DateFormat.getDateTimeInstance().format(Date(it)) } ?: "-"
         expiry.text = "QR 초대 만료: ${format(state.inviteExpiresAt)}\n세션 만료: ${format(state.expiresAt)}"
@@ -135,6 +152,7 @@ open class SyncReceiverActivity : Activity() {
             } catch (_: Exception) { image.visibility = View.GONE; status.text = "FAILED · QR 표시 실패. 요청을 취소하고 다시 시작하세요." }
         }
         create.isEnabled = transport?.creationAuthorized() == true && !state.busy && state.phase in listOf(ReceiverPhase.IDLE, ReceiverPhase.FAILED, ReceiverPhase.CANCELLED, ReceiverPhase.EXPIRED)
+        task.isEnabled = create.isEnabled
         accept.isEnabled = state.canAccept; cancel.isEnabled = state.canCancel; retry.isEnabled = state.retryAvailable && !state.busy
     }
     private fun clearQr() { image.setImageDrawable(null); image.visibility = View.GONE; qrBitmap?.recycle(); qrBitmap = null; shownQr = null }
