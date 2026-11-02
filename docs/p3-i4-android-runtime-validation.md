@@ -1,6 +1,55 @@
 # P3-I4 — Android 통합 Tire Runtime 검증
 
-2026-11-02 KST. **실제 Android 통합 Runtime은 BLOCKED**다. 최초 실행은 AVD 부재였고, 사용자 수동 부팅 후 재개에서는 대상 연결을 확인했으나 기존 Health Gate의 CPU/load 및 단일 SystemUI PID 조건을 충족하지 못했다. 설치·Activity 조작·SDK 호출은 수행하지 않았다. 아래 오프라인 검증은 Android WebView/Pleos 실측을 대신하지 않는다.
+2026-11-02 KST. **실제 Android 통합 Runtime은 BLOCKED**다. 다중 사용자 SystemUI를 단일 PID로 제한한 오탐은 원인을 확인해 수정했다. 새 실제 표본에서는 사용자별 SystemUI 검사가 통과했으나 CPU/load 초과가 남았고, 이후 대상 AVD가 연결 목록에서 사라졌다. 설치·Activity 조작·SDK 호출은 수행하지 않았다. 아래 오프라인 검증은 Android WebView/Pleos 실측을 대신하지 않는다.
+
+## Health Gate 정확성 개선과 CPU 원인 조사 — 2026-11-02
+
+시작 Worktree/branch는 동일하며 clean HEAD `82c4f8a0d26dd68315e957c5128642c4f11a57f3`와 PR #41 HEAD가 일치했다. fetch 후 main도 `7a4c77a`로 유지됐다. 이 단계의 코드 변경은 `tools/tire-probe/runtime/health.py`, `test_harness.py`, `webview.mjs`의 Health Gate 검사에 한정한다. 앱·SDK·Sync·Geometry·설치 동작은 변경하지 않았다.
+
+### SystemUI 판정: 기존 오탐 확인, 사용자별 검사로 수정
+
+기존 조건은 `pidof com.android.systemui`의 전체 문자열에 `isdigit()`을 적용했다. 실제 `1096 1600`은 두 개의 정상적인 사용자별 프로세스여서, 문자열이 동일하게 유지돼도 이 조건을 통과할 수 없었다. [AOSP 다중 사용자 설명](https://source.android.com/docs/automotive/users_accounts/user_system)은 시스템 user0과 foreground 사용자의 동시 실행을 설명한다. [AOSP UID 범위 정의](https://android.googlesource.com/platform/system/core/+/80112f73cd926077f0682c22d0744bebd1b2d47e/include/private/android_filesystem_config.h)의 `AID_USER_OFFSET=100000`을 사용하되 실제 Package Manager UID 및 `/proc` 소유권도 함께 대조한다. 문서만으로 Pleos의 정확한 프로세스 구성을 가정하지 않았다.
+
+| 실제 SystemUI | user0 | 현재 user10 |
+|---|---:|---:|
+| PID | 1096 | 1600 |
+| `ps` UID / Package Manager UID / `/proc/status` UID | 10121 | 1010121 |
+| `/proc/stat` starttime ticks | 2731 | 3295 |
+| 수정 중 Gate의 세 표본 | 동일한 UID/PID/starttime, state S | 동일한 UID/PID/starttime, state S |
+
+새 검사는 개수 제한을 지우지 않는다. 이 전용 Gate는 user0과 현재 사용자 각각 정확히 한 개의 **정확한 이름** `com.android.systemui`를 요구한다(현재 사용자가 0이면 한 개). 예상 밖 사용자·중복·누락은 BLOCKED다. UID를 사용자와 app ID로 분해하고 두 사용자의 app ID가 같은지, 패키지 UID와 `/proc/status` 네 UID가 모두 같은지 확인한다. 표본 앞뒤 process table과 `/proc/stat` 재조회로 PID 소멸·교체·재사용을 검사하고, 세 표본의 `(user,uid,pid,startTicks)`가 같은지 비교한다. 표본 앞뒤 및 최종 current user가 바뀌어도 차단한다. 정상 R/S 등 상태 변화는 허용하지만 zombie/dead/stopped·파싱 실패·권한 부족은 차단한다.
+
+기존 최근 SystemUI fatal/ANR 차단을 유지하고 process-death 문구도 검사한다. 새 소유권 조회는 요청당 2초 예산을 적용한다. Runtime driver의 `pulse()`에 있던 동일한 단일 PID 가정도 제거하고 **같은 Python 검사**를 호출해 이 실행의 PASS `health.json` baseline과 비교하도록 했다. baseline이 BLOCKED/이전 schema/불일치이면 차단하며 helper 부재·timeout도 차단한다. 새 앱 bridge/SDK API는 없다.
+
+이는 표본 구간의 관측으로, 모든 시간의 정상 동작을 증명하지 않는다. 현재 사용자 외 추가 background SystemUI 사용자가 있는 다른 구성은 자동 허용하지 않는다. 새 Runtime pulse의 실제 양성 경로와 최종 추가 `/proc/stat` 표본 내 재검사는 마지막 기기 연결 해제 때문에 **실기기 NOT_RUN**, 합성 회귀만 PASS다.
+
+### CPU 판정: 실제 고부하 유지, 내부 근본 원인은 미확정
+
+CPU/load 식과 수치는 변경하지 않았다: 2 vCPU이면 1분 load≤2, 5분 load≤3, echo≤1초, 기존 service 조회≤2초, 메모리≥512MiB, /data≥256MiB다. 15분 load는 기존과 동일하게 유효성만 검사한다.
+
+외부 원본 루트 `C:\CarScope-External\p3-i4\20261102-health-accuracy-01`에서 `dumpsys cpuinfo`, 2회 thread top, Activity/SurfaceFlinger/gfxinfo 및 두 앱의 제한된 warning 로그를 읽기만 했다. 화면 전환·설정 변경·서비스 중단·profiler/trace 활성화는 하지 않았다.
+
+- `dumpsys cpuinfo`의 보고 구간은 maps 64%, DrivingView 61%, graphics composer 13%, SurfaceFlinger 13%였다. 이 값은 해당 도구의 캐시된 구간이며 현재 순간 CPU나 CarScope 수치가 아니다. guest 표기 시각도 host UTC와 같다고 가정하지 않았다.
+- 더 짧은 두 번째 thread top 표본은 DrivingView RHIThread 27%, GameThread 7.5%, RenderThread 3.5%; maps main 15%, MbxRendermapNam 14.5%, RenderThread 12.5%; graphics composer binder 14%, SurfaceFlinger 7%였다. thread 값은 프로세스 합계와 별개이고 2 vCPU top의 총 용량은 200%다. top 자체도 CPU를 쓰므로 측정 overhead가 있다.
+- 두 앱이 별도 task의 resumed Activity로 존재하고 관련 SurfaceView layer가 합성 중이며 GPU 경로는 NVIDIA GTX1060의 Emulator OpenGL ES Translator였다. **지도/DrivingView의 지속적인 렌더 작업과 compositor 작업이 부하에 기여한다는 관측**은 확보했다. 지도 warning 로그에는 NMEA checksum 불일치가 반복됐으나 그 CPU 기여도는 측정하지 못했다. 지도/Unreal 내부 코드, renderer 병목·driver·emulator 비용 중 하나를 확정 원인으로 단정하지 않는다. raw 위치·로그 내용은 Git에 넣지 않는다.
+- host CIM 표본의 약 249.85초 구간에서 QEMU CPU 시간은 약 515.594초 증가했다. Java/Gradle daemon 네 개의 CPU 시간 증가는 각각 0.172/0.234/0.250/0.578초이며 관측한 Gradle client는 없었다. **이 구간의 무거운 Gradle 빌드 경쟁 근거는 없었다.** daemon 존재를 활성 빌드로 간주하지 않았고 다른 작업의 프로세스를 종료하지 않았다. 그 밖의 host 경쟁이 전혀 없었다는 증명은 아니다.
+
+### 재실행·회귀와 잔여 조건
+
+| 새 실행 | 결과 | 실제 근거 |
+|---|---|---|
+| `before/` 06:58:39 UTC | BLOCKED | 기존 코드: 단일 PID 오탐 + CPU/load 초과 |
+| `after-first/` 07:02:58 UTC | BLOCKED | 수정 중 사용자별 소유권/시작 시각 세 표본은 통과. load `8.62/8.63/8.06`, `8.62/8.63/8.06`, `8.25/8.55/8.04`; echo94/109/93ms. **남은 이유는 CPU/load뿐** |
+| `final/` 07:06:18 UTC | BLOCKED | 최종 코드로 새 디렉터리에 실행. 연결 목록이 비어 있음; guest 명령 없음. QEMU/emulator 프로세스도 후속 host 표본에서 없음. 종료 주체·원인은 미확정 |
+| Python Harness | PASS | `python -B -m unittest discover -s tools/tire-probe/runtime -p 'test_*.py' -v`: **23 tests**, 실패0 |
+| Node evidence guards / driver syntax | PASS | `node --test tools/tire-probe/runtime/evidence.test.mjs`: 4 tests; `node --check tools/tire-probe/runtime/webview.mjs` |
+| 공유 helper CLI 거부 | PASS | 실제 `health.py --sdk=… --serial=emulator-5554 --baseline=…/after-first/health.json --expected-user=10` 호출은 BLOCKED baseline을 exit2로 거부. 앱/SDK 미실행 |
+| 변경 경계 / 공백 | PASS | Health Gate·테스트·문서만 변경, `git diff --check` |
+| APK/빌드/JVM/UI/SDK Runtime | NOT_RUN / BLOCKED | 이번 단계는 Gate/읽기 전용 조사. 이전 빌드·114 JVM·228 desktop assertions를 재실행 결과로 표시하지 않음 |
+
+23개에는 정상 user0/10 및 user0 단독, 소유 UID/Package Manager/`proc` 불일치, 예상 밖 사용자·중복/소멸, PID 교체·재사용/starttime 변경, zombie/dead/stopped, 표본 내·표본 간·마지막 사용자 전환, fatal/ANR/death, 조회 시간 초과·권한 부족, Runtime PASS baseline 비교 및 기존 CPU 경계값 검사가 포함된다. 개발 중 replacement PID fixture의 `/proc/201` 응답 누락으로 테스트 1건이 실패했고 fixture를 완성해 최종 통과했다. 검사 기준을 약화하지 않았고 외부 `test-development-failure.txt`에 구분했다.
+
+안정된 **저부하** 상태는 확보하지 못했다. 최종적으로 대상 연결도 없어 추가 대기/재부팅을 반복하지 않았다. 앱 설치·실행·SDK 호출·강제 종료는 없고 Codex B Worktree·서버·Sync 파일은 변경하지 않았다. **SystemUI 오탐 수정 PASS / CPU 문제 BLOCKED / 통합 Runtime BLOCKED**, PR #41 Draft 및 **READY_TO_MERGE: NO** 유지다.
 
 ## 수동 부팅 후 재개 — 2026-11-02 15:34 KST
 
@@ -36,7 +85,7 @@ Health Gate가 PASS일 때만 Runtime을 수행하라는 조건에 따라 `--run
 
 새 원본은 `C:\CarScope-External\p3-i4\20261102-resume-01\health\{health,commands,apk-preflight,results}.json`에 보존했다. 아래 최초 오프라인·AVD 부재 기록은 이 재개 실행과 구분한다. 앱/공식 Harness 및 Codex B의 Worktree·서버·Sync 코드는 변경하지 않았다. **READY_TO_MERGE: NO**를 유지하고 PR #41은 Draft로 둔다.
 
-## 기준과 범위
+## 최초 실행의 기준과 범위
 
 - Worktree: `C:\dev\CarScope-p3i4-avd`, branch: `test/p3-i4-avd-integration`. 시작 working tree clean.
 - HEAD 및 fetch 후 `origin/main`: `7a4c77a60485146cf5baef248390fec46b53d608`.
@@ -44,7 +93,7 @@ Health Gate가 PASS일 때만 Runtime을 수행하라는 조건에 따라 `--run
 - [PR #39](https://github.com/ppsssj/CarScope/pull/39) merge `09785712874710150932bbc6acfaa454c00e0000`, [PR #38](https://github.com/ppsssj/CarScope/pull/38) merge `7a4c77a60485146cf5baef248390fec46b53d608`가 기준 main에 포함된다.
 - [P3-I1](p3-i1-tire-3d-integration.md), [P3-I2 계획](p3-i2-runtime-test-plan.md)·[결과](p3-i2-tire-avd-runtime.md), [P3-I3](p3-i3-tire-inspection.md), [Receiver 준비](ar-02b2c-device-sync-readiness.md), AGENTS 및 architecture/roadmap/development-setup/validation-report/SDK/STALE/Anatomy/3D PoC 문서를 확인했다.
 
-이번 변경은 이 보고서와 [증거 인덱스](evidence/p3-i4/README.md)다. 앱·SDK·Runtime Harness·Geometry·Sync 인증/HTTP/QR·AR-01을 수정하지 않았다. 기존 AVD를 생성·부팅·재시작하거나 SystemUI/Vehicle Service/다른 Codex 프로세스를 종료하지 않았다. 전역 Android/JDK/Git 설정을 변경하지 않았다.
+최초 제출 변경은 이 보고서와 [증거 인덱스](evidence/p3-i4/README.md)였다. 당시 앱·SDK·Runtime Harness·Geometry·Sync 인증/HTTP/QR·AR-01을 수정하지 않았다. 이후 Health Gate 검사 변경은 위 정확성 개선 절에서 별도 설명한다. 기존 AVD를 생성·부팅·재시작하거나 SystemUI/Vehicle Service/다른 Codex 프로세스를 종료하지 않았다. 전역 Android/JDK/Git 설정을 변경하지 않았다.
 
 ## 환경과 Health Gate
 

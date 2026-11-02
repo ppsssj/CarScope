@@ -2,6 +2,26 @@
 
 2026-11-02 KST. [검증 보고서](../../p3-i4-android-runtime-validation.md).
 
+## SystemUI Health Gate 정확성 및 CPU 조사
+
+새 외부 루트: `C:\CarScope-External\p3-i4\20261102-health-accuracy-01`. 실제 소유권 오탐 수정과 미해결 CPU 부하를 분리한다.
+
+| 위치 | 근거 / 범위 |
+|---|---|
+| `before/` | 06:58:39 UTC, 기존 단일 PID 오탐 + 실제 CPU/load 초과 |
+| `after-first/` | 07:02:58 UTC, 수정 중 사용자별 UID/PID/starttime 세 표본 일치; CPU/load만 BLOCKED. 최종 추가 stat 재조회 전 중간 코드의 실제 표본 |
+| `final/` | 07:06:18 UTC, 최종 코드의 새 Gate. 연결 목록 비어 있음, BLOCKED. 앱 실행 없음 |
+| `ps-initial.txt`, 각 Gate의 `commands.json` | UID10121/user0/PID1096, UID1010121/user10/PID1600, Package Manager/`proc` 대조 |
+| `cpuinfo.txt`, `top-threads.txt`, `diagnostic-commands.json` | 캐시된 프로세스 CPU와 짧은 thread 표본을 구분. 실제 CPU 부하; CarScope 성능 수치 아님 |
+| `activity.txt`, `surfaceflinger.txt`, `maps-gfx.txt`, `driving-gfx.txt` | 두 resumed task·SurfaceView·렌더링 경로. gfxinfo 누적 통계를 CarScope FPS로 해석하지 않음 |
+| `maps-log.txt`, `driving-log.txt` | 제한된 warning 로그. 위치를 포함할 수 있어 raw 공개 금지; checksum warning과 CPU의 인과는 미확정 |
+| `host.json`, `host-processes-{first,second}.json`, `host-interval-summary.json`, `host-{cpu,cim}-window.json` | process metadata/CPU 시간 delta. 관측 구간에 무거운 Gradle 경쟁 근거 없음. 마지막 CIM에서는 QEMU 없음; 이 시점 메모리를 기동 중 값으로 혼합하지 않음 |
+| `python-verified-23.log`, `node-verified.log`, `driver-syntax.log`, `tests.json` | 최종 Python23/Node4/syntax PASS. 앞선 `*-final.log`는 중간22개 실행이며 최종과 구분 |
+| `cli-baseline-rejection.{log,json}` | 실제 공유 helper CLI에서 BLOCKED baseline 거부 exit2 확인. 양성 Runtime 검증과 구분 |
+| `test-development-failure.txt` | 테스트 작성 중 replacement PID의 proc fixture 누락과 수정 기록 |
+
+SystemUI 사용자별 안정성은 실제 연결 표본에서 확인했지만, 새 Runtime pulse 양성 경로와 최종 추가 표본 내 stat 재조회는 기기 해제 후 실기기 NOT_RUN이다. CPU 기준은 그대로이며 저부하 안정 상태를 확보하지 못했다. 기기를 재시작/종료하거나 Sync/SDK를 호출하지 않았다.
+
 ## 사용자 수동 부팅 후 재개
 
 새 외부 증거 루트: `C:\CarScope-External\p3-i4\20261102-resume-01`. 아래 최초 실행과 별개이며 덮어쓰지 않았다.

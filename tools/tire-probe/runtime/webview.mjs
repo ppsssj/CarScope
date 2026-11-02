@@ -24,7 +24,12 @@ function pulse() {
   if (adb('emu', 'avd', 'name').split(/\r?\n/)[0] !== 'CarScope_Pleos_API34' || adb('shell', 'getprop', 'sys.boot_completed') !== '1') throw new Blocked('AVD identity/boot changed');
   const load = adb('shell', 'cat', '/proc/loadavg').split(/\s+/).slice(0, 2).map(Number);
   if (load.length !== 2 || !load.every(n => Number.isFinite(n) && n >= 0) || load[0] > Number(args.cpus)
-    || load[1] > Number(args.cpus) * 1.5 || !/^\d+$/.test(adb('shell', 'pidof', 'com.android.systemui'))) throw new Blocked('AVD load/SystemUI gate deteriorated');
+    || load[1] > Number(args.cpus) * 1.5) throw new Blocked('AVD load gate deteriorated');
+  try {
+    execFileSync(process.platform === 'win32' ? 'python' : 'python3', [join(dirname(fileURLToPath(import.meta.url)), 'health.py'),
+      '--sdk=' + resolve(dirname(args.adb), '..'), '--serial=' + args.serial, '--baseline=' + join(out, 'health.json'), '--expected-user=' + args.user],
+    { timeout: 15000, encoding: 'utf8' });
+  } catch (_) { throw new Blocked('SystemUI ownership/start time or Android user changed, or health recheck unavailable'); }
 }
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const mark = (name, condition, data = {}) => { result.checks[name] = { status: condition ? 'PASS' : 'FAIL', ...data }; if (!condition) throw Error(name); };
