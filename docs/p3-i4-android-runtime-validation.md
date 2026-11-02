@@ -1,0 +1,148 @@
+# P3-I4 — Android 통합 Tire Runtime 검증
+
+2026-11-02 KST. **실제 Android 통합 Runtime은 BLOCKED**다. 실행 중인 대상 AVD가 없어 부팅·설치·Activity 조작·SDK 호출을 수행하지 않았다. 아래 오프라인 검증은 Android WebView/Pleos 실측을 대신하지 않는다.
+
+## 기준과 범위
+
+- Worktree: `C:\dev\CarScope-p3i4-avd`, branch: `test/p3-i4-avd-integration`. 시작 working tree clean.
+- HEAD 및 fetch 후 `origin/main`: `7a4c77a60485146cf5baef248390fec46b53d608`.
+- origin: `https://github.com/ppsssj/CarScope.git`. GitHub에서 PR #32/#34/#36/#37/#38/#39의 MERGED metadata와 설명을 직접 확인했다.
+- [PR #39](https://github.com/ppsssj/CarScope/pull/39) merge `09785712874710150932bbc6acfaa454c00e0000`, [PR #38](https://github.com/ppsssj/CarScope/pull/38) merge `7a4c77a60485146cf5baef248390fec46b53d608`가 기준 main에 포함된다.
+- [P3-I1](p3-i1-tire-3d-integration.md), [P3-I2 계획](p3-i2-runtime-test-plan.md)·[결과](p3-i2-tire-avd-runtime.md), [P3-I3](p3-i3-tire-inspection.md), [Receiver 준비](ar-02b2c-device-sync-readiness.md), AGENTS 및 architecture/roadmap/development-setup/validation-report/SDK/STALE/Anatomy/3D PoC 문서를 확인했다.
+
+이번 변경은 이 보고서와 [증거 인덱스](evidence/p3-i4/README.md)다. 앱·SDK·Runtime Harness·Geometry·Sync 인증/HTTP/QR·AR-01을 수정하지 않았다. 기존 AVD를 생성·부팅·재시작하거나 SystemUI/Vehicle Service/다른 Codex 프로세스를 종료하지 않았다. 전역 Android/JDK/Git 설정을 변경하지 않았다.
+
+## 환경과 Health Gate
+
+| 항목 | 이번 관측 |
+|---|---|
+| Host | Windows 10 Home `10.0.19045`, 논리 CPU 4, RAM 16,667,484 KiB, 최초 free 2,824,088 KiB |
+| Node / npm / Python | 22.16.0 / 10.9.2 / 3.11.9 |
+| JDK / Gradle | Eclipse Adoptium 17.0.20.1 / wrapper 8.14 |
+| Android SDK | `C:\Android\Sdk`, adb/emulator/API34 android.jar 존재 |
+| Pleos SDK | 빌드 의존성 `Vehicle:2.3.2`; 실제 Service 버전은 NOT_RUN |
+| 대상 | 명시적 `emulator-5554`, 요구 AVD `CarScope_Pleos_API34` |
+| 초기 Gate | **BLOCKED** — `2026-11-02T05:42:58.529100+00:00`, `adb devices -l` exit 0, 연결 목록 비어 있음 |
+| 최종 Gate | **BLOCKED** — `2026-11-02T05:52:29.922596+00:00`, 새 `health-final/` 실행도 연결 목록 비어 있음. 최종 APK preflight는 PASS |
+| Guest 상태 | boot/API/CPU/load/RAM/storage/SystemUI/WebView/Vehicle Service **NOT_RUN**, 대상 없음 |
+
+초기 adb 명령은 목록 조회뿐이다. adb 자체가 기존 서버 부재를 보고하고 daemon을 시작했으며 emulator는 시작하지 않았다. 최초 APK preflight의 BLOCKED는 아직 빌드 전 APK 부재이며 빌드 실패로 집계하지 않는다. Sandbox에서 fetch의 외부 Git metadata 접근, CIM 조회, Anatomy 소유권 검사가 차단되어 승인된 실행으로 다시 확인했다. 안전 검사·pin·전역 설정을 완화하지 않았다.
+
+## 새 오프라인 검증
+
+원본은 외부 `C:\CarScope-External\p3-i4\20261102-integrated`에 보존한다. 과거 PR/CI 수치를 이번 실행으로 재사용하지 않는다.
+
+| Gate | 판정 | 새 명령 / 관측 | 외부 근거 |
+|---|---|---|---|
+| Node UI / Tire inspection | PASS | `npm test --prefix tools/three-poc`: 34 pass, fail/skip 0. 기존 28 + P3-I3 reducer/flow/summary 6 포함 | `ui-node.log` |
+| Android 자산 계약 | PASS | `npm run test:android-assets --prefix tools/three-poc`: 1 pass. 실제 Debug inspection 자산 생성, 상대 import/원본 바이트/CSP/GLB 미포함 | `android-assets.log` |
+| Debug Lab 자산 | PASS | `node tools/three-poc/build-android-lab.mjs` | `lab-assets.log` |
+| Runtime Harness guards | PASS | `python -B -m unittest discover -s tools/tire-probe/runtime -p 'test_*.py' -v`: 10 pass; `node --test tools/tire-probe/runtime/evidence.test.mjs`: 4 pass | `runtime-{python,node}.log` |
+| Anatomy pin / clean | PASS | `1482e8469b0a9e0d8cc18ea2740a01423d29ae80`, 원본 working tree clean | `anatomy-{pin,clean}.log` |
+| Anatomy audit / GLB / Envelope | PASS | `npm run build`, `export`, `envelope`, `verify` 각각 `--prefix tools/anatomy-car`. Sedan 91 parts / 7573 triangles, Khronos 0 errors/0 warnings. Envelope 143 parts / 14988 triangles | `geometry-{build,export,envelope,verify}.log` |
+| Anatomy 회귀 | PASS | `npm test --prefix tools/anatomy-car`: 58 pass, fail/skip 0 | `geometry-test.log` |
+| IONIQ 5 회귀 | PASS | `node --test tools/ioniq5-asset/test/*.test.mjs`: 57 pass / 기존 optional `.blend` 변환 1 skip (`IONIQ5_BLEND` 미설정). `IONIQ5_GLB`는 기존 외부 GLB 지정 | `ioniq5-tests.log` |
+| Core JVM | PASS | `gradlew.bat -PcoreOnly=true :vehicle-core:test --rerun-tasks --console=plain` + 아래 저메모리 옵션. 총 38, 37 pass / 기존 optional 자산 1 skip, fail/error 0 | `core-jvm.log`, `junit-core/` |
+| App JVM / Android 빌드 | PASS | `:app:testDebugUnitTest :app:assembleDebug :app:assembleRelease :app:bundleRelease :app:lintDebug --rerun-tasks`: 114 pass, fail/error/skip 0, 106 tasks 실행 | `android-build.log`, `junit-app/` |
+| Lint | PASS | 오류 0 / 경고 23. 경고가 없는 빌드라고 해석하지 않음. Gradle deprecated feature 안내 별도 존재 | `lint-results-debug.xml` |
+| Identity/Tire/Receiver 격리 | PASS | `python tools/identity-probe/check.py build-contract`, `python tools/tire-probe/check.py build-contract`, `python tools/inspection-sync-poc/android/check-boundary.py` | `*-boundary.log` |
+| Receiver JVM 상세 | PASS | Entry 3 / Activity 8 / HTTPS 10 / Decoder 8 / 기존 Receiver 17; app 114에 포함, 별도 추가 합산하지 않음. boundary에서 readiness Python 7 pass | `receiver-boundary.log` |
+| Kotlin → JS | PASS | `node tools/three-poc/check-tire-native-contract.mjs app/build/test-results/tire-ui-v1.json`: 실제 serializer의 합성 JVM 출력. 실제 SDK 수신 아님 | `native-js-contract.log` |
+| APK 바이트 / 서명 | PASS | 아래 최종 APK. 직접 복사된 9개 모듈이 소스와 동일하고 inspection 전체 생성 파일이 APK와 동일. GLB 미포함, APK v2 서명 검증 | `debug-source-bytes.json`, `debug-signature.log` |
+| 생성 자산 결정성 | PASS | 재생성 후 tracked `anatomy-car.parts` diff 0 | `geometry-source-diff.log` |
+
+Geometry 충돌 검사는 해당 샘플 자세에 한정하며 연속 회전 전체의 완전한 무충돌 증명이 아니다. Core skip 및 `.blend` skip을 새 PASS로 합산하지 않았다. 실제 외부 GLB 사용과 원본 Blender 재변환 검증은 별개다.
+
+### 최종 APK와 Release 경계
+
+| 산출물 | bytes | SHA-256 |
+|---|---:|---|
+| Debug APK | 11,213,154 | `a62dd72b94d21c7ba6bfebea5729e9c4ea9fdcb6e4015b21218a12a60ed6ada8` |
+| Release unsigned APK | 7,950,970 | `77ec8fa6b11e365ebc9ed85d68cd97751a4eb674bf86d79896b8d1f21a57e10d` |
+| Release AAB | 2,761,821 | `840ade102c917d63076be12fca43d9a3cb40e1bd1dbdede5bb9667e9d7efb650` |
+| 외부 GLB | 1,902,820 | `cfe0d754b5aaf8daeff7b498b0f786d7b2fb94323850f214678a3b68d00139e1` |
+
+APK: `app/build/outputs/apk/debug/app-debug.apk`, applicationId `io.carscope.app`, minSdk28/targetSdk34, debuggable, versionCode1/versionName `0.1.0-p0`. 원본 GLB hash는 P3-I3 기록과 같고 변경하지 않았다. APK/AAB 사본은 외부 evidence에 보관했다.
+
+Debug에는 InspectionActivity/Native entry/Receiver/Tire 상태·새 checklist/summary 모듈이 함께 포함된다. Release APK/AAB에는 Inspection/Lab 자산·클래스·private host·모델 경로·Receiver/Tire Debug 클래스가 없고, 테스트 전용 credential provider/Activity는 모든 APK/AAB에서 제외된다. INTERNET은 Debug만, cleartext 거부는 두 variant 모두 유지된다. 이는 패키징 근거이며 설치·기동·실제 Android rendering PASS가 아니다.
+
+### 데스크톱 Chrome 회귀
+
+실제 외부 GLB와 USER_REPORTED 테스트 입력을 사용하며 Android Native endpoint나 실제 Pleos callback 증거가 아니다. 기존 고정 Anatomy driver로 실행한 headless Chrome이며 두 viewport의 실제 렌더 캡처를 직접 검토했다.
+
+| 기존 검사 | 1600×1000 | 420×860 | 관측 범위 |
+|---|---|---|---|
+| `check-tire-inspection.mjs` | PASS 34 assertions | PASS 34 assertions | 네 타이어 체크리스트·키보드 입력·44px 대상·확정/수정/재확정·이전/다음·부분/전체 요약·기록 초기화 |
+| `check-tires.mjs` | PASS 39 | PASS 36 | 실제 Raycast·고무 강조·차체 가림·카메라/scroll/focus 복원·연속 선택/취소. Desktop에는 선택 중 420×860/1024×600 viewport resize 포함 |
+| `check-inspection-components.mjs` | PASS 34 | PASS 34 | 기존 네 부품·보닛 가림·연속 전환/취소·강조/카메라 복원 |
+| `check-inspection.mjs` | PASS 17 | NOT_RUN | 보닛·워셔액·QR 테스트 origin·중복/취소·종료 회귀 |
+
+7개 실행 모두 console clean, 총 228 assertions다. `browser-summary.json`과 각 `browser-*/{results.json 또는 browser-results.json,browser-log.txt,*.png}`가 근거다. SDK 접기 영역의 두 feature/미연동 상태 확인은 실제 Pleos 수신을 뜻하지 않는다. 별도 합성 상태 Chrome fixture 시나리오는 이번에 NOT_RUN이며 Node·Kotlin→JS 계약 결과와 구분한다. localhost 테스트 서버는 이번 프로세스만 종료했다.
+
+### 재실행 명령
+
+```powershell
+npm ci --ignore-scripts --prefix tools/three-poc
+npm ci --ignore-scripts --prefix tools/anatomy-car
+npm test --prefix tools/three-poc
+npm run test:android-assets --prefix tools/three-poc
+node tools/three-poc/build-android-lab.mjs
+python -B -m unittest discover -s tools/tire-probe/runtime -p 'test_*.py' -v
+node --test tools/tire-probe/runtime/evidence.test.mjs
+# ANATOMY_HOME은 위 고정 SHA의 clean checkout. 원본을 수정하지 않는다.
+npm run build --prefix tools/anatomy-car
+npm run export --prefix tools/anatomy-car
+npm run envelope --prefix tools/anatomy-car
+npm test --prefix tools/anatomy-car
+npm run verify --prefix tools/anatomy-car
+$env:IONIQ5_GLB='C:/CarScope-External/ioniq5-carscope/hyundai_ioniq_5_2022.glb'
+node --test tools/ioniq5-asset/test/*.test.mjs
+.\gradlew.bat -PcoreOnly=true :vehicle-core:test --rerun-tasks --console=plain --max-workers=1 '-Dorg.gradle.jvmargs=-Xmx768m -Dfile.encoding=UTF-8' '-Pkotlin.compiler.execution.strategy=in-process'
+.\gradlew.bat :app:testDebugUnitTest :app:assembleDebug :app:assembleRelease :app:bundleRelease :app:lintDebug --rerun-tasks --console=plain --max-workers=1 '-Dorg.gradle.jvmargs=-Xmx768m -Dfile.encoding=UTF-8' '-Pkotlin.compiler.execution.strategy=in-process'
+python tools/identity-probe/check.py build-contract
+python tools/tire-probe/check.py build-contract
+python tools/inspection-sync-poc/android/check-boundary.py
+node tools/three-poc/check-tire-native-contract.mjs app/build/test-results/tire-ui-v1.json
+# --out은 매번 새 외부 경로. 연결 대상이 없으면 exit 2/BLOCKED가 정상적인 차단 결과다.
+python -B tools/tire-probe/runtime/run.py --sdk=C:/Android/Sdk --out=C:/CarScope-External/p3-i4/NEW-health
+```
+
+브라우저는 `CARSCOPE_IONIQ5_GLB`에 같은 GLB, `CARSCOPE_QR_AR_BASE_URL=https://inspection.example.test/`, `PORT=8127`을 이 서버 프로세스에만 지정하고 `node tools/three-poc/serve.mjs`로 실행했다. 별도 터미널에서 `node tools/three-poc/<표의 검사>.mjs <새 외부 증거 폴더> 'http://127.0.0.1:8127/inspect.html?capture=1' <width> <height>`를 실행한다. 다른 작업 서버의 port/process를 재사용·종료하지 않는다.
+
+## 실제 AVD Runtime 시나리오
+
+| 범위 | 판정 | 실제 관측 / 잔여 조건 |
+|---|---|---|
+| A: InspectionActivity 시작·WebView 렌더·외부 GLB | BLOCKED | 연결 AVD 없음. APK 정적 검사/데스크톱 Chrome과 구분 |
+| A: WebGL 오류·프레임 상태 | BLOCKED | Android 화면/로그/프레임 미수집, 성능 수치 없음 |
+| B: 4개 타이어 선택·Raycast·Highlight·카메라 이동/복원 | BLOCKED | 실제 Android 입력·픽셀 미관측 |
+| B: 체크리스트·확정·수정·재확정 | BLOCKED | 실제 Android WebView 미관측 |
+| B: 이전/다음·중간/전체 요약·종료 초기화 | BLOCKED | 실제 Android WebView 미관측 |
+| C: Debug 워셔액 수신 버튼·Receiver 진입·Back | BLOCKED | 실제 Activity 전환 미관측; JVM/Robolectric 근거와 구분 |
+| C: WebView/Tire lease 복원·반복 진입 | BLOCKED | 실제 pause/resume·세대 교체·수명주기 미관측 |
+| D: 실제 SDK capability·cache·listener | BLOCKED | 실제 SDK 세션 없음; 아래 8행 미관측 |
+| D: observedAt·STALE >5000ms·세션 정리 | BLOCKED | 관측값 없음; UI poll 시각을 관측 시각으로 대체하지 않음 |
+| 회전·재생성·늦은 SDK callback·renderer 종료·장시간 profiling | NOT_RUN | 실제 SDK/Android 실패 주입·장시간 시나리오 미수행 |
+| 실차·센서 의미·단위·안전/주행 가능 판단 | NOT_RUN | 이번 상태 전용 UI 검증 범위 밖 |
+| Android HTTPS·광학 QR·두 기기 Sync E2E·차량 인증 | NOT_RUN | 이번 진입/복귀 범위 밖. 일반 Debug 기본 생성 권한 거부 유지 |
+
+| vehiclePartId | tire.pressure capability / cache / listener | tire.low-pressure capability / cache / listener | observedAt / source |
+|---|---|---|---|
+| tire.front-left | BLOCKED / BLOCKED / BLOCKED | BLOCKED / BLOCKED / BLOCKED | 미관측 / 미관측 |
+| tire.front-right | BLOCKED / BLOCKED / BLOCKED | BLOCKED / BLOCKED / BLOCKED | 미관측 / 미관측 |
+| tire.rear-left | BLOCKED / BLOCKED / BLOCKED | BLOCKED / BLOCKED / BLOCKED | 미관측 / 미관측 |
+| tire.rear-right | BLOCKED / BLOCKED / BLOCKED | BLOCKED / BLOCKED / BLOCKED | 미관측 / 미관측 |
+
+미관측 행을 UNSUPPORTED/0/정상으로 채우지 않았다. MOCK 자동 전환은 하지 않았다. initialize/register 반환, 실제 capability/getter/listener callback, 로컬 lease 종료, 원격 release acknowledgement는 각각 별도 증거가 필요하다.
+
+## 결함·충돌·후속 판정
+
+실제 Android 오류는 관측할 기기가 없어 확인하지 못했다. 이 사유로 앱 수정이나 Runtime Harness의 검증되지 않은 양성 경로 확장을 하지 않았다. Codex B 소유 Sync/공유 Kotlin/Manifest/Gradle/서버/모바일 파일 변경은 0이며 다른 Worktree에 쓰지 않았다. 파일 변경 충돌은 없고, 다른 Codex의 현재 원격 작업 상태는 확인했다고 주장하지 않는다.
+
+**FAIL 이력:** 로컬 증거 수집 보조 스크립트가 APK의 존재하지 않는 `inspect.css`를 요청해 KeyError로 중단됐다. 실제 빌더는 CSS를 HTML에 유지하고 9개 JS 모듈을 복사한다. 빌더의 정확한 목록으로 보조 검사만 수정한 뒤 9개 소스 및 전체 생성 자산의 바이트 대조가 PASS했다. `archive-initial-failure.json`에 이 오류를 보존했다. 제품 결함이나 APK 빌드 실패는 아니며 앱/공식 검사 기준을 변경하지 않았다. 그 외 실행한 제품/오프라인 gate의 FAIL은 없다.
+
+성능 수치는 이번 Host inventory 및 명령 시간에 한정한다. Android 빌드 244.17초(Gradle 출력 4m3s), core 명령 55.31초는 호스트 실행 시간이며 Android launch/FPS/jank/SDK 지연 수치가 아니다. Android 성능·안정성은 NOT_RUN이다.
+
+건강하고 소유권이 분리된 기존 AVD가 실행 중일 때 [P3-I2 계획](p3-i2-runtime-test-plan.md)의 새 Health Gate와 기존 Harness를 먼저 실행한다. 기존 Harness의 네 타이어 선택/상태/Probe 복귀 PASS만으로 P3-I3 체크리스트나 PR #38 Receiver 왕복을 PASS로 확대하지 않는다. 같은 통합 세션에서 위 B/C를 실제 입력으로 추가 관측하고, Android 화면·Activity/WebView lifecycle·lease 세대·SDK callback을 별도 기록해야 한다.
+
+**READY_TO_MERGE: NO — 실제 통합 Runtime 완료 기준은 미충족.** 문서 PR은 BLOCKED 결과와 오프라인 근거를 검토하기 위한 것이다. 자동 병합하지 않는다.
