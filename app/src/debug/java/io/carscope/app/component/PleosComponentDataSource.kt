@@ -102,7 +102,7 @@ internal class PleosComponentDataSource(
             ComponentFeature.BRAKE -> value is ComponentValue.Oil && value.value in OIL_STATES && value.value in (s.capabilities[f]?.values ?: emptySet())
             ComponentFeature.SOC -> value is ComponentValue.Integer
         }
-        val status = when { at < 0 || at > 8_640_000_000_000_000L -> ComponentStatus.ERROR; value == null -> ComponentStatus.UNAVAILABLE; !valid -> ComponentStatus.UNVERIFIED; value == ComponentValue.Oil("ERROR") -> ComponentStatus.ERROR; f == ComponentFeature.SOC -> ComponentStatus.UNVERIFIED; else -> ComponentStatus.SUPPORTED }
+        val status = when { at < 0 || at > 8_640_000_000_000_000L -> ComponentStatus.ERROR; value == null -> ComponentStatus.UNAVAILABLE; value == ComponentValue.Oil("ERROR") -> ComponentStatus.ERROR; !valid -> ComponentStatus.UNVERIFIED; f == ComponentFeature.SOC -> ComponentStatus.UNVERIFIED; else -> ComponentStatus.SUPPORTED }
         val observed = valid && status in setOf(ComponentStatus.SUPPORTED, ComponentStatus.UNVERIFIED)
         change(f) { it.copy(availabilityStatus = status, value = if (observed) value else null, observedAt = if (observed) at else null, reason = if (f == ComponentFeature.SOC && observed) "INTEGER_UNIT_AND_RANGE_UNVERIFIED" else status.name) }
     }

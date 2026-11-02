@@ -73,6 +73,10 @@ class PleosComponentDataSourceTest {
         f.value(ComponentFeature.BRAKE, ComponentValue.Oil("NORMAL")); assertNull(f.row(ComponentFeature.BRAKE).value)
         f.sdk.events.getValue(ComponentFeature.BRAKE).first(ComponentValue.Oil("LOW")); f.worker.drain()
         assertEquals(ComponentValue.Oil("LOW"), f.row(ComponentFeature.BRAKE).value)
+        // An explicit SDK failure is still ERROR even when not an advertised normal report.
+        f.sdk.events.getValue(ComponentFeature.BRAKE).first(ComponentValue.Oil("ERROR")); f.worker.drain()
+        assertEquals(ComponentStatus.ERROR, f.row(ComponentFeature.BRAKE).availabilityStatus)
+        assertNull(f.row(ComponentFeature.BRAKE).value); assertNull(f.row(ComponentFeature.BRAKE).observedAt)
     }
     @Test fun `stale boundary and cache reads never advance observedAt or call the SDK again`() {
         val f = Fixture(); f.values(); f.at = 6000
