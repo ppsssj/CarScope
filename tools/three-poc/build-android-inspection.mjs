@@ -22,6 +22,7 @@ rmSync(OUT, { recursive: true, force: true });
 mkdirSync(OUT, { recursive: true });
 cpSync(join(HERE, 'ev-charge-status.mjs'), join(OUT, 'ev-charge-status.mjs'));
 cpSync(join(HERE, 'charge-port-model.mjs'), join(OUT, 'charge-port-model.mjs'));
+cpSync(join(HERE, 'visibility-status.mjs'), join(OUT, 'visibility-status.mjs'));
 
 // Page: the P3-A4 document plus one script tag for the Android shell.
 const source = readFileSync(join(HERE, "inspect.html"), "utf8");

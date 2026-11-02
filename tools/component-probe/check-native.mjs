@@ -22,3 +22,10 @@ assert.equal(charge.readings[0].observedAt, 1000); assert.equal(charge.readings[
 assert.throws(() => validateComponentStatus(charge)); assert.throws(() => validateChargePortStatus(packet));
 console.log('PASS: independent charge serializer -> JS; Component UI v1 remains exactly four rows');
 console.log('EV_CHARGE_UI_SYNTHETIC_JSON ' + JSON.stringify(charge));
+const { validateVisibilityStatus } = await import('../three-poc/visibility-status.mjs');
+const visibility=validateVisibilityStatus(JSON.parse(readFileSync('app/build/test-results/visibility-ui-v1.json','utf8')));
+assert.ok(visibility.readings.every(r=>r.source==='MOCK'&&r.observedAt===1000&&r.unit===null));
+assert.equal(visibility.readings[0].value,'OTHER');assert.equal(visibility.readings[0].availabilityStatus,'UNVERIFIED');
+assert.throws(()=>validateComponentStatus(visibility));assert.throws(()=>validateChargePortStatus(visibility));
+console.log('PASS: Kotlin Visibility UI v1 -> strict JS; all legacy wire contracts preserved');
+console.log('VISIBILITY_UI_SYNTHETIC_JSON '+JSON.stringify(visibility));

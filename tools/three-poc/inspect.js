@@ -21,6 +21,7 @@ import { TIRES, detachedTireInfo } from "./inspection-tires.mjs";
 import { tireStatus, enableTireStatus, disposeTireStatus } from "./tire-status.mjs";
 import { componentStatus, componentStatusHtml, enableComponentStatus, disposeComponentStatus } from "./component-status.mjs";
 import { chargePortStatus, chargePortStatusHtml, enableChargePortStatus, disposeChargePortStatus } from './ev-charge-status.mjs';
+import { disposeVisibilityStatus } from './visibility-status.mjs';
 import { sourceWorldParts } from './charge-port-model.mjs';
 import { measureEvChargePortSupport, buildEvChargePort, EV_CHARGE_IDS } from "./ioniq5-asset/ev-charge-port.mjs";
 import { resolveTireTargets, tireCameraDirection } from "./tire-targets.mjs";
@@ -643,6 +644,7 @@ function dispose(reason) {
   disposeTireStatus();
   disposeComponentStatus();
   disposeChargePortStatus();
+  disposeVisibilityStatus();
   renderer.setAnimationLoop(null);
   controls.dispose();
   const before = { ...renderer.info.memory }, seen = new Set();

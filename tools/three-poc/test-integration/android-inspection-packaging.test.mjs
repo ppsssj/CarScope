@@ -14,6 +14,7 @@ test('Android debug package follows the new inspection builder and every relativ
   assert.equal(readFileSync(join(out,'charge-port-model.mjs'),'utf8'),readFileSync(join(repo,'tools/three-poc/charge-port-model.mjs'),'utf8'));
   assert.ok(existsSync(join(out,'ioniq5-asset/ev-charge-port.mjs')));
   assert.equal(readFileSync(join(out,'ev-charge-status.mjs'),'utf8'),readFileSync(join(repo,'tools/three-poc/ev-charge-status.mjs'),'utf8'));
+  assert.equal(readFileSync(join(out,'visibility-status.mjs'),'utf8'),readFileSync(join(repo,'tools/three-poc/visibility-status.mjs'),'utf8'));
   for (const name of ['inspection-product.mjs', 'inspection-tires.mjs', 'tire-targets.mjs', 'tire-status.mjs', 'component-status.mjs', 'tire-inspection.mjs', 'tire-inspection-view.mjs']) {
     assert.equal(readFileSync(join(out,name),'utf8'),readFileSync(join(repo,'tools/three-poc',name),'utf8'),name);
   }

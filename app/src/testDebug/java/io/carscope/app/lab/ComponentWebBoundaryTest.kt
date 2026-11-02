@@ -36,8 +36,8 @@ class ComponentWebBoundaryTest {
         val worker = ComponentTestWorker(); val sdk = ComponentFakeSession()
         val source = PleosComponentDataSource({ sdk }, worker, { 1000 })
         val channel = ComponentUiChannel(ComponentOwner(source)); channel.start(); worker.drain()
-        sdk.capabilities.values.toList().forEach { it.first(ComponentCapability(true, OIL_STATES)) }; worker.drain()
-        for (f in ComponentFeature.entries) sdk.getters.getValue(f).first(when (f) { ComponentFeature.BRAKE -> ComponentValue.Oil("LOW"); ComponentFeature.SOC -> ComponentValue.Integer(73); else -> ComponentValue.Flag(false) })
+        sdk.capabilities.forEach { (f, callback) -> callback.first(ComponentCapability(true, testComponentValues(f))) }; worker.drain()
+        for (f in ComponentFeature.entries) sdk.getters.getValue(f).first(when (f) { ComponentFeature.BRAKE -> ComponentValue.Oil("LOW"); ComponentFeature.SOC -> ComponentValue.Integer(73); ComponentFeature.WIPER_FRONT, ComponentFeature.LOW_BEAM, ComponentFeature.HIGH_BEAM -> ComponentValue.Mode("OFF"); else -> ComponentValue.Flag(false) })
         worker.drain()
         var reads = 0
         val screen = DebugWebScreen(activity.get(), "ComponentTest", host, "inspection", emptyMap(), componentStatusJson = { reads++; channel.readJson() })
@@ -52,7 +52,7 @@ class ComponentWebBoundaryTest {
             assertEquals(false, washer["value"].asBoolean); assertEquals(1000L, washer["observedAt"].asLong); assertEquals("PLEOS", washer["source"].asString)
             assertEquals("no-store", result.responseHeaders!!["Cache-Control"]); assertTrue(result.responseHeaders!!["Content-Security-Policy"]!!.contains("connect-src 'self'"))
             for (r in listOf(request("https://$host/component-status.json?x=1"), request("https://$host/component-status.json", "POST"), request("https://evil.invalid/component-status.json"), request("https://$host/tire-status.json"))) assertEquals(404, client.shouldInterceptRequest(web, r)!!.statusCode)
-            assertEquals(1, reads); assertEquals(5, sdk.getters.size); assertFalse(web.settings.allowFileAccess); assertFalse(web.settings.allowContentAccess); assertFalse(web.settings.domStorageEnabled)
+            assertEquals(1, reads); assertEquals(8, sdk.getters.size); assertFalse(web.settings.allowFileAccess); assertFalse(web.settings.allowContentAccess); assertFalse(web.settings.domStorageEnabled)
         } finally { screen.destroy(); channel.stop(); source.close(); worker.drain(); activity.pause().stop().destroy() }
     }
 }
