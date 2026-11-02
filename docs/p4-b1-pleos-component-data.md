@@ -24,7 +24,7 @@ AVD/adb/실차 호출은 자동 실행하지 않는다. capability/권한/수신
 | --- | --- | --- |
 | 워셔액 | 기존 `washer-fluid-cap` 유지 | 전체 차량의 low-washer warning을 관련 부품의 SDK 보고 패널로 연결. 특정 실차 리저버 형상/액량 측정 증거 아님 |
 | 브레이크액 | 기존 `brake-fluid-reservoir` 유지 | OilLevelState 보고를 패널에만 표시. NORMAL enum도 안전/정비 완료 판정 아님 |
-| EV 배터리 | `ev-battery.pack` 부품, `ev-battery.soc` feature 확정 | 12V `battery-12v`와 교환 금지. 아직 메시·월드 좌표·크기·선택 대상 없음. A의 모델 PR 병합 후 별도 선택/UI 연결 PR. SoC를 별도 물리 부품으로 만들 필요 없음 |
+| EV 배터리 | `ev-battery.pack` 부품, `ev-battery.soc` feature 확정 | 12V `battery-12v`와 교환 금지. 시작 시 모델이 없었으며 작업 중 A의 PR #44가 main에 병합됐다. 이 PR은 데이터 계층만 제공하며 별도 선택/UI 연결 PR이 A의 builder를 그대로 사용한다. SoC를 별도 물리 부품으로 만들 필요 없음 |
 | 전조등 | 제안 `light.exterior.low-beam`, `light.exterior.high-beam` (미확정) | 공개 Light.checkLow/HighBeamLightStateCapabilities/getCurrentLow/HighBeamLightState 및 CAR_LIGHTS 대조. 현재 전역 조회이고 좌/우별 센서라고 해석하지 않음. 기존 component registry에 ID가 없어서 연결하지 않음 |
 | 와이퍼 | 제안 `wiper.front`, `wiper.rear` (미확정) | 공개 Wiper.checkWiperStateCapabilities/getCurrentWiperState, WindowArea(FRONT_WINDSHIELD/REAR_WINDSHIELD), CAR_WINDOWS 대조. capability의 정확한 area/state가 확인돼야 함. 형상·좌표는 A가 결정하고 모델 계약 PR 선행 |
 

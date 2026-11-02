@@ -332,7 +332,7 @@ function panelContents() {
 
 function panelHtml() {
   const hasStatus = state.name === STATES.WASHER_SELECTED || state.name === STATES.COMPONENT_PREVIEW && state.component === 'brake-fluid-reservoir';
-  const status = hasStatus ? `<details class="sdk-details"><summary>Pleos API ?? ? ??? ??? ??</summary><div id="componentStatusContent">${componentStatusHtml(state.component)}</div></details>` : '';
+  const status = hasStatus ? `<details class="sdk-details"><summary>Pleos API 지원 및 SDK 보고 상태</summary><div id="componentStatusContent">${componentStatusHtml(state.component)}</div></details>` : '';
   return panelContents() + status + sessionActions(state);
 }
 

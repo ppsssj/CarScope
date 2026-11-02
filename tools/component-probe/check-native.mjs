@@ -10,3 +10,8 @@ assert.equal(packet.readings.find(r => r.featureId === 'safety.washer-fluid-warn
 assert.equal(packet.readings.find(r => r.featureId === 'safety.brake-fluid-level').value, 'LOW');
 console.log('PASS: Kotlin component projection -> JS strict contract; synthetic MOCK, SOC has no verified unit');
 console.log('COMPONENT_UI_SYNTHETIC_JSON ' + JSON.stringify(packet));
+// Export only the already validated synthetic status-only Tire packet for desktop regression.
+const { validateTireStatus } = await import('../three-poc/tire-status.mjs');
+const tire = validateTireStatus(JSON.parse(readFileSync('app/build/test-results/tire-ui-v1.json', 'utf8')));
+assert.ok(tire.readings.every(r => r.source === 'MOCK'));
+console.log('TIRE_UI_SYNTHETIC_JSON ' + JSON.stringify(tire));
