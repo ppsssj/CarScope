@@ -8,7 +8,7 @@
 | Debug asset packaging | PASS 1/1 | `npm run test:android-assets --prefix tools/three-poc`, 두 새 consumer/model adapter와 원본 A builder import/바이트 동일성 |
 | 실제 GLB Chrome + 실제 Kotlin MOCK | PASS 14 assertions × 2 | `browser-fit/results.json` 1600×1000, `browser-portrait-fit/results.json` 900×1200. source 무변경, 각각 canvas 클릭/강조, rear-right camera, SDK true 시 정적 pose, invalid UNKNOWN, pause/resume, 차체 차폐·실제 canvas 클릭, Back/summary/exit. 주요 캡처 직접 확인 |
 | Safety/EV 패널 회귀 | PASS 10/8 assertions | `safety-browser-final/results.json`, `ev-browser-final/results.json`. 전체 보기 카메라 수정 후 다시 실행 |
-| Tire/제품 흐름 회귀 | 실행 후 최종 결과는 PR 본문 | 최초 수정 전 각각 14/17 PASS, 전체 보기 카메라 수정 후 final 하위 폴더에서 재실행 |
+| Tire/제품 흐름 회귀 | PASS 14/17 assertions | `tire-browser-final/results.json`, `product-browser-final/results.json`, 전체 보기 카메라 수정 후에도 기존 스크립트 그대로 PASS |
 | Native/Debug·Release | PASS on B3a | [#48 Android CI](https://github.com/ppsssj/CarScope/actions/runs/41444921166), Component/charge 26개, 권한·APK/AAB·실제 Activity lifecycle |
 | 최종 전체 CI | PR workflow_dispatch | 선행 브랜치 대상 PR이라 main 전용 자동 trigger가 없음. 동일한 5개 workflow를 최종 HEAD에서 수동 실행하고 SHA/run 링크는 PR 본문에 기록 |
 | AVD/adb/실차 UID grant·capability·getter·listener·Service 병행 실측 | NOT_RUN | 실행하지 않았고 합성/정적 결과로 승격하지 않음 |
