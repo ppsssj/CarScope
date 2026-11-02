@@ -21,6 +21,12 @@ internal object ComponentProcessOwner {
 }
 internal object ComponentUiProjection {
     fun json(snapshot: ComponentSnapshot?, connection: String, phase: String, sessionId: String, sequence: Long): String {
+        return project(snapshot, connection, phase, sessionId, sequence, COMPONENT_UI_V1)
+    }
+    fun chargePortJson(snapshot: ComponentSnapshot?, connection: String, phase: String, sessionId: String, sequence: Long): String {
+        return project(snapshot, connection, phase, sessionId, sequence, listOf(ComponentFeature.CHARGE_PORT))
+    }
+    private fun project(snapshot: ComponentSnapshot?, connection: String, phase: String, sessionId: String, sequence: Long, features: List<ComponentFeature>): String {
         require(connection in setOf("ATTACHED", "STOPPED", "SUPERSEDED"))
         require(phase in setOf("IDLE", "ACTIVE", "STOPPING", "UNRESOLVED", "CLOSED"))
         require((snapshot != null) == (connection == "ATTACHED"))
@@ -28,7 +34,7 @@ internal object ComponentUiProjection {
         val result = JsonObject(); result.addProperty("schemaVersion", 1); result.addProperty("sessionId", sessionId); result.addProperty("sequence", sequence)
         result.addProperty("connectionStatus", connection); result.addProperty("sessionPhase", phase)
         result.add("readings", JsonArray().apply {
-            for (f in ComponentFeature.entries) add(JsonObject().apply {
+            for (f in features) add(JsonObject().apply {
                 val r = snapshot?.readings?.getValue(f)
                 if (r != null) {
                     require(r.capabilityStatus !in setOf(ComponentStatus.STALE, ComponentStatus.UNAVAILABLE))
@@ -36,7 +42,7 @@ internal object ComponentUiProjection {
                     require(r.observedAt == null || r.observedAt in 0..8_640_000_000_000_000L)
                     if (r.value != null) {
                         require(r.capabilityStatus == ComponentStatus.SUPPORTED)
-                        require(when (f) { ComponentFeature.WASHER, ComponentFeature.CHARGE_SWITCH -> r.value is ComponentValue.Flag; ComponentFeature.BRAKE -> r.value is ComponentValue.Oil && r.value.value in OIL_STATES - "ERROR"; ComponentFeature.SOC -> r.value is ComponentValue.Integer })
+                        require(when (f) { ComponentFeature.WASHER, ComponentFeature.CHARGE_SWITCH, ComponentFeature.CHARGE_PORT -> r.value is ComponentValue.Flag; ComponentFeature.BRAKE -> r.value is ComponentValue.Oil && r.value.value in OIL_STATES - "ERROR"; ComponentFeature.SOC -> r.value is ComponentValue.Integer })
                         require(r.availabilityStatus in if (f == ComponentFeature.SOC) setOf(ComponentStatus.UNVERIFIED, ComponentStatus.STALE) else setOf(ComponentStatus.SUPPORTED, ComponentStatus.STALE))
                     } else require(r.availabilityStatus !in setOf(ComponentStatus.SUPPORTED, ComponentStatus.STALE))
                 }
@@ -57,10 +63,13 @@ internal class ComponentUiChannel(private val owner: ComponentOwner) {
     private var sequence = 0L
     @Synchronized fun start() { if (lease == null) { sessionId = UUID.randomUUID().toString(); sequence = 0; lease = owner.attach().also(owner::start) } }
     @Synchronized fun stop() { lease?.let(owner::detach); lease = null }
-    @Synchronized fun readJson(): String {
+    @Synchronized fun readJson(): String = read(false)
+    @Synchronized fun readChargePortJson(): String = read(true)
+    private fun read(chargePort: Boolean): String {
         val token = lease
         val snapshot = token?.let(owner::snapshot)
         val connection = if (token == null) "STOPPED" else if (snapshot == null) "SUPERSEDED" else "ATTACHED"
-        return ComponentUiProjection.json(snapshot, connection, owner.diagnostics().phase, sessionId, ++sequence)
+        return if (chargePort) ComponentUiProjection.chargePortJson(snapshot, connection, owner.diagnostics().phase, sessionId, ++sequence)
+        else ComponentUiProjection.json(snapshot, connection, owner.diagnostics().phase, sessionId, ++sequence)
     }
 }

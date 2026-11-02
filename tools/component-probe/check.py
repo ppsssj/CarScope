@@ -14,7 +14,7 @@ ROOT = Path(__file__).resolve().parents[2]
 SHA = 'e11fdfe498cad3ecc0d5a2a6992b0c4a4d135195f1455018127bc069fd5ef937'
 EXPECTED = {
     'Safety': ['checkLowWasherFluidWarningStateCapabilities', 'hasLowWasherFluidWarning', 'registerLowWasherFluidWaringState', 'unregisterLowWasherFluidWaringState', 'checkBrakeFluidLevelStateCapabilities', 'getBrakeFluidLevelState', 'registerBrakeFluidLevelState', 'unregisterBrakeFluidLevelState'],
-    'EvBattery': ['checkEvBatteryStateOfChargeCapabilities', 'getEvBatteryStateOfCharge', 'registerEvBatteryStateOfCharge', 'unregisterEvBatteryStateOfCharge', 'checkEvChargeSwitchCapabilities', 'getEvChargeSwitchState'],
+    'EvBattery': ['checkEvBatteryStateOfChargeCapabilities', 'getEvBatteryStateOfCharge', 'registerEvBatteryStateOfCharge', 'unregisterEvBatteryStateOfCharge', 'checkEvChargeSwitchCapabilities', 'getEvChargeSwitchState', 'checkEvChargePortOpenCapabilities', 'isEvChargePortOpen', 'registerEvChargePortOpen', 'unregisterEvChargePortOpen'],
 }
 
 
@@ -36,7 +36,7 @@ def audit(aar, out):
     methods = {}
     with tempfile.TemporaryDirectory(prefix='carscope-component-sdk-') as temp:
         jar = Path(temp) / 'classes.jar'; jar.write_bytes(data)
-        classes = ['api.Safety', 'api.EvBattery', 'api.Light', 'api.Wiper', 'Vehicle', 'constant.control.OilLevelState', 'constant.area.WindowValue', 'listener.LowWasherFluidWaringListener', 'listener.OilLevelStateListener', 'listener.EvBatteryStateOfChargeListener']
+        classes = ['api.Safety', 'api.EvBattery', 'api.Light', 'api.Wiper', 'Vehicle', 'constant.control.OilLevelState', 'constant.area.WindowValue', 'listener.LowWasherFluidWaringListener', 'listener.OilLevelStateListener', 'listener.EvBatteryStateOfChargeListener', 'listener.EvChargePortOpenListener', 'listener.VehicleListener']
         for cls in classes:
             value = subprocess.run([str(javap), '-classpath', str(jar), '-v', 'ai.pleos.playground.vehicle.' + cls], capture_output=True, text=True, check=True).stdout
             (out / (cls + '.txt')).write_text(value, encoding='utf8')
@@ -49,12 +49,22 @@ def audit(aar, out):
                     expected = 'pleos.car.permission.CAR_SAFETY' if name == 'Safety' else 'pleos.car.permission.CAR_ENERGY'
                     assert permission and permission[1] == expected, method
                     methods[method] = {'permission': expected, 'signature': block.splitlines()[0].strip()}
+                    if method in ('isEvChargePortOpen', 'registerEvChargePortOpen', 'unregisterEvChargePortOpen'):
+                        assert 'Deprecated: true' in block and 'use the Google EV_CHARGE_PORT_OPEN property' in block
+                        assert 'DeprecationLevel;.ERROR' not in block and 'DeprecationLevel;.HIDDEN' not in block
+                        methods[method]['deprecated'] = 'WARNING'
                 if name == 'Safety':
                     assert 'hasLowWasherFluidWarning(kotlin.jvm.functions.Function1<? super java.lang.Boolean' in value
                     assert 'getBrakeFluidLevelState(kotlin.jvm.functions.Function1<? super ai.pleos.playground.vehicle.constant.control.OilLevelState' in value
                 else:
                     assert 'getEvBatteryStateOfCharge(kotlin.jvm.functions.Function1<? super java.lang.Integer' in value
                     assert 'getEvChargeSwitchState(kotlin.jvm.functions.Function1<? super java.lang.Boolean' in value
+                    assert 'isEvChargePortOpen(kotlin.jvm.functions.Function1<? super java.lang.Boolean' in value
+                    assert 'checkEvChargePortOpenCapabilities(kotlin.jvm.functions.Function1<? super ai.pleos.playground.vehicle.api.model.capability.CapabilityConfig' in value
+            if name == 'EvChargePortOpenListener':
+                assert 'onEvChargePortOpenUpdated(java.lang.Boolean)' in value and 'extends ai.pleos.playground.vehicle.listener.VehicleListener' in value
+            if name == 'VehicleListener':
+                assert 'onFailed(java.lang.Exception)' in value
             if name == 'Vehicle':
                 assert all(' get' + domain + '();' in value for domain in ('Safety', 'EvBattery', 'Light', 'Wiper'))
             if name == 'OilLevelState':
@@ -81,10 +91,13 @@ def boundary():
             assert b'Lio/carscope/app/component/ComponentFakeSession;' not in dex
             if debug:
                 assert 'assets/inspection/component-status.mjs' in archive.namelist()
+                assert 'assets/inspection/ev-charge-status.mjs' in archive.namelist()
             else:
+                assert b'ev-charge-status.json' not in dex
+                assert not any('ev-charge-status' in n for n in archive.namelist())
                 assert not any('component-status' in n or '/component/' in n for n in archive.namelist())
                 assert b'Lio/carscope/app/component/' not in dex
-    for cls, count in [('component.PleosComponentDataSourceTest', 14), ('component.ComponentUiProjectionTest', 4), ('lab.ComponentWebBoundaryTest', 2)]:
+    for cls, count in [('component.PleosComponentDataSourceTest', 14), ('component.ComponentUiProjectionTest', 4), ('lab.ComponentWebBoundaryTest', 2), ('component.ChargePortDataTest', 4), ('lab.ChargePortWebTest', 2)]:
         suite = ET.parse(ROOT / f'app/build/test-results/testDebugUnitTest/TEST-io.carscope.app.{cls}.xml').getroot()
         assert int(suite.get('tests')) >= count
         assert all(int(suite.get(k, 0)) == 0 for k in ('failures', 'errors', 'skipped'))

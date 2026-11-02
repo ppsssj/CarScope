@@ -6,8 +6,11 @@ internal enum class ComponentFeature(val id: String, val partId: String, val dom
     WASHER("safety.washer-fluid-warning", "washer-fluid-cap", "Safety", true),
     BRAKE("safety.brake-fluid-level", "brake-fluid-reservoir", "Safety", true),
     SOC("ev-battery.soc", "ev-battery.pack", "EvBattery", true),
-    CHARGE_SWITCH("ev-battery.charge-switch", "ev-battery.pack", "EvBattery", false)
+    CHARGE_SWITCH("ev-battery.charge-switch", "ev-battery.pack", "EvBattery", false),
+    CHARGE_PORT("ev-charge.port-open", "ev-charge.port", "EvBattery", true)
 }
+// Wire v1 stays fixed at four; the new reading is exposed only on its independent channel.
+internal val COMPONENT_UI_V1 = listOf(ComponentFeature.WASHER, ComponentFeature.BRAKE, ComponentFeature.SOC, ComponentFeature.CHARGE_SWITCH)
 internal enum class ComponentStatus { UNVERIFIED, SUPPORTED, UNSUPPORTED, UNAVAILABLE, PERMISSION_DENIED, ERROR, STALE }
 internal sealed interface ComponentValue {
     data class Flag(val value: Boolean) : ComponentValue

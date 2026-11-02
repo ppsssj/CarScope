@@ -30,6 +30,7 @@ internal class DebugWebScreen(
     private val files: Map<String, File>,
     private val tireStatusJson: (() -> String)? = null,
     private val componentStatusJson: (() -> String)? = null,
+    private val chargePortStatusJson: (() -> String)? = null,
 ) {
     private var view: WebView? = null
     private var backGeneration = 0
@@ -57,6 +58,11 @@ internal class DebugWebScreen(
                 if (!DebugWebOrigin.trusted(url.toString(), host, request.method)) return notFound()
                 val path = url.path.orEmpty().trimStart('/').ifEmpty { "index.html" }
                 if (path.contains("..")) return notFound()
+                if (path == "ev-charge-status.json") {
+                    if (!DebugWebOrigin.chargePortStatusPath(url.toString(), host, request.method) || chargePortStatusJson == null) return notFound()
+                    return try { ok("application/json", csp, chargePortStatusJson.invoke().byteInputStream(Charsets.UTF_8)) }
+                    catch (_: Exception) { WebResourceResponse("text/plain", "utf-8", 503, "Unavailable", mapOf("Cache-Control" to "no-store", "Content-Security-Policy" to csp), "Unavailable".byteInputStream()) }
+                }
                 if (path == "component-status.json") {
                     if (!DebugWebOrigin.componentStatusPath(url.toString(), host, request.method) || componentStatusJson == null) return notFound()
                     return try { ok("application/json", csp, componentStatusJson.invoke().byteInputStream(Charsets.UTF_8)) }

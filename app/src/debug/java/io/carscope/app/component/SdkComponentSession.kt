@@ -11,6 +11,7 @@ import ai.pleos.playground.vehicle.constant.control.OilLevelState
 import ai.pleos.playground.vehicle.listener.LowWasherFluidWaringListener
 import ai.pleos.playground.vehicle.listener.OilLevelStateListener
 import ai.pleos.playground.vehicle.listener.EvBatteryStateOfChargeListener
+import ai.pleos.playground.vehicle.listener.EvChargePortOpenListener
 
 internal fun componentCapability(config: CapabilityConfig, values: List<OilLevelState>? = null) =
     ComponentCapability(config.accessType in setOf(AccessType.READ, AccessType.READ_WRITE), values?.map { it.name }?.toSet())
@@ -23,6 +24,7 @@ internal class SdkComponentSession(private val context: Context) : ComponentSess
     private var washerListener: LowWasherFluidWaringListener? = null
     private var brakeListener: OilLevelStateListener? = null
     private var socListener: EvBatteryStateOfChargeListener? = null
+    private var portListener: EvChargePortOpenListener? = null
     override fun initialize() { vehicle.initialize(); safety = vehicle.getSafety(); battery = vehicle.getEvBattery() }
     private fun checkPermission(f: ComponentFeature) {
         val permission = "pleos.car.permission." + if (f.domain == "Safety") "CAR_SAFETY" else "CAR_ENERGY"
@@ -36,6 +38,7 @@ internal class SdkComponentSession(private val context: Context) : ComponentSess
             ComponentFeature.BRAKE -> safety.checkBrakeFluidLevelStateCapabilities({ c, values -> done(componentCapability(c, values)) }, failed)
             ComponentFeature.SOC -> battery.checkEvBatteryStateOfChargeCapabilities(config, failed)
             ComponentFeature.CHARGE_SWITCH -> battery.checkEvChargeSwitchCapabilities(config, failed)
+            ComponentFeature.CHARGE_PORT -> battery.checkEvChargePortOpenCapabilities(config, failed)
         }
     }
     override fun read(feature: ComponentFeature, done: (ComponentValue?) -> Unit, failed: (Exception) -> Unit) {
@@ -45,6 +48,7 @@ internal class SdkComponentSession(private val context: Context) : ComponentSess
             ComponentFeature.BRAKE -> safety.getBrakeFluidLevelState({ done(it?.let { v -> ComponentValue.Oil(v.name) }) }, failed)
             ComponentFeature.SOC -> battery.getEvBatteryStateOfCharge({ done(it?.let { v -> ComponentValue.Integer(v) }) }, failed)
             ComponentFeature.CHARGE_SWITCH -> battery.getEvChargeSwitchState({ done(it?.let { v -> ComponentValue.Flag(v) }) }, failed)
+            ComponentFeature.CHARGE_PORT -> readPort(done, failed)
         }
     }
     override fun subscribe(feature: ComponentFeature, updated: (ComponentValue?) -> Unit, failed: (Exception) -> Unit) {
@@ -72,6 +76,7 @@ internal class SdkComponentSession(private val context: Context) : ComponentSess
                 }; socListener = listener; battery.registerEvBatteryStateOfCharge(listener)
             }
             ComponentFeature.CHARGE_SWITCH -> error("NO_PUBLIC_CHARGE_SWITCH_LISTENER")
+            ComponentFeature.CHARGE_PORT -> subscribePort(updated, failed)
         }
     }
     override fun unsubscribe(feature: ComponentFeature) {
@@ -80,7 +85,24 @@ internal class SdkComponentSession(private val context: Context) : ComponentSess
             ComponentFeature.BRAKE -> brakeListener?.let { safety.unregisterBrakeFluidLevelState(it); brakeListener = null }
             ComponentFeature.SOC -> socListener?.let { battery.unregisterEvBatteryStateOfCharge(it); socListener = null }
             ComponentFeature.CHARGE_SWITCH -> Unit
+            ComponentFeature.CHARGE_PORT -> unsubscribePort()
         }
     }
     override fun release() = vehicle.release()
+    // Public 2.3.2 WARNING-deprecated path, permission checked by the caller. No platform fallback.
+    @Suppress("DEPRECATION")
+    private fun readPort(done: (ComponentValue?) -> Unit, failed: (Exception) -> Unit) =
+        battery.isEvChargePortOpen({ done(it?.let { v -> ComponentValue.Flag(v) }) }, failed)
+    @Suppress("DEPRECATION")
+    private fun subscribePort(updated: (ComponentValue?) -> Unit, failed: (Exception) -> Unit) {
+        check(portListener == null)
+        val listener = object : EvChargePortOpenListener {
+            override fun onEvChargePortOpenUpdated(value: Boolean?) = updated(value?.let { ComponentValue.Flag(it) })
+            override fun onFailed(e: Exception) = failed(e)
+        }
+        portListener = listener
+        battery.registerEvChargePortOpen(listener)
+    }
+    @Suppress("DEPRECATION")
+    private fun unsubscribePort() { portListener?.let { battery.unregisterEvChargePortOpen(it); portListener = null } }
 }

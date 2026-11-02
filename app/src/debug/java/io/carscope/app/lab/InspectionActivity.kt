@@ -26,7 +26,7 @@ class InspectionActivity : Activity() {
         super.onCreate(savedInstanceState)
         tireStatus = TireUiChannel(TireProcessOwner.get(applicationContext))
         componentStatus = ComponentUiChannel(ComponentProcessOwner.get(applicationContext))
-        screen = DebugWebScreen(this, TAG, HOST, ROOT, mapOf("external/ioniq5.glb" to File(filesDir, DebugWebScreen.MODEL_PATH)), tireStatus::readJson, componentStatus::readJson)
+        screen = DebugWebScreen(this, TAG, HOST, ROOT, mapOf("external/ioniq5.glb" to File(filesDir, DebugWebScreen.MODEL_PATH)), tireStatus::readJson, componentStatus::readJson, componentStatus::readChargePortJson)
         syncEntry = InspectionSyncEntry(this)
         setContentView(syncEntry.wrap(screen.create(intent.getStringExtra("query").orEmpty())))
     }
