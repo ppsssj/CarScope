@@ -102,8 +102,8 @@ body[data-step="result"] #manual, body[data-step="confirm"] #manual, body[data-s
 .task-links a { display:inline-flex;align-items:center;min-height:44px;padding:8px;border:1px solid var(--line);border-radius:8px;color:var(--brand); }
 .safety { display:flex;align-items:flex-start;gap:12px;min-height:56px;padding:14px;border:1px solid var(--line);border-radius:10px;background:var(--card); }
 .safety input { width:24px;height:24px;flex:none; }
-body[data-tire][data-step="review"] #step-review { display:block; }
-body[data-tire][data-step="review"] #camera { display:none; }
-#tire-answers { border:0;padding:0; }
-#tire-answers label { display:flex;gap:12px;align-items:center;min-height:56px;padding:14px;margin:10px 0;background:var(--card);border:1px solid var(--line);border-radius:10px; }
-#tire-answers input { width:24px;height:24px;flex:none;accent-color:var(--brand); }
+body[data-checklist][data-step="review"] #step-review { display:block; }
+body[data-checklist][data-step="review"] #camera { display:none; }
+.inspection-answers { border:0;padding:0; }
+.inspection-answers label { display:flex;gap:12px;align-items:center;min-height:56px;padding:14px;margin:10px 0;background:var(--card);border:1px solid var(--line);border-radius:10px; }
+.inspection-answers input { width:24px;height:24px;flex:none;accent-color:var(--brand); }

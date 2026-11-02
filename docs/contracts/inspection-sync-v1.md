@@ -7,6 +7,8 @@ the historical stand-in; real vehicle authentication remains blocked. See [authe
 The AR-01 washer-fluid result record (schema v1, `tools/mobile-ar-poc/public/inspection-result.mjs`) is reused **unchanged**.
 P5-A1 adds strict [tire result schema v2 and the Native handoff specification](tire-mobile-result-v2.md).
 The enclosing protocolVersion remains 1; Android support for tire results requires the documented follow-up.
+P5-A2 adds [charge-port result schema v2 and Native follow-up](charge-port-mobile-result-v2.md) for `ev-charge.port`.
+Its exact response keys differ from tires; `ev-charge.flap` is not a separate supported task.
 
 ## 1. QR v2 invite
 
@@ -17,7 +19,7 @@ The enclosing protocolVersion remains 1; Android support for tire results requir
 | key | rule |
 |---|---|
 | `v` | exactly `2` |
-| `task` | `washer-fluid`, `tire.front-left`, `tire.front-right`, `tire.rear-left`, `tire.rear-right` |
+| `task` | `washer-fluid`, `tire.front-left`, `tire.front-right`, `tire.rear-left`, `tire.rear-right`, `ev-charge.port` |
 | `invite` | 43 chars `[A-Za-z0-9_-]` = 32 random bytes, base64url |
 
 - Exactly these three keys, each once, in any order. Anything else (extra keys such as `vin`, a repeated key, a
@@ -56,7 +58,7 @@ The enclosing protocolVersion remains 1; Android support for tire results requir
 
 - Exactly these three keys.
 - `result` must pass the task-specific strict allow-list with no problems: unchanged AR-01 `validateResult()` for washer-fluid,
-  or `validateTireResult()` for one of the four tires. That means exact field set,
+  `validateTireResult()` for one of the four tires, or `validateChargeResult()` for the charge port. That means exact field set,
   constants, UUID, ISO times, boolean `aids` only, and `sync: "NOT_SENT"`.
 - `state` must be `COMPLETED` and `taskId` must equal the session task.
 - Anything else, such as a VIN, plate, account, device id, GPS, photo or video, frame, or tap coordinates, is an

@@ -10,6 +10,10 @@ import { createInterface } from 'node:readline/promises';
 import { fileURLToPath } from 'node:url';
 import { buildInviteFragment } from '../src/protocol.mjs';
 import { STATUS_TEXT } from '../../mobile-ar-poc/public/inspection-result.mjs';
+import {taskLabel} from '../../mobile-ar-poc/public/inspection-tasks.mjs';
+import {CHARGE_CHECKS} from '../../mobile-ar-poc/public/charge-result.mjs';
+import {TIRE_CHECKS} from '../../mobile-ar-poc/public/tire-result.mjs';
+import {ANSWERS} from '../../mobile-ar-poc/public/checklist-result.mjs';
 
 export class ReceiverClient {
   #token = null;
@@ -51,8 +55,9 @@ export class ReceiverClient {
 export function describeReceived(view) {
   const r = view.result;
   return [
-    '항목: 워셔액 셀프 점검',
+    `항목: ${taskLabel(r?.taskId ?? view.taskId ?? 'washer-fluid') ?? '미지원 항목'} 셀프 점검`,
     `사용자 보고 결과: ${r ? STATUS_TEXT[r.status]?.label ?? r.status : '없음'} (${r?.confirmation ?? '-'})`,
+    ...(r?.schemaVersion === 2 ? (r.taskId === 'ev-charge.port' ? CHARGE_CHECKS : TIRE_CHECKS).map(c=>`${c.label}: ${ANSWERS[r.responses[c.id]]}`) : []),
     `완료 시각: ${r ? new Date(r.completedAt).toLocaleString('ko-KR') : '-'}`,
     `전송 상태: ${view.sessionState === 'ACCEPTED' ? '수락됨' : view.sessionState === 'RESULT_SUBMITTED' ? '서버 수신 확인됨 · 수락 대기' : view.sessionState}`,
     '주의: 사용자가 직접 확인해 보고한 결과이며 실제 차량 센서 진단이 아닙니다.',
@@ -62,7 +67,7 @@ export function describeReceived(view) {
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const args = Object.fromEntries(process.argv.slice(2).map((a) => { const m = /^--([^=]+)(?:=(.*))?$/.exec(a); return m ? [m[1], m[2] ?? true] : [a, true]; }));
   const receiver = new ReceiverClient({ baseUrl: args.server ?? 'http://127.0.0.1:4180' });
-  const s = await receiver.create();
+  const s = await receiver.create(args.task ?? 'washer-fluid');
   console.log(`세션 생성 · 초대 만료 ${new Date(s.inviteExpiresAt).toLocaleTimeString('ko-KR')} · 세션 만료 ${new Date(s.expiresAt).toLocaleTimeString('ko-KR')}`);
   console.log('QR 내용(한 번만 표시, 공유하지 마세요):');
   console.log(args['mobile-base'] ? new URL(s.fragment, args['mobile-base']).href : s.fragment);
