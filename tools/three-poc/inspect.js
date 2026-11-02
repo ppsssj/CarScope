@@ -18,6 +18,7 @@ import { guideHtml, summaryHtml } from "./tire-inspection-view.mjs";
 import { productSummaryHtml, sessionActions } from './inspection-product.mjs';
 import { TIRES, detachedTireInfo } from "./inspection-tires.mjs";
 import { tireStatus, enableTireStatus, disposeTireStatus } from "./tire-status.mjs";
+import { componentStatus, componentStatusHtml, enableComponentStatus, disposeComponentStatus } from "./component-status.mjs";
 import { resolveTireTargets, tireCameraDirection } from "./tire-targets.mjs";
 import { STATES, EVENTS, INSPECTION_AREAS, initialState, transition, hoodTarget, cameraGoal, areaOf, HOOD_OPEN_DEG } from "./inspection-flow.mjs";
 
@@ -329,7 +330,11 @@ function panelContents() {
   }
 }
 
-function panelHtml() { return panelContents() + sessionActions(state); }
+function panelHtml() {
+  const hasStatus = state.name === STATES.WASHER_SELECTED || state.name === STATES.COMPONENT_PREVIEW && state.component === 'brake-fluid-reservoir';
+  const status = hasStatus ? `<details class="sdk-details"><summary>Pleos API 지원 및 SDK 보고 상태</summary><div id="componentStatusContent">${componentStatusHtml(state.component)}</div></details>` : '';
+  return panelContents() + status + sessionActions(state);
+}
 
 let toastTimer = null;
 function render() {
@@ -349,6 +354,11 @@ tireStatus.subscribe(() => {
 });
 // Explicit browser fixture mode; the Android shell enables the same read-only client by default.
 if (params.get('tireStatus') === 'fixture') enableTireStatus();
+componentStatus.subscribe(() => {
+  const region = $('componentStatusContent');
+  if (region) region.innerHTML = componentStatusHtml(state.component);
+});
+if (params.get('componentStatus') === 'fixture') enableComponentStatus();
 
 $("panel").addEventListener("click", (e) => {
   const b = e.target.closest("[data-action]");
@@ -573,6 +583,7 @@ function dispose(reason) {
   if (disposed) return null;
   disposed = true;
   disposeTireStatus();
+  disposeComponentStatus();
   renderer.setAnimationLoop(null);
   controls.dispose();
   const before = { ...renderer.info.memory }, seen = new Set();
@@ -597,6 +608,7 @@ window.__inspect = {
   get busy() { return Boolean(hoodTween || camTween); },
   get handoff() { return handoff; },
   tireStatus: () => tireStatus.state,
+  componentStatus: () => componentStatus.state,
   userInspection: () => userInspection,
   hoodPoint: () => screenPoint(M.hoodMeshes[0], false),
   capPoint: () => screenPoint(M.cap),

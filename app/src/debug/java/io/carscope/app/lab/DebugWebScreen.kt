@@ -29,6 +29,7 @@ internal class DebugWebScreen(
     private val root: String,
     private val files: Map<String, File>,
     private val tireStatusJson: (() -> String)? = null,
+    private val componentStatusJson: (() -> String)? = null,
 ) {
     private var view: WebView? = null
     private var backGeneration = 0
@@ -56,6 +57,11 @@ internal class DebugWebScreen(
                 if (!DebugWebOrigin.trusted(url.toString(), host, request.method)) return notFound()
                 val path = url.path.orEmpty().trimStart('/').ifEmpty { "index.html" }
                 if (path.contains("..")) return notFound()
+                if (path == "component-status.json") {
+                    if (!DebugWebOrigin.componentStatusPath(url.toString(), host, request.method) || componentStatusJson == null) return notFound()
+                    return try { ok("application/json", csp, componentStatusJson.invoke().byteInputStream(Charsets.UTF_8)) }
+                    catch (_: Exception) { WebResourceResponse("text/plain", "utf-8", 503, "Unavailable", mapOf("Cache-Control" to "no-store", "Content-Security-Policy" to csp), "Unavailable".byteInputStream()) }
+                }
                 if (path == "tire-status.json") {
                     if (!DebugWebOrigin.statusPath(url.toString(), host, request.method) || tireStatusJson == null) return notFound()
                     return try { ok("application/json", csp, tireStatusJson.invoke().byteInputStream(Charsets.UTF_8)) }
@@ -109,6 +115,10 @@ internal class DebugWebScreen(
     /** Fixed lifecycle signals only, never interpolated data or a callable JavaScript interface. */
     fun signalTireStatus(active: Boolean) {
         val event = if (active) "carscope-tire-active" else "carscope-tire-inactive"
+        view?.evaluateJavascript("window.dispatchEvent(new Event('$event'))", null)
+    }
+    fun signalComponentStatus(active: Boolean) {
+        val event = if (active) "carscope-component-active" else "carscope-component-inactive"
         view?.evaluateJavascript("window.dispatchEvent(new Event('$event'))", null)
     }
 

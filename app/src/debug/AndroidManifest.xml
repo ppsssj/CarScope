@@ -2,9 +2,10 @@
 <!-- Debug-only WebGL experiment, read-only identity diagnostic and visual-profile screen. Exported for adb on the
      test AVD; none of these activities has a launcher entry or exists in release builds. -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="pleos.car.permission.CAR_ENERGY" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.car.permission.CAR_INFO" />
-    <!-- P3-V1 read-only Tire probe only; these permissions never enter the release manifest. -->
+    <!-- Read-only Tire/Safety probes; these permissions never enter the release manifest. -->
     <uses-permission android:name="pleos.car.permission.CAR_SAFETY" />
     <uses-permission android:name="pleos.car.permission.PRIVATE_CAR_SAFETY" />
     <application>
