@@ -7,13 +7,13 @@ import { CameraSession, cameraError } from './camera.mjs';
 import { reduce, initialState, allChecked, progressOf, CHECK_ITEMS } from './self-inspection.mjs';
 import { validateResult, STATUS_TEXT } from './inspection-result.mjs';
 import { tapToVideoPoint, videoPointToStage, drawMarker } from './marker.mjs';
-import {isTireTask,parseInspectionHandoff,taskLinks} from './inspection-tasks.mjs';
-import {prepareTirePage,startTireInspectionPage} from './tire-page.mjs';
+import {isChecklistTask,parseInspectionHandoff,taskLinks} from './inspection-tasks.mjs';
+import {prepareChecklistPage,startChecklistPage} from './checklist-page.mjs';
 import {renderSummary as summary} from './inspection-ui.mjs';
 
-export function prepareInspectionPage(handoff){if(handoff.valid&&isTireTask(handoff.task))prepareTirePage(handoff.task,{locked:handoff.source==='qr-sync'});}
+export function prepareInspectionPage(handoff){if(handoff.valid&&isChecklistTask(handoff.task))prepareChecklistPage(handoff.task,{locked:handoff.source==='qr-sync'});}
 export async function startInspectionPage(options={}){const handoff=options.handoff??parseInspectionHandoff(location.hash);
-  if(handoff.valid&&isTireTask(handoff.task)){if(!document.body.dataset.tire)prepareInspectionPage(handoff);return startTireInspectionPage({...options,handoff});}
+  if(handoff.valid&&isChecklistTask(handoff.task)){if(!document.body.dataset.checklist)prepareInspectionPage(handoff);return startChecklistPage({...options,handoff});}
   return startWasherInspectionPage({...options,handoff});
 }
 

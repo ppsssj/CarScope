@@ -1,5 +1,12 @@
 # inspection-sync-poc (AR-02B-1)
 
+P5-A2 adds `ev-charge.port` with strict schema-v2 keys `flapDamage`, `debris`, `visibleDamage`.
+Washer v1, four tire v2 tasks, protocolVersion 1 and auth/TLS/session/receipt rules are preserved.
+[Charge result and Native follow-up](../../docs/contracts/charge-port-mobile-result-v2.md) ·
+[verification/runbook](../../docs/p5-a2-charge-port-mobile-ar.md).
+The existing Node receiver supports `--task=ev-charge.port` and displays the three reported answers.
+Node synthetic E2E is the completion boundary; actual Android receipt and phone camera verification remain unexecuted.
+
 P5-A1 adds four exact tire task IDs and their strict result schema v2, preserving washer-fluid schema v1,
 QR v1, QR v2 tokens, protocolVersion 1 and all auth/receipt boundaries.
 [Contract and Native handoff](../../docs/contracts/tire-mobile-result-v2.md) ·
