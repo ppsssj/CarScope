@@ -60,26 +60,27 @@ internal object SyncHttpDecoder {
     private fun id(v: Any?): String = string(v).also { if (!uuid.matches(it)) invalid() }
     private fun hash(v: Any?): String? = if (v == null) null else string(v).also { if (!digest.matches(it)) invalid() }
     private fun time(v: Any?): String = string(v).also { if (!iso.matches(it)) invalid(); Instant.parse(it) }
+    private fun task(v: Any?): String = string(v).also { if (it !in SyncTasks.all) invalid() }
     private fun flag(v: Any?): Boolean = v as? Boolean ?: invalid()
 
     fun created(bytes: ByteArray, type: String?): CreatedSyncSession = checked {
         val x = objectBody(bytes, type)
         exact(x, "sessionId", "taskId", "receiverToken", "inviteToken", "inviteExpiresAt", "expiresAt")
-        constant(x["taskId"], "washer-fluid")
+        val taskId = task(x["taskId"])
         val receiver = string(x["receiverToken"]); val invite = string(x["inviteToken"])
         if (!token.matches(receiver) || !token.matches(invite) || receiver == invite) invalid()
         val inviteExpiry = number(x["inviteExpiresAt"]); val expiry = number(x["expiresAt"])
         if (inviteExpiry == 0L || expiry < inviteExpiry) invalid()
-        CreatedSyncSession(id(x["sessionId"]), ReceiverCredential(receiver), InviteCredential(invite), inviteExpiry, expiry)
+        CreatedSyncSession(id(x["sessionId"]), ReceiverCredential(receiver), InviteCredential(invite), inviteExpiry, expiry, taskId)
     }
     fun view(bytes: ByteArray, type: String?): SyncReceiverView = checked {
         val x = objectBody(bytes, type)
         exact(x, "sessionId", "taskId", "sessionState", "expiresAt", "result", "resultDigest", "receivedAt", "acceptedAt")
-        constant(x["taskId"], "washer-fluid")
+        val taskId = task(x["taskId"])
         val state = SyncSessionState.valueOf(string(x["sessionState"]))
         val received = nullableTime(x["receivedAt"]); val accepted = nullableTime(x["acceptedAt"])
         val result = x["result"]?.let { result(obj(it)) }; val hash = hash(x["resultDigest"])
-        if (result != null && result.digest() != hash) invalid()
+        if (result != null && (result.taskId != taskId || result.digest() != hash)) invalid()
         when (state) {
             SyncSessionState.CREATED, SyncSessionState.CLAIMED -> if (result != null || hash != null || received != null || accepted != null) invalid()
             SyncSessionState.RESULT_SUBMITTED -> if (result == null || hash == null || received == null || accepted != null) invalid()
@@ -87,19 +88,30 @@ internal object SyncHttpDecoder {
             SyncSessionState.CANCELLED -> if (result != null || hash != null || accepted != null) invalid()
             SyncSessionState.EXPIRED -> if (result != null || accepted != null || (hash == null) != (received == null)) invalid()
         }
-        SyncReceiverView(id(x["sessionId"]), state, number(x["expiresAt"]), result, hash)
+        SyncReceiverView(id(x["sessionId"]), state, number(x["expiresAt"]), result, hash, taskId)
     }
-    private fun result(x: Map<String, Any?>): CompletedInspection {
+    private fun result(x: Map<String, Any?>): SyncInspection {
+        if (task(x["taskId"]) != "washer-fluid") return tireResult(x)
         exact(x, "schemaVersion", "inspectionId", "taskId", "method", "source", "state", "startedAt", "aids", "status", "confirmation", "completedAt", "sync")
         if (number(x["schemaVersion"]) != 1L) invalid()
         for ((key, expected) in mapOf("taskId" to "washer-fluid", "method" to "SELF", "source" to "MOBILE", "state" to "COMPLETED", "confirmation" to "USER_REPORTED", "sync" to "NOT_SENT")) constant(x[key], expected)
         val aids = obj(x["aids"]); exact(aids, "cameraUsed", "locationMarked")
         return CompletedInspection(id(x["inspectionId"]), time(x["startedAt"]), time(x["completedAt"]), ReportedStatus.valueOf(string(x["status"])), flag(aids["cameraUsed"]), flag(aids["locationMarked"])).also { if (!it.valid()) invalid() }
     }
-    fun cancelled(bytes: ByteArray, type: String?, expectedId: String, expiresAt: Long): SyncReceiverView = checked {
+    private fun tireResult(x: Map<String, Any?>): CompletedTireInspection {
+        exact(x, "schemaVersion", "inspectionId", "taskId", "method", "source", "state", "startedAt", "aids", "responses", "status", "confirmation", "completedAt", "sync")
+        if (number(x["schemaVersion"]) != 2L) invalid()
+        for ((key, expected) in mapOf("method" to "SELF", "source" to "MOBILE", "state" to "COMPLETED", "confirmation" to "USER_REPORTED", "sync" to "NOT_SENT")) constant(x[key], expected)
+        val aids = obj(x["aids"]); exact(aids, "cameraUsed", "locationMarked")
+        val responses = obj(x["responses"]); exact(responses, "damage", "debris", "wear")
+        return CompletedTireInspection(id(x["inspectionId"]), task(x["taskId"]), time(x["startedAt"]), time(x["completedAt"]),
+            TireResponse.valueOf(string(responses["damage"])), TireResponse.valueOf(string(responses["debris"])), TireResponse.valueOf(string(responses["wear"])),
+            TireReportedStatus.valueOf(string(x["status"])), flag(aids["cameraUsed"]), flag(aids["locationMarked"])).also { if (!it.valid()) invalid() }
+    }
+    fun cancelled(bytes: ByteArray, type: String?, expectedId: String, expiresAt: Long, taskId: String = "washer-fluid"): SyncReceiverView = checked {
         val x = objectBody(bytes, type); exact(x, "sessionId", "sessionState")
         if (id(x["sessionId"]) != expectedId) invalid(); constant(x["sessionState"], "CANCELLED")
-        SyncReceiverView(expectedId, SyncSessionState.CANCELLED, expiresAt)
+        SyncReceiverView(expectedId, SyncSessionState.CANCELLED, expiresAt, taskId = taskId)
     }
     fun error(bytes: ByteArray, type: String?, status: Int): SyncFailure = checked {
         val x = objectBody(bytes, type); exact(x, "error"); val error = obj(x["error"]); exact(error, "code")

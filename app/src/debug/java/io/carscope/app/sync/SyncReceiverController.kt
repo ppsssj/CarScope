@@ -3,13 +3,13 @@ package io.carscope.app.sync
 internal enum class ReceiverPhase { IDLE, CREATING, WAITING, RESULT_SUBMITTED, ACCEPTED, CANCELLED, EXPIRED, FAILED, CLOSED }
 internal data class SyncReceiverState(
     val phase: ReceiverPhase = ReceiverPhase.IDLE, val qr: SyncQrPayload? = null,
-    val result: CompletedInspection? = null, val digest: String? = null,
+    val result: SyncInspection? = null, val digest: String? = null,
     val busy: Boolean = false, val failure: SyncFailure? = null, val retryAvailable: Boolean = false,
     val inviteExpiresAt: Long? = null, val expiresAt: Long? = null
 ) {
     val canAccept: Boolean get() = phase == ReceiverPhase.RESULT_SUBMITTED && !busy && result != null && digest != null
     val canCancel: Boolean get() = phase in listOf(ReceiverPhase.WAITING, ReceiverPhase.RESULT_SUBMITTED) && !busy
-    fun summary(): String = "워셔액 셀프 점검 · 사용자 보고 결과: ${result?.status?.name ?: "없음"}\n" +
+    fun summary(): String = "모바일 셀프 점검 · 사용자 보고 결과: ${result?.statusName ?: "없음"}\n" +
         "완료 시각: ${result?.completedAt ?: "-"}\n처리 상태: ${phase.name}\n실제 차량 센서 진단이 아닙니다."
 }
 
@@ -32,14 +32,14 @@ internal class SyncReceiverController(
         val owner = generation
         timer = scheduler.after(2000L shl errors) { synchronized(this) { if (owner == generation) poll() } }
     }
-    @Synchronized fun create(mobileRoot: String) {
+    @Synchronized fun create(mobileRoot: String, taskId: String = "washer-fluid") {
         if (pending || state.phase !in listOf(ReceiverPhase.IDLE, ReceiverPhase.FAILED, ReceiverPhase.CANCELLED, ReceiverPhase.EXPIRED)) return
         try { requireHttpsMobileRoot(mobileRoot) } catch (_: Exception) { publish(SyncReceiverState(phase = ReceiverPhase.FAILED, failure = SyncFailure.INVALID)); return }
         val owner = ++generation
         stopTimer(); request?.cancel(); pending = true; errors = 0
         publish(SyncReceiverState(phase = ReceiverPhase.CREATING, busy = true))
         if (owner != generation) return
-        request = client.create(mobileRoot) { reply -> synchronized(this) {
+        request = client.create(mobileRoot, taskId) { reply -> synchronized(this) {
             if (owner != generation) return@synchronized
             pending = false
             when (reply) {
@@ -88,7 +88,7 @@ internal class SyncReceiverController(
                                 SyncSessionState.EXPIRED -> ReceiverPhase.EXPIRED
                             }
                             publish(SyncReceiverState(phase = phase, qr = if (v.sessionState == SyncSessionState.CREATED) state.qr else null,
-                                result = v.result, digest = v.resultDigest, expiresAt = v.expiresAt, inviteExpiresAt = state.inviteExpiresAt))
+                                result = v.result ?: state.result.takeIf { phase == ReceiverPhase.ACCEPTED }, digest = v.resultDigest, expiresAt = v.expiresAt, inviteExpiresAt = state.inviteExpiresAt))
                             if (phase in listOf(ReceiverPhase.ACCEPTED, ReceiverPhase.CANCELLED, ReceiverPhase.EXPIRED)) client.forget() else schedule()
                         }
                     }

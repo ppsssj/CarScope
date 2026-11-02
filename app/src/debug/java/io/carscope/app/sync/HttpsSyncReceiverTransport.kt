@@ -55,6 +55,7 @@ internal class HttpsSyncReceiverTransport(
     private val closed = AtomicBoolean(false)
     private val executor = ThreadPoolExecutor(2, 2, 0, TimeUnit.MILLISECONDS, ArrayBlockingQueue(8), { task -> Thread(task, "carscope-sync-https").apply { isDaemon = true } })
     private val active = ConcurrentHashMap.newKeySet<Call>()
+    private val tasks = ConcurrentHashMap<String, String>()
     private val expiries = ConcurrentHashMap<String, Long>()
     private class Call : SyncCancellation {
         val cancelled = AtomicBoolean(false)
@@ -125,12 +126,16 @@ internal class HttpsSyncReceiverTransport(
         }
         return Response(status, output.toByteArray(), connection.contentType)
     }
-    override fun create(callback: (SyncReply<CreatedSyncSession>) -> Unit): SyncCancellation = submit(callback) { call ->
+    override fun create(callback: (SyncReply<CreatedSyncSession>) -> Unit): SyncCancellation = create("washer-fluid", callback)
+    override fun create(taskId: String, callback: (SyncReply<CreatedSyncSession>) -> Unit): SyncCancellation = submit(callback) { call ->
+        if (taskId !in SyncTasks.all) return@submit SyncReply.Failure(SyncFailure.INVALID)
         val credential = credentials.credential(endpoint) ?: return@submit SyncReply.Failure(SyncFailure.UNAUTHORIZED)
-        val r = request(call, "POST", "/v1/sessions", credential.authorizationValue(), "{\"taskId\":\"washer-fluid\"}")
+        val r = request(call, "POST", "/v1/sessions", credential.authorizationValue(), "{\"taskId\":\"$taskId\"}")
         if (r.status != 201) SyncReply.Failure(SyncHttpDecoder.error(r.bytes, r.type, r.status))
         else {
-            val created = SyncHttpDecoder.created(r.bytes, r.type); expiries[created.sessionId] = created.expiresAt
+            val created = SyncHttpDecoder.created(r.bytes, r.type)
+            if (created.taskId != taskId) throw SyncHttpDecoder.Invalid()
+            expiries[created.sessionId] = created.expiresAt; tasks[created.sessionId] = taskId
             SyncReply.Success(created)
         }
     }
@@ -143,8 +148,8 @@ internal class HttpsSyncReceiverTransport(
         val r = request(call, method, sessionPath(id) + suffix, receiver.authorizationValue(), body)
         if (r.status != 200) SyncReply.Failure(SyncHttpDecoder.error(r.bytes, r.type, r.status))
         else {
-            val view = if (suffix == "/cancel") SyncHttpDecoder.cancelled(r.bytes, r.type, id, expiries[id] ?: throw SyncHttpDecoder.Invalid()) else SyncHttpDecoder.view(r.bytes, r.type)
-            if (view.sessionId != id) throw SyncHttpDecoder.Invalid()
+            val view = if (suffix == "/cancel") SyncHttpDecoder.cancelled(r.bytes, r.type, id, expiries[id] ?: throw SyncHttpDecoder.Invalid(), tasks[id] ?: throw SyncHttpDecoder.Invalid()) else SyncHttpDecoder.view(r.bytes, r.type)
+            if (view.sessionId != id || tasks[id]?.let { it != view.taskId } == true) throw SyncHttpDecoder.Invalid()
             if (suffix == "/accept" && view.sessionState != SyncSessionState.ACCEPTED) throw SyncHttpDecoder.Invalid()
             expiries[id] = view.expiresAt; SyncReply.Success(view)
         }
@@ -161,7 +166,7 @@ internal class HttpsSyncReceiverTransport(
         else SyncReply.Failure(SyncFailure.INVALID)
     }
     override fun close() { if (closed.compareAndSet(false, true)) {
-        active.forEach { it.cancel() }; active.clear(); expiries.clear(); executor.shutdownNow()
+        active.forEach { it.cancel() }; active.clear(); expiries.clear(); tasks.clear(); executor.shutdownNow()
         try { credentials.close() } catch (_: Exception) { /* No credential/provider exception logging. */ }
     } }
 }

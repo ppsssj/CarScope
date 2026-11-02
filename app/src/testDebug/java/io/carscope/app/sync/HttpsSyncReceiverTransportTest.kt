@@ -83,6 +83,7 @@ class HttpsSyncReceiverTransportTest {
         var status = 200; var body = HttpSamples.view(); var contentType = "application/json"
         var delay = 0L; var location: String? = null; var drop = false
         val headers = mutableListOf<Pair<String, String?>>()
+        val bodies = mutableListOf<String>()
         val callbackQueue = LinkedBlockingQueue<() -> Unit>()
         private val workers = Executors.newCachedThreadPool()
         private val server = pki.server(name).serverSocketFactory.createServerSocket(0, 50, InetAddress.getByName("127.0.0.1")) as SSLServerSocket
@@ -102,7 +103,8 @@ class HttpsSyncReceiverTransportTest {
                                 if (line.isEmpty()) break
                                 val split = line.indexOf(':'); if (split > 0) requestHeaders[line.substring(0, split).lowercase()] = line.substring(split + 1).trim()
                             }
-                            repeat(requestHeaders["content-length"]?.toInt() ?: 0) { reader.read() }
+                            val requestBody = buildString { repeat(requestHeaders["content-length"]?.toInt() ?: 0) { append(reader.read().toChar()) } }
+                            synchronized(bodies) { bodies.add(requestBody) }
                             hits.incrementAndGet(); synchronized(headers) { headers.add(requestLine.split(' ')[1] to requestHeaders["authorization"]) }
                             arrived.countDown()
                             if (!drop) {
@@ -131,6 +133,26 @@ class HttpsSyncReceiverTransportTest {
     }
     private fun reason(r: SyncReply<*>): SyncFailure = (r as SyncReply.Failure).reason
 
+    @Test fun `real TLS four tire session bodies view accept cancel and wrong creation task rejection`() {
+        for (task in SyncTasks.all.drop(1)) Fixture().use { f -> f.transport(provider = ExplicitDebugTestCredentialProvider(f.origin)).use { transport ->
+            f.status = 201; f.body = HttpSamples.creation.replace("washer-fluid", task)
+            assertTrue(f.await<CreatedSyncSession> { transport.create(task, it) } is SyncReply.Success)
+            assertEquals("""{"taskId":"$task"}""", f.bodies.first())
+            f.status = 200; f.body = TireSamples.wire(TireSamples.result(task))
+            assertTrue(f.await<SyncReceiverView> { transport.view(HttpSamples.ID, ReceiverCredential(HttpSamples.receiver), it) } is SyncReply.Success)
+            f.body = TireSamples.wire(TireSamples.result(task), "ACCEPTED")
+            assertTrue(f.await<SyncReceiverView> { transport.accept(HttpSamples.ID, ReceiverCredential(HttpSamples.receiver), TireSamples.result(task).digest(), it) } is SyncReply.Success)
+            f.body = HttpSamples.cancelled
+            val cancelled = f.await<SyncReceiverView> { transport.cancel(HttpSamples.ID, ReceiverCredential(HttpSamples.receiver), it) } as SyncReply.Success
+            assertEquals(task, cancelled.value.taskId)
+            f.status = 201; f.body = HttpSamples.creation
+            assertEquals(SyncFailure.INVALID, reason(f.await<CreatedSyncSession> { transport.create(task, it) }))
+            val hits = f.hits.get()
+            assertEquals(SyncFailure.INVALID, reason(f.await<CreatedSyncSession> { transport.create("ev-charge.port", it) }))
+            assertEquals(hits, f.hits.get())
+        } }
+    }
+
     @Test fun `fixture TLS chain passes the unmodified JDK hostname verifier`() {
         Fixture().use { f ->
             val c = URI(f.origin).toURL().openConnection() as HttpsURLConnection
@@ -156,6 +178,8 @@ class HttpsSyncReceiverTransportTest {
     @Test fun `creation defaults to denial before any network call and fixture provider cannot use public API`() {
         Fixture().use { f -> f.transport().use { transport ->
             assertEquals(SyncFailure.UNAUTHORIZED, reason(f.await(transport::create))); assertEquals(0, f.hits.get()); assertFalse(transport.creationAuthorized())
+            for (task in SyncTasks.all.drop(1)) assertEquals(SyncFailure.UNAUTHORIZED, reason(f.await<CreatedSyncSession> { transport.create(task, it) }))
+            assertEquals(0, f.hits.get())
             assertEquals(SyncFailure.INVALID, reason(f.await<SyncReceiverView> { transport.view("bad-id", ReceiverCredential(HttpSamples.receiver), it) }))
             assertEquals(SyncFailure.INVALID, reason(f.await<SyncReceiverView> { transport.accept(HttpSamples.ID, ReceiverCredential(HttpSamples.receiver), "bad-digest", it) }))
             assertEquals(0, f.hits.get())

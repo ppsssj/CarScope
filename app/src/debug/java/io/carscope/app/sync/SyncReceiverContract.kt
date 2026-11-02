@@ -4,9 +4,16 @@ import java.net.URI
 import java.security.MessageDigest
 import java.time.Instant
 
-/** Debug-only typed boundary. A future HTTP decoder must reject unknown wire fields before building these values. */
+/** Debug-only typed boundary. The strict HTTP decoder rejects unknown wire fields before constructing records. */
 internal enum class SyncSessionState { CREATED, CLAIMED, RESULT_SUBMITTED, ACCEPTED, CANCELLED, EXPIRED }
 internal enum class ReportedStatus { OK, NEEDS_REFILL, UNSURE }
+internal enum class TireResponse { FOUND, NOT_FOUND, UNABLE }
+internal enum class TireReportedStatus { REVIEW_NEEDED, UNABLE, NO_FINDINGS_REPORTED }
+internal object SyncTasks {
+    val all = listOf("washer-fluid", "tire.front-left", "tire.front-right", "tire.rear-left", "tire.rear-right")
+    val labels = listOf("워셔액", "앞 왼쪽 타이어", "앞 오른쪽 타이어", "뒤 왼쪽 타이어", "뒤 오른쪽 타이어")
+    fun label(taskId: String): String = labels[all.indexOf(taskId)]
+}
 internal enum class SyncFailure { NETWORK, TIMEOUT, UNAUTHORIZED, EXPIRED, CLOSED, CONFLICT, INVALID, RATE_LIMITED, SERVER }
 
 internal class ReceiverCredential(private val value: String) {
@@ -15,7 +22,10 @@ internal class ReceiverCredential(private val value: String) {
     override fun toString(): String = "ReceiverCredential(REDACTED)"
 }
 internal class InviteCredential(private val value: String) {
-    fun fragment(): String = "#v=2&task=washer-fluid&invite=$value"
+    fun fragment(taskId: String = "washer-fluid"): String {
+        require(taskId in SyncTasks.all)
+        return "#v=2&task=$taskId&invite=$value"
+    }
     fun valid(): Boolean = TOKEN.matches(value)
     override fun toString(): String = "InviteCredential(REDACTED)"
 }
@@ -31,11 +41,24 @@ internal class CreatedSyncSession(
 }
 internal data class ReceiverSession(val expiresAt: Long, val qr: SyncQrPayload, val inviteExpiresAt: Long = expiresAt)
 
+internal sealed interface SyncInspection {
+    val inspectionId: String
+    val startedAt: String
+    val completedAt: String
+    val taskId: String
+    val statusName: String
+    fun valid(): Boolean
+    fun canonicalJson(): String
+    fun digest(): String = "sha256:" + MessageDigest.getInstance("SHA-256").digest(canonicalJson().toByteArray(Charsets.UTF_8))
+        .joinToString("") { "%02x".format(it.toInt() and 255) }
+}
 internal data class CompletedInspection(
-    val inspectionId: String, val startedAt: String, val completedAt: String,
+    override val inspectionId: String, override val startedAt: String, override val completedAt: String,
     val status: ReportedStatus, val cameraUsed: Boolean, val locationMarked: Boolean
-) {
-    fun valid(): Boolean = try {
+) : SyncInspection {
+    override val taskId: String get() = "washer-fluid"
+    override val statusName: String get() = status.name
+    override fun valid(): Boolean = try {
         Regex("[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}").matches(inspectionId) &&
             !Instant.parse(completedAt).isBefore(Instant.parse(startedAt))
     } catch (_: Exception) { false }
@@ -45,25 +68,53 @@ internal data class CompletedInspection(
         '\\' -> "\\\\".toList(); '"' -> "\\\"".toList()
         else -> if (c.code < 32) "\\u%04x".format(c.code).toList() else listOf(c)
     } }.joinToString("") + "\""
-    fun canonicalJson(): String = "{\"aids\":{\"cameraUsed\":$cameraUsed,\"locationMarked\":$locationMarked}," +
+    override fun canonicalJson(): String = "{\"aids\":{\"cameraUsed\":$cameraUsed,\"locationMarked\":$locationMarked}," +
         "\"completedAt\":${quote(completedAt)},\"confirmation\":\"USER_REPORTED\",\"inspectionId\":${quote(inspectionId)}," +
         "\"method\":\"SELF\",\"schemaVersion\":1,\"source\":\"MOBILE\",\"startedAt\":${quote(startedAt)}," +
         "\"state\":\"COMPLETED\",\"status\":\"${status.name}\",\"sync\":\"NOT_SENT\",\"taskId\":\"washer-fluid\"}"
-    fun digest(): String = "sha256:" + MessageDigest.getInstance("SHA-256").digest(canonicalJson().toByteArray(Charsets.UTF_8))
-        .joinToString("") { "%02x".format(it.toInt() and 255) }
+}
+
+/** Immutable user responses; never contains SDK pressure, units or sensor observations. */
+internal data class CompletedTireInspection(
+    override val inspectionId: String, override val taskId: String,
+    override val startedAt: String, override val completedAt: String,
+    val damage: TireResponse, val debris: TireResponse, val wear: TireResponse,
+    val status: TireReportedStatus, val cameraUsed: Boolean, val locationMarked: Boolean
+) : SyncInspection {
+    override val statusName: String get() = status.name
+    fun computedStatus(): TireReportedStatus = when {
+        TireResponse.FOUND in listOf(damage, debris, wear) -> TireReportedStatus.REVIEW_NEEDED
+        TireResponse.UNABLE in listOf(damage, debris, wear) -> TireReportedStatus.UNABLE
+        else -> TireReportedStatus.NO_FINDINGS_REPORTED
+    }
+    override fun valid(): Boolean = try {
+        taskId in SyncTasks.all.drop(1) && status == computedStatus() &&
+            Regex("[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}").matches(inspectionId) &&
+            listOf(startedAt, completedAt).all {
+                java.time.format.DateTimeFormatter.ofPattern("uuuu-MM-dd'T'HH:mm:ss.SSS'Z'").withZone(java.time.ZoneOffset.UTC).format(Instant.parse(it)) == it
+            } && !Instant.parse(completedAt).isBefore(Instant.parse(startedAt))
+    } catch (_: Exception) { false }
+    override fun canonicalJson(): String {
+        require(valid())
+        return """{"aids":{"cameraUsed":$cameraUsed,"locationMarked":$locationMarked},"completedAt":"$completedAt","confirmation":"USER_REPORTED","inspectionId":"$inspectionId","method":"SELF","responses":{"damage":"$damage","debris":"$debris","wear":"$wear"},"schemaVersion":2,"source":"MOBILE","startedAt":"$startedAt","state":"COMPLETED","status":"$status","sync":"NOT_SENT","taskId":"$taskId"}"""
+    }
 }
 internal data class SyncReceiverView(
     val sessionId: String, val sessionState: SyncSessionState, val expiresAt: Long,
-    val result: CompletedInspection? = null, val resultDigest: String? = null, val taskId: String = "washer-fluid"
+    val result: SyncInspection? = null, val resultDigest: String? = null, val taskId: String = "washer-fluid"
 )
 internal sealed class SyncReply<out T> {
     data class Success<T>(val value: T) : SyncReply<T>()
     data class Failure(val reason: SyncFailure) : SyncReply<Nothing>()
 }
 
-/** No HTTP implementation is enabled. Android networking, real auth and trusted HTTPS remain integration gates. */
+/** Debug transport boundary; creation credentials and platform TLS checks remain mandatory. */
 internal interface SyncReceiverTransport {
     fun create(callback: (SyncReply<CreatedSyncSession>) -> Unit): SyncCancellation
+    fun create(taskId: String, callback: (SyncReply<CreatedSyncSession>) -> Unit): SyncCancellation {
+        if (taskId == "washer-fluid") return create(callback)
+        callback(SyncReply.Failure(SyncFailure.INVALID)); return SyncCancellation {}
+    }
     fun view(id: String, receiver: ReceiverCredential, callback: (SyncReply<SyncReceiverView>) -> Unit): SyncCancellation
     fun accept(id: String, receiver: ReceiverCredential, digest: String, callback: (SyncReply<SyncReceiverView>) -> Unit): SyncCancellation
     fun cancel(id: String, receiver: ReceiverCredential, callback: (SyncReply<SyncReceiverView>) -> Unit): SyncCancellation

@@ -9,6 +9,7 @@ import android.view.WindowManager
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
+import android.widget.Spinner
 import com.google.zxing.BinaryBitmap
 import com.google.zxing.RGBLuminanceSource
 import com.google.zxing.common.HybridBinarizer
@@ -29,27 +30,32 @@ internal class ActivityFakeTransport : ConnectedSyncReceiverTransport {
     var probeFailure: SyncFailure? = null
     var cancelFailure = false
     var result = false
+    var taskId = "washer-fluid"
+    private val record: SyncInspection get() = if (taskId == "washer-fluid") HttpSamples.result else TireSamples.result(taskId)
     override fun creationAuthorized() = !closed
     override fun checkConnection(callback: (SyncReply<Unit>) -> Unit): SyncCancellation { callback(probeFailure?.let { SyncReply.Failure(it) } ?: SyncReply.Success(Unit)); return SyncCancellation {} }
     override fun create(callback: (SyncReply<CreatedSyncSession>) -> Unit): SyncCancellation {
-        val reply = { callback(SyncReply.Success(CreatedSyncSession(HttpSamples.ID, ReceiverCredential(HttpSamples.receiver), InviteCredential(HttpSamples.invite), expiry - 30000, expiry))) }
+        val reply = { callback(SyncReply.Success(CreatedSyncSession(HttpSamples.ID, ReceiverCredential(HttpSamples.receiver), InviteCredential(HttpSamples.invite), expiry - 30000, expiry, taskId))) }
         if (defer) late = reply else reply()
         return SyncCancellation {}
     }
+    override fun create(taskId: String, callback: (SyncReply<CreatedSyncSession>) -> Unit): SyncCancellation {
+        this.taskId = taskId; return create(callback)
+    }
     override fun view(id: String, receiver: ReceiverCredential, callback: (SyncReply<SyncReceiverView>) -> Unit): SyncCancellation {
         callback(SyncReply.Success(SyncReceiverView(id, if (result) SyncSessionState.RESULT_SUBMITTED else SyncSessionState.CREATED, expiry,
-            if (result) HttpSamples.result else null, if (result) HttpSamples.result.digest() else null)))
+            if (result) record else null, if (result) record.digest() else null, taskId)))
         return SyncCancellation {}
     }
     override fun accept(id: String, receiver: ReceiverCredential, digest: String, callback: (SyncReply<SyncReceiverView>) -> Unit): SyncCancellation {
         accepted++
-        val reply = { callback(SyncReply.Success(SyncReceiverView(id, SyncSessionState.ACCEPTED, expiry, HttpSamples.result, digest))) }
+        val reply = { callback(SyncReply.Success(SyncReceiverView(id, SyncSessionState.ACCEPTED, expiry, record, digest, taskId))) }
         if (defer) late = reply else reply()
         return SyncCancellation {}
     }
     override fun cancel(id: String, receiver: ReceiverCredential, callback: (SyncReply<SyncReceiverView>) -> Unit): SyncCancellation {
         cancelled++
-        callback(if (cancelFailure) SyncReply.Failure(SyncFailure.NETWORK) else SyncReply.Success(SyncReceiverView(id, SyncSessionState.CANCELLED, expiry)))
+        callback(if (cancelFailure) SyncReply.Failure(SyncFailure.NETWORK) else SyncReply.Success(SyncReceiverView(id, SyncSessionState.CANCELLED, expiry, taskId = taskId)))
         return SyncCancellation {}
     }
     override fun close() { closed = true }
@@ -69,6 +75,27 @@ class SyncReceiverActivityTest {
     private fun <T : View> view(activity: SyncReceiverActivity, tag: String): T = activity.findViewById<ViewGroup>(android.R.id.content).findViewWithTag(tag)
     private fun text(activity: SyncReceiverActivity, tag: String): String = view<TextView>(activity, tag).text.toString()
     private fun poll() { shadowOf(Looper.getMainLooper()).idleFor(2, TimeUnit.SECONDS) }
+    @Test fun `each selected tire renders three independent user answers and explicit single accept`() {
+        for (index in 1..4) {
+            val b = Robolectric.buildActivity(ReceiverFixtureActivity::class.java).setup(); val a = b.get()
+            view<Spinner>(a, "task").setSelection(index)
+            view<Button>(a, "create").performClick()
+            assertEquals(SyncTasks.all[index], a.fake.taskId); assertFalse(view<Spinner>(a, "task").isEnabled)
+            val bitmap = (view<ImageView>(a, "qr").drawable as BitmapDrawable).bitmap
+            val pixels = IntArray(bitmap.width * bitmap.height); bitmap.getPixels(pixels, 0, bitmap.width, 0, 0, bitmap.width, bitmap.height)
+            val qr = QRCodeReader().decode(BinaryBitmap(HybridBinarizer(RGBLuminanceSource(bitmap.width, bitmap.height, pixels)))).text
+            assertEquals("https://mobile.example/#v=2&task=${SyncTasks.all[index]}&invite=${HttpSamples.invite}", qr)
+            a.fake.result = true; poll()
+            val text = text(a, "result")
+            for (label in listOf(SyncTasks.labels[index], "손상: 보이는 범위에서 발견하지 못함", "이물질: 발견 보고", "불균일 마모: 확인 불가", "REVIEW_NEEDED", "USER_REPORTED", "안전·정상·주행 가능 판정이 아닙니다")) assertTrue(label, text.contains(label))
+            assertEquals(0, a.fake.accepted); assertTrue(view<Button>(a, "accept").isEnabled)
+            a.fake.defer = true
+            view<Button>(a, "accept").performClick(); view<Button>(a, "accept").performClick()
+            assertEquals(1, a.fake.accepted); a.fake.late!!()
+            assertTrue(text(a, "status").contains("ACCEPTED")); assertFalse(view<Button>(a, "accept").isEnabled)
+            b.pause().stop().destroy()
+        }
+    }
     @Test fun `default Activity never offers creation without configured credentials`() {
         val builder = Robolectric.buildActivity(SyncReceiverActivity::class.java).setup(); val activity = builder.get()
         assertFalse(view<Button>(activity, "create").isEnabled)
