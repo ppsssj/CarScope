@@ -52,7 +52,7 @@ class ComponentWebBoundaryTest {
             assertEquals(false, washer["value"].asBoolean); assertEquals(1000L, washer["observedAt"].asLong); assertEquals("PLEOS", washer["source"].asString)
             assertEquals("no-store", result.responseHeaders!!["Cache-Control"]); assertTrue(result.responseHeaders!!["Content-Security-Policy"]!!.contains("connect-src 'self'"))
             for (r in listOf(request("https://$host/component-status.json?x=1"), request("https://$host/component-status.json", "POST"), request("https://evil.invalid/component-status.json"), request("https://$host/tire-status.json"))) assertEquals(404, client.shouldInterceptRequest(web, r)!!.statusCode)
-            assertEquals(1, reads); assertEquals(4, sdk.getters.size); assertFalse(web.settings.allowFileAccess); assertFalse(web.settings.allowContentAccess); assertFalse(web.settings.domStorageEnabled)
+            assertEquals(1, reads); assertEquals(5, sdk.getters.size); assertFalse(web.settings.allowFileAccess); assertFalse(web.settings.allowContentAccess); assertFalse(web.settings.domStorageEnabled)
         } finally { screen.destroy(); channel.stop(); source.close(); worker.drain(); activity.pause().stop().destroy() }
     }
 }

@@ -36,12 +36,12 @@ export function validateComponentStatus(p) {
   return freeze({ ...p, readings });
 }
 export class ComponentStatusStore {
-  constructor() { this.listeners = new Set(); this.invalidate('DETACHED'); }
+  constructor(validate = validateComponentStatus, emptyReadings = blank) { this.validate = validate; this.emptyReadings = emptyReadings; this.listeners = new Set(); this.invalidate('DETACHED'); }
   subscribe(f) { this.listeners.add(f); return () => this.listeners.delete(f); }
   emit() { for (const f of this.listeners) f(); }
-  invalidate(connectionStatus = 'STOPPED') { this.sessionId = null; this.sequence = 0; this.state = freeze({ connectionStatus, sessionPhase: 'IDLE', readings: blank() }); this.emit(); }
+  invalidate(connectionStatus = 'STOPPED') { this.sessionId = null; this.sequence = 0; this.state = freeze({ connectionStatus, sessionPhase: 'IDLE', readings: this.emptyReadings() }); this.emit(); }
   accept(payload) {
-    const p = validateComponentStatus(payload);
+    const p = this.validate(payload);
     if (this.sessionId !== null && this.sessionId !== p.sessionId || p.sequence <= this.sequence) return false;
     this.sessionId = p.sessionId; this.sequence = p.sequence;
     const view = { connectionStatus: p.connectionStatus, sessionPhase: p.sessionPhase, readings: p.readings };
@@ -54,14 +54,14 @@ export class ComponentStatusStore {
   }
 }
 export class ComponentStatusClient {
-  constructor(store, { fetchImpl = (...a) => fetch(...a), schedule = (f, ms) => setTimeout(f, ms), cancel = id => clearTimeout(id) } = {}) { Object.assign(this, { store, fetchImpl, schedule, cancel, running: false, generation: 0 }); }
+  constructor(store, { fetchImpl = (...a) => fetch(...a), schedule = (f, ms) => setTimeout(f, ms), cancel = id => clearTimeout(id), endpoint = './component-status.json' } = {}) { Object.assign(this, { store, fetchImpl, schedule, cancel, endpoint, running: false, generation: 0 }); }
   start() { if (!this.running) { this.running = true; this.generation++; this.store.invalidate('DETACHED'); void this.poll(this.generation); } }
   stop() { this.running = false; this.generation++; this.cancel(this.timer); this.controller?.abort(); this.store.invalidate('STOPPED'); }
   async poll(generation) {
     const controller = new AbortController(); this.controller = controller;
     const timeout = this.schedule(() => controller.abort(), 3000);
     try {
-      const r = await this.fetchImpl('./component-status.json', { cache: 'no-store', credentials: 'omit', redirect: 'error', signal: controller.signal });
+      const r = await this.fetchImpl(this.endpoint, { cache: 'no-store', credentials: 'omit', redirect: 'error', signal: controller.signal });
       if (!r.ok || r.redirected || !r.headers.get('content-type')?.startsWith('application/json')) throw Error('UNAVAILABLE');
       const text = await r.text(); if (text.length > 8192) throw Error('OVERSIZE');
       if (!this.running || generation !== this.generation) return;

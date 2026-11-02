@@ -98,7 +98,7 @@ internal class PleosComponentDataSource(
     }
     private fun publish(s: Session, f: ComponentFeature, value: ComponentValue?, at: Long) {
         val valid = when (f) {
-            ComponentFeature.WASHER, ComponentFeature.CHARGE_SWITCH -> value is ComponentValue.Flag
+            ComponentFeature.WASHER, ComponentFeature.CHARGE_SWITCH, ComponentFeature.CHARGE_PORT -> value is ComponentValue.Flag
             ComponentFeature.BRAKE -> value is ComponentValue.Oil && value.value in OIL_STATES && value.value in (s.capabilities[f]?.values ?: emptySet())
             ComponentFeature.SOC -> value is ComponentValue.Integer
         }

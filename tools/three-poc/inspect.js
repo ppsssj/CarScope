@@ -20,6 +20,7 @@ import { productSummaryHtml, sessionActions } from './inspection-product.mjs';
 import { TIRES, detachedTireInfo } from "./inspection-tires.mjs";
 import { tireStatus, enableTireStatus, disposeTireStatus } from "./tire-status.mjs";
 import { componentStatus, componentStatusHtml, enableComponentStatus, disposeComponentStatus } from "./component-status.mjs";
+import { disposeChargePortStatus } from './ev-charge-status.mjs';
 import { resolveTireTargets, tireCameraDirection } from "./tire-targets.mjs";
 import { STATES, EVENTS, INSPECTION_AREAS, initialState, transition, hoodTarget, cameraGoal, areaOf, HOOD_OPEN_DEG } from "./inspection-flow.mjs";
 
@@ -603,6 +604,7 @@ function dispose(reason) {
   disposed = true;
   disposeTireStatus();
   disposeComponentStatus();
+  disposeChargePortStatus();
   renderer.setAnimationLoop(null);
   controls.dispose();
   const before = { ...renderer.info.memory }, seen = new Set();

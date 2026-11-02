@@ -17,8 +17,10 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 const ASSET_SRC = join(HERE, "..", "ioniq5-asset");
 const OUT = join(HERE, "..", "..", "app", "src", "debug", "assets", "inspection");
 const THREE = join(HERE, "node_modules", "three");
+// Independent charge status consumer, shared only by the Debug inspection shell.
 rmSync(OUT, { recursive: true, force: true });
 mkdirSync(OUT, { recursive: true });
+cpSync(join(HERE, 'ev-charge-status.mjs'), join(OUT, 'ev-charge-status.mjs'));
 
 // Page: the P3-A4 document plus one script tag for the Android shell.
 const source = readFileSync(join(HERE, "inspect.html"), "utf8");

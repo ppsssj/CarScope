@@ -12,7 +12,7 @@ class ComponentUiProjectionTest {
     private val id = "00000000-0000-4000-8000-000000000001"
     private fun sample() = ComponentSnapshot(ComponentFeature.entries.associateWith { f -> ComponentReading(f, ComponentStatus.SUPPORTED,
         if (f == ComponentFeature.SOC) ComponentStatus.UNVERIFIED else ComponentStatus.SUPPORTED,
-        when (f) { ComponentFeature.WASHER, ComponentFeature.CHARGE_SWITCH -> ComponentValue.Flag(false); ComponentFeature.BRAKE -> ComponentValue.Oil("LOW"); ComponentFeature.SOC -> ComponentValue.Integer(73) },
+        when (f) { ComponentFeature.WASHER, ComponentFeature.CHARGE_SWITCH, ComponentFeature.CHARGE_PORT -> ComponentValue.Flag(false); ComponentFeature.BRAKE -> ComponentValue.Oil("LOW"); ComponentFeature.SOC -> ComponentValue.Integer(73) },
         1000, "MOCK", "private diagnostic <script>") })
     @Test fun `public SDK access and enum declarations map without numeric ID guessing`() {
         assertTrue(componentCapability(CapabilityConfig(AccessType.READ), listOf(OilLevelState.LOW)).readable)
@@ -42,7 +42,7 @@ class ComponentUiProjectionTest {
         val source = PleosComponentDataSource({ sdk }, worker, { 1000 })
         val owner = ComponentOwner(source); val first = ComponentUiChannel(owner); val second = ComponentUiChannel(owner)
         first.start(); worker.drain(); assertEquals(1, sdk.initialized)
-        repeat(50) { first.readJson() }; assertEquals(4, sdk.capabilities.size); assertTrue(sdk.getters.isEmpty())
+        repeat(50) { first.readJson(); first.readChargePortJson() }; assertEquals(5, sdk.capabilities.size); assertTrue(sdk.getters.isEmpty())
         val a = JsonParser.parseString(first.readJson()).asJsonObject
         second.start(); first.stop(); worker.drain()
         assertEquals("ATTACHED", JsonParser.parseString(second.readJson()).asJsonObject["connectionStatus"].asString)
