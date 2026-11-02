@@ -17,11 +17,13 @@ export const STATES = Object.freeze({
   MOBILE_HANDOFF_READY: 'MOBILE_HANDOFF_READY',
   TIRE_SELECTION: 'TIRE_SELECTION', TIRE_PREVIEW: 'TIRE_PREVIEW', TIRE_SUMMARY: 'TIRE_SUMMARY',
   EV_BATTERY_PREVIEW: 'EV_BATTERY_PREVIEW',
+  CHARGE_PORT_PREVIEW: 'CHARGE_PORT_PREVIEW',
 });
 
 export const EVENTS = Object.freeze({
   SHOW_SUMMARY: 'SHOW_SUMMARY', SHOW_TIRE_SUMMARY: 'SHOW_TIRE_SUMMARY', START: 'START', SELECT_AREA: 'SELECT_AREA', HOOD_OPENED: 'HOOD_OPENED', HOOD_CLOSED: 'HOOD_CLOSED',
   SELECT_COMPONENT: 'SELECT_COMPONENT', SELECT_TIRE: 'SELECT_TIRE', REQUEST_HANDOFF: 'REQUEST_HANDOFF', BACK: 'BACK', EXIT: 'EXIT',
+  SELECT_CHARGE_PART: 'SELECT_CHARGE_PART',
 });
 
 // Inspection areas. Only `available` entries can be selected; `planned` ones are listed as not yet
@@ -41,6 +43,10 @@ export const INSPECTION_AREAS = Object.freeze([
   { id: 'tires', label: '타이어 · 네 바퀴', status: 'available', components: TIRES },
   { id: 'ev-battery', label: 'EV 배터리 · 하부 보기', status: 'available', components: [
     { id: 'ev-battery.pack', label: '고전압 배터리 팩', status: 'preview' },
+  ] },
+  { id: 'ev-charge', label: 'EV 충전구', status: 'available', components: [
+    { id: 'ev-charge.port', label: '충전구 외곽', status: 'preview' },
+    { id: 'ev-charge.flap', label: '충전구 덮개', status: 'preview' },
   ] },
 ]);
 
@@ -79,11 +85,17 @@ export function transition(state, event, ctx = {}) {
       if (type === E.SELECT_TIRE) return selectTire();
       if (type === E.SELECT_AREA && event.id === 'tires') return to(S.TIRE_SELECTION, { area: 'tires' });
       if (type === E.SELECT_AREA && event.id === 'ev-battery') return to(S.EV_BATTERY_PREVIEW, { area: 'ev-battery', component: 'ev-battery.pack' });
+      if (type === E.SELECT_AREA && event.id === 'ev-charge') return ctx.chargePortAvailable === true ? to(S.CHARGE_PORT_PREVIEW, { area: 'ev-charge', component: ['ev-charge.port', 'ev-charge.flap'].includes(event.partId) ? event.partId : 'ev-charge.flap' }) : state;
       if (type === E.SELECT_AREA && available(INSPECTION_AREAS, event.id)) return to(S.HOOD_OPENING, { area: event.id });
       if (type === E.BACK && state.name === S.INSPECTION_SUMMARY) return to(S.INSPECTION_OVERVIEW);
       if (type === E.BACK || type === E.EXIT) return initialState();
       return state;
     case S.EV_BATTERY_PREVIEW:
+      if (type === E.BACK) return to(S.INSPECTION_OVERVIEW, { area: null, component: null });
+      if (type === E.EXIT) return initialState();
+      return state;
+    case S.CHARGE_PORT_PREVIEW:
+      if (type === E.SELECT_CHARGE_PART && ['ev-charge.port', 'ev-charge.flap'].includes(event.id)) return event.id === state.component ? state : to(S.CHARGE_PORT_PREVIEW, { component: event.id });
       if (type === E.BACK) return to(S.INSPECTION_OVERVIEW, { area: null, component: null });
       if (type === E.EXIT) return initialState();
       return state;
@@ -146,6 +158,7 @@ export function cameraGoal(state) {
     case S.TIRE_SUMMARY: case S.TIRE_SELECTION: return 'tires';
     case S.TIRE_PREVIEW: return state.component;
     case S.EV_BATTERY_PREVIEW: return 'ev-battery.pack';
+    case S.CHARGE_PORT_PREVIEW: return state.component;
     case S.HOOD_CLOSING: return state.afterClose === S.IDLE ? 'home' : 'overview';
     case S.HOOD_OPENING: case S.COMPONENT_SELECTION: return 'bay';
     case S.COMPONENT_PREVIEW: return state.component;

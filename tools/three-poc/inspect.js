@@ -20,7 +20,9 @@ import { productSummaryHtml, sessionActions } from './inspection-product.mjs';
 import { TIRES, detachedTireInfo } from "./inspection-tires.mjs";
 import { tireStatus, enableTireStatus, disposeTireStatus } from "./tire-status.mjs";
 import { componentStatus, componentStatusHtml, enableComponentStatus, disposeComponentStatus } from "./component-status.mjs";
-import { disposeChargePortStatus } from './ev-charge-status.mjs';
+import { chargePortStatus, chargePortStatusHtml, enableChargePortStatus, disposeChargePortStatus } from './ev-charge-status.mjs';
+import { sourceWorldParts } from './charge-port-model.mjs';
+import { measureEvChargePortSupport, buildEvChargePort, EV_CHARGE_IDS } from "./ioniq5-asset/ev-charge-port.mjs";
 import { resolveTireTargets, tireCameraDirection } from "./tire-targets.mjs";
 import { STATES, EVENTS, INSPECTION_AREAS, initialState, transition, hoodTarget, cameraGoal, areaOf, HOOD_OPEN_DEG } from "./inspection-flow.mjs";
 
@@ -73,6 +75,8 @@ const VIEWS = {
 // ---------- model state ----------
 const M = { hood: null, group: null, pivot: null, axis: null, hoodMeshes: [], outline: [], bay: new THREE.Group(), cap: null, washerMeshes: [], components: new Map(), tires: new Map(), angle: 0 };
 const targetMeshes = id => M.components.get(id) ?? M.tires.get(id)?.meshes;
+M.charge = new THREE.Group(); M.charge.name = '__charge_port_static'; M.charge.visible = false; scene.add(M.charge);
+M.chargeInfo = { status: 'UNAVAILABLE', sourceMeshCount: 0, sourceUnchanged: false };
 function* targetGroups() { yield* M.components; for (const [id, t] of M.tires) yield [id, t.meshes]; }
 M.bay.name = "__p3a4_bay"; M.bay.visible = false; scene.add(M.bay);
 
@@ -152,7 +156,7 @@ let handoff = { configured: false, url: null, reason: "loading" };
 fetch("./inspection-handoff.json").then((r) => (r.ok ? r.json() : null)).then((h) => { if (h) handoff = h; render(); }).catch(() => {});
 
 function dispatch(event) {
-  const prev = state, next = transition(state, event, { handoffConfigured: handoff.configured });
+  const prev = state, next = transition(state, event, { handoffConfigured: handoff.configured, chargePortAvailable: M.chargeInfo.status === 'AVAILABLE' });
   if (next === prev) { log("ignored", { state: prev.name, event: event.type }); return false; }
   state = next;
   log("transition", { from: prev.name, to: next.name, event: event.type });
@@ -186,7 +190,10 @@ function driveCamera(name, dur = 1100) {
   log('camera-target', { name, state: state.name });
   const meshes = targetMeshes(name);
   let target, dir, dist;
-  if (name === 'tires') {
+  if (name === 'overview' && M.vehicleBounds) {
+    target = M.vehicleBounds.getCenter(new THREE.Vector3()); dir = VIEWS.overview[1];
+    dist = boxDistance(M.vehicleBounds.getSize(new THREE.Vector3()).toArray(), dir, camera.fov, innerWidth, innerHeight, panelBox());
+  } else if (name === 'tires') {
     const bounds = new THREE.Box3();
     for (const t of M.tires.values()) bounds.union(t.bounds);
     target = bounds.getCenter(new THREE.Vector3()); dir = VIEWS.tires[1];
@@ -194,12 +201,12 @@ function driveCamera(name, dur = 1100) {
   } else if (meshes && name !== 'washer-fluid-cap') {
     const bounds = componentBounds(name), size = bounds.getSize(new THREE.Vector3());
     target = bounds.getCenter(new THREE.Vector3());
-    dir = name === EV_BATTERY_ID ? [0.7, -1, -0.5] : M.tires.has(name) ? tireCameraDirection(name) : [1.2, 2.8, Math.sign(target.z) * 0.55];
+    dir = Object.values(EV_CHARGE_IDS).includes(name) ? [-0.6, 0.38, 1] : name === EV_BATTERY_ID ? [0.7, -1, -0.5] : M.tires.has(name) ? tireCameraDirection(name) : [1.2, 2.8, Math.sign(target.z) * 0.55];
     dist = componentDistance(size.toArray(), camera.fov, innerWidth, innerHeight, panelBox());
   } else [target, dir, dist] = VIEWS[name];
   controls.minDistance = meshes ? 0.55 : 1.3;
-  controls.maxDistance = name === 'tires' ? Math.max(11, dist) : 11;
-  camTween = { name, fromPos: camera.position.clone(), fromTarget: controls.target.clone(), toTarget: target.clone(), toPos: target.clone().add(new THREE.Vector3(...dir).normalize().multiplyScalar(dist * (meshes || name === 'tires' ? 1 : fitScale()))), t0: performance.now(), dur: ms(dur) };
+  controls.maxDistance = ['tires', 'overview'].includes(name) ? Math.max(11, dist) : 11;
+  camTween = { name, fromPos: camera.position.clone(), fromTarget: controls.target.clone(), toTarget: target.clone(), toPos: target.clone().add(new THREE.Vector3(...dir).normalize().multiplyScalar(dist * (meshes || ['tires', 'overview'].includes(name) ? 1 : fitScale()))), t0: performance.now(), dur: ms(dur) };
   controls.enabled = false;
 }
 const ease = (t) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2);
@@ -218,6 +225,7 @@ function enter(prev) {
   }
   if (selectionView && state.component) selectionView.component = state.component;
   document.body.dataset.state = state.name;
+  M.charge.visible = M.chargeInfo.status === 'AVAILABLE' && [STATES.INSPECTION_OVERVIEW, STATES.INSPECTION_SUMMARY, STATES.CHARGE_PORT_PREVIEW].includes(state.name);
   const underbody = state.name === STATES.EV_BATTERY_PREVIEW;
   floor.visible = ring.visible = !underbody;
   for (const mesh of M.components.get(EV_BATTERY_ID) ?? []) mesh.visible = underbody;
@@ -225,7 +233,7 @@ function enter(prev) {
   hovered = false;
   driveHood(hoodTarget(state));
   render();
-  if ([STATES.EV_BATTERY_PREVIEW, STATES.COMPONENT_PREVIEW, STATES.WASHER_SELECTED, STATES.TIRE_PREVIEW, STATES.INSPECTION_SUMMARY, STATES.TIRE_SUMMARY].includes(state.name)) {
+  if ([STATES.CHARGE_PORT_PREVIEW, STATES.EV_BATTERY_PREVIEW, STATES.COMPONENT_PREVIEW, STATES.WASHER_SELECTED, STATES.TIRE_PREVIEW, STATES.INSPECTION_SUMMARY, STATES.TIRE_SUMMARY].includes(state.name)) {
     $('panel').scrollTop = 0;
     const title = $('panel').querySelector('h2');
     title.tabIndex = -1; title.focus({ preventScroll: true });
@@ -255,7 +263,7 @@ function componentBounds(id) {
 
 // ---------- panel ----------
 const crumbs = { IDLE: "", INSPECTION_OVERVIEW: "차량 점검", HOOD_OPENING: "차량 점검 › 보닛", HOOD_CLOSING: "차량 점검", COMPONENT_SELECTION: "차량 점검 › 보닛", WASHER_SELECTED: "차량 점검 › 보닛 › 워셔액", MOBILE_HANDOFF_READY: "차량 점검 › 보닛 › 워셔액" };
-const hints = { INSPECTION_OVERVIEW: "보닛이나 타이어를 선택하세요", COMPONENT_SELECTION: "모델의 부품이나 목록을 선택하세요" };
+const hints = { INSPECTION_OVERVIEW: "모델의 부위나 목록을 선택하세요", COMPONENT_SELECTION: "모델의 부품이나 목록을 선택하세요" };
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 const item = (x, action) => ['available', 'preview'].includes(x.status)
   ? `<li><button type="button" class="item available ${x.status === 'preview' ? 'preview' : ''}" aria-pressed="${state.component === x.id}" data-action="${action}" data-id="${x.id}">${esc(x.label)}<span class="tag">${x.status === 'preview' ? '형상 보기' : '점검 가능'}</span></button></li>`
@@ -273,6 +281,14 @@ function tireStatusHtml(id) {
 function panelContents() {
   const S = STATES;
   switch (state.name) {
+    case S.CHARGE_PORT_PREVIEW:
+      return `<div class="eyebrow">EV 충전구 · 차량 우측 후방</div><h2>${state.component === EV_CHARGE_IDS.flap ? '충전구 덮개' : '충전구 외곽'}</h2>
+        <span class="badge">ESTIMATED_GEOMETRY · 정적 닫힌 형상</span>
+        <p>모델 우측 후방의 추정 외함입니다. 형상·치수·배치와 실제 차량 변형의 일치는 미검증입니다. 힌지축·각도·소켓·정비 절차를 제공하지 않습니다.</p>
+        <p class="note">SDK true/false는 보고값이며 형상을 열거나 회전시키지 않습니다. 현재 모델의 정적 자세가 실제 차량의 닫힘 상태를 뜻하지 않습니다.</p>
+        <ul class="items">${areaOf(state).components.map(c => item(c, 'charge-part')).join('')}</ul>
+        <details class="sdk-details" open><summary>충전구 SDK 보고 · 형상과 별개</summary><div id="chargePortStatusContent">${chargePortStatusHtml()}</div></details>
+        <div class="actions"><button type="button" class="secondary" data-action="back">뒤로 · 차량 전체 보기</button></div>`;
     case S.EV_BATTERY_PREVIEW:
       return `<div class="eyebrow">EV 배터리 · 하부 보기</div><h2>고전압 배터리 팩</h2>
         <span class="badge">ESTIMATED_GEOMETRY · 추정 외함</span>
@@ -304,7 +320,8 @@ function panelContents() {
       return '<div class="eyebrow">차량 점검</div><h2>모델의 보닛을 닫는 중</h2><p>완료되면 요청한 화면으로 이동합니다.</p>';
     case S.INSPECTION_OVERVIEW:
       return `<div class="eyebrow">차량 점검</div><h2>점검할 부위를 선택하세요</h2><p>3D 모델의 강조된 부위나 아래 목록에서 선택합니다.</p>
-        <ul class="items">${INSPECTION_AREAS.map((a) => item(a, "area")).join("")}</ul>
+        <ul class="items">${INSPECTION_AREAS.map((a) => a.id === 'ev-charge' && M.chargeInfo.status !== 'AVAILABLE' ? '<li><button type="button" class="item" disabled>EV 충전구 · 참조 면 정렬 미검증</button></li>' : item(a, "area")).join("")}</ul>
+        ${M.chargeInfo.status !== 'AVAILABLE' ? '<p role="status">참조 모델에서 충전구 위치를 확인할 수 없어 이 항목을 사용할 수 없습니다.</p>' : ''}
         <p class="note">응답은 이 화면의 메모리에만 남습니다. 홈 복귀·종료·새로고침 시 지워집니다.</p>`;
     case S.HOOD_OPENING:
       return `<div class="eyebrow">보닛</div><h2>보닛을 여는 중</h2><p>차량 전방으로 이동합니다.</p><div class="progress"><i id="hoodProgress"></i></div>
@@ -356,6 +373,7 @@ function render() {
   $('panel').inert = state.name === STATES.IDLE;
   $("crumb").textContent = state.name === STATES.INSPECTION_SUMMARY ? '차량 점검 › 전체 요약' : state.area === 'tires' ? `차량 점검 › 타이어${state.component ? ' › ' + detachedTireInfo(state.component).label : ''}` : state.name === STATES.COMPONENT_PREVIEW ? `차량 점검 › 보닛 › ${areaOf(state).components.find(c => c.id === state.component).label}` : crumbs[state.name];
   if (state.name === STATES.EV_BATTERY_PREVIEW) $('crumb').textContent = '차량 점검 › EV 배터리';
+  if (state.name === STATES.CHARGE_PORT_PREVIEW) $('crumb').textContent = '차량 점검 › EV 충전구';
   const hint = hints[state.name];
   clearTimeout(toastTimer);
   $("toast").textContent = hint ?? "";
@@ -373,6 +391,8 @@ componentStatus.subscribe(() => {
   if (region) region.innerHTML = componentStatusHtml(state.component);
 });
 if (params.get('componentStatus') === 'fixture') enableComponentStatus();
+chargePortStatus.subscribe(() => { const region = $('chargePortStatusContent'); if (region) region.innerHTML = chargePortStatusHtml(); });
+if (params.get('chargeStatus') === 'fixture') enableChargePortStatus();
 
 $("panel").addEventListener("click", (e) => {
   const b = e.target.closest("[data-action]");
@@ -392,6 +412,7 @@ $("panel").addEventListener("click", (e) => {
   else if (a === "component") dispatch({ type: EVENTS.SELECT_COMPONENT, id: b.dataset.id });
   else if (a === "tire") dispatch({ type: EVENTS.SELECT_TIRE, id: b.dataset.id });
   else if (a === "handoff") dispatch({ type: EVENTS.REQUEST_HANDOFF });
+  else if (a === 'charge-part') dispatch({ type: EVENTS.SELECT_CHARGE_PART, id: b.dataset.id });
   else if (a === "back") dispatch({ type: EVENTS.BACK });
   else if (a === "exit") dispatch({ type: EVENTS.EXIT });
 });
@@ -427,6 +448,7 @@ function hitAt(x, y) {
   // Everything visible occludes: a closed hood hides the cap, the body hides the far side.
   const hit = ray.intersectObjects(scene.children, true).find((h) => { if (!h.object.isMesh) return false; for (let n = h.object; n; n = n.parent) if (!n.visible) return false; return true; });
   if (!hit) return null;
+  if (Object.values(EV_CHARGE_IDS).includes(hit.object.userData.partId)) return { kind: 'charge', id: hit.object.userData.partId };
   if (hit.object.userData.inspectionTire) return { kind: 'tire', id: hit.object.userData.inspectionTire };
   if (hit.object.userData.isHood) return { kind: "hood" };
   if (hit.object.userData.washer) return { kind: "washer" };
@@ -435,6 +457,8 @@ function hitAt(x, y) {
 }
 function pickTarget(x, y) {
   const h = hitAt(x, y);
+  if ([STATES.INSPECTION_OVERVIEW, STATES.INSPECTION_SUMMARY].includes(state.name) && h?.kind === 'charge') return { type: EVENTS.SELECT_AREA, id: 'ev-charge', partId: h.id };
+  if (state.name === STATES.CHARGE_PORT_PREVIEW && h?.kind === 'charge') return { type: EVENTS.SELECT_CHARGE_PART, id: h.id };
   if ([STATES.INSPECTION_OVERVIEW, STATES.INSPECTION_SUMMARY, STATES.TIRE_SELECTION, STATES.TIRE_PREVIEW, STATES.TIRE_SUMMARY].includes(state.name) && h?.kind === 'tire') return { type: EVENTS.SELECT_TIRE, id: h.id };
   if ([STATES.INSPECTION_OVERVIEW, STATES.INSPECTION_SUMMARY].includes(state.name) && h?.kind === "hood") return { type: EVENTS.SELECT_AREA, id: "hood" };
   if ([STATES.COMPONENT_SELECTION, STATES.COMPONENT_PREVIEW, STATES.WASHER_SELECTED].includes(state.name)) {
@@ -545,6 +569,20 @@ controls.target.copy(VIEWS.home[0]);
 controls.update();
 new GLTFLoader().load(params.get("model") ?? "./external/ioniq5.glb", (gltf) => {
   scene.add(gltf.scene);
+  M.vehicleBounds = new THREE.Box3().setFromObject(gltf.scene, true);
+  // Measure every ORIGINAL world mesh before hood reparenting or synthetic geometry.
+  try {
+    const source = sourceWorldParts(gltf.scene), support = measureEvChargePortSupport(source);
+    const model = buildEvChargePort({ support });
+    const after = sourceWorldParts(gltf.scene);
+    const unchanged = source.length === after.length && source.every((p, i) => p.triangles.length === after[i].triangles.length && p.triangles.every((v, k) => v === after[i].triangles[k]));
+    if (!unchanged) throw Error('SOURCE_CHANGED');
+    for (const p of model.parts) {
+      const mesh = meshFrom(p.triangles, new THREE.MeshStandardMaterial({ color: p.id === EV_CHARGE_IDS.flap ? 0x59616b : 0x24282d, roughness: 0.7 }), p.id, { partId: p.meta.partId, inspectionTarget: p.meta.inspectionTarget, meta: p.meta });
+      M.charge.add(mesh); M.components.set(p.meta.partId, [mesh]);
+    }
+    M.chargeInfo = { status: 'AVAILABLE', sourceMeshCount: source.length, support, sourceUnchanged: unchanged };
+  } catch { M.chargeInfo = { status: 'UNAVAILABLE', sourceMeshCount: 0, sourceUnchanged: false }; log('charge-model-unavailable'); }
   const meshNodes = new Set(gltf.parser.json.nodes.filter((n) => n.mesh !== undefined).map((n) => n.name));
   let bodyMaterial = null;
   gltf.scene.traverse((o) => { if (!o.isMesh) return; o.material = o.material.clone(); const part = meshNodes.has(o.name) ? o.name : o.parent.name; if (part === "Body" && o.material.name === "Body") bodyMaterial = o.material; });
@@ -630,6 +668,18 @@ window.__inspect = {
   get handoff() { return handoff; },
   tireStatus: () => tireStatus.state,
   componentStatus: () => componentStatus.state,
+  chargePortStatus: () => chargePortStatus.state,
+  chargeGeometry: () => ({ ...M.chargeInfo, visible: M.charge.visible, parts: M.charge.children.map(m => ({ partId: m.userData.partId, matrix: m.matrixWorld.toArray(), positions: Array.from(m.geometry.attributes.position.array), meta: m.userData.meta })) }),
+  chargePoint: (id) => {
+    scene.updateMatrixWorld(true); camera.updateMatrixWorld(); const p = new THREE.Vector3();
+    for (const mesh of M.components.get(id) ?? []) { const pos = mesh.geometry.attributes.position;
+      for (let i = 0; i < pos.count; i += 3) {
+        p.set(0, 0, 0); for (let k = 0; k < 3; k++) p.add(new THREE.Vector3().fromBufferAttribute(pos, i + k)); p.multiplyScalar(1 / 3).applyMatrix4(mesh.matrixWorld).project(camera);
+        const x = (p.x + 1) * innerWidth / 2, y = (1 - p.y) * innerHeight / 2, b = panelBox();
+        if (p.z < 1 && x > 80 && x < innerWidth - b.side && y > 80 && y < innerHeight - b.bottom && hitAt(x, y)?.id === id) return { x, y };
+      }
+    } return null;
+  },
   batteryView: () => ({ visible: M.components.get(EV_BATTERY_ID)?.[0].visible, meta: M.components.get(EV_BATTERY_ID)?.[0].userData.meta, floorVisible: floor.visible, ringVisible: ring.visible, maxPolarAngle: controls.maxPolarAngle }),
   userInspection: () => userInspection,
   hoodPoint: () => screenPoint(M.hoodMeshes[0], false),
