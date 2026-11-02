@@ -1,12 +1,14 @@
 // AR-02A inspection-sync v1 contract: shared by the sync server, the mobile sync client and the vehicle receiver.
 // Pure and dependency-free (Node 22 and browsers): QR v2 handoff, token shape, result digest, envelope/receipt checks.
-// The AR-01 result record and its strict validator are reused unchanged from tools/mobile-ar-poc.
+// Washer schema v1 is reused unchanged; tire schema v2 has a separate strict task validator.
 import { validateResult, TASK_ID, STATES } from '../../mobile-ar-poc/public/inspection-result.mjs';
+import {validateTireResult} from '../../mobile-ar-poc/public/tire-result.mjs';
+import {TIRE_TASKS,isTireTask} from '../../mobile-ar-poc/public/inspection-tasks.mjs';
 
 export const PROTOCOL = 'inspection-sync';
 export const PROTOCOL_VERSION = 1;
 export const QR_VERSION = 2;
-export const SUPPORTED_TASKS = Object.freeze([TASK_ID]);
+export const SUPPORTED_TASKS = Object.freeze([TASK_ID,...TIRE_TASKS.map(t=>t.id)]);
 
 // 32 random bytes, base64url without padding: exactly 43 characters. Tokens are bearer secrets, not identities.
 export const TOKEN_BYTES = 32;
@@ -60,7 +62,7 @@ export async function resultDigest(result) {
 // ---------- submission envelope (mobile -> server) ----------
 
 /**
- * The completed AR-01 record travels unchanged inside an envelope; transport state never goes into the record.
+ * The completed task record travels unchanged inside an envelope; transport state never goes into the record.
  * Returns a list of problems (empty when acceptable).
  */
 export function checkEnvelope(envelope, sessionTask) {
@@ -73,7 +75,7 @@ export function checkEnvelope(envelope, sessionTask) {
   const r = envelope.result;
   if (!r || typeof r !== 'object') return [...problems, 'result: missing'];
   if (r.state !== STATES.COMPLETED) problems.push('result: not COMPLETED');
-  for (const p of validateResult(r)) problems.push(`result: ${p}`);
+  for (const p of (isTireTask(r.taskId)?validateTireResult(r):validateResult(r))) problems.push(`result: ${p}`);
   if (sessionTask && r.taskId !== sessionTask) problems.push('result: task mismatch');
   return problems;
 }
