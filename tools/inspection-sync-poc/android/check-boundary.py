@@ -27,6 +27,8 @@ for artifact, debug in artifacts:
         for marker in (b"Lio/carscope/app/sync/InspectionSyncEntry;", b"Lio/carscope/app/sync/SyncReceiverActivity;", b"Lio/carscope/app/sync/HttpsSyncReceiverTransport;", b"Lio/carscope/app/sync/SyncHttpDecoder;", b"Lcom/google/zxing/qrcode/QRCodeWriter;"):
             assert (marker in dex) == debug, (artifact.name, marker)
         assert b"Lio/carscope/app/sync/ExplicitDebugTestCredentialProvider;" not in dex, artifact.name
+        assert b"Lio/carscope/app/sync/ProvisionedSessionCredentialProviderTest;" not in dex, artifact.name
+        assert (b"Lio/carscope/app/sync/ProvisionedSessionCreationCredentialProvider;" in dex) == debug, artifact.name
         assert b"Lio/carscope/app/sync/ReceiverFixtureActivity;" not in dex, artifact.name
         assert b"Lio/carscope/app/sync/EntryHostActivity;" not in dex, artifact.name
         if not debug:
@@ -37,7 +39,7 @@ suite = ET.parse(report).getroot()
 assert int(suite.get("tests")) >= 15
 assert int(suite.get("tests")) >= 17
 assert all(int(suite.get(key, "0")) == 0 for key in ("failures", "errors", "skipped"))
-for name, minimum in (("SyncHttpDecoderTest", 8), ("HttpsSyncReceiverTransportTest", 10), ("SyncReceiverActivityTest", 8), ("InspectionSyncEntryTest", 3)):
+for name, minimum in (("SyncHttpDecoderTest", 8), ("HttpsSyncReceiverTransportTest", 10), ("SyncReceiverActivityTest", 8), ("InspectionSyncEntryTest", 3), ("ProvisionedSessionCredentialProviderTest", 7)):
     report = ROOT / f"app/build/test-results/testDebugUnitTest/TEST-io.carscope.app.sync.{name}.xml"
     current = ET.parse(report).getroot()
     assert int(current.get("tests")) >= minimum, name

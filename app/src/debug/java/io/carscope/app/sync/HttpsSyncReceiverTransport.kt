@@ -30,7 +30,10 @@ internal class SessionCreationCredential(private val value: String) {
     fun authorizationValue(): String = value
     override fun toString(): String = "SessionCreationCredential(REDACTED)"
 }
-internal fun interface SessionCreationCredentialProvider { fun credential(endpoint: SyncEndpoint): SessionCreationCredential? }
+internal fun interface SessionCreationCredentialProvider : AutoCloseable {
+    fun credential(endpoint: SyncEndpoint): SessionCreationCredential?
+    override fun close() {}
+}
 internal class DenyByDefaultCredentialProvider : SessionCreationCredentialProvider {
     override fun credential(endpoint: SyncEndpoint): SessionCreationCredential? = null
 }
@@ -157,5 +160,8 @@ internal class HttpsSyncReceiverTransport(
         if (r.status == 401 && SyncHttpDecoder.error(r.bytes, r.type, r.status) == SyncFailure.UNAUTHORIZED) SyncReply.Success(Unit)
         else SyncReply.Failure(SyncFailure.INVALID)
     }
-    override fun close() { if (closed.compareAndSet(false, true)) { active.forEach { it.cancel() }; active.clear(); expiries.clear(); executor.shutdownNow() } }
+    override fun close() { if (closed.compareAndSet(false, true)) {
+        active.forEach { it.cancel() }; active.clear(); expiries.clear(); executor.shutdownNow()
+        try { credentials.close() } catch (_: Exception) { /* No credential/provider exception logging. */ }
+    } }
 }
