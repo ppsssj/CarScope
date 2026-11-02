@@ -17,7 +17,12 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
-    testOptions { unitTests.isIncludeAndroidResources = true }
+    testOptions {
+        unitTests.isIncludeAndroidResources = true
+        // Android/Robolectric and plain JDK TLS fixtures must not inherit another class's process globals.
+        // Keep every test and its strict TLS assertions; only isolate class-level JVM workers.
+        unitTests.all { it.forkEvery = 1 }
+    }
 }
 
 kotlin { jvmToolchain(17) }

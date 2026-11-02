@@ -31,6 +31,7 @@ internal class DebugWebScreen(
     private val tireStatusJson: (() -> String)? = null,
 ) {
     private var view: WebView? = null
+    private var backGeneration = 0
 
     fun create(query: String): WebView {
         val web = WebView(activity)
@@ -95,6 +96,16 @@ internal class DebugWebScreen(
         Log.i(tag, "lifecycle resume")
     }
 
+    /** Fixed navigation command only; no data, endpoint or native JS bridge. */
+    fun inspectionBack() {
+        val web = view
+        if (web == null) { activity.finish(); return }
+        val generation = ++backGeneration
+        web.evaluateJavascript("Boolean(window.__androidShell && window.__androidShell.back())") { handled ->
+            if (generation == backGeneration && handled != "true" && !activity.isFinishing) activity.finish()
+        }
+    }
+
     /** Fixed lifecycle signals only, never interpolated data or a callable JavaScript interface. */
     fun signalTireStatus(active: Boolean) {
         val event = if (active) "carscope-tire-active" else "carscope-tire-inactive"
@@ -103,12 +114,14 @@ internal class DebugWebScreen(
 
     /** [disposeScript] runs while the page can still execute; it is a fallback, the page releases GL on close itself. */
     fun pause(finishing: Boolean, disposeScript: String) {
+        backGeneration++ // a delayed Back response must not close a paused parent behind the receiver.
         if (finishing) view?.evaluateJavascript(disposeScript, null)
         view?.onPause()
         Log.i(tag, "lifecycle pause finishing=$finishing")
     }
 
     fun destroy() {
+        backGeneration++
         view?.let {
             (it.parent as? ViewGroup)?.removeView(it)
             it.stopLoading()

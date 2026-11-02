@@ -15,6 +15,7 @@ import { buildInspectionComponents } from "./ioniq5-asset/inspection-components.
 import { componentDistance, boxDistance } from "./inspection-camera.mjs";
 import { createTireInspection, updateTireInspection, inspectionProgress } from "./tire-inspection.mjs";
 import { guideHtml, summaryHtml } from "./tire-inspection-view.mjs";
+import { productSummaryHtml, sessionActions } from './inspection-product.mjs';
 import { TIRES, detachedTireInfo } from "./inspection-tires.mjs";
 import { tireStatus, enableTireStatus, disposeTireStatus } from "./tire-status.mjs";
 import { resolveTireTargets, tireCameraDirection } from "./tire-targets.mjs";
@@ -217,7 +218,7 @@ function enter(prev) {
   hovered = false;
   driveHood(hoodTarget(state));
   render();
-  if ([STATES.COMPONENT_PREVIEW, STATES.WASHER_SELECTED, STATES.TIRE_PREVIEW].includes(state.name)) {
+  if ([STATES.COMPONENT_PREVIEW, STATES.WASHER_SELECTED, STATES.TIRE_PREVIEW, STATES.INSPECTION_SUMMARY, STATES.TIRE_SUMMARY].includes(state.name)) {
     $('panel').scrollTop = 0;
     const title = $('panel').querySelector('h2');
     title.tabIndex = -1; title.focus({ preventScroll: true });
@@ -234,7 +235,8 @@ function enter(prev) {
     $('panel').scrollTop = saved.scroll;
     $('panel').querySelector(`[data-id="${saved.component}"]`)?.focus({ preventScroll: true });
   } else if (cameraGoal(state) !== cameraGoal(prev) || state.name === STATES.IDLE) driveCamera(cameraGoal(state));
-  if ([STATES.HOOD_CLOSING, STATES.IDLE, STATES.INSPECTION_OVERVIEW].includes(state.name)) selectionView = null;
+  if ([STATES.HOOD_CLOSING, STATES.IDLE, STATES.INSPECTION_OVERVIEW, STATES.INSPECTION_SUMMARY].includes(state.name)) selectionView = null;
+  if (state.name === STATES.IDLE) $('start').focus({ preventScroll: true });
 }
 
 function componentBounds(id) {
@@ -246,10 +248,10 @@ function componentBounds(id) {
 
 // ---------- panel ----------
 const crumbs = { IDLE: "", INSPECTION_OVERVIEW: "차량 점검", HOOD_OPENING: "차량 점검 › 보닛", HOOD_CLOSING: "차량 점검", COMPONENT_SELECTION: "차량 점검 › 보닛", WASHER_SELECTED: "차량 점검 › 보닛 › 워셔액", MOBILE_HANDOFF_READY: "차량 점검 › 보닛 › 워셔액" };
-const hints = { INSPECTION_OVERVIEW: "강조된 보닛을 선택하세요", COMPONENT_SELECTION: "모델의 부품이나 목록을 선택하세요" };
+const hints = { INSPECTION_OVERVIEW: "보닛이나 타이어를 선택하세요", COMPONENT_SELECTION: "모델의 부품이나 목록을 선택하세요" };
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 const item = (x, action) => ['available', 'preview'].includes(x.status)
-  ? `<li><button type="button" class="item available ${x.status === 'preview' ? 'preview' : ''}" aria-pressed="${state.component === x.id}" data-action="${action}" data-id="${x.id}">${esc(x.label)}<span class="tag">${x.status === 'preview' || x.id === 'tires' ? '형상 보기' : '점검 가능'}</span></button></li>`
+  ? `<li><button type="button" class="item available ${x.status === 'preview' ? 'preview' : ''}" aria-pressed="${state.component === x.id}" data-action="${action}" data-id="${x.id}">${esc(x.label)}<span class="tag">${x.status === 'preview' ? '형상 보기' : '점검 가능'}</span></button></li>`
   : `<li><div class="item" aria-disabled="true">${esc(x.label)}<span class="tag">준비 중</span></div></li>`;
 
 const connectionLabels = { DETACHED: '미연동', ATTACHED: '앱 소유권 확보 · SDK 연결 완료를 뜻하지 않음', STOPPED: '화면 중지 · 이전 관측 무효화', SUPERSEDED: '다른 점검 화면이 세션을 소유함', UNAVAILABLE: '상태 전달 실패 · 이전 관측 무효화' };
@@ -261,17 +263,18 @@ function tireStatusHtml(id) {
     <dl class="tire-status"><dt>연결</dt><dd>${connectionLabels[t.connectionStatus]}</dd><dt>세션 진단</dt><dd>${t.sessionPhase}${t.sessionPhase === 'UNRESOLVED' ? ' · SDK 요청/정리 미완료, 재시작 차단' : ' · 원격 연결/정리 완료 미검증'}</dd></dl>`;
 }
 
-function panelHtml() {
+function panelContents() {
   const S = STATES;
   switch (state.name) {
+    case S.INSPECTION_SUMMARY: return productSummaryHtml(userInspection);
     case S.TIRE_SUMMARY:
       return `<div class="eyebrow">타이어 · 육안 기록</div><h2>네 타이어 점검 요약</h2>${summaryHtml(userInspection)}
-        <div class="actions"><button type="button" class="secondary" data-action="back">타이어 목록으로</button><button type="button" class="secondary" data-action="exit">점검 종료 · 기록 지우기</button></div>`;
+        <div class="actions"><button type="button" class="secondary" data-action="back">타이어 목록으로</button></div>`;
     case S.TIRE_SELECTION:
       return `<div class="eyebrow">타이어 · 형상 탐색</div><h2>타이어 선택</h2><p>모델의 타이어·휠 또는 아래 목록을 선택하세요. 좌우는 차량 진행 방향 기준입니다.</p>
         <ul class="items">${TIRES.map(t => item(t, 'tire')).join('')}</ul>
         <p role="status">육안 점검 완료 ${inspectionProgress(userInspection)}/4</p><p class="note">타이어를 선택해 육안 기록과 API 상태를 확인하세요. 수치 및 정상·비정상 판정은 제공하지 않습니다.</p>
-        <div class="actions"><button type="button" class="primary" data-action="tire-summary">중간 결과 · 요약 보기</button><button type="button" class="secondary" data-action="back">점검 부위로</button><button type="button" class="secondary" data-action="exit">점검 종료</button></div>`;
+        <div class="actions"><button type="button" class="primary" data-action="tire-summary">중간 결과 · 요약 보기</button><button type="button" class="secondary" data-action="back">점검 부위로</button></div>`;
     case S.TIRE_PREVIEW: {
       const t = detachedTireInfo(state.component);
       return `<div class="eyebrow">타이어 · 상태 탐색</div><h2>${esc(t.label)}</h2><span class="badge detached">상태만 표시 · 수치 및 진단 미제공</span>
@@ -281,12 +284,14 @@ function panelHtml() {
         <p class="note">SUPPORTED는 API 기능 지원 여부입니다. STALE은 오래된 관측이며 정상·비정상 판정이 아닙니다.</p>
         <p class="note">커뮤니티 GLB의 기존 타이어 형상입니다. 실차 형상 정확도와 API 값·단위는 미검증이며 공기압 및 정상·비정상을 판단하지 않습니다.</p>
         <h3>다른 타이어 보기</h3><ul class="items">${TIRES.map(t => item(t, 'tire')).join('')}</ul>
-        <div class="actions"><button type="button" class="primary" data-action="tire-summary">점검 요약 보기</button><button type="button" class="secondary" data-action="back">선택 해제 · 이전 시점으로</button><button type="button" class="secondary" data-action="exit">점검 종료</button></div>`;
+        <div class="actions"><button type="button" class="primary" data-action="tire-summary">점검 요약 보기</button><button type="button" class="secondary" data-action="back">선택 해제 · 이전 시점으로</button></div>`;
     }
-    case S.INSPECTION_OVERVIEW: case S.HOOD_CLOSING:
+    case S.HOOD_CLOSING:
+      return '<div class="eyebrow">차량 점검</div><h2>모델의 보닛을 닫는 중</h2><p>완료되면 요청한 화면으로 이동합니다.</p>';
+    case S.INSPECTION_OVERVIEW:
       return `<div class="eyebrow">차량 점검</div><h2>점검할 부위를 선택하세요</h2><p>3D 모델의 강조된 부위나 아래 목록에서 선택합니다.</p>
         <ul class="items">${INSPECTION_AREAS.map((a) => item(a, "area")).join("")}</ul>
-        <div class="actions"><button type="button" class="secondary" data-action="exit">점검 종료</button></div>`;
+        <p class="note">응답은 이 화면의 메모리에만 남습니다. 홈 복귀·종료·새로고침 시 지워집니다.</p>`;
     case S.HOOD_OPENING:
       return `<div class="eyebrow">보닛</div><h2>보닛을 여는 중</h2><p>차량 전방으로 이동합니다.</p><div class="progress"><i id="hoodProgress"></i></div>
         <div class="actions"><button type="button" class="secondary" data-action="back">취소</button></div>`;
@@ -294,7 +299,7 @@ function panelHtml() {
       return `<div class="eyebrow">보닛 · 전방 수납부</div><h2>점검 항목</h2><p>모델의 부품이나 목록에서 고르세요. 워셔액 외 항목은 추정 형상만 탐색할 수 있습니다.</p>
         <ul class="items">${areaOf(state).components.map((c) => item(c, "component")).join("")}</ul>
         <p class="note">밝은 베이지색 리저버와 무광 케이스는 추정 부품 모델입니다. 저전도 냉각수는 형상과 안내가 준비 중입니다.</p>
-        <div class="actions"><button type="button" class="secondary" data-action="exit">점검 종료</button></div>`;
+        <div class="actions"><button type="button" class="secondary" data-action="back">점검 부위로</button></div>`;
     case S.COMPONENT_PREVIEW: {
       const c = areaOf(state).components.find(c => c.id === state.component);
       return `<div class="eyebrow">보닛 · 형상 탐색</div><h2>${esc(c.label)}</h2><span class="badge">추정 모델 · 점검 절차 미제공</span>
@@ -302,7 +307,7 @@ function panelHtml() {
         <h3>모델에서의 위치 안내</h3><p>${esc(c.location)}에 배치한 추정 형상입니다. 좌우는 운전자가 전방을 보는 기준입니다.</p>
         <p>형상과 배치를 살펴보는 화면입니다. 실제 차량의 정확한 위치나 상태를 나타내지 않습니다.</p>
         <h3>다른 항목 보기</h3><ul class="items">${areaOf(state).components.map(c => item(c, 'component')).join('')}</ul>
-        <div class="actions"><button type="button" class="secondary" data-action="back">점검 목록과 이전 시점으로</button><button type="button" class="secondary" data-action="exit">점검 종료</button></div>`;
+        <div class="actions"><button type="button" class="secondary" data-action="back">점검 목록과 이전 시점으로</button></div>`;
     }
     case S.WASHER_SELECTED:
       return `<div class="eyebrow">보닛 · 워셔액</div><h2>워셔액 점검</h2><span class="badge">위치·형상 추정</span>
@@ -311,23 +316,27 @@ function panelHtml() {
         <h3>출처</h3><p><a class="link" href="${esc(SERVICE_MANUAL)}" target="_blank" rel="noopener noreferrer">Hyundai IONIQ 5 (2022, UK) 정비 설명서 9-14 워셔액</a></p>
         <div class="actions">${handoff.configured
           ? `<button type="button" class="primary" data-action="handoff">스마트폰으로 이어서 보기</button>`
-          : `<p class="note">스마트폰 연결 주소가 설정되지 않았습니다 (CARSCOPE_QR_AR_BASE_URL).</p>`}
+          : `<p class="note">스마트폰 연결이 준비되지 않았습니다. 현재는 이 화면의 안내를 확인할 수 있습니다.</p>`}
           <button type="button" class="secondary" data-action="back">점검 항목으로</button></div>`;
     case S.MOBILE_HANDOFF_READY:
       return `<div class="eyebrow">보닛 · 워셔액</div><h2>스마트폰으로 이어서 보기</h2><p>스마트폰 카메라로 QR을 스캔하면 워셔액 점검 보조 화면이 열립니다.</p>
         <div class="qr"><img src="./inspection-qr.svg" alt="워셔액 점검 보조 화면으로 연결되는 QR 코드"></div>
         <p><a class="link" id="handoffLink" href="${esc(handoff.url)}" target="_blank" rel="noopener noreferrer">직접 열기</a></p>
         <p class="note">QR에는 작업 종류만 담기며 차량·계정 정보는 포함되지 않습니다. 스마트폰 화면의 후보 표시는 색상 기반이며 실제 주입구 인식 정확도는 검증되지 않았습니다.</p>
-        <div class="actions"><button type="button" class="secondary" data-action="back">점검 방법으로</button><button type="button" class="secondary" data-action="exit">점검 종료</button></div>`;
+        <div class="actions"><button type="button" class="secondary" data-action="back">점검 방법으로</button></div>`;
     default:
       return "";
   }
 }
 
+function panelHtml() { return panelContents() + sessionActions(state); }
+
 let toastTimer = null;
 function render() {
   $("panel").innerHTML = panelHtml();
-  $("crumb").textContent = state.area === 'tires' ? `차량 점검 › 타이어${state.component ? ' › ' + detachedTireInfo(state.component).label : ''}` : state.name === STATES.COMPONENT_PREVIEW ? `차량 점검 › 보닛 › ${areaOf(state).components.find(c => c.id === state.component).label}` : crumbs[state.name];
+  $('home').inert = state.name !== STATES.IDLE;
+  $('panel').inert = state.name === STATES.IDLE;
+  $("crumb").textContent = state.name === STATES.INSPECTION_SUMMARY ? '차량 점검 › 전체 요약' : state.area === 'tires' ? `차량 점검 › 타이어${state.component ? ' › ' + detachedTireInfo(state.component).label : ''}` : state.name === STATES.COMPONENT_PREVIEW ? `차량 점검 › 보닛 › ${areaOf(state).components.find(c => c.id === state.component).label}` : crumbs[state.name];
   const hint = hints[state.name];
   clearTimeout(toastTimer);
   $("toast").textContent = hint ?? "";
@@ -350,6 +359,7 @@ $("panel").addEventListener("click", (e) => {
     if (next !== userInspection) { userInspection = next; renderGuide('confirm'); }
   }
   else if (a === 'tire-summary') dispatch({ type: EVENTS.SHOW_TIRE_SUMMARY });
+  else if (a === 'product-summary') dispatch({ type: EVENTS.SHOW_SUMMARY });
   else if (['previous-tire', 'next-tire'].includes(a) && state.name === STATES.TIRE_PREVIEW) {
     const index = TIRES.findIndex(t => t.id === state.component);
     dispatch({ type: EVENTS.SELECT_TIRE, id: TIRES[(index + (a === 'next-tire' ? 1 : 3)) % 4].id });
@@ -401,8 +411,8 @@ function hitAt(x, y) {
 }
 function pickTarget(x, y) {
   const h = hitAt(x, y);
-  if ([STATES.INSPECTION_OVERVIEW, STATES.TIRE_SELECTION, STATES.TIRE_PREVIEW, STATES.TIRE_SUMMARY].includes(state.name) && h?.kind === 'tire') return { type: EVENTS.SELECT_TIRE, id: h.id };
-  if (state.name === STATES.INSPECTION_OVERVIEW && h?.kind === "hood") return { type: EVENTS.SELECT_AREA, id: "hood" };
+  if ([STATES.INSPECTION_OVERVIEW, STATES.INSPECTION_SUMMARY, STATES.TIRE_SELECTION, STATES.TIRE_PREVIEW, STATES.TIRE_SUMMARY].includes(state.name) && h?.kind === 'tire') return { type: EVENTS.SELECT_TIRE, id: h.id };
+  if ([STATES.INSPECTION_OVERVIEW, STATES.INSPECTION_SUMMARY].includes(state.name) && h?.kind === "hood") return { type: EVENTS.SELECT_AREA, id: "hood" };
   if ([STATES.COMPONENT_SELECTION, STATES.COMPONENT_PREVIEW, STATES.WASHER_SELECTED].includes(state.name)) {
     if (h?.kind === 'washer') return { type: EVENTS.SELECT_COMPONENT, id: 'washer-fluid-cap' };
     if (h?.kind === 'component') return { type: EVENTS.SELECT_COMPONENT, id: h.id };

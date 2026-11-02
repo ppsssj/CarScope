@@ -6,6 +6,7 @@
 //  - JSON event lines `CARSCOPE_INSPECT {...}` for logcat: flow transitions, on-screen targets for automation,
 //    frame statistics per state, blocked external links, errors.
 import { enableTireStatus } from './tire-status.mjs';
+import { inspectionBack } from './inspection-product.mjs';
 enableTireStatus();
 const I = () => window.__inspect;
 const T0 = performance.now();
@@ -22,7 +23,8 @@ style.textContent = `
   body[data-state="HOOD_OPENING"] #androidZoom,body[data-state="HOOD_CLOSING"] #androidZoom{opacity:.35;pointer-events:none}`;
 document.head.appendChild(style);
 const close = Object.assign(document.createElement("button"), { type: "button", id: "androidClose", textContent: "✕ 닫기" });
-close.setAttribute("aria-label", "화면 닫기");
+close.setAttribute("aria-label", "화면 닫기 · 이 화면의 기록 지우기");
+close.title = '화면을 닫으면 이 화면의 기록이 지워집니다';
 document.querySelector(".topbar").appendChild(close);
 const zoomBox = document.createElement("div");
 zoomBox.id = "androidZoom";
@@ -42,7 +44,7 @@ function closeScreen(reason) {
   location.href = "./close";
 }
 close.addEventListener("click", () => closeScreen("close-button"));
-window.__androidShell = { closeScreen };
+window.__androidShell = { closeScreen, back: () => inspectionBack(I(), closeScreen) };
 
 // External pages (manual PDF, the phone handoff link) must not open inside this WebView; the QR is the handoff.
 document.addEventListener("click", (e) => {
@@ -51,6 +53,10 @@ document.addEventListener("click", (e) => {
   const url = new URL(a.getAttribute("href"), location.href);
   if (url.origin === location.origin) return;
   e.preventDefault();
+  const notice = document.createElement('p');
+  notice.className = 'note'; notice.setAttribute('role', 'status');
+  notice.textContent = '외부 링크는 이 Debug 화면에서 열 수 없습니다. 스마트폰 연결은 QR을 사용하고 실제 차량 설명서를 확인하세요.';
+  document.getElementById('androidLinkNotice')?.remove(); notice.id = 'androidLinkNotice'; a.after(notice);
   report("external-link-blocked", { href: url.href, id: a.id || null });
 }, true);
 
