@@ -140,3 +140,23 @@ The review server also serves `/charge.svg`. All dimensions and placement are
 `ESTIMATED_GEOMETRY`; the review-only flap visibility toggle never means SDK OPEN.
 See [the location/API Gate, geometry contract and validation](../../docs/p4-a3-ev-charge-port-geometry.md)
 and [external evidence index](../../docs/evidence/p4-a3/README.md).
+
+## P4-A4: static estimated front wipers / read-only lighting audit
+
+`front-wiper.mjs` exports `measureFrontWiperSupport(sourceParts)` and
+`buildFrontWiperGeometry({support})` → `{parts,bounds,joints:[],layout}`.
+IDs `wiper.front.left` / `wiper.front.right` share inspection target `wiper.front`.
+Each compound arm/blade envelope has cm bounds and ESTIMATED_GEOMETRY metadata.
+No rear wiper, actual pivot, sweep, service pose or SDK state is implemented.
+Three.js uses `userData.partId` and per-mesh material clones for independent highlighting.
+`exterior-light-audit.mjs` inventories existing source IDs; it adds no lamp geometry or data mapping.
+
+```powershell
+node tools/ioniq5-asset/front-wiper-report.mjs --glb=$glb --out=C:\CarScope-External\front-wiper\review\report
+node tools/ioniq5-asset/front-wiper-preview-server.mjs --glb=$glb --report=C:\CarScope-External\front-wiper\review\report
+# separate terminal, Chrome only; /review.svg serves the common-triangle SVG
+node tools/ioniq5-asset/check-front-wiper-preview.mjs C:\CarScope-External\front-wiper\review\browser
+```
+
+[Source/API audit, light reuse and geometry contract](../../docs/p4-a4-front-wiper-geometry.md) ·
+[external evidence index](../../docs/evidence/p4-a4/README.md).
