@@ -12,6 +12,7 @@ import { localPki, tlsFetch } from './https-helpers.mjs';
 
 test('authenticated TLS: QR v2, lost submit ACK, duplicate, view, explicit accept, phone ACCEPTED, expiry and cancellation', async (t) => {
   const pki = localPki(), fetch = tlsFetch(pki.ca), logs = [], secrets = [];
+  t.after(() => pki.cleanup());
   let now = Date.now();
   const credential = randomBytes(32).toString('base64url'); secrets.push(credential);
   const authorizer = new FakeSessionCreationAuthorizer({ token: credential, expiresAt: now + 60_000, now: () => now });

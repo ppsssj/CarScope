@@ -127,6 +127,8 @@ export function createSyncHandler({ service, limiter = new RateLimiter(), author
         case 'POST /v1/sessions': {
           if ((await authorizer.authorize({ token: bearer(req), remoteAddress: client, secure: Boolean(req.socket.encrypted) })) !== true) throw new SyncError(ERRORS.FORBIDDEN, 403);
           const body = await readJson(req);
+          // The body may arrive after the credential expired/revoked. Recheck at the creation boundary.
+          if ((await authorizer.authorize({ token: bearer(req), remoteAddress: client, secure: Boolean(req.socket.encrypted) })) !== true) throw new SyncError(ERRORS.FORBIDDEN, 403);
           send(201, await service.create({ taskId: body.taskId }));
           return;
         }
@@ -145,7 +147,7 @@ export function createSyncHandler({ service, limiter = new RateLimiter(), author
       }
     } catch (error) {
       if (error instanceof SyncError) send(error.status, { error: { code: error.code } });
-      else { send(500, { error: { code: ERRORS.INTERNAL } }); log(`internal error ${error?.name ?? 'Error'}`); }
+      else { send(500, { error: { code: ERRORS.INTERNAL } }); log('internal error'); }
     } finally {
       log(`${routeName} ${status} ${Date.now() - started}ms`);
     }
