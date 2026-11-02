@@ -16,6 +16,13 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk=[34])
 class VisibilityWebTest {
+    @Test fun `non Automotive host is rejected before SDK creation while Activity and cache remain usable`() {
+        val activity=Robolectric.buildActivity(Activity::class.java).setup();val worker=ComponentTestWorker()
+        val source=PleosComponentDataSource({createComponentSdkSession(activity.get())},worker,{1000});val channel=ComponentUiChannel(ComponentOwner(source))
+        try{assertFalse(activity.get().packageManager.hasSystemFeature(android.content.pm.PackageManager.FEATURE_AUTOMOTIVE));channel.start();worker.drain();val packet=JsonParser.parseString(channel.readVisibilityJson()).asJsonObject
+            assertTrue(packet["readings"].asJsonArray.all{it.asJsonObject["value"].isJsonNull&&it.asJsonObject["availabilityStatus"].asString=="ERROR"});assertFalse(activity.get().isFinishing)
+        }finally{channel.stop();source.close();worker.drain();activity.pause().stop().destroy()}
+    }
     private val host="carscope-inspection.invalid"
     private fun request(url:String,method:String="GET")=object:WebResourceRequest{
         override fun getUrl()=Uri.parse(url);override fun getMethod()=method

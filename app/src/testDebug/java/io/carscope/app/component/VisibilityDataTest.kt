@@ -12,6 +12,11 @@ import org.junit.Test
 import java.io.File
 
 class VisibilityDataTest {
+    @Test fun `unavailable vehicle service initialization remains an error cache rather than an app exit or mock`() {
+        val worker=ComponentTestWorker();val sdk=ComponentFakeSession().apply{initFails=true};val source=PleosComponentDataSource({sdk},worker,{1000})
+        source.start();worker.drain();assertTrue(source.readSnapshot().readings.values.all{it.availabilityStatus==ComponentStatus.ERROR&&it.source=="PLEOS"&&it.value==null})
+        assertTrue(sdk.capabilities.isEmpty());assertEquals(1,sdk.released);source.close();worker.drain();assertEquals("CLOSED",source.diagnostics.phase)
+    }
     private class Fixture {
         val worker=ComponentTestWorker(); val sdk=ComponentFakeSession(); var at=1000L
         val source=PleosComponentDataSource({sdk},worker,{at}); val channel=ComponentUiChannel(ComponentOwner(source))

@@ -113,7 +113,7 @@ def boundary():
                 assert not any('ev-charge-status' in n for n in archive.namelist())
                 assert not any('component-status' in n or '/component/' in n for n in archive.namelist())
                 assert b'Lio/carscope/app/component/' not in dex
-    for cls, count in [('component.PleosComponentDataSourceTest', 14), ('component.ComponentUiProjectionTest', 4), ('lab.ComponentWebBoundaryTest', 2), ('component.ChargePortDataTest', 4), ('lab.ChargePortWebTest', 2), ('component.VisibilityDataTest', 6), ('lab.VisibilityWebTest', 2)]:
+    for cls, count in [('component.PleosComponentDataSourceTest', 14), ('component.ComponentUiProjectionTest', 4), ('lab.ComponentWebBoundaryTest', 2), ('component.ChargePortDataTest', 4), ('lab.ChargePortWebTest', 2), ('component.VisibilityDataTest', 7), ('lab.VisibilityWebTest', 3)]:
         suite = ET.parse(ROOT / f'app/build/test-results/testDebugUnitTest/TEST-io.carscope.app.{cls}.xml').getroot()
         assert int(suite.get('tests')) >= count
         assert all(int(suite.get(k, 0)) == 0 for k in ('failures', 'errors', 'skipped'))
