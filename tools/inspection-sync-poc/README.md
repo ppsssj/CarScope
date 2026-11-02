@@ -1,5 +1,12 @@
 # inspection-sync-poc (AR-02B-1)
 
+P5-A1 adds four exact tire task IDs and their strict result schema v2, preserving washer-fluid schema v1,
+QR v1, QR v2 tokens, protocolVersion 1 and all auth/receipt boundaries.
+[Contract and Native handoff](../../docs/contracts/tire-mobile-result-v2.md) ·
+[implementation/verification](../../docs/p5-a1-tire-mobile-ar.md).
+JavaScript loopback/browser tests cover Node receiver acceptance; Android tire receipt and real phone E2E
+remain unverified and require the separately owned Native implementation.
+
 AR-02B-2E: [auth adapter contract and HTTPS same-origin service](../../docs/ar-02b2e-auth-service-integration.md).
 `npm run serve:https` serves mobile v2 and `/v1/*` through one TLS listener and SQLite store;
 creation still defaults to denial. Real issuer/registration/revocation and Android provisioning adapters are not supplied.
@@ -10,7 +17,7 @@ AR-02B-2D: [authenticated two-device readiness and runbook](../../docs/ar-02b2d-
 `npm run readiness:host -- --api-origin https://approved-api/ --mobile-root https://approved-mobile/`
 performs credential-free host checks only; it does not enable session creation or prove phone/Android trust.
 
-This is a local PoC for sending a completed AR-01 washer-fluid self-inspection result from a phone to a vehicle-side
+This is a local PoC for sending a completed washer-fluid or tire user self-inspection result from a phone to a vehicle-side
 receiver. Pairing uses a one-time QR v2 invite. The phone shows a result as sent only after it verifies the server
 ACK, and the vehicle must accept the result explicitly.
 

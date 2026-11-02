@@ -1,8 +1,8 @@
 // Mobile sync client (browser and Node), used by the explicit v2 service and debug tests; static AR-01 stays local-only.
-// Rules: send only on an explicit call, only a COMPLETED record that passes the AR-01 validator, one request in
+// Rules: send only on an explicit call, only a COMPLETED record that passes its task validator, one request in
 // flight at a time, SENT only after a receipt that matches this record (inspectionId + SHA-256 digest). The completed
 // record itself is never modified; transport state lives here.
-import { PROTOCOL, PROTOCOL_VERSION, checkEnvelope, parseInviteFragment, receiptMatches, isToken, canonicalJson } from '../src/protocol.mjs';
+import { PROTOCOL, PROTOCOL_VERSION, checkEnvelope, parseInviteFragment, receiptMatches, isToken, canonicalJson,SUPPORTED_TASKS } from '../src/protocol.mjs';
 
 export const TRANSPORT = Object.freeze({
   NOT_SENT: 'NOT_SENT', SENDING: 'SENDING', SENT: 'SENT', // SENT = server receipt verified
@@ -35,7 +35,9 @@ function mapError(status, code) {
 export class SyncClient {
   #submitToken = null; #inFlight = null; #claimFlight = null; #claimAttempted = false;
   #disposed = false; #controllers = new Set(); #sendingJson = null; #sentJson = null;
-  constructor({ baseUrl, fetchImpl = globalThis.fetch, timeoutMs = 8000, retries = 2, backoffMs = 400, sleep = (ms) => new Promise((r) => setTimeout(r, ms)) }) {
+  #task;
+  constructor({ baseUrl,taskId='washer-fluid', fetchImpl = globalThis.fetch, timeoutMs = 8000, retries = 2, backoffMs = 400, sleep = (ms) => new Promise((r) => setTimeout(r, ms)) }) {
+    if(!SUPPORTED_TASKS.includes(taskId))throw Error('Unsupported sync task');this.#task=taskId;
     // Wrapped: browsers throw "Illegal invocation" when window.fetch is called as a method of another object.
     this.baseUrl = baseUrl.replace(/\/$/, ''); this.fetch = (...a) => fetchImpl(...a); this.timeoutMs = timeoutMs; this.retries = retries; this.backoffMs = backoffMs; this.sleep = sleep;
     this.transport = TRANSPORT.NOT_SENT; this.receipt = null; this.lastError = null;
@@ -75,7 +77,7 @@ export class SyncClient {
     const r = await this.#call('POST', '/v1/claim', inviteToken);
     if (this.#disposed) return { ok: false, outcome: TRANSPORT.REJECTED_CLOSED };
     if (!r.ok) return { ok: false, outcome: r.outcome ?? mapError(r.status, r.json?.error?.code), code: r.json?.error?.code ?? null };
-    if (!isToken(r.json?.submitToken) || r.json?.taskId !== 'washer-fluid') return { ok: false, outcome: TRANSPORT.REJECTED_INVALID };
+    if (!isToken(r.json?.submitToken) || r.json?.taskId !== this.#task) return { ok: false, outcome: TRANSPORT.REJECTED_INVALID };
     this.#submitToken = r.json.submitToken;
     return { ok: true, taskId: r.json.taskId, expiresAt: r.json.expiresAt };
   }
@@ -103,7 +105,7 @@ export class SyncClient {
     };
     if (!this.#submitToken) return finish(TRANSPORT.REJECTED_UNAUTHORIZED, null, 'not paired');
     const envelope = { protocol: PROTOCOL, protocolVersion: PROTOCOL_VERSION, result };
-    const local = checkEnvelope(envelope, result?.taskId);
+    const local = checkEnvelope(envelope, this.#task);
     if (local.length) return finish(TRANSPORT.REJECTED_INVALID, null, local.join('; ')); // incomplete or malformed: never sent
     this.transport = TRANSPORT.SENDING;
     let outcome = TRANSPORT.FAILED_NETWORK, code = null;

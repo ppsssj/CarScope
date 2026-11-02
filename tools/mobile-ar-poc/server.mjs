@@ -4,11 +4,12 @@ import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import QRCode from 'qrcode';
 import { handoffURL } from './public/handoff.mjs';
+import {MOBILE_MODULES} from './public-modules.mjs';
 
 const publicRoot = new URL('./public/', import.meta.url);
 const files = new Map([
   ['/', ['index.html', 'text/html; charset=utf-8']],
-  ...['app-entry.mjs', 'app.mjs', 'handoff.mjs', 'camera.mjs', 'detector.mjs', 'self-inspection.mjs', 'inspection-result.mjs', 'marker.mjs'].map(name => [`/${name}`, [name, 'text/javascript; charset=utf-8']]),
+  ...['app-entry.mjs',...MOBILE_MODULES].map(name => [`/${name}`, [name, 'text/javascript; charset=utf-8']]),
   ['/style.css', ['style.css', 'text/css; charset=utf-8']],
   ['/favicon.svg', ['favicon.svg', 'image/svg+xml']]
 ]);

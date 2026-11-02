@@ -1,6 +1,14 @@
-# CarScope 모바일 · 워셔액 셀프 점검 (AR-01) / QR-AR-01 PoC
+# CarScope 모바일 · 워셔액과 타이어 카메라 보조 점검
 
-> **현재 화면은 AR-01 셀프 점검이다.** QR 진입 → 카메라 안내(파란색 후보 + 사용자가 탭해 지정하는 2D 위치 표시) → 셀프 점검 체크리스트 → 결과 선택(정상 확인·보충 필요·확인 불가) → 확정 → 완료 화면. 결과는 `USER_REPORTED` 레코드로 이 화면에서만 확정되며 전송되지 않는다(AR-02 예정). 흐름, 데이터 모델, 검증, 실기기 절차는 [AR01_SELF_INSPECTION.md](AR01_SELF_INSPECTION.md)에 있다. 아래는 QR-AR-01 PoC 단계의 기록이며 카메라·후보·QR 계약은 그대로 재사용한다.
+P5-A1: 네 타이어(`tire.front-left`, `tire.front-right`, `tire.rear-left`, `tire.rear-right`)의 정차 확인 → 카메라/수동 안내 → 세 개별 육안 응답 → 검토·명시적 확정을 지원한다. 루트 화면에서 타이어를 선택하거나 `/#task=tire.front-left`로 시작한다. 수동 2D 위치 표시이며 객체 인식·공간 추적·마모 깊이/공기압 측정은 없다. 기존 워셔액 schema v1과 QR v1은 보존한다.
+
+[구현·재실행·검증 결과](../../docs/p5-a1-tire-mobile-ar.md) · [타이어 schema v2 및 Native 수신 명세](../../docs/contracts/tire-mobile-result-v2.md) · [외부 증거 인덱스](../../docs/evidence/p5-a1/README.md). 정적 화면은 로컬 메모리 전용이다. 별도 Sync entry의 QR v2는 워셔액/타이어 결과를 명시적으로 전송할 수 있으나, 이번 검증은 Node 수신기까지의 합성 테스트다. **타이어 실제 폰/Android 두 기기 E2E는 미실행이며 현재 Native 수신 계약의 후속 구현이 필요하다.**
+
+`npm run test:browser`는 기존 워셔액 Edge + 타이어 Chrome 모바일 뷰포트 테스트를 실행한다. `test:browser:tire`는 타이어만 실행한다. 원본 증거는 기존처럼 저장소 밖에 둔다.
+
+## 기존 AR-01 / QR-AR-01 단계 기록
+
+> **아래는 기존 워셔액 AR-01의 구현·검증 기록이다.** QR 진입 → 카메라 안내(파란색 후보 + 사용자가 탭해 지정하는 2D 위치 표시) → 셀프 점검 체크리스트 → 결과 선택(정상 확인·보충 필요·확인 불가) → 확정 → 완료 화면. 정적 화면의 결과는 `USER_REPORTED` 레코드로 이 화면에서만 확정되며 전송되지 않는다. 별도 Sync entry의 전송 구현은 위 최신 문서를 참조한다. 기존 흐름, 데이터 모델, 실기기 절차는 [AR01_SELF_INSPECTION.md](AR01_SELF_INSPECTION.md)에 있다.
 
 ## QR-AR-01 · 워셔액 주입구 모바일 안내 PoC
 
@@ -8,7 +16,7 @@
 
 기존 Android 앱·Pleos SDK·vehicle-core·Geometry·Three.js에는 연결하지 않는다. 앱에서 QR을 표시하는 통합도 이번 범위에 없다. PC의 독립 도구 화면에서 QR을 표시하고 스마트폰의 기본 카메라/QR 리더로 연다. release 앱에는 포함하지 않는다.
 
-최신 상태는 [실제 폰 사용자 관측과 HTTPS 스테이징](HTTPS_STAGING.md)이며 **AR012_PARTIAL**이다. 플랫폼 미상의 실제 폰에서 HTTPS·QR·카메라·후보·중지·재시작·수동 안내가 사용자 보고 PASS다. 후면 렌즈, 소실·거부·회전·백그라운드와 기기 정보는 미확인/NOT_RUN이라 Draft·병합 보류를 유지한다. PC 서버/Tailscale 상시 실행은 필요 없다. [01.2](MOBILE_E2E_VERIFICATION.md)·[01.1](REAL_DEVICE_VALIDATION.md)은 이전 단계 기록이다.
+AR-01.2 당시 상태는 [실제 폰 사용자 관측과 HTTPS 스테이징](HTTPS_STAGING.md)의 **AR012_PARTIAL** 기록이다. 플랫폼 미상의 실제 폰에서 HTTPS·QR·카메라·후보·중지·재시작·수동 안내가 사용자 보고 PASS다. 당시 후면 렌즈, 소실·거부·회전·백그라운드와 기기 정보는 미확인/NOT_RUN이었다. 현재 P5-A1 타이어의 실기기 결과로 전용하지 않는다. PC 서버/Tailscale 상시 실행은 필요 없다. [01.2](MOBILE_E2E_VERIFICATION.md)·[01.1](REAL_DEVICE_VALIDATION.md)은 이전 단계 기록이다.
 
 ## 감사와 구현 결정 (2026-10-31)
 

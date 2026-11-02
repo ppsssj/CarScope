@@ -1,6 +1,6 @@
 // Shared allow-list for the loopback dev server and the HTTPS same-origin service.
 import { readFile } from 'node:fs/promises';
-const mobileFiles = ['app.mjs', 'handoff.mjs', 'camera.mjs', 'detector.mjs', 'self-inspection.mjs', 'inspection-result.mjs', 'marker.mjs'];
+import {MOBILE_MODULES as mobileFiles} from '../../mobile-ar-poc/public-modules.mjs';
 const syncFiles = ['mobile-dev-entry.mjs', 'mobile-handoff.mjs', 'mobile-sync.mjs', 'sync-client.mjs'];
 const files = new Map([
   ...mobileFiles.map((s) => [`/mobile-ar-poc/public/${s}`, new URL(`../../mobile-ar-poc/public/${s}`, import.meta.url)]),

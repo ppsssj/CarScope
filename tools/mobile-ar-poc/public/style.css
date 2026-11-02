@@ -97,3 +97,13 @@ body[data-step="result"] #manual, body[data-step="confirm"] #manual, body[data-s
   .actions .primary { min-height: 48px; }
 }
 @media (min-width: 900px) { main { padding-top: 20px; } }
+
+.task-links { display:flex;flex-wrap:wrap;gap:8px;margin:16px 0; }
+.task-links a { display:inline-flex;align-items:center;min-height:44px;padding:8px;border:1px solid var(--line);border-radius:8px;color:var(--brand); }
+.safety { display:flex;align-items:flex-start;gap:12px;min-height:56px;padding:14px;border:1px solid var(--line);border-radius:10px;background:var(--card); }
+.safety input { width:24px;height:24px;flex:none; }
+body[data-tire][data-step="review"] #step-review { display:block; }
+body[data-tire][data-step="review"] #camera { display:none; }
+#tire-answers { border:0;padding:0; }
+#tire-answers label { display:flex;gap:12px;align-items:center;min-height:56px;padding:14px;margin:10px 0;background:var(--card);border:1px solid var(--line);border-radius:10px; }
+#tire-answers input { width:24px;height:24px;flex:none;accent-color:var(--brand); }

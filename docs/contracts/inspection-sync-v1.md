@@ -4,8 +4,9 @@ Status: **PoC contract**, implemented in `tools/inspection-sync-poc/` and run on
 AR-02B-1 keeps this payload/state contract but replaces the historical loopback create stand-in with an injected
 creation authorizer that **denies by default**, including loopback. Only explicit local test configuration enables
 the historical stand-in; real vehicle authentication remains blocked. See [authentication design](../ar-02b1-authentication-design.md).
-The AR-01 result record (schema v1, `tools/mobile-ar-poc/public/inspection-result.mjs`) is reused **unchanged**; this
-contract only wraps and transports it.
+The AR-01 washer-fluid result record (schema v1, `tools/mobile-ar-poc/public/inspection-result.mjs`) is reused **unchanged**.
+P5-A1 adds strict [tire result schema v2 and the Native handoff specification](tire-mobile-result-v2.md).
+The enclosing protocolVersion remains 1; Android support for tire results requires the documented follow-up.
 
 ## 1. QR v2 invite
 
@@ -16,7 +17,7 @@ contract only wraps and transports it.
 | key | rule |
 |---|---|
 | `v` | exactly `2` |
-| `task` | a supported task id; only `washer-fluid` today |
+| `task` | `washer-fluid`, `tire.front-left`, `tire.front-right`, `tire.rear-left`, `tire.rear-right` |
 | `invite` | 43 chars `[A-Za-z0-9_-]` = 32 random bytes, base64url |
 
 - Exactly these three keys, each once, in any order. Anything else (extra keys such as `vin`, a repeated key, a
@@ -27,7 +28,7 @@ contract only wraps and transports it.
 - The token is **not** a vehicle identifier. Scanning it proves only that someone saw the QR. It says nothing about who
   owns the vehicle or which car it is.
 - QR v1 (`#v=1&task=washer-fluid`, AR-01) is unchanged. The v1 parser rejects v2 and the v2 parser rejects v1. The
-  current AR-01 page therefore shows "unsupported QR" for a v2 code; that page is changed only in AR-02B.
+  standalone static page rejects v2; the separate same-origin Sync entry supports v2.
 
 ## 2. Tokens
 
@@ -49,12 +50,13 @@ contract only wraps and transports it.
 {
   "protocol": "inspection-sync",
   "protocolVersion": 1,
-  "result": { "...": "AR-01 schema v1 record, state COMPLETED" }
+  "result": { "...": "task-specific schema v1 (washer) or v2 (tire), state COMPLETED" }
 }
 ```
 
 - Exactly these three keys.
-- `result` must pass the AR-01 `validateResult()` strict allow-list with no problems. That means exact field set,
+- `result` must pass the task-specific strict allow-list with no problems: unchanged AR-01 `validateResult()` for washer-fluid,
+  or `validateTireResult()` for one of the four tires. That means exact field set,
   constants, UUID, ISO times, boolean `aids` only, and `sync: "NOT_SENT"`.
 - `state` must be `COMPLETED` and `taskId` must equal the session task.
 - Anything else, such as a VIN, plate, account, device id, GPS, photo or video, frame, or tap coordinates, is an

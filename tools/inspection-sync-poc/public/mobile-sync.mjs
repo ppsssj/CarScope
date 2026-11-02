@@ -22,7 +22,9 @@ export class MobileSync {
   #invite; #client; #result = null; #timer = null; #busy = false; #polling = false;
   #closed = false; #paused = false; #generation = 0; #errors = 0; #attempted = false;
   #connection = 'INVITED'; #display = 'NOT_SENT'; #received = false; #terminal = false;
-  constructor({ invite, client, onChange = () => {}, schedule = setTimeout, unschedule = clearTimeout, intervalMs = 2000 }) {
+  #task;
+  constructor({ invite, client,taskId='washer-fluid', onChange = () => {}, schedule = setTimeout, unschedule = clearTimeout, intervalMs = 2000 }) {
+    this.#task=taskId;
     this.#invite = invite; this.#client = client; this.onChange = onChange;
     this.schedule = (...args) => schedule(...args); this.unschedule = (...args) => unschedule(...args); this.intervalMs = intervalMs;
   }
@@ -59,7 +61,7 @@ export class MobileSync {
   }
   setResult(result) {
     if (this.#closed || this.#result) return; // one local completed record per connection
-    if (checkEnvelope({ protocol: PROTOCOL, protocolVersion: PROTOCOL_VERSION, result }, 'washer-fluid').length) { this.#show('REJECTED_INVALID'); return; }
+    if (checkEnvelope({ protocol: PROTOCOL, protocolVersion: PROTOCOL_VERSION, result }, this.#task).length) { this.#show('REJECTED_INVALID'); return; }
     this.#result = structuredClone(result); this.#emit();
   }
   async send() {

@@ -37,6 +37,10 @@ const STATIC = new Map([
   ['/public/sync-client.mjs', ['public/sync-client.mjs', 'text/javascript; charset=utf-8']],
   ['/src/protocol.mjs', ['src/protocol.mjs', 'text/javascript; charset=utf-8']],
   ['/mobile-ar-poc/public/inspection-result.mjs', ['../mobile-ar-poc/public/inspection-result.mjs', 'text/javascript; charset=utf-8']],
+  // Pure tire validator dependencies, also imported by protocol.mjs on the legacy debug page.
+  ...['tire-result.mjs', 'inspection-tasks.mjs', 'handoff.mjs'].map((name) => [
+    `/mobile-ar-poc/public/${name}`, [`../mobile-ar-poc/public/${name}`, 'text/javascript; charset=utf-8'],
+  ]),
 ]);
 
 const ROUTES = [
