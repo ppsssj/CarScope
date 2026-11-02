@@ -1,4 +1,4 @@
-// Read-only projection of Native component cache. EV IDs are data-only until a model contract is merged.
+// Read-only projection of Native component cache. EV selection reuses the merged model contract.
 export const COMPONENT_FEATURES = Object.freeze({
   'safety.washer-fluid-warning': 'washer-fluid-cap',
   'safety.brake-fluid-level': 'brake-fluid-reservoir',

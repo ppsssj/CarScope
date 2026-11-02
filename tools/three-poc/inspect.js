@@ -12,6 +12,7 @@ import { buildFrontCompartment, measureHoodSurface } from "./ioniq5-asset/front-
 import { buildFrunk } from "./ioniq5-asset/frunk.mjs";
 import { buildServiceComponents, SERVICE_MANUAL } from "./ioniq5-asset/service-components.mjs";
 import { buildInspectionComponents } from "./ioniq5-asset/inspection-components.mjs";
+import { buildEvBatteryPack, EV_BATTERY_ID } from "./ioniq5-asset/ev-battery.mjs";
 import { componentDistance, boxDistance } from "./inspection-camera.mjs";
 import { createTireInspection, updateTireInspection, inspectionProgress } from "./tire-inspection.mjs";
 import { guideHtml, summaryHtml } from "./tire-inspection-view.mjs";
@@ -192,7 +193,7 @@ function driveCamera(name, dur = 1100) {
   } else if (meshes && name !== 'washer-fluid-cap') {
     const bounds = componentBounds(name), size = bounds.getSize(new THREE.Vector3());
     target = bounds.getCenter(new THREE.Vector3());
-    dir = M.tires.has(name) ? tireCameraDirection(name) : [1.2, 2.8, Math.sign(target.z) * 0.55];
+    dir = name === EV_BATTERY_ID ? [0.7, -1, -0.5] : M.tires.has(name) ? tireCameraDirection(name) : [1.2, 2.8, Math.sign(target.z) * 0.55];
     dist = componentDistance(size.toArray(), camera.fov, innerWidth, innerHeight, panelBox());
   } else [target, dir, dist] = VIEWS[name];
   controls.minDistance = meshes ? 0.55 : 1.3;
@@ -216,10 +217,14 @@ function enter(prev) {
   }
   if (selectionView && state.component) selectionView.component = state.component;
   document.body.dataset.state = state.name;
+  const underbody = state.name === STATES.EV_BATTERY_PREVIEW;
+  floor.visible = ring.visible = !underbody;
+  for (const mesh of M.components.get(EV_BATTERY_ID) ?? []) mesh.visible = underbody;
+  controls.maxPolarAngle = Math.PI * (underbody ? 0.92 : 0.48);
   hovered = false;
   driveHood(hoodTarget(state));
   render();
-  if ([STATES.COMPONENT_PREVIEW, STATES.WASHER_SELECTED, STATES.TIRE_PREVIEW, STATES.INSPECTION_SUMMARY, STATES.TIRE_SUMMARY].includes(state.name)) {
+  if ([STATES.EV_BATTERY_PREVIEW, STATES.COMPONENT_PREVIEW, STATES.WASHER_SELECTED, STATES.TIRE_PREVIEW, STATES.INSPECTION_SUMMARY, STATES.TIRE_SUMMARY].includes(state.name)) {
     $('panel').scrollTop = 0;
     const title = $('panel').querySelector('h2');
     title.tabIndex = -1; title.focus({ preventScroll: true });
@@ -267,6 +272,13 @@ function tireStatusHtml(id) {
 function panelContents() {
   const S = STATES;
   switch (state.name) {
+    case S.EV_BATTERY_PREVIEW:
+      return `<div class="eyebrow">EV 배터리 · 하부 보기</div><h2>고전압 배터리 팩</h2>
+        <span class="badge">ESTIMATED_GEOMETRY · 추정 외함</span>
+        <p>차체 아래 두 차축 사이의 외함을 나타낸 개략 모델입니다. 치수·배치·해당 차량 변형과의 일치는 미검증입니다. 12V 보조 배터리와 다릅니다.</p>
+        <p class="note">하부를 보기 위해 화면의 바닥 장식을 숨겼습니다. 실제 차량 아래로 진입하거나 배터리를 열도록 안내하는 절차가 아닙니다.</p>
+        <p class="note">SoC는 원시 Integer이며 단위·범위가 미검증입니다. 충전 스위치 값은 충전 진행 상태나 안전 판정이 아닙니다.</p>
+        <div class="actions"><button type="button" class="secondary" data-action="back">점검 부위로</button></div>`;
     case S.INSPECTION_SUMMARY: return productSummaryHtml(userInspection);
     case S.TIRE_SUMMARY:
       return `<div class="eyebrow">타이어 · 육안 기록</div><h2>네 타이어 점검 요약</h2>${summaryHtml(userInspection)}
@@ -331,8 +343,8 @@ function panelContents() {
 }
 
 function panelHtml() {
-  const hasStatus = state.name === STATES.WASHER_SELECTED || state.name === STATES.COMPONENT_PREVIEW && state.component === 'brake-fluid-reservoir';
-  const status = hasStatus ? `<details class="sdk-details"><summary>Pleos API 지원 및 SDK 보고 상태</summary><div id="componentStatusContent">${componentStatusHtml(state.component)}</div></details>` : '';
+  const hasStatus = state.name === STATES.EV_BATTERY_PREVIEW || state.name === STATES.WASHER_SELECTED || state.name === STATES.COMPONENT_PREVIEW && state.component === 'brake-fluid-reservoir';
+  const status = hasStatus ? `<details class="sdk-details"${state.name === STATES.EV_BATTERY_PREVIEW ? ' open' : ''}><summary>Pleos API 지원 및 SDK 보고 상태</summary><div id="componentStatusContent">${componentStatusHtml(state.component)}</div></details>` : '';
   return panelContents() + status + sessionActions(state);
 }
 
@@ -342,6 +354,7 @@ function render() {
   $('home').inert = state.name !== STATES.IDLE;
   $('panel').inert = state.name === STATES.IDLE;
   $("crumb").textContent = state.name === STATES.INSPECTION_SUMMARY ? '차량 점검 › 전체 요약' : state.area === 'tires' ? `차량 점검 › 타이어${state.component ? ' › ' + detachedTireInfo(state.component).label : ''}` : state.name === STATES.COMPONENT_PREVIEW ? `차량 점검 › 보닛 › ${areaOf(state).components.find(c => c.id === state.component).label}` : crumbs[state.name];
+  if (state.name === STATES.EV_BATTERY_PREVIEW) $('crumb').textContent = '차량 점검 › EV 배터리';
   const hint = hints[state.name];
   clearTimeout(toastTimer);
   $("toast").textContent = hint ?? "";
@@ -556,6 +569,12 @@ new GLTFLoader().load(params.get("model") ?? "./external/ioniq5.glb", (gltf) => 
   M.pivot.add(M.hood);
   M.hood.traverse((o) => { if (o.isMesh && !o.userData.synthetic) { o.userData.isHood = true; M.hoodMeshes.push(o); M.outline.push(outlineOf(o)); } });
   buildBay(bodyMaterial, closed);
+  // Reuse A's merged model verbatim; this group is outside the hood-only bay.
+  for (const p of buildEvBatteryPack().parts) {
+    const mesh = meshFrom(p.triangles, new THREE.MeshStandardMaterial({ color: 0x59616b, roughness: 0.78 }), p.id, { inspectionTarget: EV_BATTERY_ID, meta: p.meta });
+    scene.add(mesh); mesh.visible = false;
+    M.components.set(EV_BATTERY_ID, [mesh]);
+  }
   setHoodAngle(0);
   $("status").remove();
   $("start").disabled = false;
@@ -609,6 +628,7 @@ window.__inspect = {
   get handoff() { return handoff; },
   tireStatus: () => tireStatus.state,
   componentStatus: () => componentStatus.state,
+  batteryView: () => ({ visible: M.components.get(EV_BATTERY_ID)?.[0].visible, meta: M.components.get(EV_BATTERY_ID)?.[0].userData.meta, floorVisible: floor.visible, ringVisible: ring.visible, maxPolarAngle: controls.maxPolarAngle }),
   userInspection: () => userInspection,
   hoodPoint: () => screenPoint(M.hoodMeshes[0], false),
   capPoint: () => screenPoint(M.cap),
