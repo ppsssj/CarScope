@@ -30,6 +30,7 @@ const ROOTS = [
   ["/ioniq5-asset/service-components.mjs", join(HERE, "..", "ioniq5-asset", "service-components.mjs")],
   ["/ioniq5-asset/inspection-components.mjs", join(HERE, "..", "ioniq5-asset", "inspection-components.mjs")],
   ["/ioniq5-asset/ev-battery.mjs", join(HERE, "..", "ioniq5-asset", "ev-battery.mjs")],
+  ["/ioniq5-asset/ev-charge-port.mjs", join(HERE, "..", "ioniq5-asset", "ev-charge-port.mjs")],
   ...(process.env.CARSCOPE_P3A23_DIR ? [["/external/p3-a2-3/", resolve(process.env.CARSCOPE_P3A23_DIR)]] : []),
   ...(process.env.CARSCOPE_P3A22_DIR ? [["/external/p3-a2-2/", resolve(process.env.CARSCOPE_P3A22_DIR)]] : []),
   ...(process.env.CARSCOPE_P3A1_DIR ? [["/external/p3-a1/", resolve(process.env.CARSCOPE_P3A1_DIR)]] : []),
@@ -41,6 +42,7 @@ const handoff = handoffTarget(process.env.CARSCOPE_QR_AR_BASE_URL);
 const handoffQr = handoff.configured ? await QRCode.toString(handoff.url, { type: "svg", margin: 2, errorCorrectionLevel: "M" }) : null;
 // Explicit local synthetic UI test only. No native endpoint fallback and no bundled fixture.
 const componentFixture = process.env.CARSCOPE_COMPONENT_UI_FIXTURE ? resolve(process.env.CARSCOPE_COMPONENT_UI_FIXTURE) : null;
+const chargeFixture = process.env.CARSCOPE_CHARGE_UI_FIXTURE ? resolve(process.env.CARSCOPE_CHARGE_UI_FIXTURE) : null;
 const tireFixture = process.env.CARSCOPE_TIRE_UI_FIXTURE ? resolve(process.env.CARSCOPE_TIRE_UI_FIXTURE) : null;
 const TYPES ={ ".html": "text/html", ".js": "text/javascript", ".mjs": "text/javascript", ".glb": "model/gltf-binary", ".json": "application/json", ".svg": "image/svg+xml" };
 const port = Number(process.env.PORT ?? 8095);
@@ -53,6 +55,13 @@ createServer(async (req, res) => {
   if (url === '/tire-status.json' && tireFixture && req.method === 'GET') {
     try {
       const body = await readFile(tireFixture);
+      res.writeHead(200, { 'content-type': 'application/json', 'cache-control': 'no-store' }); return res.end(body);
+    } catch { res.writeHead(503); return res.end('Unavailable'); }
+  }
+  if (url === '/ev-charge-status.json' && chargeFixture && req.method === 'GET') {
+    try {
+      const body = await readFile(chargeFixture), packet = JSON.parse(body);
+      if (packet.readings?.length !== 1 || packet.readings[0].source !== 'MOCK') throw Error('MOCK_ONLY');
       res.writeHead(200, { 'content-type': 'application/json', 'cache-control': 'no-store' }); return res.end(body);
     } catch { res.writeHead(503); return res.end('Unavailable'); }
   }
