@@ -17,6 +17,17 @@ const json = (status, body) => new Response(JSON.stringify(body), { status });
 const sched = () => { const pending = new Set(); return { schedule: (fn) => { pending.add(fn); return fn; }, unschedule: (fn) => pending.delete(fn), pending }; };
 const receipt = async (result) => ({ protocol: PROTOCOL, protocolVersion: PROTOCOL_VERSION, inspectionId: result.inspectionId, resultDigest: await resultDigest(result), receivedAt: 1, sessionState: 'RESULT_SUBMITTED' });
 
+test('mobile status rejects mismatched Receipt state instead of displaying false ACCEPTED', async () => {
+  const result = done(), valid = await receipt(result);
+  for (const [state, receiptState] of [['ACCEPTED', 'RESULT_SUBMITTED'], ['RESULT_SUBMITTED', 'ACCEPTED']]) {
+    const fake = { paired: true, status: async () => ({ ok: true, sessionState: state, receipt: { ...valid, sessionState: receiptState } }), dispose() { this.paired = false; } };
+    const ui = new MobileSync({ invite: null, client: fake, ...sched() }); ui.setResult(result);
+    await ui.refresh();
+    assert.equal(ui.snapshot.display, 'REJECTED_INVALID'); assert.equal(ui.snapshot.received, false);
+    assert.equal(fake.paired, false); ui.close();
+  }
+});
+
 test('mobile entry: v1/direct unchanged; v2 strict and fragment stripped synchronously, invalid never exposes invite', () => {
   const token = newToken(), calls = [];
   const take = (hash) => takeMobileHandoff({ hash, pathname: '/', search: '' }, { replaceState: (...args) => calls.push(args) });

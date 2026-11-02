@@ -85,7 +85,7 @@ export class MobileSync {
       if (r.sessionState === 'CANCELLED') this.#show('CANCELLED');
       else if (r.sessionState === 'EXPIRED') this.#show('REJECTED_EXPIRED');
       else if (['ACCEPTED', 'RESULT_SUBMITTED'].includes(r.sessionState)) {
-        const matches = this.#result && await receiptMatches(r.receipt, this.#result);
+        const matches = this.#result && r.receipt?.sessionState === r.sessionState && await receiptMatches(r.receipt, this.#result);
         if (generation !== this.#generation) return;
         if (!matches) this.#show('REJECTED_INVALID');
         else { this.#received = true; this.#show(r.sessionState === 'ACCEPTED' ? 'ACCEPTED' : 'SENT'); }

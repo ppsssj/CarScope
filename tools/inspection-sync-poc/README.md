@@ -1,5 +1,10 @@
 # inspection-sync-poc (AR-02B-1)
 
+AR-02B-2D: [authenticated two-device readiness and runbook](../../docs/ar-02b2d-sync-e2e-readiness.md).
+`npm run test:https-e2e` runs isolated authenticated loopback TLS E2E and host preflight tests.
+`npm run readiness:host -- --api-origin https://approved-api/ --mobile-root https://approved-mobile/`
+performs credential-free host checks only; it does not enable session creation or prove phone/Android trust.
+
 This is a local PoC for sending a completed AR-01 washer-fluid self-inspection result from a phone to a vehicle-side
 receiver. Pairing uses a one-time QR v2 invite. The phone shows a result as sent only after it verifies the server
 ACK, and the vehicle must accept the result explicitly.

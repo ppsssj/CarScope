@@ -219,9 +219,9 @@ class HttpsSyncReceiverTransportTest {
                 var value: SyncReply<T>? = null; start { value = it }; (queue.poll(10, TimeUnit.SECONDS) ?: error("no callback"))()
                 assertTrue(value is SyncReply.Success); return (value as SyncReply.Success).value
             }
-            fun phone(path: String, token: String, body: String?): String {
+            fun phone(path: String, token: String, body: String?, method: String = "POST"): String {
                 val c = URI(origin + path).toURL().openConnection() as HttpsURLConnection
-                c.sslSocketFactory = pki.client().socketFactory; c.instanceFollowRedirects = false; c.requestMethod = "POST"
+                c.sslSocketFactory = pki.client().socketFactory; c.instanceFollowRedirects = false; c.requestMethod = method
                 c.setRequestProperty("Authorization", "Bearer $token")
                 if (body != null) { c.doOutput = true; c.setRequestProperty("Content-Type", "application/json"); c.outputStream.use { it.write(body.toByteArray()) } }
                 return try { assertTrue(c.responseCode in 200..299); c.inputStream.bufferedReader().use { it.readText() } } finally { c.disconnect() }
@@ -229,11 +229,21 @@ class HttpsSyncReceiverTransportTest {
             transport.use {
                 val created = await(transport::create)
                 val claim = JsonParser.parseString(phone("/v1/claim", created.invite.fragment().substringAfter("invite="), null)).asJsonObject
-                phone("/v1/submissions", claim["submitToken"].asString, "{\"protocol\":\"inspection-sync\",\"protocolVersion\":1,\"result\":${HttpSamples.result.canonicalJson()}}")
+                val envelope = "{\"protocol\":\"inspection-sync\",\"protocolVersion\":1,\"result\":${HttpSamples.result.canonicalJson()}}"
+                val firstReceipt = JsonParser.parseString(phone("/v1/submissions", claim["submitToken"].asString, envelope)).asJsonObject
+                val duplicate = JsonParser.parseString(phone("/v1/submissions", claim["submitToken"].asString, envelope)).asJsonObject
+                assertTrue(duplicate["duplicate"].asBoolean)
+                assertEquals(firstReceipt["receipt"], duplicate["receipt"])
+                assertEquals(HttpSamples.result.digest(), firstReceipt["receipt"].asJsonObject["resultDigest"].asString)
                 val submitted = await<SyncReceiverView> { cb -> transport.view(created.sessionId, created.receiver, cb) }
                 assertEquals(HttpSamples.result.digest(), submitted.resultDigest)
+                assertEquals(SyncSessionState.RESULT_SUBMITTED, submitted.sessionState)
                 val accepted = await<SyncReceiverView> { cb -> transport.accept(created.sessionId, created.receiver, submitted.resultDigest!!, cb) }
                 assertEquals(SyncSessionState.ACCEPTED, accepted.sessionState)
+                val status = JsonParser.parseString(phone("/v1/submissions/status", claim["submitToken"].asString, null, "GET")).asJsonObject
+                assertEquals("ACCEPTED", status["sessionState"].asString)
+                assertEquals("ACCEPTED", status["receipt"].asJsonObject["sessionState"].asString)
+                assertEquals(submitted.resultDigest, status["receipt"].asJsonObject["resultDigest"].asString)
                 val second = await(transport::create)
                 val cancelled = await<SyncReceiverView> { cb -> transport.cancel(second.sessionId, second.receiver, cb) }
                 assertEquals(SyncSessionState.CANCELLED, cancelled.sessionState)
