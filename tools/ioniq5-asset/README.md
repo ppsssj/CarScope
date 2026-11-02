@@ -118,3 +118,25 @@ node tools/ioniq5-asset/check-ev-battery-preview.mjs C:\CarScope-External\ev-bat
 
 See [geometry contract, official sources and validation limits](../../docs/p4-a2-ev-battery-geometry.md)
 and [external evidence index](../../docs/evidence/p4-a2/README.md).
+
+## P4-A3: opt-in EV charging-port surround and static flap
+
+`ev-charge-port.mjs` exports `measureEvChargePortSupport(sourceParts)` and
+`buildEvChargePort({support})`. Supply all source mesh triangles in CarScope cm; missing
+or inapplicable reference data throws rather than creating a fallback placement.
+The builder returns `{parts,bounds,joints:[],layout}` with `ev-charge.port` (surround)
+and `ev-charge.flap` (static closed exterior), per-part/combined bounds and estimated provenance.
+Use Three.js `userData.partId` for selection. No source-body cut, socket, hinge or motion is added.
+The opt-in sidecar pattern follows P4-A2 and preserves the original GLB and product UI.
+
+```powershell
+node tools/ioniq5-asset/ev-charge-port-report.mjs --glb=$glb --out=C:\CarScope-External\ev-charge-port\review\report
+node tools/ioniq5-asset/ev-charge-port-preview-server.mjs --glb=$glb --report=C:\CarScope-External\ev-charge-port\review\report
+# separate terminal, local Chrome only
+node tools/ioniq5-asset/check-ev-charge-port-preview.mjs C:\CarScope-External\ev-charge-port\review\browser
+```
+
+The review server also serves `/charge.svg`. All dimensions and placement are
+`ESTIMATED_GEOMETRY`; the review-only flap visibility toggle never means SDK OPEN.
+See [the location/API Gate, geometry contract and validation](../../docs/p4-a3-ev-charge-port-geometry.md)
+and [external evidence index](../../docs/evidence/p4-a3/README.md).
