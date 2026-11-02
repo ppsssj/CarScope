@@ -16,6 +16,7 @@ export const STATES = Object.freeze({
   COMPONENT_PREVIEW: 'COMPONENT_PREVIEW',
   MOBILE_HANDOFF_READY: 'MOBILE_HANDOFF_READY',
   TIRE_SELECTION: 'TIRE_SELECTION', TIRE_PREVIEW: 'TIRE_PREVIEW', TIRE_SUMMARY: 'TIRE_SUMMARY',
+  EV_BATTERY_PREVIEW: 'EV_BATTERY_PREVIEW',
 });
 
 export const EVENTS = Object.freeze({
@@ -38,6 +39,9 @@ export const INSPECTION_AREAS = Object.freeze([
     ],
   },
   { id: 'tires', label: '타이어 · 네 바퀴', status: 'available', components: TIRES },
+  { id: 'ev-battery', label: 'EV 배터리 · 하부 보기', status: 'available', components: [
+    { id: 'ev-battery.pack', label: '고전압 배터리 팩', status: 'preview' },
+  ] },
 ]);
 
 export const HOOD_OPEN_DEG = 60; // axis A: P3-A1 simulation found no new mesh interference over 0–60°
@@ -74,9 +78,14 @@ export function transition(state, event, ctx = {}) {
     case S.INSPECTION_SUMMARY:
       if (type === E.SELECT_TIRE) return selectTire();
       if (type === E.SELECT_AREA && event.id === 'tires') return to(S.TIRE_SELECTION, { area: 'tires' });
+      if (type === E.SELECT_AREA && event.id === 'ev-battery') return to(S.EV_BATTERY_PREVIEW, { area: 'ev-battery', component: 'ev-battery.pack' });
       if (type === E.SELECT_AREA && available(INSPECTION_AREAS, event.id)) return to(S.HOOD_OPENING, { area: event.id });
       if (type === E.BACK && state.name === S.INSPECTION_SUMMARY) return to(S.INSPECTION_OVERVIEW);
       if (type === E.BACK || type === E.EXIT) return initialState();
+      return state;
+    case S.EV_BATTERY_PREVIEW:
+      if (type === E.BACK) return to(S.INSPECTION_OVERVIEW, { area: null, component: null });
+      if (type === E.EXIT) return initialState();
       return state;
     case S.TIRE_SELECTION:
     case S.TIRE_SUMMARY:
@@ -136,6 +145,7 @@ export function cameraGoal(state) {
     case S.INSPECTION_SUMMARY: case S.INSPECTION_OVERVIEW: return 'overview';
     case S.TIRE_SUMMARY: case S.TIRE_SELECTION: return 'tires';
     case S.TIRE_PREVIEW: return state.component;
+    case S.EV_BATTERY_PREVIEW: return 'ev-battery.pack';
     case S.HOOD_CLOSING: return state.afterClose === S.IDLE ? 'home' : 'overview';
     case S.HOOD_OPENING: case S.COMPONENT_SELECTION: return 'bay';
     case S.COMPONENT_PREVIEW: return state.component;
