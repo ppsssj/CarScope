@@ -1,4 +1,4 @@
-// Served only by the loopback-only dev server. Never copied by the AR-01 staging build.
+// Served by the explicit same-origin dev/HTTPS service. Never copied by the AR-01 staging build.
 import { takeMobileHandoff } from './mobile-handoff.mjs';
 import { MobileSync, SYNC_TEXT } from './mobile-sync.mjs';
 import { SyncClient } from './sync-client.mjs';

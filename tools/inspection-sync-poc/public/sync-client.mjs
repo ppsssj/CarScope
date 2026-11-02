@@ -1,5 +1,5 @@
-// AR-02A mobile sync client (browser and Node). Not wired into the AR-01 page: it is exercised by the debug page and
-// tests. Rules: send only on an explicit call, only a COMPLETED record that passes the AR-01 validator, one request in
+// Mobile sync client (browser and Node), used by the explicit v2 service and debug tests; static AR-01 stays local-only.
+// Rules: send only on an explicit call, only a COMPLETED record that passes the AR-01 validator, one request in
 // flight at a time, SENT only after a receipt that matches this record (inspectionId + SHA-256 digest). The completed
 // record itself is never modified; transport state lives here.
 import { PROTOCOL, PROTOCOL_VERSION, checkEnvelope, parseInviteFragment, receiptMatches, isToken, canonicalJson } from '../src/protocol.mjs';

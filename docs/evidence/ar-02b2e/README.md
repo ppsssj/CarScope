@@ -14,7 +14,7 @@
 | 기존 Sync browser | PASS 11 checks | `npm run test:browser`, `sync-browser/summary.json` |
 | 기존 AR-01 browser | PASS 16 checks, page errors 0 | AR-01 `npm run test:browser`, 별도 qr-ar-01 경로의 `browser-results.json`, 합성 카메라 |
 | readiness offline | PASS 7/7 | `python tools/inspection-sync-poc/android/test-device-readiness.py`, adb mock 검사. 실제 adb 실행 없음 |
-| Android provider + 기존 JVM/Decoder/HTTPS/Robolectric/Debug/Release | CI PENDING | 로컬 무거운 Gradle 병렬 실행 안 함. 기존 CI와 강화한 check-boundary.py로 새 provider 7개 및 testDebug APK 제외 확인 |
+| Android provider + 기존 JVM/Decoder/HTTPS/Robolectric/Debug/Release | CI PASS (구현 SHA 21d3236) | 새 provider 7 + 기존 Sync 46 = 53개, failure/error/skip 0. Debug/Release APK, Release AAB, lintDebug, manifest/DEX 격리 통과. 로컬 무거운 Gradle 병렬 실행 없음 |
 | 실제 기기 네트워크/TLS/광학 QR/차량 인증 | NOT_RUN | AVD/adb/폰 실행 및 외부 배포 없음 |
 
 원본 위치:
@@ -30,3 +30,18 @@
 PKI 정리: Node 생성 실패를 별도 child process/통제한 temp parent에서 주입해 잔여 디렉터리 0 확인. 정상 key/cert 삭제와 cleanup idempotence 확인. JVM은 생성 실패/AfterClass cleanup 추가, CI로 확인한다. 타 작업의 temp나 기존 증거를 전역 삭제하지 않는다. crash/강제 종료 후 잔여 정리와 물리 삭제 보장은 별도 한계다.
 
 실제 서비스 연결은 발급/등록/폐기 adapter와 Android provisioning, 승인된 DNS/TLS/배포·운영 구성이 남는다. 테스트 fixture ID나 credential을 실제 차량 인증으로 취급하지 않는다. 기본 거부 유지, 자동 병합 없음.
+
+## PR CI 근거
+
+[PR #42](https://github.com/ppsssj/CarScope/pull/42), 구현 SHA `21d3236d7b69cd3f5591edd31a43042087253c2e`의 fresh 7 checks 전부 SUCCESS. 이후 문서·주석만 보정한 최종 HEAD의 rollup은 PR에서 별도로 확인한다.
+
+| 실행 | 결과/범위 |
+| --- | --- |
+| [Sync Linux/Windows](https://github.com/ppsssj/CarScope/actions/runs/41410818303) | 두 job SUCCESS. Node/SQLite/auth/TLS, Windows의 기존 Sync/AR-01/통합 모바일 browser. Linux는 Windows 전용 browser steps SKIPPED |
+| [Android JVM·빌드·경계](https://github.com/ppsssj/CarScope/actions/runs/41410818328) | SUCCESS. provider 7, Decoder 8, 실제 HTTPS 10, Receiver 17, Robolectric lifecycle/QR 8, entry 3. app 전체 failure/error/skip 0 assertion 통과. Debug/Release APK·Release AAB·lint 및 Sync/Identity/Tire 경계 PASS. lint 성공을 경고 0으로 해석하지 않음 |
+| [Core JVM](https://github.com/ppsssj/CarScope/actions/runs/41410818424) | SUCCESS 38개, failure/error 0, 기존 skip 1 |
+| [Geometry](https://github.com/ppsssj/CarScope/actions/runs/41410818315) | SUCCESS. 기존 CI 범위이며 B의 형상 변경/기기 렌더링 검증이 아님 |
+| [Tire offline](https://github.com/ppsssj/CarScope/actions/runs/41410818345) | SUCCESS, 기존 guard 검사. AVD 사용 없음 |
+| GitGuardian | SUCCESS |
+
+이번 CI에서 JVM TLS fixture 간헐 실패 재발 없음. 새 AfterClass PKI cleanup까지 통과했다. 과거 원인 미확정 TLS 실패를 이번 변경이 해결했다고 주장하지 않는다.
