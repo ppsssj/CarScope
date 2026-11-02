@@ -98,3 +98,23 @@ $env:IONIQ5_GLB = $glb; node --test tools/ioniq5-asset/test/front-compartment.te
 Not implemented (reported, not guessed): modifier/constraint evaluation (none in this source),
 Blender custom split normals (`custom_normal` is stored relative to Blender's corner normal spaces),
 UVs/textures (none in this source), older `.blend` header formats.
+
+## P4-A2: opt-in EV high-voltage battery housing
+
+`ev-battery.mjs` exports `buildEvBatteryPack()` and the stable ID `ev-battery.pack`.
+It returns one closed estimated housing mesh, CarScope-cm bounds (min/max/center/size),
+part identification and provenance metadata, and no joints. This is separate from `battery-12v`.
+The original vehicle GLB, hood, wheels and inspection UI are unchanged.
+`ev-battery-glb.mjs` exports the pack-only sidecar; the same triangles generate the review SVG.
+For Three.js selection use `mesh.userData.partId`: GLTFLoader can sanitize dots in node names.
+All dimensions and placement are `ESTIMATED_GEOMETRY`; no OEM mounting or battery state is implied.
+
+```powershell
+node tools/ioniq5-asset/ev-battery-report.mjs --glb=$glb --out=C:\CarScope-External\ev-battery\review\report
+node tools/ioniq5-asset/ev-battery-preview-server.mjs --glb=$glb --report=C:\CarScope-External\ev-battery\review\report
+# separate terminal; local Chrome only, no AVD/adb
+node tools/ioniq5-asset/check-ev-battery-preview.mjs C:\CarScope-External\ev-battery\review\browser
+```
+
+See [geometry contract, official sources and validation limits](../../docs/p4-a2-ev-battery-geometry.md)
+and [external evidence index](../../docs/evidence/p4-a2/README.md).

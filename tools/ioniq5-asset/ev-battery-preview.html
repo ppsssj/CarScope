@@ -1,0 +1,37 @@
+<!doctype html><html lang="ko"><meta charset="utf-8"><title>EV battery geometry review</title>
+<style>body{margin:0;background:#e8edf0;color:#1d2c38;font:16px system-ui;display:grid;grid-template-columns:350px 1fr;height:100vh}aside{padding:24px;overflow:auto;background:white}h1{font-size:24px}p{line-height:1.6}button{display:block;width:100%;min-height:44px;margin:8px 0;font:inherit}pre{white-space:pre-wrap;font-size:12px}#view{min-width:0}canvas{display:block;width:100%;height:100%}</style>
+<aside><h1>EV 고전압 배터리팩</h1><p>ESTIMATED_GEOMETRY · 형상 검토 전용<br>실차 치수·장착·전기 상태 미검증</p>
+<button data-view="vehicle">차량 전체 · 원래 차체</button><button data-view="underbody">아래에서 보기</button><button data-view="context">배치 확인 · 차체 반투명</button><button data-view="isolated">팩만 보기</button><button id="select">ev-battery.pack 선택 / 해제</button>
+<p id="status">모델 불러오는 중</p><pre id="info">반투명 차체는 검토용 표시입니다. 차체와 팩의 좌표는 이동하지 않습니다. 정비 안내·배터리 상태 판정이 아닙니다.</pre></aside><div id="view"></div>
+<script type="importmap">{"imports":{"three":"/three","/utils/BufferGeometryUtils.js":"/utils"}}</script>
+<script type="module">
+import * as T from 'three';import{GLTFLoader}from'/loader';
+const host=document.querySelector('#view'),renderer=new T.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});renderer.setPixelRatio(1);host.append(renderer.domElement);
+const scene=new T.Scene();scene.background=new T.Color('#e8edf0');scene.add(new T.HemisphereLight(0xffffff,0x687781,3));
+const light=new T.DirectionalLight(0xffffff,3);light.position.set(3,4,-3);scene.add(light);
+const camera=new T.PerspectiveCamera(38,1,0.01,40),loader=new GLTFLoader();
+const [source,pack,report]=await Promise.all([loader.loadAsync('/source.glb'),loader.loadAsync('/pack.glb'),fetch('/report.json').then(r=>r.json())]);
+scene.add(source.scene,pack.scene);scene.updateMatrixWorld(true);
+// GLTFLoader sanitizes dots in node names for animation binding; extras.partId is authoritative.
+let mesh;pack.scene.traverse(n=>{if(n.isMesh&&n.userData.partId==='ev-battery.pack')mesh=n;});
+if(!mesh)throw Error('missing ev-battery.pack metadata');
+const box=new T.Box3().setFromObject(mesh),expected=report.model.bounds;
+const min=[box.min.x*100,-box.max.z*100,box.min.y*100],max=[box.max.x*100,-box.min.z*100,box.max.y*100];
+const boundsDeltaCm=Math.max(...min.map((v,k)=>Math.abs(v-expected.min[k])),...max.map((v,k)=>Math.abs(v-expected.max[k])));
+if(boundsDeltaCm>0.0001||mesh.userData.partId!=='ev-battery.pack')throw Error('loaded pack bounds/ID');
+const originalTransforms=[];source.scene.traverse(n=>originalTransforms.push({object:n,matrix:n.matrix.toArray()}));
+const outline=new T.Box3Helper(box,0xd47820);outline.visible=false;scene.add(outline);
+let view='vehicle',selected=false;
+function draw(){renderer.setSize(host.clientWidth,host.clientHeight,false);camera.aspect=host.clientWidth/host.clientHeight;camera.updateProjectionMatrix();renderer.render(scene,camera);}
+function setView(name){view=name;source.scene.visible=name!=='isolated';source.scene.traverse(n=>{if(n.isMesh)for(const m of(Array.isArray(n.material)?n.material:[n.material])){m.transparent=name==='context';m.opacity=name==='context'?0.13:1;m.depthWrite=name!=='context';m.needsUpdate=true;}});
+  const positions={vehicle:[5.5,4,-5.5],underbody:[4.6,-4.5,-4.6],context:[5.5,3.8,-5.5],isolated:[2.7,2.2,-2.7]};
+  camera.position.fromArray(positions[name]);camera.up.set(0,1,0);camera.lookAt(name==='vehicle'?new T.Vector3(0,0.7,0):box.getCenter(new T.Vector3()));draw();}
+function select(value){selected=value;mesh.material.emissive.set(value?'#643608':'#000000');outline.visible=value;document.querySelector('#info').textContent=value?JSON.stringify(mesh.userData,null,2):'ESTIMATED_GEOMETRY · 실차 치수·장착·상태 미검증';draw();}
+const raycaster=new T.Raycaster();
+function pick(x,y){raycaster.setFromCamera(new T.Vector2(x,y),camera);return raycaster.intersectObject(pack.scene,true)[0]?.object.userData.partId??null;}
+renderer.domElement.onclick=e=>{const r=renderer.domElement.getBoundingClientRect();if(pick((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1))select(!selected);};
+document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>setView(b.dataset.view));document.querySelector('#select').onclick=()=>select(!selected);
+window.addEventListener('resize',draw);setView('vehicle');
+window.__battery={ready:true,renderer,scene,camera,mesh,source,pack,report,boundsDeltaCm,setView,select,pick,originalTransforms,get view(){return view;},get selected(){return selected;}};
+document.querySelector('#status').textContent=`ev-battery.pack · ${report.model.stats.triangles} triangles · 충돌 ${report.failures}건`;
+</script></html>
