@@ -2,6 +2,49 @@
 
 2026-11-02 KST. **실제 Android 통합 Runtime은 BLOCKED**다. 다중 사용자 SystemUI를 단일 PID로 제한한 오탐은 원인을 확인해 수정했다. 새 실제 표본에서는 사용자별 SystemUI 검사가 통과했으나 CPU/load 초과가 남았고, 이후 대상 AVD가 연결 목록에서 사라졌다. 설치·Activity 조작·SDK 호출은 수행하지 않았다. 아래 오프라인 검증은 Android WebView/Pleos 실측을 대신하지 않는다.
 
+## CI 최종 확인 및 QEMU 종료 증거 검토 — 2026-11-02
+
+이번 단계는 기존 Windows 이벤트/파일 읽기와 문서 갱신만 수행했다. 시작 clean HEAD `09f4b77a0c2e2d794c757f788e5e03f142d4fa6d`가 PR #41 HEAD와 일치했고 fetch 후 main은 `7a4c77a`였다. 새 Health Gate/adb/앱/SDK 실행, AVD 부팅·재설치, 프로세스 종료, 전역 설정·권한 변경은 하지 않았다.
+
+### SystemUI 수정 코드의 CI 결과
+
+`09f4b77`의 모든 Checks가 완료됐고 **7/7 SUCCESS**다. 실행별 성공은 해당 오프라인 job 범위에 한정한다.
+
+| Job | 결과 / 실행 |
+|---|---|
+| Tire runtime guards (no emulator) | PASS — [41404771319](https://github.com/ppsssj/CarScope/actions/runs/41404771319), Python23/Node4 및 driver 구문 검사 |
+| Core JVM tests | PASS — [41404771388](https://github.com/ppsssj/CarScope/actions/runs/41404771388) |
+| Debug identity probe tests and release boundary | PASS — [41404771271](https://github.com/ppsssj/CarScope/actions/runs/41404771271) |
+| SVG and geometry correctness | PASS — [41404771386](https://github.com/ppsssj/CarScope/actions/runs/41404771386) |
+| Sync Linux / Windows | PASS / PASS — [41404771268](https://github.com/ppsssj/CarScope/actions/runs/41404771268) |
+| GitGuardian | PASS — 해당 HEAD의 PR Checks 확인 |
+
+### 종료 조사 범위와 결과
+
+새 외부 근거는 `C:\CarScope-External\p3-i4\20261102-qemu-exit-review-01`이다. 기존 host 표본에서 QEMU가 마지막으로 보인 시각은 16:02:57 KST, QEMU/emulator가 없음을 확인한 다음 CIM 표본은 16:05:18 KST다. 이는 관측 경계이며 정확한 종료 시각·exit code·종료 주체를 뜻하지 않는다.
+
+| 근거 | 읽기 전용 관측 | 해석 한계 |
+|---|---|---|
+| Windows Application / System | Korea Standard Time(+09:00)의 15:25–16:20 조건으로 조회. Application8건(Security-SPP/AutoEnrollment/Edge), System2건(IsolatedUserMode). 각 최대2000건 제한에 도달하지 않음 | 조회 당시 존재하는 기록에서 QEMU Application Error/WER, Resource-Exhaustion/OOM, Display/nvlddmkm 오류를 찾지 못함. 로그 부재가 원인 배제나 정상 종료의 증명은 아님 |
+| WER ReportArchive / ReportQueue | Archive 상위 폴더500개 중 qemu/emulator 이름 또는 해당 시간대 수정일 후보 없음. Queue 파일0개 | Archive 하위 파일 열거는 일부 ACL 접근 거부. 전체 보고서 본문 검사는 **BLOCKED**이며 권한을 변경하지 않음. 사용자별 WER 경로는 없음 |
+| 사용자 CrashDumps / Emulator Crashpad | CrashDumps 파일10개 중 qemu/emulator 이름0개. `emu-crash-37.2.13.db/reports`에 보고서 파일 없음; metadata는10/30, settings.dat는11/2 15:30 수정 | 확인한 경로에 이번 종료와 연결할 dump/report가 없음. crash 미발생을 증명하지 않음 |
+| 기존 emulator stdout/stderr 로그 | `C:\Android\_logs`와 `C:\CarScope-External`의 제한된 깊이에서 찾은11개 로그의 metadata와 각 최대64KiB/마지막60줄 검토. 모두10/30–11/1 세션 | 과거 shutdown/OpenGL/Vulkan 문구와 다른 PID를 이번 PID38600의 종료 근거로 재사용하지 않음. 이번 수동 부팅 세션의 stdout/stderr·종료 exit code는 조사 경로에서 확보하지 못함 |
+| 현재 AVD 텍스트 metadata | launch 인자에 `-no-snapshot -gpu host`. `quickbootChoice.ini`는16:03:30, `emulator-user.ini`는16:03:32 수정. `saveOnExit=true` 설정 존재 | 파일 수정 시각·설정은 사용자 종료, 정상 종료, snapshot 저장 성공, 드라이버 실패 중 어느 하나의 직접 증거도 아님 |
+
+**종료 원인 판정: 미확정.** 사용자 종료·비정상 종료·OOM·드라이버 문제 각각을 확정하거나 배제할 직접 근거가 없다. 앞서 관측한 높은 CPU/load와 QEMU 소멸 사이의 인과도 입증하지 못했다. 기존 파일·로그의 metadata/구간을 보존했고 다른 세션의 로그를 혼합하지 않았다. OS 이벤트 감사나 emulator verbose logging을 새로 켜거나 재현을 위해 부팅하지 않았다.
+
+### 검증 완료 범위와 남은 조건
+
+| 범위 | 판정 |
+|---|---|
+| 사용자별 SystemUI 판정 로직·오류/소유권/PID/user 전환 회귀 | PASS — 로컬23/4 및 수정 코드 HEAD의 CI7/7 |
+| 실제 연결 AVD의 사용자별 UID/PID/starttime 안정성 | 기존 중간 코드의 세 표본 PASS만 유지. 최종 추가 표본 내 stat 재조회·Runtime pulse의 실제 양성 경로는 NOT_RUN |
+| CPU/load 건강성 | BLOCKED — 기존8.25/8.55 기준 초과; 이번에 새 측정으로 바꾸지 않음 |
+| QEMU 종료 원인 | 미확정 / 일부 WER 본문 접근 BLOCKED |
+| 실제 Android3D·Tire 체크리스트/요약·Receiver/Back·WebView/Tire lease·SDK callback | BLOCKED / 미검증. 별도 환경 안정화 이후 재개 |
+
+이번 문서 변경은 `git diff --check`로 확인하고, push 후 **그 새 HEAD의 CI 최종 상태도 별도로 확인**한다. 이 절의 `09f4b77` 결과를 후속 HEAD의 성공으로 미리 간주하지 않는다. PR #41은 Draft, **READY_TO_MERGE: NO**를 유지하고 자동 병합하지 않는다.
+
 ## Health Gate 정확성 개선과 CPU 원인 조사 — 2026-11-02
 
 시작 Worktree/branch는 동일하며 clean HEAD `82c4f8a0d26dd68315e957c5128642c4f11a57f3`와 PR #41 HEAD가 일치했다. fetch 후 main도 `7a4c77a`로 유지됐다. 이 단계의 코드 변경은 `tools/tire-probe/runtime/health.py`, `test_harness.py`, `webview.mjs`의 Health Gate 검사에 한정한다. 앱·SDK·Sync·Geometry·설치 동작은 변경하지 않았다.

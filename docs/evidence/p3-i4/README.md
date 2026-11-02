@@ -2,6 +2,22 @@
 
 2026-11-02 KST. [검증 보고서](../../p3-i4-android-runtime-validation.md).
 
+## CI 최종 상태 및 QEMU 종료 증거 검토
+
+새 외부 루트: `C:\CarScope-External\p3-i4\20261102-qemu-exit-review-01`. 이벤트와 기존 로그·metadata를 읽기만 했다. 새 AVD/adb/SDK 실행 및 프로세스 종료 없음. 원본 이벤트·개인 환경 파일·dump는 Git에 넣지 않는다.
+
+| 위치 | 범위 / 한계 |
+|---|---|
+| `ci-09f4b77.json` | 수정 코드 HEAD의7/7 최종 SUCCESS. 후속 문서 HEAD의 CI와 구분 |
+| `event-query.json`, `Application-events.json`, `System-events.json` | 15:25–16:20 KST 조건의 Application8/System2. 해당 조회에서 QEMU/OOM/driver 관련 이벤트 근거 없음; 종료 원인 배제 아님 |
+| `wer-inventory.json`, `wer-archive-folders.json` | Archive 상위 metadata와 Queue. 일부 Archive 본문 ACL 접근 거부, 전체 본문 조사 BLOCKED |
+| `crashpad-inventory.json`, `local-crashdump-status.json` | 확인한 Crashpad reports 파일0, 사용자 CrashDumps에서 qemu/emulator 이름0. crash 부재 증명 아님 |
+| `emulator-log-inventory.json`, `historical-emulator-tails.json` | 이전 세션 로그11개 metadata 및 bounded tail. 10/30–11/1 기록이므로 이번 PID38600 종료 근거로 사용하지 않음 |
+| `avd-file-metadata.json`, `emu-launch-params.txt`, `emulator-user.ini`, `quickbootChoice.ini`, `AVD.conf`, `bootcompleted.ini` | 기존 파일 복사·hash·시각. 16:03:30–32 파일 수정 및 설정을 종료 주체/exit code로 해석하지 않음 |
+| `review-summary-complete.json` | 조사 범위별 결과 요약. 앞선 `review-summary.json`은 CrashDumps 명시적 상태 수집 전 중간 요약 |
+
+QEMU가 마지막으로 보인 기존 CIM16:02:57과 다음 부재 표본16:05:18 사이의 정확한 종료 시각·주체·exit code는 확보하지 못했다. **사용자 종료/비정상 종료/OOM/driver 중 원인 미확정**이다. SystemUI 합성 회귀·CI PASS와 실제 Android Runtime 미검증을 분리하며 Draft를 유지한다. 후속 문서 HEAD의 최종 CI는 PR Checks와 별도 외부 CI snapshot으로 확인한다.
+
 ## SystemUI Health Gate 정확성 및 CPU 조사
 
 새 외부 루트: `C:\CarScope-External\p3-i4\20261102-health-accuracy-01`. 실제 소유권 오탐 수정과 미해결 CPU 부하를 분리한다.
