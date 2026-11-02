@@ -20,6 +20,30 @@ DECISION: 기존 Component SDK session/worker/cache/lease를 재사용한다. �
 
 UI는 A의 measured front-wiper builder와 기존 GLB low/high marker/housing을 재사용한다. 전면 유리 한 상태를 좌우 두 와이퍼에 공통 표시하며 실제 자세를 합성하지 않는다. 전조등 marker는 위치/의미 표식일 뿐 광학 bulb/좌우 센서가 아니다. housing이 가리는 marker는 차체를 뚫어 선택하거나 전후 전체 housing을 단일 bulb로 재분류하지 않고 목록/확보된 시점으로 접근한다.
 
+실제 GLB의 전체 44개 mesh node를 월드 cm 삼각형으로 묶어 A의 measureFrontWiperSupport/buildFrontWiperGeometry에 넘긴다. source vertex/index/transform과 Geometry 파일을 수정하지 않는다. 지원 면이나 네 조명 marker의 ID·재질·참조 위치가 검증되지 않으면 해당 영역을 비활성화한다.
+
+브라우저 조사에서 화면에 보이는 하향등 표식의 첫 ray hit는 반투명 Lens_Smoked(opacity 0.25)였고, 상향등은 처음 시점에서 불투명 Body/Black_Plastic이 먼저 가렸다. 대조한 투명 렌즈만 picking을 통과시키며 불투명 Body/하우징/알 수 없는 투명 재질은 차폐한다. 실제 모델 AABB 밖의 후보 시점에서 ray를 검사하여 네 marker 모두 외부 가시 시점을 찾았다. 상향등 수평 시점이 OrbitControls에 의해 위로 clamp되지 않게 해당 상세에서만 polar 범위를 허용하고 Back 시 복구한다. 이는 제한된 후보 시점 검사이며 모든 회전의 가시성·충돌 부재 증명은 아니다. 원본 geometry/opacity를 변경하지 않으며 SDK ON/OFF를 실제 광도나 와이퍼 동작으로 합성하지 않는다.
+
+미지원 host는 SDK 객체 생성 전 automotive feature gate로 UNSUPPORTED 캐시를 만들고 Activity를 종료하지 않는다. 실제 Vehicle Service 초기화 실패는 ERROR로 구분한다. 두 경우 모두 합성/Robolectric으로 검증하며 실제 Android 종료 안정성을 대신하지 않는다. 신규 와이퍼·조명 보고에는 한국어 미지원/권한 거부/미수신/STALE 안내를 표시한다.
+
+## 재현
+
+```powershell
+$env:GRADLE_USER_HOME='C:/gradle-home'
+$env:JAVA_HOME='C:/Program Files/Eclipse Adoptium/jdk-17.0.20.101-hotspot'
+python tools/component-probe/check.py sdk-audit --out C:/CarScope-External/p5-b1/sdk-audit
+npm ci --ignore-scripts --prefix tools/three-poc
+npm test --prefix tools/three-poc
+npm run test:android-assets --prefix tools/three-poc
+# 기존 CI가 app JVM/Robolectric + Debug/Release APK/AAB/lint/boundary를 실행한다.
+# CI check-native.mjs의 VISIBILITY_UI_SYNTHETIC_JSON은 실제 Kotlin serializer의 MOCK만 출력한다.
+# 해당 JSON을 외부 native-visibility.json에 추출한 뒤:
+$env:CARSCOPE_IONIQ5_GLB='C:/CarScope-External/ioniq5-carscope/hyundai_ioniq_5_2022.glb'
+node tools/three-poc/check-visibility.mjs C:/CarScope-External/p5-b1/browser-final C:/CarScope-External/p5-b1/native-visibility.json
+node tools/three-poc/check-visibility.mjs C:/CarScope-External/p5-b1/browser-portrait-final C:/CarScope-External/p5-b1/native-visibility.json 900 1200
+# 기존 check-component-status / check-ev-status / check-charge-port / check-tire-status / check-inspection-product도 실행한다.
+```
+
 ## 실제 기기 Gate
 
 기존 `python tools/tire-probe/runtime/run.py --sdk C:/Android/Sdk --serial emulator-5554 --out C:/CarScope-External/p5-b1/health-initial`을 --run/--install 없이 실행했다. **BLOCKED: 지정 target absent/offline**. 다른 기기에 guest 명령을 보내거나 emulator/SystemUI/Service를 시작·재시작하지 않았다. SDK Capability/getter/listener·실제 Android 종료 안정성은 BLOCKED/NOT_RUN이며 합성 성공으로 승격하지 않는다.
@@ -30,4 +54,4 @@ UI는 A의 measured front-wiper builder와 기존 GLB low/high marker/housing을
 
 Release는 기존 정적 SVG/기존 Door 조회 권한만 유지한다. Debug 3D/API/권한을 Release로 옮기지 않는다. SDK AAR 안 공개 클래스가 Release에 존재하는 것과 새 어댑터가 제품에 포함되는 것은 별개다. 3D 제공에는 외부 GLB 배포 권리/CC BY attribution/패키징 크기·공급 경로, 최소 조회 권한 승인, driving restriction/사용성, 미지원 기기의 실패·종료/복원, 메모리/renderer/SDK Service 실측, 보안·origin 정책 및 별도 제품 승인이 필요하다. 외부 GLB를 무단 포함하지 않는다.
 
-검증 결과·API별 7단계 상태·Release 후속 항목은 증거 인덱스와 PR 최종 HEAD에 기록한다. PR은 생성만 하며 병합하지 않는다.
+검증 결과·API별 7단계 상태·Release 후속 항목은 [증거 인덱스](evidence/p5-b1/README.md)와 PR 최종 HEAD에 기록한다. PR은 생성만 하며 병합하지 않는다.

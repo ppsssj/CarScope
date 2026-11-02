@@ -81,7 +81,7 @@ def audit(aar, out):
             if name == 'OilLevelState':
                 assert all('OilLevelState ' + state + ';' in value for state in ('LOW', 'HIGH', 'NORMAL', 'ERROR', 'CRITICALLY_LOW'))
     (out / 'summary.json').write_text(json.dumps({'aarSha256': SHA, 'classesSha256': hashlib.sha256(data).hexdigest(), 'methods': methods, 'runtime': 'NOT_RUN', 'socUnitAndRange': 'UNVERIFIED'}, indent=2), encoding='utf8')
-    print('PASS: public Safety/EV declarations, callbacks and permissions; Light/Wiper inventory saved; runtime NOT_RUN')
+    print('PASS: public Safety/EV/Wiper/Light declarations, enums, callbacks and read permissions; runtime NOT_RUN')
 
 
 def boundary():

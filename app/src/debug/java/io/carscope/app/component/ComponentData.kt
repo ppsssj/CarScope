@@ -25,6 +25,7 @@ internal sealed interface ComponentValue {
 internal val OIL_STATES = setOf("LOW", "HIGH", "NORMAL", "ERROR", "CRITICALLY_LOW")
 internal val WIPER_STATES = setOf("OTHER", "OFF", "ON", "SERVICE")
 internal val LIGHT_STATES = setOf("OFF", "ON", "DAYTIME_RUNNING")
+internal class ComponentEnvironmentUnsupported : Exception("AUTOMOTIVE_SDK_UNAVAILABLE")
 internal data class ComponentCapability(val readable: Boolean, val values: Set<String>? = null)
 internal data class ComponentReading(
     val feature: ComponentFeature, val capabilityStatus: ComponentStatus = ComponentStatus.UNVERIFIED,

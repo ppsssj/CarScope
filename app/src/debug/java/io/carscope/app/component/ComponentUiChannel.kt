@@ -20,7 +20,7 @@ internal object ComponentProcessOwner {
     @Synchronized fun get(context: Context): ComponentOwner = owner ?: ComponentOwner(PleosComponentDataSource({ createComponentSdkSession(context.applicationContext) })).also { owner = it }
 }
 internal fun createComponentSdkSession(context: Context): ComponentSession {
-    if (!context.packageManager.hasSystemFeature(android.content.pm.PackageManager.FEATURE_AUTOMOTIVE)) throw UnsupportedOperationException("AUTOMOTIVE_SDK_UNAVAILABLE")
+    if (!context.packageManager.hasSystemFeature(android.content.pm.PackageManager.FEATURE_AUTOMOTIVE)) throw ComponentEnvironmentUnsupported()
     return SdkComponentSession(context.applicationContext)
 }
 internal object ComponentUiProjection {

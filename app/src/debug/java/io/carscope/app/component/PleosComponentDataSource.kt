@@ -109,7 +109,7 @@ internal class PleosComponentDataSource(
         change(f) { it.copy(availabilityStatus = status, value = if (observed) value else null, observedAt = if (observed) at else null, reason = if (f == ComponentFeature.SOC && observed) "INTEGER_UNIT_AND_RANGE_UNVERIFIED" else status.name) }
     }
     private fun fail(f: ComponentFeature, error: Exception, capability: Boolean) {
-        val status = if (error is SecurityException) ComponentStatus.PERMISSION_DENIED else ComponentStatus.ERROR
+        val status = when(error) { is ComponentEnvironmentUnsupported -> ComponentStatus.UNSUPPORTED; is SecurityException -> ComponentStatus.PERMISSION_DENIED; else -> ComponentStatus.ERROR }
         change(f) { it.copy(capabilityStatus = if (capability) status else it.capabilityStatus, availabilityStatus = status, value = null, observedAt = null, reason = status.name) }
     }
     private fun reset(f: ComponentFeature, status: ComponentStatus, reason: String) = change(f) { ComponentReading(f, status, status, reason = reason) }

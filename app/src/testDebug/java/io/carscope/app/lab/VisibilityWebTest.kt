@@ -20,7 +20,7 @@ class VisibilityWebTest {
         val activity=Robolectric.buildActivity(Activity::class.java).setup();val worker=ComponentTestWorker()
         val source=PleosComponentDataSource({createComponentSdkSession(activity.get())},worker,{1000});val channel=ComponentUiChannel(ComponentOwner(source))
         try{assertFalse(activity.get().packageManager.hasSystemFeature(android.content.pm.PackageManager.FEATURE_AUTOMOTIVE));channel.start();worker.drain();val packet=JsonParser.parseString(channel.readVisibilityJson()).asJsonObject
-            assertTrue(packet["readings"].asJsonArray.all{it.asJsonObject["value"].isJsonNull&&it.asJsonObject["availabilityStatus"].asString=="ERROR"});assertFalse(activity.get().isFinishing)
+            assertTrue(packet["readings"].asJsonArray.all{it.asJsonObject["value"].isJsonNull&&it.asJsonObject["availabilityStatus"].asString=="UNSUPPORTED"});assertFalse(activity.get().isFinishing)
         }finally{channel.stop();source.close();worker.drain();activity.pause().stop().destroy()}
     }
     private val host="carscope-inspection.invalid"
