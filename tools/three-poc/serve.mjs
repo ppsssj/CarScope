@@ -39,11 +39,16 @@ const ROOTS = [
 const handoff = handoffTarget(process.env.CARSCOPE_QR_AR_BASE_URL);
 const handoffQr = handoff.configured ? await QRCode.toString(handoff.url, { type: "svg", margin: 2, errorCorrectionLevel: "M" }) : null;
 // Explicit local synthetic UI test only. No native endpoint fallback and no bundled fixture.
+const componentFixture = process.env.CARSCOPE_COMPONENT_UI_FIXTURE ? resolve(process.env.CARSCOPE_COMPONENT_UI_FIXTURE) : null;
 const tireFixture = process.env.CARSCOPE_TIRE_UI_FIXTURE ? resolve(process.env.CARSCOPE_TIRE_UI_FIXTURE) : null;
 const TYPES ={ ".html": "text/html", ".js": "text/javascript", ".mjs": "text/javascript", ".glb": "model/gltf-binary", ".json": "application/json", ".svg": "image/svg+xml" };
 const port = Number(process.env.PORT ?? 8095);
 createServer(async (req, res) => {
   const url = decodeURIComponent(new URL(req.url, "http://x").pathname);
+  if (url === '/component-status.json' && componentFixture && req.method === 'GET' && !new URL(req.url, 'http://x').search) {
+    try { const body = await readFile(componentFixture); const packet = JSON.parse(body); if (!Array.isArray(packet.readings) || packet.readings.some(r => r.source !== 'MOCK')) throw Error('Fixture must be MOCK'); res.writeHead(200, { 'content-type': 'application/json', 'cache-control': 'no-store' }); return res.end(body); }
+    catch { res.writeHead(503); return res.end('Unavailable'); }
+  }
   if (url === '/tire-status.json' && tireFixture && req.method === 'GET') {
     try {
       const body = await readFile(tireFixture);
@@ -73,4 +78,4 @@ createServer(async (req, res) => {
   }
   res.writeHead(404);
   res.end("not found");
-}).listen(port, "127.0.0.1", () => console.log(`PoC on http://127.0.0.1:${port}/`));
+}).listen(port, "127.0.0.1", function () { console.log(`PoC on http://127.0.0.1:${this.address().port}/`); });

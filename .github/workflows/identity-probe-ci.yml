@@ -53,6 +53,11 @@ jobs:
         run: node tools/three-poc/check-tire-native-contract.mjs app/build/test-results/tire-ui-v1.json
       - name: Verify sync receiver Debug and Release boundary
         run: python3 tools/inspection-sync-poc/android/check-boundary.py
+      - name: Verify public SDK component declarations and Debug-only cache boundary
+        run: |
+          python3 tools/component-probe/check.py sdk-audit
+          python3 tools/component-probe/check.py boundary
+          node tools/component-probe/check-native.mjs app/build/test-results/component-ui-v1.json
       - name: Summarize JVM test evidence
         run: |
           python3 - <<'PY'

@@ -12,4 +12,6 @@ internal object DebugWebOrigin {
 
     fun statusPath(url: String, host: String, method: String): Boolean =
         trusted(url, host, method) && URI(url).rawPath == "/tire-status.json" && URI(url).rawQuery == null
+    fun componentStatusPath(url: String, host: String, method: String): Boolean =
+        trusted(url, host, method) && URI(url).rawPath == "/component-status.json" && URI(url).rawQuery == null
 }
