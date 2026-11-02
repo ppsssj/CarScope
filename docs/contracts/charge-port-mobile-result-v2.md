@@ -72,11 +72,23 @@ data class ChargeResponses(
     val debris: ChargeAnswer,
     val visibleDamage: ChargeAnswer,
 )
-// CompletedChargeInspection:
-// schemaVersion=2, taskId="ev-charge.port", method="SELF", source="MOBILE",
-// state="COMPLETED", confirmation="USER_REPORTED", sync="NOT_SENT";
-// inspectionId, startedAt, completedAt, aids(cameraUsed,locationMarked),
-// responses: ChargeResponses, status: ChargeReportedStatus.
+data class ChargeAids(val cameraUsed: Boolean, val locationMarked: Boolean)
+data class CompletedChargeInspection(
+    val inspectionId: String,
+    val startedAt: String,
+    val completedAt: String,
+    val aids: ChargeAids,
+    val responses: ChargeResponses,
+    val status: ChargeReportedStatus,
+) {
+    val schemaVersion: Int get() = 2
+    val taskId: String get() = "ev-charge.port"
+    val method: String get() = "SELF"
+    val source: String get() = "MOBILE"
+    val state: String get() = "COMPLETED"
+    val confirmation: String get() = "USER_REPORTED"
+    val sync: String get() = "NOT_SENT"
+}
 ```
 
 Native 담당자는 다음 경계를 확장해야 한다.

@@ -40,6 +40,21 @@ test('strict result rejects partials, invalid times, UUIDs, extra data and cross
     {aids:{...r.aids,x:.5}},{completedAt:'2026-02-30T00:00:00.000Z'},{completedAt:'2026-11-02T00:00:00.000Z'}])assert.ok(validateChargeResult({...r,...patch}).length);
   for(const key of ['photo','video','gps','vin','sdk','token','tap'])assert.ok(validateChargeResult({...r,[key]:'forbidden'}).length);
 });
+test('v2 validators reject enum/UUID coercion without throwing, including legacy tires',()=>{
+  for(const id of [CHARGE_TASK.id,...TIRE_TASKS.map(t=>t.id)]){
+    const profile=getChecklistProfile(id),key=profile.checks[0].id;let r=profile.result.start(id,ctx);
+    for(const c of profile.checks)r=profile.result.answer(r,c.id,'UNABLE');r=profile.result.complete(r,ctx);
+    assert.ok(profile.result.validate({...r,inspectionId:[r.inspectionId]}).length);
+    for(const value of [['UNABLE'],{toString:null},null,true,1]){
+      assert.ok(profile.result.validate({...r,responses:{...r.responses,[key]:value}}).length);
+      let s=profile.flow.reduce(profile.flow.initial(id),{type:'SAFETY',value:true},ctx);
+      if(profile.requiresNotCharging)s=profile.flow.reduce(s,{type:'NOT_CHARGING',value:true},ctx);
+      s=profile.flow.reduce(s,{type:'START',camera:false},ctx);assert.equal(s.step,'check');
+      assert.equal(profile.flow.reduce(s,{type:'ANSWER',checkId:key,answer:value}),s);
+      assert.throws(()=>profile.result.answer(profile.result.start(id,ctx),key,value),/Invalid checklist answer/);
+    }
+  }
+});
 test('partial answers cannot advance; Back edits, old attempts and duplicate confirmation are guarded',()=>{
   let s=ready();assert.equal(run(s,{type:'NEXT',index:0}),s);assert.equal(run(s,{type:'CONFIRM'}),s);
   for(const [i,c]of CHARGE_CHECKS.entries()){s=run(s,{type:'ANSWER',checkId:c.id,answer:'UNABLE'});const e={type:'NEXT',index:i};s=run(s,e);assert.equal(run(s,e),s);}

@@ -1,5 +1,5 @@
 // Shared transitions; additional charge-port safety rules are explicit opt-in policy.
-import {ANSWERS} from './checklist-result.mjs';
+import {isAnswer} from './checklist-result.mjs';
 export function createChecklistFlow({matchesTask,checks,result,requiresNotCharging=false,stopOnFinding=false}) {
   function initial(taskId) {
     if (!matchesTask(taskId)) throw Error('Unknown checklist task');
@@ -17,12 +17,12 @@ export function createChecklistFlow({matchesTask,checks,result,requiresNotChargi
       case 'NOTE_AIDS': return s.record && ['locate','check'].includes(s.step) ? to({record:result.noteAids(s.record,e)}) : s;
       case 'TO_CHECK': return s.step === 'locate' ? to({step:'check',mode:e.manual?'manual':s.mode}) : s;
       case 'ANSWER':
-        if (s.step !== 'check' || e.checkId !== checks[s.index].id || !Object.hasOwn(ANSWERS,e.answer)) return s;
+        if (s.step !== 'check' || e.checkId !== checks[s.index].id || !isAnswer(e.answer)) return s;
         return to({record:result.answer(s.record,e.checkId,e.answer),
           ...(stopOnFinding && e.answer === 'FOUND' ? {mode:'manual',observationStopped:true} : {})});
       case 'STOP_OBSERVATION': return requiresNotCharging && ['locate','check'].includes(s.step)
         ? to({step:'check',mode:'manual',observationStopped:true}) : s;
-      case 'NEXT': return s.step === 'check' && e.index === s.index && Object.hasOwn(ANSWERS,s.record.responses[checks[s.index].id])
+      case 'NEXT': return s.step === 'check' && e.index === s.index && isAnswer(s.record.responses[checks[s.index].id])
         ? to(s.index < checks.length-1 ? {index:s.index+1} : {step:'review'}) : s;
       case 'CONFIRM': return s.step === 'review' ? to({step:'done',record:result.complete(s.record,ctx)}) : s;
       case 'BACK':

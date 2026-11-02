@@ -49,7 +49,9 @@ test('same charge result retries are idempotent; a different valid result confli
     const secondReceiver=new ReceiverClient({baseUrl:server.url}),s=await secondReceiver.create(task);
     const claim=await fetch(server.url+'/v1/claim',{method:'POST',headers:{Authorization:'Bearer '+parseInviteFragment(s.fragment).invite}}).then(r=>r.json());
     const submit=value=>fetch(server.url+'/v1/submissions',{method:'POST',headers:{Authorization:'Bearer '+claim.submitToken,'Content-Type':'application/json'},body:JSON.stringify(envelope(value))});
-    for(const invalid of [{...r,responses:{flapDamage:'UNABLE'}},{...r,taskId:'tire.front-left',responses:{damage:'UNABLE',debris:'UNABLE',wear:'UNABLE'}}])assert.equal((await submit(invalid)).status,422);
+    for(const invalid of [{...r,responses:{flapDamage:'UNABLE'}},{...r,inspectionId:[r.inspectionId]},
+      {...r,responses:{...r.responses,debris:['UNABLE']}},{...r,responses:{...r.responses,debris:{toString:null}}},
+      {...r,taskId:'tire.front-left',responses:{damage:'UNABLE',debris:'UNABLE',wear:'UNABLE'}}])assert.equal((await submit(invalid)).status,422);
     const first=await submit(r),again=await submit(r);assert.equal(first.status,201);assert.equal(again.status,200);
     const firstBody=await first.json(),againBody=await again.json();assert.equal(firstBody.duplicate,false);assert.equal(againBody.duplicate,true);assert.deepEqual(firstBody.receipt,againBody.receipt);
     const changed={...r,responses:{...r.responses,debris:'FOUND'},status:'REVIEW_NEEDED'};

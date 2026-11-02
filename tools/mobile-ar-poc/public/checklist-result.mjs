@@ -1,5 +1,6 @@
 // Shared strict schema-v2 mechanics. Task identities and checklist keys remain profile-specific.
 export const ANSWERS = Object.freeze({FOUND:'이상 징후 발견', NOT_FOUND:'발견하지 못함', UNABLE:'확인할 수 없음'});
+export const isAnswer = value => typeof value === 'string' && Object.hasOwn(ANSWERS,value);
 export const aggregateStatus = responses => Object.values(responses).includes('FOUND') ? 'REVIEW_NEEDED'
   : Object.values(responses).includes('UNABLE') ? 'UNABLE' : 'NO_FINDINGS_REPORTED';
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
@@ -19,14 +20,14 @@ export function createChecklistResult({matchesTask, checks}) {
     if (!exact(r,['schemaVersion','inspectionId','taskId','method','source','state','startedAt','aids','responses',
       ...(done ? ['status','confirmation','completedAt','sync'] : [])])) errors.push('fields');
     if (r.schemaVersion !== 2 || !matchesTask(r.taskId)) errors.push('schema/task');
-    if (!uuid.test(r.inspectionId)) errors.push('inspectionId');
+    if (typeof r.inspectionId !== 'string' || !uuid.test(r.inspectionId)) errors.push('inspectionId');
     if (r.method !== 'SELF' || r.source !== 'MOBILE') errors.push('origin');
     if (!time(r.startedAt)) errors.push('startedAt');
     if (!exact(r.aids,['cameraUsed','locationMarked']) || Object.values(r.aids ?? {}).some(v => typeof v !== 'boolean')) errors.push('aids');
     if (!r.responses || typeof r.responses !== 'object' || Array.isArray(r.responses)
-      || Object.entries(r.responses).some(([k,v]) => !keys.includes(k) || !Object.hasOwn(ANSWERS,v))) errors.push('responses');
+      || Object.entries(r.responses).some(([k,v]) => !keys.includes(k) || !isAnswer(v))) errors.push('responses');
     if (done) {
-      if (!exact(r.responses,keys) || !keys.every(k => Object.hasOwn(ANSWERS,r.responses?.[k]))) errors.push('incomplete');
+      if (!exact(r.responses,keys) || !keys.every(k => isAnswer(r.responses?.[k]))) errors.push('incomplete');
       if (r.status !== aggregateStatus(r.responses ?? {})) errors.push('status');
       if (r.confirmation !== 'USER_REPORTED' || r.sync !== 'NOT_SENT') errors.push('confirmation/sync');
       if (!time(r.completedAt) || Date.parse(r.completedAt) < Date.parse(r.startedAt)) errors.push('completedAt');
@@ -39,7 +40,7 @@ export function createChecklistResult({matchesTask, checks}) {
       startedAt:new Date(now()).toISOString(),aids:{cameraUsed:false,locationMarked:false},responses:{}});
   }
   function answer(record,id,value) {
-    if (record.state !== 'IN_PROGRESS' || !keys.includes(id) || !Object.hasOwn(ANSWERS,value)) throw Error('Invalid checklist answer');
+    if (record.state !== 'IN_PROGRESS' || !keys.includes(id) || !isAnswer(value)) throw Error('Invalid checklist answer');
     return freeze({...record,responses:{...record.responses,[id]:value}});
   }
   function noteAids(record,aids) {
@@ -49,7 +50,7 @@ export function createChecklistResult({matchesTask, checks}) {
   }
   function complete(record,{now=Date.now}={}) {
     if (record.state !== 'IN_PROGRESS' || validate(record).length
-      || !keys.every(k => Object.hasOwn(ANSWERS,record.responses[k]))) throw Error('Incomplete checklist result');
+      || !keys.every(k => isAnswer(record.responses[k]))) throw Error('Incomplete checklist result');
     const completedAt = new Date(now()).toISOString();
     if (Date.parse(completedAt) < Date.parse(record.startedAt)) throw Error('Time moved backwards');
     return freeze({...record,state:'COMPLETED',status:aggregateStatus(record.responses),confirmation:'USER_REPORTED',completedAt,sync:'NOT_SENT'});

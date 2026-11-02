@@ -3,10 +3,11 @@
 2026-11-03 KST, Windows / Node 22.16.0. 기준 main `0a054ca1685cbe198247c278ab831d6eb4d614e1`. 원본 로그·캡처·합성 SQLite는 Git 밖에 보관한다. 이 실행은 **합성/브라우저/Node** 증거이며 실제 스마트폰·차량·Android SDK 수신 증거가 아니다.
 
 최종 실행 루트: `C:\CarScope-External\qr-ar-01\p5-a2\20261103-final`.
+타입 검증 결함 수정 후 최신 syntax/단위/Sync 검증은 `C:\CarScope-External\qr-ar-01\p5-a2\20261103-types-final`이다. 아래 모바일 check/unit 및 sync/* 행은 두 번째 루트 기준이며 브라우저 행은 첫 번째 루트 기준이다. 타입 수정 전 모바일 단위 수는 47개, 수정 후 48개다.
 
 | 루트 기준 경로 | 내용/결과 |
 |---|---|
-| `mobile-check.log`, `mobile-unit.log` | 모바일 syntax, 47/47 PASS |
+| `mobile-check.log`, `mobile-unit.log` | 모바일 syntax, 48/48 PASS |
 | `mobile-browser.log`, `mobile/browser-results.json` | 기존 워셔액 Edge 156.0.4314.58, 16 검사 그룹 PASS |
 | `mobile/tires/browser-results.json` | 기존 네 타이어 Chrome 156.0.8078.79, 7 그룹 PASS |
 | `mobile/charge/browser-results.json` | 충전구 Chrome, 6 그룹 PASS |
@@ -14,7 +15,7 @@
 | `mobile/charge/02-camera.png`, `03-landscape.png` | 합성 canvas 영상 + 수동 위치, 가로 화면 위치 초기화. 실제 인식/실물 영상 아님 |
 | `mobile/charge/04-node-accepted.png` | Node 수신기의 명시적 수락 후 ACCEPTED. Native 수신 아님 |
 | `sync/summary.json`, `check.txt`, `test.txt` | check, 전체 95/95 PASS |
-| `sync/test-legacy.txt`, `test-sqlite.txt`, `test-ar01.txt` | 기존 48/48, SQLite 21/21, 모바일 wrapper 47/47 PASS. 중복 실행 합산 금지 |
+| `sync/test-legacy.txt`, `test-sqlite.txt`, `test-ar01.txt` | 기존 48/48, SQLite 21/21, 모바일 wrapper 48/48 PASS. 중복 실행 합산 금지 |
 | `sync-browser/summary.json`, `01-invite.png` 등 | 기존 Sync debug Edge, 11 그룹 PASS |
 | `sync-browser/mobile-summary.json`, `01-completed-not-sent.png` 등 | 기존 워셔액 v2 통합 Edge, 19 그룹 PASS |
 
@@ -26,6 +27,7 @@ Sync 브라우저 텍스트 로그는 `C:\CarScope-External\qr-ar-01\p5-a2\20261
 - `20261103-run02/sync-unit.log`, `20261103-run03/sync/test.txt`: 새 테스트가 기존 201/200 및 duplicate 플래그 차이를 잘못 기대한 실패. 서버 변경 없이 정확한 계약 검증으로 수정했고 final은 95/95 PASS.
 - `20261103-run03/charge-browser.log`: pause 이벤트 완료 전에 즉시 track 상태를 검사한 실패. 비동기 정리 완료 대기로 수정.
 - `20261103-run04/charge-browser.log`: 동일 fragment 재탐색을 새 페이지로 가정한 하네스 실패. 새 시도 fixture의 명시적 reload로 수정. run05 및 final의 6 그룹 모두 PASS.
+- 최종 소스 검토 재현에서 배열 enum/UUID가 통과한 기존 v2 타입 결함은 문자열 타입 확인으로 수정했다. `20261103-types-final`에서 모바일 48/48과 Sync 95/95 및 HTTP 422 회귀를 재검증한다. 정상 JSON의 형식은 유지한다.
 
 소스 검토와 최종 합성 카메라/확정/가로/수락 화면을 실제 이미지로 확인했다. 테스트의 가짜 자격 증명은 프로세스 메모리에만 사용하며 URL/DOM/storage 노출을 검사했다. 개인 영상·사진·GPS·VIN·실제 토큰을 수집하지 않았다.
 
