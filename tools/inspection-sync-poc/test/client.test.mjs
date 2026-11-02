@@ -52,6 +52,7 @@ test('double press: concurrent sends share one request; after SENT no further re
   assert.equal(calls.filter((x) => x.url.endsWith('/v1/submissions')).length, 1);
   const init = calls.at(-1).init;
   assert.deepEqual([init.credentials, init.cache, init.referrerPolicy], ['omit', 'no-store', 'no-referrer']);
+  assert.equal(init.redirect, 'error', 'bearer requests must never follow a redirect');
   assert.match(init.headers.Authorization, /^Bearer [A-Za-z0-9_-]{43}$/);
   assert.ok(!calls.at(-1).url.includes('?'), 'token never in the URL');
 });

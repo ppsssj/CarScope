@@ -136,12 +136,31 @@ try {
   pass('429 has distinct state and no automatic submission retry');
 
   paired = await pair(); await complete();
+  let redirected = 0;
+  await page.route('**/credential-target', (route) => { redirected++; return route.fulfill({ status: 200, body: '{}' }); });
+  await page.route('**/v1/submissions', (route) => route.fulfill({ status: 307, headers: { Location: '/credential-target' } }));
+  await send(); await waitState('FAILED_NETWORK');
+  assert.equal(submitCount, 3); assert.equal(redirected, 0);
+  pass('real browser fetch rejects bearer redirects and never reaches the redirect target');
+
+  paired = await pair(); await complete();
   await page.route('**/v1/submissions', async (route) => {
     const response = await route.fetch(), body = await response.json(); body.receipt.resultDigest = 'sha256:' + '0'.repeat(64);
     await route.fulfill({ response, json: body });
   });
   await send(); await waitState('FAILED_NETWORK');
   assert.ok(!(await page.locator('#done-sync').textContent()).includes('서버 수신 확인')); pass('2xx with wrong Digest is never SENT');
+
+  paired = await pair(); await complete(); await send(); await waitState('SENT');
+  const submittedReceipt = (await paired.receiver.view()).resultDigest;
+  await page.route('**/v1/submissions/status', async (route) => {
+    const response = await route.fetch(), body = await response.json();
+    assert.equal(body.receipt.resultDigest, submittedReceipt);
+    body.sessionState = 'ACCEPTED'; // receipt still says RESULT_SUBMITTED: must never display acceptance.
+    await route.fulfill({ response, json: body });
+  });
+  await page.click('#sync-refresh'); await waitState('REJECTED_INVALID');
+  pass('status ACCEPTED with a submitted-only Receipt is rejected despite matching Digest');
 
   paired = await pair(); await complete(); await send(); await waitState('SENT');
   const port = Number(new URL(server.url).port); await server.stop(); store.close(); await start(port);

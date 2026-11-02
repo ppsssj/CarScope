@@ -50,7 +50,7 @@ export class SyncClient {
     const timer = setTimeout(() => ctrl.abort(), this.timeoutMs);
     try {
       const res = await this.fetch(this.baseUrl + path, {
-        method, signal: ctrl.signal, credentials: 'omit', cache: 'no-store', referrerPolicy: 'no-referrer',
+        method, signal: ctrl.signal, credentials: 'omit', cache: 'no-store', referrerPolicy: 'no-referrer', redirect: 'error',
         headers: { Authorization: `Bearer ${token}`, ...(body !== undefined ? { 'Content-Type': 'application/json' } : {}) },
         body: body !== undefined ? JSON.stringify(body) : undefined,
       });
