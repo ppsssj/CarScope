@@ -17,7 +17,11 @@ internal class ComponentOwner(private val source: PleosComponentDataSource) {
 }
 internal object ComponentProcessOwner {
     @Volatile private var owner: ComponentOwner? = null
-    @Synchronized fun get(context: Context): ComponentOwner = owner ?: ComponentOwner(PleosComponentDataSource({ SdkComponentSession(context.applicationContext) })).also { owner = it }
+    @Synchronized fun get(context: Context): ComponentOwner = owner ?: ComponentOwner(PleosComponentDataSource({ createComponentSdkSession(context.applicationContext) })).also { owner = it }
+}
+internal fun createComponentSdkSession(context: Context): ComponentSession {
+    if (!context.packageManager.hasSystemFeature(android.content.pm.PackageManager.FEATURE_AUTOMOTIVE)) throw ComponentEnvironmentUnsupported()
+    return SdkComponentSession(context.applicationContext)
 }
 internal object ComponentUiProjection {
     fun json(snapshot: ComponentSnapshot?, connection: String, phase: String, sessionId: String, sequence: Long): String {
@@ -26,6 +30,8 @@ internal object ComponentUiProjection {
     fun chargePortJson(snapshot: ComponentSnapshot?, connection: String, phase: String, sessionId: String, sequence: Long): String {
         return project(snapshot, connection, phase, sessionId, sequence, listOf(ComponentFeature.CHARGE_PORT))
     }
+    fun visibilityJson(snapshot: ComponentSnapshot?, connection: String, phase: String, sessionId: String, sequence: Long): String =
+        project(snapshot, connection, phase, sessionId, sequence, VISIBILITY_UI_V1)
     private fun project(snapshot: ComponentSnapshot?, connection: String, phase: String, sessionId: String, sequence: Long, features: List<ComponentFeature>): String {
         require(connection in setOf("ATTACHED", "STOPPED", "SUPERSEDED"))
         require(phase in setOf("IDLE", "ACTIVE", "STOPPING", "UNRESOLVED", "CLOSED"))
@@ -42,15 +48,15 @@ internal object ComponentUiProjection {
                     require(r.observedAt == null || r.observedAt in 0..8_640_000_000_000_000L)
                     if (r.value != null) {
                         require(r.capabilityStatus == ComponentStatus.SUPPORTED)
-                        require(when (f) { ComponentFeature.WASHER, ComponentFeature.CHARGE_SWITCH, ComponentFeature.CHARGE_PORT -> r.value is ComponentValue.Flag; ComponentFeature.BRAKE -> r.value is ComponentValue.Oil && r.value.value in OIL_STATES - "ERROR"; ComponentFeature.SOC -> r.value is ComponentValue.Integer })
-                        require(r.availabilityStatus in if (f == ComponentFeature.SOC) setOf(ComponentStatus.UNVERIFIED, ComponentStatus.STALE) else setOf(ComponentStatus.SUPPORTED, ComponentStatus.STALE))
+                        require(when (f) { ComponentFeature.WASHER, ComponentFeature.CHARGE_SWITCH, ComponentFeature.CHARGE_PORT -> r.value is ComponentValue.Flag; ComponentFeature.BRAKE -> r.value is ComponentValue.Oil && r.value.value in OIL_STATES - "ERROR"; ComponentFeature.SOC -> r.value is ComponentValue.Integer; ComponentFeature.WIPER_FRONT -> r.value is ComponentValue.Mode && r.value.value in WIPER_STATES; ComponentFeature.LOW_BEAM, ComponentFeature.HIGH_BEAM -> r.value is ComponentValue.Mode && r.value.value in LIGHT_STATES })
+                        require(r.availabilityStatus in if (f == ComponentFeature.SOC || f == ComponentFeature.WIPER_FRONT && r.value == ComponentValue.Mode("OTHER")) setOf(ComponentStatus.UNVERIFIED, ComponentStatus.STALE) else setOf(ComponentStatus.SUPPORTED, ComponentStatus.STALE))
                     } else require(r.availabilityStatus !in setOf(ComponentStatus.SUPPORTED, ComponentStatus.STALE))
                 }
                 addProperty("featureId", f.id); addProperty("vehiclePartId", f.partId)
                 addProperty("capabilityStatus", r?.capabilityStatus?.name ?: "UNVERIFIED"); addProperty("availabilityStatus", r?.availabilityStatus?.name ?: "UNVERIFIED")
                 add("observedAt", r?.observedAt?.let(::JsonPrimitive) ?: JsonNull.INSTANCE)
                 add("source", r?.source?.let(::JsonPrimitive) ?: JsonNull.INSTANCE)
-                add("value", when (val value = r?.value) { is ComponentValue.Flag -> JsonPrimitive(value.value); is ComponentValue.Oil -> JsonPrimitive(value.value); is ComponentValue.Integer -> JsonPrimitive(value.value); null -> JsonNull.INSTANCE })
+                add("value", when (val value = r?.value) { is ComponentValue.Flag -> JsonPrimitive(value.value); is ComponentValue.Oil -> JsonPrimitive(value.value); is ComponentValue.Integer -> JsonPrimitive(value.value); is ComponentValue.Mode -> JsonPrimitive(value.value); null -> JsonNull.INSTANCE })
                 add("unit", JsonNull.INSTANCE)
             })
         })
@@ -63,13 +69,17 @@ internal class ComponentUiChannel(private val owner: ComponentOwner) {
     private var sequence = 0L
     @Synchronized fun start() { if (lease == null) { sessionId = UUID.randomUUID().toString(); sequence = 0; lease = owner.attach().also(owner::start) } }
     @Synchronized fun stop() { lease?.let(owner::detach); lease = null }
-    @Synchronized fun readJson(): String = read(false)
-    @Synchronized fun readChargePortJson(): String = read(true)
-    private fun read(chargePort: Boolean): String {
+    @Synchronized fun readJson(): String = read(0)
+    @Synchronized fun readChargePortJson(): String = read(1)
+    @Synchronized fun readVisibilityJson(): String = read(2)
+    private fun read(channel: Int): String {
         val token = lease
         val snapshot = token?.let(owner::snapshot)
         val connection = if (token == null) "STOPPED" else if (snapshot == null) "SUPERSEDED" else "ATTACHED"
-        return if (chargePort) ComponentUiProjection.chargePortJson(snapshot, connection, owner.diagnostics().phase, sessionId, ++sequence)
-        else ComponentUiProjection.json(snapshot, connection, owner.diagnostics().phase, sessionId, ++sequence)
+        return when (channel) {
+            0 -> ComponentUiProjection.json(snapshot, connection, owner.diagnostics().phase, sessionId, ++sequence)
+            1 -> ComponentUiProjection.chargePortJson(snapshot, connection, owner.diagnostics().phase, sessionId, ++sequence)
+            else -> ComponentUiProjection.visibilityJson(snapshot, connection, owner.diagnostics().phase, sessionId, ++sequence)
+        }
     }
 }

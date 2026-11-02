@@ -21,6 +21,9 @@ import { TIRES, detachedTireInfo } from "./inspection-tires.mjs";
 import { tireStatus, enableTireStatus, disposeTireStatus } from "./tire-status.mjs";
 import { componentStatus, componentStatusHtml, enableComponentStatus, disposeComponentStatus } from "./component-status.mjs";
 import { chargePortStatus, chargePortStatusHtml, enableChargePortStatus, disposeChargePortStatus } from './ev-charge-status.mjs';
+import { visibilityStatus, visibilityStatusHtml, enableVisibilityStatus, disposeVisibilityStatus } from './visibility-status.mjs';
+import { WIPER_PARTS, LIGHT_PARTS, sourcePartsByNode, resolveFrontLightTargets, visibilityFeaturesForPart, nearestInspectionHit, lightSightline } from './visibility-targets.mjs';
+import { measureFrontWiperSupport, buildFrontWiperGeometry } from "./ioniq5-asset/front-wiper.mjs";
 import { sourceWorldParts } from './charge-port-model.mjs';
 import { measureEvChargePortSupport, buildEvChargePort, EV_CHARGE_IDS } from "./ioniq5-asset/ev-charge-port.mjs";
 import { resolveTireTargets, tireCameraDirection } from "./tire-targets.mjs";
@@ -77,6 +80,8 @@ const M = { hood: null, group: null, pivot: null, axis: null, hoodMeshes: [], ou
 const targetMeshes = id => M.components.get(id) ?? M.tires.get(id)?.meshes;
 M.charge = new THREE.Group(); M.charge.name = '__charge_port_static'; M.charge.visible = false; scene.add(M.charge);
 M.chargeInfo = { status: 'UNAVAILABLE', sourceMeshCount: 0, sourceUnchanged: false };
+M.wipers=new THREE.Group();M.wipers.visible=false;scene.add(M.wipers);
+M.wiperInfo={status:'UNAVAILABLE'};M.lights=new Map();
 function* targetGroups() { yield* M.components; for (const [id, t] of M.tires) yield [id, t.meshes]; }
 M.bay.name = "__p3a4_bay"; M.bay.visible = false; scene.add(M.bay);
 
@@ -156,7 +161,7 @@ let handoff = { configured: false, url: null, reason: "loading" };
 fetch("./inspection-handoff.json").then((r) => (r.ok ? r.json() : null)).then((h) => { if (h) handoff = h; render(); }).catch(() => {});
 
 function dispatch(event) {
-  const prev = state, next = transition(state, event, { handoffConfigured: handoff.configured, chargePortAvailable: M.chargeInfo.status === 'AVAILABLE' });
+  const prev = state, next = transition(state, event, { handoffConfigured: handoff.configured, chargePortAvailable: M.chargeInfo.status === 'AVAILABLE', wipersAvailable:M.wiperInfo.status==='AVAILABLE', lightsAvailable:M.lights.size===4 });
   if (next === prev) { log("ignored", { state: prev.name, event: event.type }); return false; }
   state = next;
   log("transition", { from: prev.name, to: next.name, event: event.type });
@@ -201,7 +206,7 @@ function driveCamera(name, dur = 1100) {
   } else if (meshes && name !== 'washer-fluid-cap') {
     const bounds = componentBounds(name), size = bounds.getSize(new THREE.Vector3());
     target = bounds.getCenter(new THREE.Vector3());
-    dir = Object.values(EV_CHARGE_IDS).includes(name) ? [-0.6, 0.38, 1] : name === EV_BATTERY_ID ? [0.7, -1, -0.5] : M.tires.has(name) ? tireCameraDirection(name) : [1.2, 2.8, Math.sign(target.z) * 0.55];
+    dir = M.lights.has(name)?M.lights.get(name).sightline.direction:Object.values(EV_CHARGE_IDS).includes(name) ? [-0.6, 0.38, 1] : name === EV_BATTERY_ID ? [0.7, -1, -0.5] : M.tires.has(name) ? tireCameraDirection(name) : [1.2, 2.8, Math.sign(target.z) * 0.55];
     dist = componentDistance(size.toArray(), camera.fov, innerWidth, innerHeight, panelBox());
   } else [target, dir, dist] = VIEWS[name];
   controls.minDistance = meshes ? 0.55 : 1.3;
@@ -226,14 +231,15 @@ function enter(prev) {
   if (selectionView && state.component) selectionView.component = state.component;
   document.body.dataset.state = state.name;
   M.charge.visible = M.chargeInfo.status === 'AVAILABLE' && [STATES.INSPECTION_OVERVIEW, STATES.INSPECTION_SUMMARY, STATES.CHARGE_PORT_PREVIEW].includes(state.name);
+  M.wipers.visible=M.wiperInfo.status==='AVAILABLE'&&[STATES.INSPECTION_OVERVIEW,STATES.INSPECTION_SUMMARY,STATES.VISIBILITY_PREVIEW].includes(state.name);
   const underbody = state.name === STATES.EV_BATTERY_PREVIEW;
   floor.visible = ring.visible = !underbody;
   for (const mesh of M.components.get(EV_BATTERY_ID) ?? []) mesh.visible = underbody;
-  controls.maxPolarAngle = Math.PI * (underbody ? 0.92 : 0.48);
+  controls.maxPolarAngle = Math.PI * (underbody ? 0.92 : state.name===STATES.VISIBILITY_PREVIEW&&state.area==='lights'?0.7:0.48);
   hovered = false;
   driveHood(hoodTarget(state));
   render();
-  if ([STATES.CHARGE_PORT_PREVIEW, STATES.EV_BATTERY_PREVIEW, STATES.COMPONENT_PREVIEW, STATES.WASHER_SELECTED, STATES.TIRE_PREVIEW, STATES.INSPECTION_SUMMARY, STATES.TIRE_SUMMARY].includes(state.name)) {
+  if ([STATES.VISIBILITY_PREVIEW, STATES.CHARGE_PORT_PREVIEW, STATES.EV_BATTERY_PREVIEW, STATES.COMPONENT_PREVIEW, STATES.WASHER_SELECTED, STATES.TIRE_PREVIEW, STATES.INSPECTION_SUMMARY, STATES.TIRE_SUMMARY].includes(state.name)) {
     $('panel').scrollTop = 0;
     const title = $('panel').querySelector('h2');
     title.tabIndex = -1; title.focus({ preventScroll: true });
@@ -281,6 +287,17 @@ function tireStatusHtml(id) {
 function panelContents() {
   const S = STATES;
   switch (state.name) {
+    case S.VISIBILITY_PREVIEW:{
+      const part=areaOf(state).components.find(c=>c.id===state.component),wiper=state.area==='wipers';
+      return `<div class="eyebrow">${wiper?'전면 와이퍼 · 한 유리 영역':'전조등 · 전역 SDK 보고'}</div><h2>${esc(part.label)}</h2>
+        <span class="badge">${wiper?'ESTIMATED_GEOMETRY · 정적 휴지 자세':'기존 커뮤니티 GLB 표식 · OEM 광학 구조 미검증'}</span>
+        <p>${wiper?'전면 유리의 물을 닦는 암과 블레이드의 추정 외관입니다. 두 와이퍼는 전면 유리 하나의 작동 상태를 공유합니다. 작동 각도·위치·속도·마모·교체 시기는 측정하지 않습니다.':'하향등은 가까운 전방, 상향등은 먼 전방을 비추는 기능입니다. 이 평면 표식은 기존 모델의 위치 안내이며 실제 bulb·광도·광축·고장 진단이 아닙니다. 하우징에 가릴 수 있으며 좌우 선택에도 같은 전역 상태가 표시됩니다.'}</p>
+        <p class="note">${wiper?'ON·SERVICE 보고로 와이퍼를 움직이거나 실제 자세를 재현하지 않습니다.':'강조는 선택 표시이며 실제 램프 발광이나 광도 재현이 아닙니다. 차체·하우징을 관통 선택하지 않습니다.'}</p>
+        ${!wiper&&M.lights.get(state.component).sightline.status==='SOURCE_OCCLUDED'?'<p role="status">이 참조 모델의 표식은 차체에 가려져 있습니다. 목록으로 위치와 전역 SDK 보고를 확인할 수 있습니다.</p>':''}
+        <ul class="items">${areaOf(state).components.map(c=>item(c,'visibility-part')).join('')}</ul>
+        <details class="sdk-details" open><summary>SDK 보고 · 사용자 기록과 별개</summary><div id="visibilityStatusContent">${visibilityStatusHtml(visibilityFeaturesForPart(state.component))}</div></details>
+        <div class="actions"><button type="button" class="secondary" data-action="back">뒤로 · 차량 전체 보기</button></div>`;
+    }
     case S.CHARGE_PORT_PREVIEW:
       return `<div class="eyebrow">EV 충전구 · 차량 우측 후방</div><h2>${state.component === EV_CHARGE_IDS.flap ? '충전구 덮개' : '충전구 외곽'}</h2>
         <span class="badge">ESTIMATED_GEOMETRY · 정적 닫힌 형상</span>
@@ -320,7 +337,7 @@ function panelContents() {
       return '<div class="eyebrow">차량 점검</div><h2>모델의 보닛을 닫는 중</h2><p>완료되면 요청한 화면으로 이동합니다.</p>';
     case S.INSPECTION_OVERVIEW:
       return `<div class="eyebrow">차량 점검</div><h2>점검할 부위를 선택하세요</h2><p>3D 모델의 강조된 부위나 아래 목록에서 선택합니다.</p>
-        <ul class="items">${INSPECTION_AREAS.map((a) => a.id === 'ev-charge' && M.chargeInfo.status !== 'AVAILABLE' ? '<li><button type="button" class="item" disabled>EV 충전구 · 참조 면 정렬 미검증</button></li>' : item(a, "area")).join("")}</ul>
+        <ul class="items">${INSPECTION_AREAS.map((a) => a.id === 'ev-charge' && M.chargeInfo.status !== 'AVAILABLE' || a.id==='wipers'&&M.wiperInfo.status!=='AVAILABLE'||a.id==='lights'&&M.lights.size!==4 ? `<li><button type="button" class="item" disabled>${esc(a.label)} · 모델 위치 미검증</button></li>` : item(a, "area")).join("")}</ul>
         ${M.chargeInfo.status !== 'AVAILABLE' ? '<p role="status">참조 모델에서 충전구 위치를 확인할 수 없어 이 항목을 사용할 수 없습니다.</p>' : ''}
         <p class="note">응답은 이 화면의 메모리에만 남습니다. 홈 복귀·종료·새로고침 시 지워집니다.</p>`;
     case S.HOOD_OPENING:
@@ -374,6 +391,7 @@ function render() {
   $("crumb").textContent = state.name === STATES.INSPECTION_SUMMARY ? '차량 점검 › 전체 요약' : state.area === 'tires' ? `차량 점검 › 타이어${state.component ? ' › ' + detachedTireInfo(state.component).label : ''}` : state.name === STATES.COMPONENT_PREVIEW ? `차량 점검 › 보닛 › ${areaOf(state).components.find(c => c.id === state.component).label}` : crumbs[state.name];
   if (state.name === STATES.EV_BATTERY_PREVIEW) $('crumb').textContent = '차량 점검 › EV 배터리';
   if (state.name === STATES.CHARGE_PORT_PREVIEW) $('crumb').textContent = '차량 점검 › EV 충전구';
+  if(state.name===STATES.VISIBILITY_PREVIEW)$('crumb').textContent='차량 점검 › '+(state.area==='wipers'?'전면 와이퍼':'전조등');
   const hint = hints[state.name];
   clearTimeout(toastTimer);
   $("toast").textContent = hint ?? "";
@@ -393,6 +411,8 @@ componentStatus.subscribe(() => {
 if (params.get('componentStatus') === 'fixture') enableComponentStatus();
 chargePortStatus.subscribe(() => { const region = $('chargePortStatusContent'); if (region) region.innerHTML = chargePortStatusHtml(); });
 if (params.get('chargeStatus') === 'fixture') enableChargePortStatus();
+visibilityStatus.subscribe(()=>{const region=$('visibilityStatusContent');if(region)region.innerHTML=visibilityStatusHtml(visibilityFeaturesForPart(state.component));});
+if(params.get('visibilityStatus')==='fixture')enableVisibilityStatus();
 
 $("panel").addEventListener("click", (e) => {
   const b = e.target.closest("[data-action]");
@@ -413,6 +433,7 @@ $("panel").addEventListener("click", (e) => {
   else if (a === "tire") dispatch({ type: EVENTS.SELECT_TIRE, id: b.dataset.id });
   else if (a === "handoff") dispatch({ type: EVENTS.REQUEST_HANDOFF });
   else if (a === 'charge-part') dispatch({ type: EVENTS.SELECT_CHARGE_PART, id: b.dataset.id });
+  else if(a==='visibility-part')dispatch({type:EVENTS.SELECT_VISIBILITY_PART,id:b.dataset.id});
   else if (a === "back") dispatch({ type: EVENTS.BACK });
   else if (a === "exit") dispatch({ type: EVENTS.EXIT });
 });
@@ -446,8 +467,9 @@ function hitAt(x, y) {
   camera.updateMatrixWorld();
   ray.setFromCamera(new THREE.Vector2(((x - r.left) / r.width) * 2 - 1, -((y - r.top) / r.height) * 2 + 1), camera);
   // Everything visible occludes: a closed hood hides the cap, the body hides the far side.
-  const hit = ray.intersectObjects(scene.children, true).find((h) => { if (!h.object.isMesh) return false; for (let n = h.object; n; n = n.parent) if (!n.visible) return false; return true; });
+  const hit = nearestInspectionHit(ray.intersectObjects(scene.children, true));
   if (!hit) return null;
+  if(hit.object.userData.visibilityPartId)return {kind:'visibility',id:hit.object.userData.visibilityPartId};
   if (Object.values(EV_CHARGE_IDS).includes(hit.object.userData.partId)) return { kind: 'charge', id: hit.object.userData.partId };
   if (hit.object.userData.inspectionTire) return { kind: 'tire', id: hit.object.userData.inspectionTire };
   if (hit.object.userData.isHood) return { kind: "hood" };
@@ -457,6 +479,8 @@ function hitAt(x, y) {
 }
 function pickTarget(x, y) {
   const h = hitAt(x, y);
+  if([STATES.INSPECTION_OVERVIEW,STATES.INSPECTION_SUMMARY].includes(state.name)&&h?.kind==='visibility')return {type:EVENTS.SELECT_AREA,id:WIPER_PARTS.includes(h.id)?'wipers':'lights',partId:h.id};
+  if(state.name===STATES.VISIBILITY_PREVIEW&&h?.kind==='visibility')return {type:EVENTS.SELECT_VISIBILITY_PART,id:h.id};
   if ([STATES.INSPECTION_OVERVIEW, STATES.INSPECTION_SUMMARY].includes(state.name) && h?.kind === 'charge') return { type: EVENTS.SELECT_AREA, id: 'ev-charge', partId: h.id };
   if (state.name === STATES.CHARGE_PORT_PREVIEW && h?.kind === 'charge') return { type: EVENTS.SELECT_CHARGE_PART, id: h.id };
   if ([STATES.INSPECTION_OVERVIEW, STATES.INSPECTION_SUMMARY, STATES.TIRE_SELECTION, STATES.TIRE_PREVIEW, STATES.TIRE_SUMMARY].includes(state.name) && h?.kind === 'tire') return { type: EVENTS.SELECT_TIRE, id: h.id };
@@ -522,6 +546,7 @@ function paintHighlight(now) {
   for (const [id, meshes] of targetGroups()) for (const m of meshes) {
     const selected = state.component === id;
     const washerHint = id === 'washer-fluid-cap' && capOn && m === M.cap;
+    if(m.userData.originalLight){if(selected)m.material.emissive.setHex(ACCENT);else m.material.emissive.copy(m.userData.originalLight.emissive);m.material.emissiveIntensity=selected?0.6:m.userData.originalLight.intensity;continue;}
     m.material.emissive.setHex(selected || washerHint ? ACCENT : 0);
     m.material.emissiveIntensity = selected ? 0.6 : washerHint ? 0.25 + 0.45 * pulse : 0;
   }
@@ -584,8 +609,14 @@ new GLTFLoader().load(params.get("model") ?? "./external/ioniq5.glb", (gltf) => 
     M.chargeInfo = { status: 'AVAILABLE', sourceMeshCount: source.length, support, sourceUnchanged: unchanged };
   } catch { M.chargeInfo = { status: 'UNAVAILABLE', sourceMeshCount: 0, sourceUnchanged: false }; log('charge-model-unavailable'); }
   const meshNodes = new Set(gltf.parser.json.nodes.filter((n) => n.mesh !== undefined).map((n) => n.name));
+  try{
+    const source=sourcePartsByNode(gltf.scene,meshNodes),model=buildFrontWiperGeometry({support:measureFrontWiperSupport(source)});
+    for(const p of model.parts){const mesh=meshFrom(p.triangles,new THREE.MeshStandardMaterial({color:0x262b31,roughness:0.85}),p.id,{partId:p.meta.partId,inspectionTarget:p.meta.inspectionTarget,visibilityPartId:p.meta.partId,meta:p.meta});M.wipers.add(mesh);M.components.set(p.id,[mesh]);}
+    M.wiperInfo={status:'AVAILABLE',sourceNodeCount:source.length};
+  }catch{M.wiperInfo={status:'UNAVAILABLE'};log('wiper-model-unavailable');}
   let bodyMaterial = null;
   gltf.scene.traverse((o) => { if (!o.isMesh) return; o.material = o.material.clone(); const part = meshNodes.has(o.name) ? o.name : o.parent.name; if (part === "Body" && o.material.name === "Body") bodyMaterial = o.material; });
+  try{M.lights=resolveFrontLightTargets(gltf.scene);for(const [id,t]of M.lights){t.sightline=lightSightline(gltf.scene,t);for(const mesh of t.meshes){mesh.userData.visibilityPartId=id;mesh.userData.originalLight={emissive:mesh.material.emissive.clone(),intensity:mesh.material.emissiveIntensity};M.components.set(id,t.meshes);}}}catch{M.lights=new Map();log('light-model-unavailable');}
   try { M.tires = resolveTireTargets(gltf.scene); }
   catch (error) {
     $('status').textContent = '타이어의 좌표·형상 매핑을 검증할 수 없습니다. 참조 GLB를 확인하세요.';
@@ -643,6 +674,7 @@ function dispose(reason) {
   disposeTireStatus();
   disposeComponentStatus();
   disposeChargePortStatus();
+  disposeVisibilityStatus();
   renderer.setAnimationLoop(null);
   controls.dispose();
   const before = { ...renderer.info.memory }, seen = new Set();
@@ -669,6 +701,9 @@ window.__inspect = {
   tireStatus: () => tireStatus.state,
   componentStatus: () => componentStatus.state,
   chargePortStatus: () => chargePortStatus.state,
+  visibilityStatus:()=>visibilityStatus.state,
+  visibilityInfo:()=>({wipers:M.wiperInfo,lights:[...M.lights].map(([id,t])=>({id,node:t.node,feature:t.feature,sightline:t.sightline,bounds:{min:t.bounds.min.toArray(),max:t.bounds.max.toArray()},parts:t.meshes.map(m=>({positions:Array.from(m.geometry.attributes.position.array),matrix:m.matrixWorld.toArray()}))})),wiperParts:M.wipers.children.map(m=>({partId:m.userData.partId,positions:Array.from(m.geometry.attributes.position.array),matrix:m.matrixWorld.toArray(),meta:m.userData.meta}))}),
+  visibilityRay:id=>{const p=window.__inspect.componentPoint(id);hitAt(p.x,p.y);return {point:p,hits:ray.intersectObjects(scene.children,true).filter(h=>h.object.isMesh).slice(0,8).map(h=>({name:h.object.name,material:h.object.material.name,transparent:h.object.material.transparent,opacity:h.object.material.opacity,distance:h.distance,part:h.object.userData.visibilityPartId}))};},
   chargeGeometry: () => ({ ...M.chargeInfo, visible: M.charge.visible, parts: M.charge.children.map(m => ({ partId: m.userData.partId, matrix: m.matrixWorld.toArray(), positions: Array.from(m.geometry.attributes.position.array), meta: m.userData.meta })) }),
   chargePoint: (id) => {
     scene.updateMatrixWorld(true); camera.updateMatrixWorld(); const p = new THREE.Vector3();

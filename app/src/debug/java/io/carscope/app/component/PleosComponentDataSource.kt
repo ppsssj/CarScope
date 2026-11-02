@@ -64,8 +64,8 @@ internal class PleosComponentDataSource(
                 when {
                     cap == null -> reset(f, ComponentStatus.UNVERIFIED, "NULL_CAPABILITY")
                     !cap.readable -> reset(f, ComponentStatus.UNSUPPORTED, "NO_READ_CAPABILITY")
-                    f == ComponentFeature.BRAKE && cap.values == null -> reset(f, ComponentStatus.UNVERIFIED, "NULL_CAPABILITY_VALUES")
-                    f == ComponentFeature.BRAKE && cap.values!!.isEmpty() -> reset(f, ComponentStatus.UNSUPPORTED, "NO_SUPPORTED_VALUES")
+                    (f == ComponentFeature.BRAKE || f in VISIBILITY_UI_V1) && cap.values == null -> reset(f, ComponentStatus.UNVERIFIED, "NULL_CAPABILITY_VALUES")
+                    (f == ComponentFeature.BRAKE || f in VISIBILITY_UI_V1) && cap.values!!.isEmpty() -> reset(f, ComponentStatus.UNSUPPORTED, "NO_SUPPORTED_VALUES")
                     else -> {
                         s.capabilities[f] = cap.copy(values = cap.values?.toSet())
                         change(f) { it.copy(capabilityStatus = ComponentStatus.SUPPORTED, reason = "AWAITING_VALUE") }
@@ -101,13 +101,15 @@ internal class PleosComponentDataSource(
             ComponentFeature.WASHER, ComponentFeature.CHARGE_SWITCH, ComponentFeature.CHARGE_PORT -> value is ComponentValue.Flag
             ComponentFeature.BRAKE -> value is ComponentValue.Oil && value.value in OIL_STATES && value.value in (s.capabilities[f]?.values ?: emptySet())
             ComponentFeature.SOC -> value is ComponentValue.Integer
+            ComponentFeature.WIPER_FRONT -> value is ComponentValue.Mode && value.value in WIPER_STATES && value.value in (s.capabilities[f]?.values ?: emptySet())
+            ComponentFeature.LOW_BEAM, ComponentFeature.HIGH_BEAM -> value is ComponentValue.Mode && value.value in LIGHT_STATES && value.value in (s.capabilities[f]?.values ?: emptySet())
         }
-        val status = when { at < 0 || at > 8_640_000_000_000_000L -> ComponentStatus.ERROR; value == null -> ComponentStatus.UNAVAILABLE; value == ComponentValue.Oil("ERROR") -> ComponentStatus.ERROR; !valid -> ComponentStatus.UNVERIFIED; f == ComponentFeature.SOC -> ComponentStatus.UNVERIFIED; else -> ComponentStatus.SUPPORTED }
+        val status = when { at < 0 || at > 8_640_000_000_000_000L -> ComponentStatus.ERROR; value == null -> ComponentStatus.UNAVAILABLE; value == ComponentValue.Oil("ERROR") -> ComponentStatus.ERROR; !valid -> ComponentStatus.UNVERIFIED; f == ComponentFeature.SOC || f == ComponentFeature.WIPER_FRONT && value == ComponentValue.Mode("OTHER") -> ComponentStatus.UNVERIFIED; else -> ComponentStatus.SUPPORTED }
         val observed = valid && status in setOf(ComponentStatus.SUPPORTED, ComponentStatus.UNVERIFIED)
         change(f) { it.copy(availabilityStatus = status, value = if (observed) value else null, observedAt = if (observed) at else null, reason = if (f == ComponentFeature.SOC && observed) "INTEGER_UNIT_AND_RANGE_UNVERIFIED" else status.name) }
     }
     private fun fail(f: ComponentFeature, error: Exception, capability: Boolean) {
-        val status = if (error is SecurityException) ComponentStatus.PERMISSION_DENIED else ComponentStatus.ERROR
+        val status = when(error) { is ComponentEnvironmentUnsupported -> ComponentStatus.UNSUPPORTED; is SecurityException -> ComponentStatus.PERMISSION_DENIED; else -> ComponentStatus.ERROR }
         change(f) { it.copy(capabilityStatus = if (capability) status else it.capabilityStatus, availabilityStatus = status, value = null, observedAt = null, reason = status.name) }
     }
     private fun reset(f: ComponentFeature, status: ComponentStatus, reason: String) = change(f) { ComponentReading(f, status, status, reason = reason) }

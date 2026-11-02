@@ -1,6 +1,6 @@
 // Read the complete original GLB before adding synthetic parts or reparenting the hood.
 import { Vector3 } from 'three';
-export function sourceWorldParts(root) {
+export function sourceWorldParts(root, nameOf = mesh => mesh.name) {
   root.updateMatrixWorld(true); const parts = [], point = new Vector3();
   root.traverse(mesh => {
     if (!mesh.isMesh) return;
@@ -16,7 +16,7 @@ export function sourceWorldParts(root) {
       point.fromBufferAttribute(position, vertex).applyMatrix4(mesh.matrixWorld);
       triangles[i * 3] = point.x * 100; triangles[i * 3 + 1] = -point.z * 100; triangles[i * 3 + 2] = point.y * 100;
     }
-    parts.push({ name: mesh.name, triangles });
+    parts.push({ name: nameOf(mesh), triangles });
   });
   if (!parts.length) throw Error('MISSING_SOURCE_MESHES');
   return parts;

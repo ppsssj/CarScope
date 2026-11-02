@@ -4,6 +4,7 @@
 // so a cancelled or repeated input can never leave the hood and the UI in different states.
 
 import { TIRES } from './inspection-tires.mjs';
+import { WIPER_PARTS, LIGHT_PARTS } from './visibility-parts.mjs';
 
 export const STATES = Object.freeze({
   IDLE: 'IDLE',
@@ -18,12 +19,14 @@ export const STATES = Object.freeze({
   TIRE_SELECTION: 'TIRE_SELECTION', TIRE_PREVIEW: 'TIRE_PREVIEW', TIRE_SUMMARY: 'TIRE_SUMMARY',
   EV_BATTERY_PREVIEW: 'EV_BATTERY_PREVIEW',
   CHARGE_PORT_PREVIEW: 'CHARGE_PORT_PREVIEW',
+  VISIBILITY_PREVIEW: 'VISIBILITY_PREVIEW',
 });
 
 export const EVENTS = Object.freeze({
   SHOW_SUMMARY: 'SHOW_SUMMARY', SHOW_TIRE_SUMMARY: 'SHOW_TIRE_SUMMARY', START: 'START', SELECT_AREA: 'SELECT_AREA', HOOD_OPENED: 'HOOD_OPENED', HOOD_CLOSED: 'HOOD_CLOSED',
   SELECT_COMPONENT: 'SELECT_COMPONENT', SELECT_TIRE: 'SELECT_TIRE', REQUEST_HANDOFF: 'REQUEST_HANDOFF', BACK: 'BACK', EXIT: 'EXIT',
   SELECT_CHARGE_PART: 'SELECT_CHARGE_PART',
+  SELECT_VISIBILITY_PART: 'SELECT_VISIBILITY_PART',
 });
 
 // Inspection areas. Only `available` entries can be selected; `planned` ones are listed as not yet
@@ -48,6 +51,8 @@ export const INSPECTION_AREAS = Object.freeze([
     { id: 'ev-charge.port', label: '충전구 외곽', status: 'preview' },
     { id: 'ev-charge.flap', label: '충전구 덮개', status: 'preview' },
   ] },
+  { id: 'wipers', label: '전면 와이퍼', status: 'available', components: WIPER_PARTS.map((id,i)=>({id,label:i===0?'차량 좌측 전면 와이퍼':'차량 우측 전면 와이퍼',status:'preview'})) },
+  { id: 'lights', label: '전조등', status: 'available', components: LIGHT_PARTS.map(p=>({id:p.id,label:p.label,status:'preview'})) },
 ]);
 
 export const HOOD_OPEN_DEG = 60; // axis A: P3-A1 simulation found no new mesh interference over 0–60°
@@ -86,6 +91,10 @@ export function transition(state, event, ctx = {}) {
       if (type === E.SELECT_AREA && event.id === 'tires') return to(S.TIRE_SELECTION, { area: 'tires' });
       if (type === E.SELECT_AREA && event.id === 'ev-battery') return to(S.EV_BATTERY_PREVIEW, { area: 'ev-battery', component: 'ev-battery.pack' });
       if (type === E.SELECT_AREA && event.id === 'ev-charge') return ctx.chargePortAvailable === true ? to(S.CHARGE_PORT_PREVIEW, { area: 'ev-charge', component: ['ev-charge.port', 'ev-charge.flap'].includes(event.partId) ? event.partId : 'ev-charge.flap' }) : state;
+      if (type === E.SELECT_AREA && ['wipers','lights'].includes(event.id)) {
+        const ids=event.id==='wipers'?WIPER_PARTS:LIGHT_PARTS.map(p=>p.id);
+        return ctx[event.id+'Available']===true?to(S.VISIBILITY_PREVIEW,{area:event.id,component:ids.includes(event.partId)?event.partId:ids[0]}):state;
+      }
       if (type === E.SELECT_AREA && available(INSPECTION_AREAS, event.id)) return to(S.HOOD_OPENING, { area: event.id });
       if (type === E.BACK && state.name === S.INSPECTION_SUMMARY) return to(S.INSPECTION_OVERVIEW);
       if (type === E.BACK || type === E.EXIT) return initialState();
@@ -99,6 +108,10 @@ export function transition(state, event, ctx = {}) {
       if (type === E.BACK) return to(S.INSPECTION_OVERVIEW, { area: null, component: null });
       if (type === E.EXIT) return initialState();
       return state;
+    case S.VISIBILITY_PREVIEW:
+      if(type===E.SELECT_VISIBILITY_PART&&areaOf(state).components.some(c=>c.id===event.id))return event.id===state.component?state:to(S.VISIBILITY_PREVIEW,{component:event.id});
+      if(type===E.BACK)return to(S.INSPECTION_OVERVIEW,{area:null,component:null});
+      if(type===E.EXIT)return initialState();return state;
     case S.TIRE_SELECTION:
     case S.TIRE_SUMMARY:
     case S.TIRE_PREVIEW:
@@ -159,6 +172,7 @@ export function cameraGoal(state) {
     case S.TIRE_PREVIEW: return state.component;
     case S.EV_BATTERY_PREVIEW: return 'ev-battery.pack';
     case S.CHARGE_PORT_PREVIEW: return state.component;
+    case S.VISIBILITY_PREVIEW: return state.component;
     case S.HOOD_CLOSING: return state.afterClose === S.IDLE ? 'home' : 'overview';
     case S.HOOD_OPENING: case S.COMPONENT_SELECTION: return 'bay';
     case S.COMPONENT_PREVIEW: return state.component;

@@ -26,20 +26,24 @@ internal class ComponentFakeSession : ComponentSession {
     override fun unsubscribe(feature: ComponentFeature) { unregistered.add(feature); if (unregisterFails) throw IllegalStateException("fixture") }
     override fun release() { released++; if (releaseFails) throw IllegalStateException("fixture") }
 }
+internal fun testComponentValues(f: ComponentFeature): Set<String>? = when (f) {
+    ComponentFeature.BRAKE -> OIL_STATES; ComponentFeature.WIPER_FRONT -> WIPER_STATES
+    ComponentFeature.LOW_BEAM, ComponentFeature.HIGH_BEAM -> LIGHT_STATES; else -> null
+}
 class PleosComponentDataSourceTest {
     private class Fixture {
         val worker = ComponentTestWorker(); var at = 1000L; val sessions = mutableListOf<ComponentFakeSession>()
         val source = PleosComponentDataSource({ ComponentFakeSession().also(sessions::add) }, worker, { at })
         val sdk get() = sessions.first()
         init { source.start(); worker.drain() }
-        fun cap(f: ComponentFeature, c: ComponentCapability? = ComponentCapability(true, if (f == ComponentFeature.BRAKE) OIL_STATES else null)) { sdk.capabilities.getValue(f).first(c); worker.drain() }
+        fun cap(f: ComponentFeature, c: ComponentCapability? = ComponentCapability(true, testComponentValues(f))) { sdk.capabilities.getValue(f).first(c); worker.drain() }
         fun ready() { ComponentFeature.entries.forEach { cap(it) } }
         fun value(f: ComponentFeature, v: ComponentValue?) { sdk.getters.getValue(f).first(v); worker.drain() }
-        fun values() { ready(); value(ComponentFeature.WASHER, ComponentValue.Flag(false)); value(ComponentFeature.BRAKE, ComponentValue.Oil("NORMAL")); value(ComponentFeature.SOC, ComponentValue.Integer(42)); value(ComponentFeature.CHARGE_SWITCH, ComponentValue.Flag(false)); value(ComponentFeature.CHARGE_PORT, ComponentValue.Flag(false)) }
+        fun values() { ready(); value(ComponentFeature.WASHER, ComponentValue.Flag(false)); value(ComponentFeature.BRAKE, ComponentValue.Oil("NORMAL")); value(ComponentFeature.SOC, ComponentValue.Integer(42)); value(ComponentFeature.CHARGE_SWITCH, ComponentValue.Flag(false)); value(ComponentFeature.CHARGE_PORT, ComponentValue.Flag(false)); VISIBILITY_UI_V1.forEach { value(it, ComponentValue.Mode("OFF")) } }
         fun row(f: ComponentFeature) = source.readSnapshot().readings.getValue(f)
     }
     @Test fun `initial and capability states do not fabricate values or getter calls`() {
-        val f = Fixture(); assertEquals(5, f.source.diagnostics.pending)
+        val f = Fixture(); assertEquals(8, f.source.diagnostics.pending)
         assertTrue(f.source.readSnapshot().readings.values.all { it.capabilityStatus == ComponentStatus.UNVERIFIED && it.value == null && it.source == "PLEOS" })
         f.cap(ComponentFeature.WASHER, null); f.cap(ComponentFeature.BRAKE, ComponentCapability(false, OIL_STATES))
         f.cap(ComponentFeature.SOC, ComponentCapability(false)); f.cap(ComponentFeature.CHARGE_SWITCH)
@@ -83,7 +87,7 @@ class PleosComponentDataSourceTest {
         assertEquals(ComponentStatus.SUPPORTED, f.row(ComponentFeature.WASHER).availabilityStatus)
         f.at = 6001; assertEquals(ComponentStatus.STALE, f.row(ComponentFeature.WASHER).availabilityStatus)
         repeat(50) { f.source.readSnapshot() }
-        assertEquals(1000L, f.row(ComponentFeature.WASHER).observedAt); assertEquals(5, f.sdk.getters.size)
+        assertEquals(1000L, f.row(ComponentFeature.WASHER).observedAt); assertEquals(8, f.sdk.getters.size)
         f.at = 999; assertEquals(ComponentStatus.ERROR, f.row(ComponentFeature.WASHER).availabilityStatus); assertNull(f.row(ComponentFeature.WASHER).value)
     }
     @Test fun `callback receipt time is captured before worker queueing`() {
@@ -110,7 +114,7 @@ class PleosComponentDataSourceTest {
         assertEquals(0, f.source.diagnostics.pending); assertEquals(ComponentValue.Flag(false), f.row(ComponentFeature.WASHER).value)
     }
     @Test fun `timeout is not cancellation and late callbacks drain before one restart`() {
-        val f = Fixture(); f.worker.timeout(); assertEquals(5, f.source.diagnostics.pending); assertEquals(5, f.source.diagnostics.timedOut)
+        val f = Fixture(); f.worker.timeout(); assertEquals(8, f.source.diagnostics.pending); assertEquals(8, f.source.diagnostics.timedOut)
         f.source.stop(); assertTrue(f.source.readSnapshot().readings.values.all { it.value == null }); f.worker.drain()
         repeat(50) { f.source.start(); f.worker.drain() }; assertEquals(1, f.sessions.size)
         f.sdk.capabilities.values.toList().forEach { it.first(ComponentCapability(true, OIL_STATES)) }; f.worker.drain()
@@ -119,7 +123,7 @@ class PleosComponentDataSourceTest {
     @Test fun `stop immediately hides queued events and superseded callbacks cannot republish`() {
         val f = Fixture(); f.values(); f.sdk.events.getValue(ComponentFeature.WASHER).first(ComponentValue.Flag(true))
         f.source.stop(); assertNull(f.row(ComponentFeature.WASHER).value); f.worker.drain()
-        assertNull(f.row(ComponentFeature.WASHER).value); assertEquals(1, f.sdk.released); assertEquals(4, f.sdk.unregistered.size)
+        assertNull(f.row(ComponentFeature.WASHER).value); assertEquals(1, f.sdk.released); assertEquals(7, f.sdk.unregistered.size)
     }
     @Test fun `cleanup and release failures quarantine the old session and block repeated initialization`() {
         for (release in listOf(false, true)) {
