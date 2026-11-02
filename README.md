@@ -2,33 +2,43 @@
 
 **Interactive 3D vehicle inspection, from the car to your phone camera.**
 
-CarScope는 3D 차량 모델에서 점검할 부위를 찾아 열어 보고, 점검 방법을 확인한 뒤 QR로 스마트폰 카메라 보조 화면까지 이어지는 차량 점검 경험을 만드는 프로젝트입니다. Android Automotive OS(AAOS)와 Pleos SDK의 **읽기 전용 차량 상태 관측**은 별도 프로토타입에서 검증하고 있습니다.
+CarScope는 3D 차량에서 부위를 선택하고, 네 타이어의 육안 응답을 기록·확정한 뒤 요약을 검토하는 차량 점검 프로토타입입니다. 워셔액은 기존 안내와 QR 스마트폰 점검으로 이어집니다. 사용자 기록과 Android Automotive OS(AAOS)/Pleos SDK의 **읽기 전용 상태 관측**을 구분합니다.
 
 <p align="center">
   <img src="docs/visuals/p3-a4/hero-home.webp" width="860" alt="CarScope 차량 점검 UI 홈 화면: 다크 배경 중앙의 IONIQ 5 참조 모델과 차량 점검 버튼">
 </p>
 <p align="center"><sub>P3-A4 차량 점검 UI 홈 화면 (<code>tools/three-poc/inspect.html</code>, 로컬 Chrome 실제 캡처). 차량 모델: “Hyundai Ioniq 5” © 2022 andikapratamaw, <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>. OpenX Assets 수정본을 CarScope에서 변환·렌더링했습니다. <a href="#model-references--attribution">출처 자세히</a></sub></p>
 
-> **현재 범위:** 브라우저 기반 차량 점검 UI와 모바일 QR-AR PoC가 연결됐습니다. 이 3D 점검 화면은 Android/Pleos 앱에 **아직 통합되지 않았습니다**(P3-A5 예정). 보닛 회전과 부품 위치는 시뮬레이션·추정값이고, QR-AR은 워셔액 주입구를 의미적으로 인식하지 않습니다.
+> **현재 범위:** 같은 3D 점검 UI를 브라우저와 Android **Debug InspectionActivity**에 패키징합니다. 네 타이어 USER_REPORTED 기록, 전체 요약, Native 워셔액 수신 화면 진입이 구현돼 있습니다. Release의 기본 화면은 기존 정적 SVG이며 Debug 3D/외부 GLB를 포함하지 않습니다. **최신 통합 Android 실측은 별도 최종 검증 단계로 연기**했습니다. 보닛/서비스 부품은 추정·시뮬레이션이고 QR-AR은 실제 주입구를 의미적으로 인식하지 않습니다.
 
-[차량 점검 UI](tools/three-poc/INSPECTION_UI.md) · [QR-AR 검증](tools/mobile-ar-poc/HTTPS_STAGING.md) · [Android/Pleos 연동](docs/pleos-sdk-integration.md) · [개발 로드맵](docs/roadmap.md)
+[차량 점검 UI](tools/three-poc/INSPECTION_UI.md) · [제품 흐름·보존 정책 설계](docs/p4-a1-inspection-product-flow.md) · [QR-AR 검증](tools/mobile-ar-poc/HTTPS_STAGING.md) · [Android/Pleos 연동](docs/pleos-sdk-integration.md) · [개발 로드맵](docs/roadmap.md)
 
 ## Features
 
 | 기능 | 구현 범위 | 상태 |
 | --- | --- | --- |
-| **Interactive 3D Vehicle Inspection** | 차량 회전·확대/축소, 차량 점검 모드, 상태 머신 기반 단계 이동과 뒤로 가기·점검 종료 | 브라우저 PoC 구현 |
+| **Interactive 3D Vehicle Inspection** | 홈 → 부위 선택 → 상세 → 전체 요약 → 종료. 모델 회전·확대/축소, 취소·뒤로 가기·중복 입력 처리 | 브라우저 / Android Debug 패키징 |
 | **Hood Opening Animation** | 보닛 선택 시 카메라가 전방으로 이동하고 보닛이 0→60° 열림. 전방 구획 Shell·프렁크(닫힘) 노출. 중간 취소 시 현재 각도에서 닫힘 | 시뮬레이션 축 A 기준 · 실제 힌지 미검증 |
-| **Component Highlight & Navigation** | 보닛 강조 → 워셔액 캡 `washer-fluid-cap` 강조·라벨·근접 카메라. 3D 클릭과 목록 선택 모두 지원 | 구현 · 다른 5개 부품은 “준비 중”(선택 불가) |
+| **Component Highlight & Navigation** | 워셔액 캡 강조·라벨·근접 카메라, 냉각수/브레이크액/12V/퓨즈박스 preview, 네 타이어 Raycast·고무 강조 | 기존 검증 형상 재사용 · 저전도 냉각수 준비 중 |
+| **Four-tire Self Inspection** | 타이어별 3응답, 명시 확정, 수정·재확정, 이전/다음, 부분/전체 요약 | USER_REPORTED · 정상/안전 판정 아님 |
+| **Session Summary & Exit** | 타이어 기록과 워셔액 결과 미수집 범위를 구분. 모든 활성 화면에 전체 요약/종료 제공 | 메모리 전용 · 홈/종료/닫기/새로고침 시 삭제 |
 | **Washer Fluid Inspection Guide** | 점검 방법, 주의사항, Hyundai 공식 정비 설명서 출처 | 구현 · 위치·형상은 추정 |
 | **QR-to-Mobile Camera Assistance** | `#v=1&task=washer-fluid` QR과 직접 링크. 스마트폰 카메라에서 파란색 영역 후보를 2D 박스로 표시하고 수동 안내 제공. 영상은 기기 안에서만 처리 | Galaxy Z Flip8 Android Chrome 사용자 보고 PASS · 의미 인식 미검증 |
-| **Pleos SDK Vehicle Data** | Pleos SDK에서 1열 좌측(`ROW_1_LEFT`) 도어 상태를 읽기 전용으로 관측해 Android SVG 차량도에 반영 | Pleos AVD 특정 환경 PASS · 3D UI와 미연결 |
+| **Pleos SDK Vehicle Data** | 기존 도어→SVG와 별도로 Debug 3D 타이어 상세에 cache 기반 capability/availability/source/observedAt 표시 | 상태 전용 · 압력/단위 미제공 · 최신 실제 Tire Runtime 미검증 |
+| **Android Debug Navigation** | 시스템 Back과 웹 단계 Back 공유, 외부 링크 차단 안내, 기존 Native 워셔액 Receiver 진입 | JVM/Robolectric 범위와 실제 Android 실측 구분 |
 
-냉각수·저전도 냉각수·브레이크액·12V 배터리·퓨즈박스는 공식 배치도에서 존재만 확인한 예약 영역이며 실제 형상과 점검 안내가 없습니다. 보닛·프렁크·워셔액 캡의 형상과 회전축·좌표는 OEM CAD나 실차 실측값이 아닙니다.
+냉각수·브레이크액·12V 배터리·퓨즈박스는 추정 형상 탐색만 지원하며 점검 절차는 제공하지 않습니다. 저전도 냉각수는 준비 중입니다. 모델과 형상·회전축·좌표는 OEM CAD나 실차 실측값이 아닙니다. 점검 완료는 응답 확정이며 차량 정상·안전·주행 가능 판정이 아닙니다.
 
 ## User Flow
 
-차량 홈 → 차량 점검 → 보닛 선택 → 보닛 개방 → 워셔액 캡 → QR → 모바일 보조
+차량 홈 → 차량 점검 → 3D 부위 선택 → 점검 상세 → 전체 점검 요약 → 계속 점검 / 종료·기록 지우기
+
+- **타이어:** 네 바퀴 선택 → 육안 응답 3개 → 결과 확정 → 수정·재확정 / 타이어 전환 → 요약.
+- **워셔액:** 보닛 → 워셔액 안내 → 선택적 QR → 모바일 보조. QR 열람을 점검 완료로 집계하지 않습니다. 모바일/Native 수신 결과는 3D 기록과 별도입니다.
+- **보존:** 같은 페이지 안에서 이동하면 기록을 유지합니다. 영구 저장·reload/Activity 재생성 복구는 구현하지 않습니다. [저장·복원·삭제 후속 요구사항](docs/p4-a1-inspection-product-flow.md)을 먼저 확정합니다.
+
+<details>
+<summary>초기 P3-A4 워셔액 흐름 캡처 — 현재 추가된 타이어·요약 화면과 구분</summary>
 
 | ① 차량 점검 · 보닛 강조 | ② 보닛 개방 · 점검 항목 |
 | --- | --- |
@@ -41,6 +51,8 @@ CarScope는 3D 차량 모델에서 점검할 부위를 찾아 열어 보고, 점
 | 근접 카메라와 함께 점검 방법·주의사항·출처를 표시합니다. | QR을 스캔하면 모바일 카메라 보조 화면이 열립니다. |
 
 위 4장은 1440×900 로컬 Chrome에서 `inspect.html`을 실제로 실행해 캡처했습니다(2026-11-01, main `062b6b2`와 같은 UI 코드). ③·④는 같은 화면의 일부를 잘라낸 것입니다. QR은 접근이 제한된 스테이징 주소를 가리킵니다. 마지막 모바일 보조 단계는 사용자가 실제 스마트폰에서 확인했지만 공개 가능한 실기기 화면 캡처가 없어 이미지를 넣지 않았습니다.
+
+</details>
 
 <details>
 <summary>이전 단계의 엔지니어링 검증 이미지 (P2-A6)</summary>
@@ -67,18 +79,20 @@ flowchart TB
     QR --> CAM["Camera + 2D blue-region detector"]
     CAM --> GUIDE["Candidate overlay / manual guide"]
   end
-  subgraph Android["Android AAOS / Pleos · separate prototype (app, vehicle-core)"]
+  subgraph Android["Android AAOS / Pleos (app, vehicle-core)"]
     direction TB
     SDK["Mock / Pleos VehicleDataSource"] --> SNAP["VehicleSnapshot"]
     SNAP --> MAP["VehicleDiagramMapper"]
     MAP --> SVG["VehicleSvgRenderer"]
     SVG --> WV["Android WebView · SVG"]
+    DEBUG["Debug InspectionActivity · same inspection assets"]
+    TIRE["Pleos Tire cache · status-only projection"] --> DEBUG
+    DEBUG --> NATIVE["Native washer receiver · separate results"]
   end
-  P35(["P3-A5 · not connected yet"])
-  Browser -.- P35 -.- Android
+  UI -->|"Debug asset packaging"| DEBUG
 ```
 
-브라우저 점검 UI와 Android/Pleos 앱은 **아직 별개의 구현**입니다. 점선은 P3-A5에서 연결할 예정인 경계이며 현재 데이터 흐름이 없습니다. 3D 점검 UI는 Pleos 차량 데이터를 읽지 않고, Android 앱은 3D 점검 UI를 실행하지 않습니다.
+브라우저와 Debug WebView는 같은 점검 자산/상태 머신을 사용합니다. Debug의 Native 버튼이 별도 수신 Activity를 엽니다. JS가 Native Sync를 제어하거나 모바일 결과를 타이어 기록으로 병합하지 않습니다. Release 기본 SVG와 Debug 3D의 포함 범위는 구분하며 실제 Tire SDK 수신·WebView 수명주기 성공은 패키징/CI만으로 주장하지 않습니다.
 
 | 영역 | 주요 기술 및 역할 |
 | --- | --- |
@@ -136,8 +150,9 @@ npm run test:browser
 
 | 검증 대상 | 확인된 결과 | 한계 |
 | --- | --- | --- |
-| 점검 UI 상태 전이 | Node 단위 테스트 9/9 PASS | 브라우저와 Android 앱은 별도 |
-| 점검 UI E2E | 4개 뷰포트에서 각각 17개 assertion PASS | 로컬 브라우저·외부 GLB 기반 |
+| 점검 UI 상태 전이·기록·수신 계약 | Node 회귀와 Android 자산 byte 계약 | 최신 수치는 [P4-A1 보고서](docs/p4-a1-inspection-product-flow.md) |
+| 점검 UI E2E | 실제 외부 GLB 기반 Chrome 입력/렌더·회귀 | Android shell JS의 desktop 검사는 실제 Android 아님 |
+| Android Debug | JVM/Robolectric, Debug/Release 빌드·격리 | 최신 실제 WebView/SDK/AVD는 최종 통합 단계까지 NOT_RUN |
 | QR-AR | Node 16/16, 합성 브라우저 반복 검증 PASS | 실차 의미 인식 정확도 미검증 |
 | 모바일 실기기 | Samsung Galaxy Z Flip8 / Android Chrome, 13개 항목 `USER_REPORTED PASS` | OS·Chrome 세부 버전 미기록; 실차 캡 직접 촬영 아님 |
 | Pleos SDK | 집 PC Pleos AVD에서 실제 도어 이벤트 → SVG 반영 PASS | 오류 경로·STALE 정책 및 릴리스 검증 잔여 |
@@ -149,9 +164,9 @@ npm run test:browser
 
 | 완료 | 다음 단계 |
 | --- | --- |
-| P3-A4 차량 점검 UI (PR #21) · QR-AR 모바일 보조 (PR #18) | **P3-A5 · Android/Pleos UI 통합** |
+| 3D Debug 통합·네 타이어 점검·상태 projection·Native 수신 진입 및 PR #40 기반 | **제품 흐름 정리 → 별도 환경 안정화 후 최종 Android 실측** |
 
-1. **P3-A5 · Android/Pleos 통합 (다음 단계):** 현재 브라우저 점검 UI를 Android 디버그 경계에서 검증하고, 기존 SVG 및 Pleos 관측 기능을 보존합니다.
+1. **제품 흐름·기록:** 전체 요약·명시적 종료를 연결하고, 로컬 보존/복원/삭제 정책 확정 후 저장 기능을 별도 구현합니다.
 2. **안정성·성능:** Android WebView/WebGL 성능, 수명주기, 액세스 정책, 터치/HMI 동작을 별도 검증합니다.
 3. **점검 부위 확장:** 공식 근거와 실제 형상 검증이 가능한 부위부터 순차적으로 추가합니다.
 4. **식별 정확도 평가:** 라벨이 있는 실물 이미지와 실제 차량을 확보한 이후 색상 후보 방식의 오탐·미탐을 별도로 평가합니다.

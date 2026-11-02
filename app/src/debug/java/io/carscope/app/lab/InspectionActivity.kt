@@ -49,6 +49,9 @@ class InspectionActivity : Activity() {
         super.onDestroy()
     }
 
+    @Deprecated("Debug Activity uses the shared inspection step navigation")
+    override fun onBackPressed() { screen.inspectionBack() }
+
     private companion object {
         const val TAG = "CarScopeInspection"
         const val HOST = "carscope-inspection.invalid"

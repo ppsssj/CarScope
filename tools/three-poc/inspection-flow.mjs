@@ -8,6 +8,7 @@ import { TIRES } from './inspection-tires.mjs';
 export const STATES = Object.freeze({
   IDLE: 'IDLE',
   INSPECTION_OVERVIEW: 'INSPECTION_OVERVIEW',
+  INSPECTION_SUMMARY: 'INSPECTION_SUMMARY',
   HOOD_OPENING: 'HOOD_OPENING',
   HOOD_CLOSING: 'HOOD_CLOSING',
   COMPONENT_SELECTION: 'COMPONENT_SELECTION',
@@ -18,7 +19,7 @@ export const STATES = Object.freeze({
 });
 
 export const EVENTS = Object.freeze({
-  SHOW_TIRE_SUMMARY: 'SHOW_TIRE_SUMMARY', START: 'START', SELECT_AREA: 'SELECT_AREA', HOOD_OPENED: 'HOOD_OPENED', HOOD_CLOSED: 'HOOD_CLOSED',
+  SHOW_SUMMARY: 'SHOW_SUMMARY', SHOW_TIRE_SUMMARY: 'SHOW_TIRE_SUMMARY', START: 'START', SELECT_AREA: 'SELECT_AREA', HOOD_OPENED: 'HOOD_OPENED', HOOD_CLOSED: 'HOOD_CLOSED',
   SELECT_COMPONENT: 'SELECT_COMPONENT', SELECT_TIRE: 'SELECT_TIRE', REQUEST_HANDOFF: 'REQUEST_HANDOFF', BACK: 'BACK', EXIT: 'EXIT',
 });
 
@@ -61,14 +62,21 @@ export function transition(state, event, ctx = {}) {
   };
   const selectTire = () => TIRES.some(t => t.id === event.id) && state.component !== event.id
     ? to(S.TIRE_PREVIEW, { area: 'tires', component: event.id }) : state;
+  if (type === E.SHOW_SUMMARY && state.name !== S.IDLE) {
+    if (state.name === S.INSPECTION_SUMMARY || (state.name === S.HOOD_CLOSING && [S.IDLE, S.INSPECTION_SUMMARY].includes(state.afterClose))) return state;
+    return hoodTarget(state) > 0 || state.name === S.HOOD_CLOSING
+      ? close(S.INSPECTION_SUMMARY) : to(S.INSPECTION_SUMMARY, { area: null, component: null, afterClose: null });
+  }
   switch (state.name) {
     case S.IDLE:
       return type === E.START ? to(S.INSPECTION_OVERVIEW) : state;
     case S.INSPECTION_OVERVIEW:
+    case S.INSPECTION_SUMMARY:
       if (type === E.SELECT_TIRE) return selectTire();
       if (type === E.SELECT_AREA && event.id === 'tires') return to(S.TIRE_SELECTION, { area: 'tires' });
       if (type === E.SELECT_AREA && available(INSPECTION_AREAS, event.id)) return to(S.HOOD_OPENING, { area: event.id });
-      if (type === E.BACK || type === E.EXIT) return to(S.IDLE, { area: null });
+      if (type === E.BACK && state.name === S.INSPECTION_SUMMARY) return to(S.INSPECTION_OVERVIEW);
+      if (type === E.BACK || type === E.EXIT) return initialState();
       return state;
     case S.TIRE_SELECTION:
     case S.TIRE_SUMMARY:
@@ -85,7 +93,7 @@ export function transition(state, event, ctx = {}) {
       if (type === E.EXIT) return close(S.IDLE);
       return state;
     case S.HOOD_CLOSING:
-      if (type === E.HOOD_CLOSED) return to(state.afterClose, { afterClose: null, area: state.afterClose === S.IDLE ? null : state.area });
+      if (type === E.HOOD_CLOSED) return to(state.afterClose, { afterClose: null, area: [S.IDLE, S.INSPECTION_SUMMARY].includes(state.afterClose) ? null : state.area });
       if (type === E.SELECT_AREA && event.id === 'hood') return to(S.HOOD_OPENING, { area: event.id, afterClose: null });
       if (type === E.EXIT) return to(S.HOOD_CLOSING, { afterClose: S.IDLE });
       return state;
@@ -125,7 +133,7 @@ export function hoodTarget(state) {
 export function cameraGoal(state) {
   switch (state.name) {
     case S.IDLE: return 'home';
-    case S.INSPECTION_OVERVIEW: return 'overview';
+    case S.INSPECTION_SUMMARY: case S.INSPECTION_OVERVIEW: return 'overview';
     case S.TIRE_SUMMARY: case S.TIRE_SELECTION: return 'tires';
     case S.TIRE_PREVIEW: return state.component;
     case S.HOOD_CLOSING: return state.afterClose === S.IDLE ? 'home' : 'overview';
