@@ -16,7 +16,11 @@ the temporary directory by the existing test and removed in its `AfterClass` cle
   original receiver 17; decoder 8; real TLS transport 11; Activity/Robolectric 9;
   provisioned credentials 7; new tire integration 6 (including 109 JS/Kotlin vectors).
   A further assertion that default denial covers every tire task is included in the CI run below.
-- Existing Android CI (all tests, builds, lint, DEX/manifest boundaries): PENDING PR run.
+- Existing Android CI (all tests, builds, lint, DEX/manifest boundaries): authoritative outcome is attached to
+  the current HEAD in [PR #54 checks](https://github.com/ppsssj/CarScope/pull/54/checks). The PR description records
+  the completed run URLs and counts; a queued/in-progress run must not be interpreted as PASS.
 
 AVD / adb / real phone / optical QR / real vehicle authentication: NOT_RUN.
 No existing processes or other worktrees were manipulated. No mobile/server/Three.js source changes.
+PR #53 merged into main during this work (`e9cb109`); this PR changes none of its files. GitHub PR CI tests
+the combined merge reference, including those merged JS validators. Charge-port Native reception stays unsupported.
