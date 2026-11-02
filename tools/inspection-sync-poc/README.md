@@ -1,5 +1,10 @@
 # inspection-sync-poc (AR-02B-1)
 
+AR-02B-2E: [auth adapter contract and HTTPS same-origin service](../../docs/ar-02b2e-auth-service-integration.md).
+`npm run serve:https` serves mobile v2 and `/v1/*` through one TLS listener and SQLite store;
+creation still defaults to denial. Real issuer/registration/revocation and Android provisioning adapters are not supplied.
+`npm run test:service-tls` verifies the replaceable auth boundary and persistent TLS E2E with test-only dependencies.
+
 AR-02B-2D: [authenticated two-device readiness and runbook](../../docs/ar-02b2d-sync-e2e-readiness.md).
 `npm run test:https-e2e` runs isolated authenticated loopback TLS E2E and host preflight tests.
 `npm run readiness:host -- --api-origin https://approved-api/ --mobile-root https://approved-mobile/`

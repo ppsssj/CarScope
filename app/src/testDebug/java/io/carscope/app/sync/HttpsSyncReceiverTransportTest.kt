@@ -2,6 +2,7 @@ package io.carscope.app.sync
 
 import org.junit.Assert.*
 import org.junit.Test
+import org.junit.AfterClass
 import java.io.File
 import java.net.InetAddress
 import java.net.URI
@@ -40,18 +41,25 @@ class HttpsSyncReceiverTransportTest {
             check(process.waitFor() == 0) { "TLS fixture generation failed: $output" }
         }
         init {
-            run("req", "-x509", "-newkey", "rsa:2048", "-nodes", "-keyout", "ca.key", "-out", "ca.pem", "-days", "2", "-subj", "/CN=CarScope JVM fixture CA")
-            run("req", "-newkey", "rsa:2048", "-nodes", "-keyout", "leaf.key", "-out", "leaf.csr", "-subj", "/CN=localhost")
-            for (name in listOf("valid", "wrong", "expired")) {
-                File(dir, "extensions.cnf").writeText("subjectAltName=" + (if (name == "wrong") "DNS:wrong.example" else "DNS:localhost,IP:127.0.0.1") + "\nbasicConstraints=critical,CA:FALSE\nkeyUsage=critical,digitalSignature,keyEncipherment\nextendedKeyUsage=serverAuth\n")
-                if (name != "expired") run("x509", "-req", "-in", "leaf.csr", "-CA", "ca.pem", "-CAkey", "ca.key", "-CAcreateserial", "-out", "$name.pem", "-days", "1", "-extfile", "extensions.cnf")
-                else {
-                    File(dir, "index.txt").writeText(""); File(dir, "serial").writeText("1000\n")
-                    File(dir, "ca.cnf").writeText("[ca]\ndefault_ca=local\n[local]\ndatabase=index.txt\nserial=serial\nnew_certs_dir=.\ncertificate=ca.pem\nprivate_key=ca.key\ndefault_md=sha256\npolicy=subject_policy\nx509_extensions=leaf\n[subject_policy]\ncommonName=supplied\n[leaf]\n" + File(dir, "extensions.cnf").readText())
-                    run("ca", "-batch", "-notext", "-config", "ca.cnf", "-in", "leaf.csr", "-out", "expired.pem", "-startdate", "200101000000Z", "-enddate", "200102000000Z")
+            try {
+                run("req", "-x509", "-newkey", "rsa:2048", "-nodes", "-keyout", "ca.key", "-out", "ca.pem", "-days", "2", "-subj", "/CN=CarScope JVM fixture CA")
+                run("req", "-newkey", "rsa:2048", "-nodes", "-keyout", "leaf.key", "-out", "leaf.csr", "-subj", "/CN=localhost")
+                for (name in listOf("valid", "wrong", "expired")) {
+                    File(dir, "extensions.cnf").writeText("subjectAltName=" + (if (name == "wrong") "DNS:wrong.example" else "DNS:localhost,IP:127.0.0.1") + "\nbasicConstraints=critical,CA:FALSE\nkeyUsage=critical,digitalSignature,keyEncipherment\nextendedKeyUsage=serverAuth\n")
+                    if (name != "expired") run("x509", "-req", "-in", "leaf.csr", "-CA", "ca.pem", "-CAkey", "ca.key", "-CAcreateserial", "-out", "$name.pem", "-days", "1", "-extfile", "extensions.cnf")
+                    else {
+                        File(dir, "index.txt").writeText(""); File(dir, "serial").writeText("1000\n")
+                        File(dir, "ca.cnf").writeText("[ca]\ndefault_ca=local\n[local]\ndatabase=index.txt\nserial=serial\nnew_certs_dir=.\ncertificate=ca.pem\nprivate_key=ca.key\ndefault_md=sha256\npolicy=subject_policy\nx509_extensions=leaf\n[subject_policy]\ncommonName=supplied\n[leaf]\n" + File(dir, "extensions.cnf").readText())
+                        run("ca", "-batch", "-notext", "-config", "ca.cnf", "-in", "leaf.csr", "-out", "expired.pem", "-startdate", "200101000000Z", "-enddate", "200102000000Z")
+                    }
+                    run("pkcs12", "-export", "-in", "$name.pem", "-inkey", "leaf.key", "-out", "$name.p12", "-passout", "pass:fixture-only")
                 }
-                run("pkcs12", "-export", "-in", "$name.pem", "-inkey", "leaf.key", "-out", "$name.p12", "-passout", "pass:fixture-only")
-            }
+            } catch (error: Throwable) { cleanup(); throw error }
+        }
+        fun cleanup() {
+            val target = dir.canonicalFile.toPath()
+            check(target.parent == File(System.getProperty("java.io.tmpdir")).canonicalFile.toPath() && target.fileName.toString().startsWith("carscope-ar02b2b-tls-") && !Files.isSymbolicLink(dir.toPath())) { "UNSAFE_FIXTURE_CLEANUP" }
+            if (Files.exists(target)) Files.walk(target).use { paths -> paths.sorted(Comparator.reverseOrder()).forEach { Files.delete(it) } }
         }
         fun server(name: String): SSLContext {
             val keys = KeyStore.getInstance("PKCS12"); File(dir, "$name.p12").inputStream().use { keys.load(it, "fixture-only".toCharArray()) }
@@ -65,7 +73,11 @@ class HttpsSyncReceiverTransportTest {
             return SSLContext.getInstance("TLS").apply { init(null, tm.trustManagers, SecureRandom()) }
         }
     }
-    companion object { private val pki by lazy { Pki() } }
+    companion object {
+        private val pkiHolder = lazy { Pki() }
+        private val pki by pkiHolder
+        @JvmStatic @AfterClass fun cleanupPki() { if (pkiHolder.isInitialized()) pki.cleanup() }
+    }
     private class Fixture(name: String = "valid") : AutoCloseable {
         val hits = AtomicInteger(); val arrived = CountDownLatch(1)
         var status = 200; var body = HttpSamples.view(); var contentType = "application/json"

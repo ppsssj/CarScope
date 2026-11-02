@@ -12,6 +12,7 @@ test('host readiness rejects credentials, cleartext, query, fragment, paths and 
 
 test('host readiness verifies actual TLS plus both API paths and v2 surface; never promotes device/auth gates', async (t) => {
   const pki = localPki(); let mode = 'valid'; const requests = [];
+  t.after(() => pki.cleanup());
   const server = https.createServer({ cert: readFileSync(pki.tlsCert), key: readFileSync(pki.tlsKey) }, (req, res) => {
     requests.push({ method: req.method, auth: req.headers.authorization });
     if (mode === 'redirect') { res.writeHead(302, { Location: '/target' }); res.end(); return; }

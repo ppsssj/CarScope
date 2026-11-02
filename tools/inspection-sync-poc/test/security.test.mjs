@@ -1,10 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, readFileSync, writeFileSync, existsSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import path from 'node:path';
 import https from 'node:https';
-import { execFileSync } from 'node:child_process';
+import { localPki } from './https-helpers.mjs';
 import { ProductionSessionCreationAuthorizer, FakeSessionCreationAuthorizer, LocalTestSessionCreationAuthorizer } from '../src/creation-authorizer.mjs';
 import { startSyncServer } from '../src/server.mjs';
 import { RateLimiter } from '../src/rate-limit.mjs';
@@ -46,21 +43,8 @@ test('memory limiter bounds keys and rolls expired windows without relaxing budg
   now = 1000; assert.equal(limiter.check('b', 'create').ok, true);
 });
 
-function certificates() {
-  const dir = mkdtempSync(path.join(tmpdir(), 'carscope-tls-'));
-  const openssl = process.env.SYNC_OPENSSL || (process.platform === 'win32' && existsSync('C:/Program Files/Git/usr/bin/openssl.exe') ? 'C:/Program Files/Git/usr/bin/openssl.exe' : 'openssl');
-  const run = (...args) => execFileSync(openssl, args, { cwd: dir, stdio: 'pipe' });
-  writeFileSync(path.join(dir, 'extensions.cnf'), 'subjectAltName=DNS:localhost,IP:127.0.0.1\nbasicConstraints=critical,CA:FALSE\nkeyUsage=critical,digitalSignature,keyEncipherment\nextendedKeyUsage=serverAuth\n');
-  run('req', '-x509', '-newkey', 'rsa:2048', '-nodes', '-keyout', 'ca.key', '-out', 'ca.pem', '-days', '2', '-subj', '/CN=CarScope Local Test CA');
-  run('req', '-newkey', 'rsa:2048', '-nodes', '-keyout', 'server.key', '-out', 'server.csr', '-subj', '/CN=localhost');
-  run('x509', '-req', '-in', 'server.csr', '-CA', 'ca.pem', '-CAkey', 'ca.key', '-CAcreateserial', '-out', 'server.pem', '-days', '1', '-extfile', 'extensions.cnf');
-  // Newer OpenSSL rejects a negative -days. Use a valid historical interval, not end < start.
-  writeFileSync(path.join(dir, 'index.txt'), '');
-  writeFileSync(path.join(dir, 'serial'), '1000\n');
-  writeFileSync(path.join(dir, 'ca.cnf'), '[ca]\ndefault_ca=local\n[local]\ndatabase=index.txt\nserial=serial\nnew_certs_dir=.\ncertificate=ca.pem\nprivate_key=ca.key\ndefault_md=sha256\npolicy=subject_policy\nx509_extensions=server_ext\n[subject_policy]\ncommonName=supplied\n[server_ext]\n' + readFileSync(path.join(dir, 'extensions.cnf'), 'utf8'));
-  run('ca', '-batch', '-notext', '-config', 'ca.cnf', '-in', 'server.csr', '-out', 'expired.pem', '-startdate', '200101000000Z', '-enddate', '200102000000Z');
-  return { dir, ca: readFileSync(path.join(dir, 'ca.pem')), tlsKey: path.join(dir, 'server.key'), tlsCert: path.join(dir, 'server.pem'), expired: path.join(dir, 'expired.pem') };
-}
+const certificates = () => localPki({ expired: true });
+
 function request(url, { ca, servername, method = 'GET', token, origin, body } = {}) {
   return new Promise((resolve, reject) => {
     const req = https.request(url, { ca, servername, method, headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}), ...(origin ? { Origin: origin } : {}), ...(body ? { 'Content-Type': 'application/json' } : {}) } }, (res) => {
@@ -73,6 +57,7 @@ function request(url, { ca, servername, method = 'GET', token, origin, body } = 
 
 test('HTTPS: trusted CA and SAN succeed; untrusted CA, hostname mismatch and expired certificate fail closed', async (t) => {
   const cert = certificates(), lines = []; let now = 100;
+  t.after(() => cert.cleanup());
   const token = 'T'.repeat(43), authorizer = new FakeSessionCreationAuthorizer({ token, expiresAt: 200, now: () => now });
   const s = await startSyncServer({ port: 0, tlsCert: cert.tlsCert, tlsKey: cert.tlsKey, authorizer, debugPage: true, allowedOrigin: 'https://phone.example', log: (x) => lines.push(x) });
   t.after(() => s.stop());
