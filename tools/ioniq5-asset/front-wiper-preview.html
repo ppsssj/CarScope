@@ -1,0 +1,30 @@
+<!doctype html><html lang="ko"><meta charset="utf-8"><title>P4-A4 front wiper geometry review</title>
+<style>body{margin:0;font:16px system-ui;color:#223541;background:#e8edf0;display:grid;grid-template-columns:350px 1fr;height:100vh}aside{padding:24px;overflow:auto;background:white}h1{font-size:24px}button{display:block;width:100%;min-height:44px;margin:8px 0;font:inherit}p{line-height:1.6}pre{white-space:pre-wrap;font-size:12px}#view{min-width:0}canvas{display:block;width:100%;height:100%}</style>
+<aside><h1>전면 와이퍼 형상 검토</h1><p>ESTIMATED_GEOMETRY<br>정적 설명용 자세 · 실제 장착·길이 미검증</p>
+<button data-view="vehicle">차량 전체 · 원래 시점</button><button data-view="focus">전면 유리·보닛 경계</button><button data-view="left">차량 좌측 와이퍼</button><button data-view="right">차량 우측 와이퍼</button><button data-view="lights">원본 전면 조명 영역</button>
+<button id="source-only">원본만 / 와이퍼 함께 표시</button><button id="clear">선택 해제</button>
+<p id="status">모델 불러오는 중</p><p>SDK 상태·블레이드 마모 판정이 아닙니다. 실제 회전축·와이핑·서비스 자세를 구현하지 않습니다.</p><pre id="info"></pre></aside><div id="view"></div>
+<script type="importmap">{"imports":{"three":"/three","/utils/BufferGeometryUtils.js":"/utils"}}</script><script type="module">
+import * as T from 'three';import{GLTFLoader}from'/loader';
+const host=document.querySelector('#view'),renderer=new T.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});renderer.setPixelRatio(1);host.append(renderer.domElement);
+const scene=new T.Scene();scene.background=new T.Color('#e8edf0');scene.add(new T.HemisphereLight(0xffffff,0x77818b,3));const light=new T.DirectionalLight(0xffffff,3);light.position.set(3,5,-3);scene.add(light);
+const camera=new T.PerspectiveCamera(38,1,.01,40),loader=new GLTFLoader();
+const [source,wipers,report]=await Promise.all([loader.loadAsync('/source.glb'),loader.loadAsync('/pack.glb'),fetch('/report.json').then(r=>r.json())]);scene.add(source.scene,wipers.scene);scene.updateMatrixWorld(true);
+const parts=new Map(),rows=[];wipers.scene.traverse(n=>{if(n.isMesh){n.material=n.material.clone();parts.set(n.userData.partId,n);}});
+for(const p of report.model.parts){const mesh=parts.get(p.id);if(!mesh)throw Error('missing metadata '+p.id);mesh.geometry.computeBoundingBox();const b=new T.Box3().setFromObject(mesh),lo=[b.min.x*100,-b.max.z*100,b.min.y*100],hi=[b.max.x*100,-b.min.z*100,b.max.y*100],delta=Math.max(...lo.map((x,k)=>Math.abs(x-p.bounds.min[k])),...hi.map((x,k)=>Math.abs(x-p.bounds.max[k])));if(delta>.0001)throw Error('buffer bounds '+p.id);rows.push({id:p.id,deltaCm:delta});}
+const originals=[];source.scene.traverse(n=>originals.push({object:n,matrix:n.matrix.toArray()}));const cm=p=>new T.Vector3(p[0]/100,p[2]/100,-p[1]/100);
+// Centroid of an actual blade top triangle, not an arbitrary point in its empty compound bounds.
+function anchor(id){const mesh=parts.get(id),p=mesh.geometry.attributes.position,v=new T.Vector3(),steps=report.model.layout.find(p=>p.id===id).blade.steps,index=(2*steps+2*Math.floor(steps/2))*3;for(let i=0;i<3;i++)v.add(new T.Vector3().fromBufferAttribute(p,index+i));return mesh.localToWorld(v.multiplyScalar(1/3));}
+let selected=null,view='vehicle';
+function draw(){renderer.setSize(host.clientWidth,host.clientHeight,false);camera.aspect=host.clientWidth/host.clientHeight;camera.updateProjectionMatrix();scene.updateMatrixWorld(true);camera.updateMatrixWorld(true);renderer.render(scene,camera);}
+function setView(name){view=name;if(name==='vehicle'){camera.position.set(5,3.5,-5);camera.lookAt(new T.Vector3(0,.8,0));}
+  else if(name==='lights'){camera.position.set(4.2,1.7,-2.7);camera.lookAt(new T.Vector3(2.05,.8,0));}
+  else if(name==='focus'){const p=cm(report.model.bounds.center);camera.position.copy(p).add(new T.Vector3(.95,.9,-1.4));camera.lookAt(p);}
+  else{const p=anchor('wiper.front.'+name);camera.position.copy(p).add(new T.Vector3(.75,.65,name==='left'?-.7:.7));camera.lookAt(p);}draw();}
+function select(id){selected=id;for(const [key,m]of parts)m.material.emissive.set(key===id?'#724006':'#000000');document.querySelector('#info').textContent=id?JSON.stringify(parts.get(id).userData,null,2):'차량 좌측 +Y / 우측 -Y · SDK 데이터 없음';draw();}
+const ray=new T.Raycaster();function pick(x,y){ray.setFromCamera(new T.Vector2(x,y),camera);const hit=ray.intersectObjects([source.scene,...(wipers.scene.visible?[wipers.scene]:[])],true)[0],id=hit?.object.userData.partId;return parts.has(id)?id:null;}
+renderer.domElement.onclick=e=>{const r=renderer.domElement.getBoundingClientRect();select(pick((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1));};
+document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>setView(b.dataset.view));document.querySelector('#clear').onclick=()=>select(null);document.querySelector('#source-only').onclick=()=>{wipers.scene.visible=!wipers.scene.visible;select(null);};
+window.addEventListener('resize',draw);setView('vehicle');select(null);const vehiclePose={position:camera.position.toArray(),quaternion:camera.quaternion.toArray()};
+window.__wiper={ready:true,renderer,scene,camera,parts,source,wipers,report,rows,originals,vehiclePose,setView,pick,get selected(){return selected;}};document.querySelector('#status').textContent=`2 parts · 208 triangles · 충돌 ${report.failures}건`;
+</script></html>
