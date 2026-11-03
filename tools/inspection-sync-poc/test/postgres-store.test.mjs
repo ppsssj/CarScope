@@ -1,6 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
+import http from 'node:http';
+import { startRenderStateful } from '../src/render-stateful.mjs';
 import { PostgreSQLSessionStore } from '../src/postgres-store.mjs';
 import { SessionService, STATES, hashToken, newToken } from '../src/sessions.mjs';
 import { startInspection, completeInspection } from '../../mobile-ar-poc/public/inspection-result.mjs';
@@ -79,6 +81,32 @@ test('PostgreSQL SessionStore: real database, cross-connection contention, recov
       assert.equal(await storeB.delete(s.id, () => true), true);
       assert.equal(await storeA.idByTokenHash('invite', s.inviteHash), null);
       assert.equal(await storeA.get(s.id), null);
+    });
+    await t.test('Render stateful HTTP ingress has PostgreSQL health and hard-denied creation', async () => {
+      await reset();
+      const poolC = new Pool({ connectionString: uri, max: 3, connectionTimeoutMillis: 5000 });
+      const origin = 'https://carscope-test.onrender.com';
+      const app = await startRenderStateful({ pool: poolC, publicOrigin: origin });
+      try {
+        const port = app.server.address().port;
+        const get = (path, method = 'GET', headers = {}) => new Promise((resolve, reject) => {
+          const req = http.request({ hostname: '127.0.0.1', port, method, path, headers: {
+            Host: new URL(origin).host, 'X-Forwarded-Proto': 'https', ...headers,
+          } }, res => {
+            const chunks = [];
+            res.on('data', v => chunks.push(v));
+            res.on('end', () => resolve({ status: res.statusCode, body: Buffer.concat(chunks).toString('utf8') }));
+          });
+          req.on('error', reject); req.end();
+        });
+        const h = await get('/healthz');
+        assert.equal(h.status, 200);
+        assert.equal(JSON.parse(h.body).sessionCreation, 'DENIED');
+        assert.equal((await get('/')).status, 200);
+        assert.equal((await get('/v1/sessions/00000000-0000-4000-8000-000000000000')).status, 401);
+        assert.equal((await get('/', 'GET', { Host: 'evil.test' })).status, 403);
+        assert.equal((await get('/', 'GET', { 'X-Forwarded-Proto': 'http' })).status, 403);
+      } finally { await app.stop(); }
     });
     await t.test('rate windows enforce a shared concurrent limit', async () => {
       await reset();
