@@ -30,6 +30,12 @@ export async function startRenderStateful({ pool, publicOrigin, host = '127.0.0.
     const api = createSyncHandler({
       service, limiter, tls: true, log: () => {},
       authorizer: simStore || new ProductionSessionCreationAuthorizer(),
+      // Render-managed TLS is terminated at the ingress; this callback is opt-in
+      // only for the explicitly enabled AVD simulation mode. The outer request
+      // handler rejects unverified Host / Origin / X-Forwarded-Proto first.
+      trustedEdgeSecure: simStore ? req => req.headers.host === new URL(origin).host &&
+        req.headers['x-forwarded-proto'] === 'https' &&
+        (!req.headers.origin || req.headers.origin === origin) : null,
     });
     server = http.createServer(async (req, res) => {
       const headers = { ...MOBILE_HEADERS, 'Strict-Transport-Security': 'max-age=31536000' };
