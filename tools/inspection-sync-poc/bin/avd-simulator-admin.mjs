@@ -1,19 +1,40 @@
 #!/usr/bin/env node
 // LOCAL OPERATOR ONLY. No public admin endpoint, test credential or vehicle ownership assertion.
 import { fileURLToPath } from 'node:url';
-import { mkdir, writeFile, realpath, unlink } from 'node:fs/promises';
-import { resolve, dirname, relative, isAbsolute, sep, join } from 'node:path';
+import { writeFile, realpath } from 'node:fs/promises';
+import { resolve, dirname, relative, isAbsolute, sep } from 'node:path';
 import { AvdSimulatorCredentialStore, AVD_MAX_ENROLLMENT_MS } from '../src/avd-simulator-credentials.mjs';
 
-async function run(argv=process.argv.slice(2)) {
-  const [cmd,...args] = argv;
-  const opts = {};
-  for (let i=0; i<args.length; i+=2) {
-    if (!/^--(?:label|out|hours|id)$/.test(args[i]) || args[i] in opts || !args[i+1]) throw new Error('INVALID_ARGUMENTS');
-    opts[args[i]] = args[i+1];
+/** Pure, testable operator CLI parser; all keys are normalized before action validation.
+ *  No command-line secrets: --label, --out, --hours and --id only.
+ */
+export function parseOperatorArguments(argv) {
+  if (!Array.isArray(argv) || !['issue', 'revoke', 'list'].includes(argv[0]))
+    throw new Error('INVALID_ADMIN_COMMAND');
+  const [cmd, ...args] = argv;
+  const allowed = cmd === 'issue' ? new Set(['label', 'out', 'hours'])
+    : cmd === 'revoke' ? new Set(['id']) : new Set();
+  if (args.length % 2 !== 0) throw new Error('INVALID_ARGUMENTS');
+  const opts = Object.create(null);
+  for (let i = 0; i < args.length; i += 2) {
+    const flag = args[i];
+    if (typeof flag !== 'string' || !/^--(?:label|out|hours|id)$/.test(flag))
+      throw new Error('INVALID_ARGUMENTS');
+    const key = flag.slice(2);
+    if (!allowed.has(key) || Object.hasOwn(opts, key) ||
+        typeof args[i + 1] !== 'string' || args[i + 1].length === 0 ||
+        args[i + 1].startsWith('--')) throw new Error('INVALID_ARGUMENTS');
+    opts[key] = args[i + 1];
   }
-  if (!['issue','revoke','list'].includes(cmd) ||
-      !process.env.PG_ADMIN_DATABASE_URL || process.env.NODE_TLS_REJECT_UNAUTHORIZED === '0') throw new Error('INVALID_ADMIN_CONFIGURATION');
+  if (cmd === 'issue' && (!opts.label || !opts.out)) throw new Error('ISSUE_ARGUMENTS');
+  if (cmd === 'revoke' && !opts.id) throw new Error('REVOKE_ARGUMENTS');
+  return {cmd, opts};
+}
+
+async function run(argv=process.argv.slice(2)) {
+  const {cmd, opts} = parseOperatorArguments(argv);
+  if (!process.env.PG_ADMIN_DATABASE_URL || process.env.NODE_TLS_REJECT_UNAUTHORIZED === '0')
+    throw new Error('INVALID_ADMIN_CONFIGURATION');
   const url = new URL(process.env.PG_ADMIN_DATABASE_URL);
   if (!['postgresql:','postgres:'].includes(url.protocol) || !url.hostname || !url.username || !url.password ||
       !url.pathname || url.pathname === '/' || url.hash) throw new Error('INVALID_POSTGRES_URL');
@@ -23,7 +44,7 @@ async function run(argv=process.argv.slice(2)) {
     const auth = new AvdSimulatorCredentialStore({ pool });
     await auth.initialize();
     if (cmd === 'issue') {
-      if (!opts.label || !opts.out || Object.keys(opts).some(k => !['label','out','hours'].includes(k))) throw new Error('ISSUE_ARGUMENTS');
+      if (!opts.label || !opts.out) throw new Error('ISSUE_ARGUMENTS');
       const hours = opts.hours == null ? 2 : Number(opts.hours);
       if (!Number.isSafeInteger(hours) || hours < 1 || hours > AVD_MAX_ENROLLMENT_MS / 3600000) throw new Error('ENROLLMENT_TTL');
       const target = resolve(opts.out);
@@ -43,12 +64,12 @@ async function run(argv=process.argv.slice(2)) {
       return;
     }
     if (cmd === 'revoke') {
-      if (!opts.id || Object.keys(opts).length !== 1) throw new Error('REVOKE_ARGUMENTS');
+      if (!opts.id) throw new Error('REVOKE_ARGUMENTS');
       const revoked = await auth.revoke({registrationId:opts.id});
       process.stdout.write(JSON.stringify({status:revoked?'REVOKED':'NOT_FOUND',registrationId:opts.id})+'\n');
       return;
     }
-    if (Object.keys(opts).length) throw new Error('LIST_ARGUMENTS');
+    // list accepts no options, as enforced by parseOperatorArguments.
     process.stdout.write(JSON.stringify({registrations:await auth.metadata()})+'\n');
   } finally { await pool.end(); }
 }
