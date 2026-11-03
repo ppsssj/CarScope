@@ -61,3 +61,11 @@ test('summary/detail use one projection and distinguish record time/source from 
   const legend=stateLegendHtml(s);for(const label of ['미점검','이상 징후 보고','확인 불가','발견 사항 없음'])assert.ok(legend.includes(label));
   assert.match(legend,/모바일·Native 결과는 이 화면에 수신되지/);assert.equal(stateRecordHtml(s,'washer-fluid-cap'),'');
 });
+
+test('compact summary keeps scope available after results and one semantic original timestamp in detail',()=>{
+  const s=complete(['FOUND','UNABLE','NOT_FOUND']),summary=summaryHtml(s),record=stateRecordHtml(s,id);
+  assert.ok(summary.indexOf('class="record-scope"')>summary.indexOf('class="tire-map"'));
+  assert.match(summary,/<details class="record-scope"><summary>/);
+  assert.ok(!summary.includes('<details class="record-scope" open'));
+  assert.match(record,/<time datetime="1970-01-01T00:02:03.456Z">1970-01-01T00:02:03.456Z<\/time>/);
+});
