@@ -24,6 +24,7 @@ open class SyncReceiverActivity : Activity() {
     private var owner: SyncReceiverController? = null
     private var transport: ConnectedSyncReceiverTransport? = null
     private var provisioning: RefreshingProvisionedCredentialSource? = null
+    private var simulatorProvisioning: RefreshingAvdSimulatorCredentialSource? = null
     private var check: SyncCancellation? = null
     private var generation = 0L
     private var stopped = true
@@ -32,6 +33,7 @@ open class SyncReceiverActivity : Activity() {
     private lateinit var task: Spinner
     private lateinit var status: TextView
     private lateinit var connection: TextView
+    private lateinit var authentication: TextView
     private lateinit var expiry: TextView
     private lateinit var summary: TextView
     private lateinit var image: ImageView
@@ -50,7 +52,15 @@ open class SyncReceiverActivity : Activity() {
     } catch (_: Exception) { null }
     // Only a reviewed code integration may supply this source. No Intent/file/global setter opts into authentication.
     internal open fun newProvisioningSource(endpoint: SyncEndpoint, dispatcher: SyncCallbackDispatcher): RefreshingProvisionedCredentialSource? = null
-    internal open fun credentialProvider(): SessionCreationCredentialProvider = provisioning?.provider() ?: DenyByDefaultCredentialProvider()
+    // Only a private file populated by a trusted AVD operator opts into the fixed simulation origin.
+    // Test/production OEM provisioners are separate and never downgraded to simulator ownership.
+    internal open fun newAvdSimulatorSource(endpoint: SyncEndpoint, dispatcher: SyncCallbackDispatcher): RefreshingAvdSimulatorCredentialSource? {
+        val enrollment = AvdSimulatorPolicy.readEnrollment(filesDir, endpoint, now()) ?: return null
+        return RefreshingAvdSimulatorCredentialSource(endpoint,
+            HttpsAvdSimulatorGrantExchange(endpoint, enrollment, dispatcher, ::now), ::now)
+    }
+    internal open fun credentialProvider(): SessionCreationCredentialProvider =
+        provisioning?.provider() ?: simulatorProvisioning?.provider() ?: DenyByDefaultCredentialProvider()
     internal open fun now(): Long = System.currentTimeMillis()
     internal open fun newTransport(endpoint: SyncEndpoint, dispatcher: SyncCallbackDispatcher): ConnectedSyncReceiverTransport =
         HttpsSyncReceiverTransport(endpoint, credentialProvider(), dispatcher)
@@ -64,7 +74,7 @@ open class SyncReceiverActivity : Activity() {
         text("CarScope 모바일 셀프 점검", "title").textSize = 24f
         text("사용자가 직접 확인한 보고입니다. 실제 차량 센서 진단이나 차량 상태 보증이 아닙니다.", "notice")
         connection = text("연결 설정 미완료", "connection")
-        text("실제 차량 인증 미구현 · 생성 권한이 없으면 세션을 만들 수 없습니다.", "authentication")
+        authentication = text("실제 차량 인증 미구현 · 생성 권한이 없으면 세션을 만들 수 없습니다.", "authentication")
         probe = button("서비스 연결 확인", "probe")
         task = Spinner(this).apply {
             tag = "task"; isSaveEnabled = false; contentDescription = "모바일 점검 요청 부품"
@@ -91,6 +101,10 @@ open class SyncReceiverActivity : Activity() {
         }
         val dispatcher = SyncCallbackDispatcher { action -> handler.post { if (!stopped && generation == current) action() } }
         provisioning = newProvisioningSource(endpoint, dispatcher)
+        simulatorProvisioning = if (provisioning == null) newAvdSimulatorSource(endpoint, dispatcher) else null
+        if (simulatorProvisioning != null) {
+            authentication.text = "운영자 승인 AVD 시뮬레이션 전용 · 실제 차량 소유권/차량 인증이 아닙니다."
+        } else authentication.text = "실제 차량 인증 미구현 · 생성 권한이 없으면 세션을 만들 수 없습니다."
         val connectionTransport = newTransport(endpoint, dispatcher); transport = connectionTransport
         val scheduler = SyncReceiverScheduler { delay, action ->
             val runnable = Runnable { if (!stopped && generation == current) action() }; handler.postDelayed(runnable, delay)
@@ -98,10 +112,13 @@ open class SyncReceiverActivity : Activity() {
         }
         val controller = SyncReceiverController(SyncReceiverClient(connectionTransport, ::now), scheduler) { render(it) }
         owner = controller
-        connection.text = "HTTPS 주소 설정됨 · 연결/TLS 미확인 · 생성 인증 기본 거부"
+        connection.text = if (simulatorProvisioning != null)
+            "HTTPS 주소 설정됨 · AVD 등록 검증 대기 · 차량 인증과는 별개입니다."
+            else "HTTPS 주소 설정됨 · 연결/TLS 미확인 · 생성 인증 기본 거부"
         probe.isEnabled = true
         probe.setOnClickListener {
             provisioning?.refresh { render(controller.state) }
+            simulatorProvisioning?.refresh { render(controller.state) }
             probe.isEnabled = false; connection.text = "HTTPS 서비스 확인 중…"
             check = connectionTransport.checkConnection { reply ->
                 probe.isEnabled = true
@@ -113,6 +130,7 @@ open class SyncReceiverActivity : Activity() {
         accept.setOnClickListener { controller.accept() }; cancel.setOnClickListener { controller.cancel() }; retry.setOnClickListener { controller.retryPolling() }
         render(controller.state)
         provisioning?.refresh { render(controller.state) }
+        simulatorProvisioning?.refresh { render(controller.state) }
         val tick = object : Runnable {
             override fun run() {
                 if (stopped || generation != current) return
@@ -177,9 +195,9 @@ open class SyncReceiverActivity : Activity() {
     }
     override fun onStop() {
         stopped = true; generation++; handler.removeCallbacksAndMessages(null); check?.cancel(); check = null
-        owner?.close(); owner = null; transport?.close(); transport = null; provisioning?.close(); provisioning = null; clearQr()
+        owner?.close(); owner = null; transport?.close(); transport = null; simulatorProvisioning?.close(); simulatorProvisioning = null; provisioning?.close(); provisioning = null; clearQr()
         listOf(create, accept, cancel, retry, probe).forEach { it.isEnabled = false }
         super.onStop()
     }
-    override fun onDestroy() { handler.removeCallbacksAndMessages(null); transport?.close(); provisioning?.close(); clearQr(); super.onDestroy() }
+    override fun onDestroy() { handler.removeCallbacksAndMessages(null); transport?.close(); simulatorProvisioning?.close(); provisioning?.close(); clearQr(); super.onDestroy() }
 }
