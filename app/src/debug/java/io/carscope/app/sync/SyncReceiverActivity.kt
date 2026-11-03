@@ -119,6 +119,9 @@ open class SyncReceiverActivity : Activity() {
         probe.setOnClickListener {
             provisioning?.refresh { render(controller.state) }
             simulatorProvisioning?.refresh { render(controller.state) }
+            // Refresh invalidates the previous grant immediately: reflect this in the UI
+            // before asynchronous HTTPS can finish, never keep an enabled Create button.
+            render(controller.state)
             probe.isEnabled = false; connection.text = "HTTPS 서비스 확인 중…"
             check = connectionTransport.checkConnection { reply ->
                 probe.isEnabled = true
