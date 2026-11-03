@@ -131,6 +131,12 @@ open class SyncReceiverActivity : Activity() {
         } + if (state.failure != null) "\n요청 실패: ${failureMessage(state.failure)} · 취소/수락 성공이 아닙니다." else ""
         summary.text = state.result?.let { result ->
             val detail = when (result) {
+                is CompletedChargeInspection -> {
+                    fun answer(value: ChargeAnswer) = when (value) {
+                        ChargeAnswer.FOUND -> "발견 보고"; ChargeAnswer.NOT_FOUND -> "보이는 범위에서 발견하지 못함"; ChargeAnswer.UNABLE -> "확인 불가"
+                    }
+                    "덮개 손상: ${answer(result.responses.flapDamage)}\n이물질·오염: ${answer(result.responses.debris)}\n눈에 보이는 변형·변색: ${answer(result.responses.visibleDamage)}\n종합: ${result.statusName}\n충전 가능·고전압 시스템 안전 판정이 아닙니다."
+                }
                 is CompletedInspection -> when (result.status) {
                     ReportedStatus.OK -> "정상으로 보고"; ReportedStatus.NEEDS_REFILL -> "보충 필요"; ReportedStatus.UNSURE -> "확인 불가"
                 }

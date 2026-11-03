@@ -91,7 +91,10 @@ internal object SyncHttpDecoder {
         SyncReceiverView(id(x["sessionId"]), state, number(x["expiresAt"]), result, hash, taskId)
     }
     private fun result(x: Map<String, Any?>): SyncInspection {
-        if (task(x["taskId"]) != "washer-fluid") return tireResult(x)
+        when (task(x["taskId"])) {
+            "ev-charge.port" -> return chargeResult(x)
+            in SyncTasks.tires -> return tireResult(x)
+        }
         exact(x, "schemaVersion", "inspectionId", "taskId", "method", "source", "state", "startedAt", "aids", "status", "confirmation", "completedAt", "sync")
         if (number(x["schemaVersion"]) != 1L) invalid()
         for ((key, expected) in mapOf("taskId" to "washer-fluid", "method" to "SELF", "source" to "MOBILE", "state" to "COMPLETED", "confirmation" to "USER_REPORTED", "sync" to "NOT_SENT")) constant(x[key], expected)
@@ -107,6 +110,16 @@ internal object SyncHttpDecoder {
         return CompletedTireInspection(id(x["inspectionId"]), task(x["taskId"]), time(x["startedAt"]), time(x["completedAt"]),
             TireResponse.valueOf(string(responses["damage"])), TireResponse.valueOf(string(responses["debris"])), TireResponse.valueOf(string(responses["wear"])),
             TireReportedStatus.valueOf(string(x["status"])), flag(aids["cameraUsed"]), flag(aids["locationMarked"])).also { if (!it.valid()) invalid() }
+    }
+    private fun chargeResult(x: Map<String, Any?>): CompletedChargeInspection {
+        exact(x, "schemaVersion", "inspectionId", "taskId", "method", "source", "state", "startedAt", "aids", "responses", "status", "confirmation", "completedAt", "sync")
+        if (number(x["schemaVersion"]) != 2L) invalid()
+        for ((key, expected) in mapOf("taskId" to "ev-charge.port", "method" to "SELF", "source" to "MOBILE", "state" to "COMPLETED", "confirmation" to "USER_REPORTED", "sync" to "NOT_SENT")) constant(x[key], expected)
+        val aids = obj(x["aids"]); exact(aids, "cameraUsed", "locationMarked")
+        val responses = obj(x["responses"]); exact(responses, "flapDamage", "debris", "visibleDamage")
+        return CompletedChargeInspection(id(x["inspectionId"]), time(x["startedAt"]), time(x["completedAt"]),
+            ChargeResponses(ChargeAnswer.valueOf(string(responses["flapDamage"])), ChargeAnswer.valueOf(string(responses["debris"])), ChargeAnswer.valueOf(string(responses["visibleDamage"]))),
+            ChargeAids(flag(aids["cameraUsed"]), flag(aids["locationMarked"])), ChargeReportedStatus.valueOf(string(x["status"]))).also { if (!it.valid()) invalid() }
     }
     fun cancelled(bytes: ByteArray, type: String?, expectedId: String, expiresAt: Long, taskId: String = "washer-fluid"): SyncReceiverView = checked {
         val x = objectBody(bytes, type); exact(x, "sessionId", "sessionState")
