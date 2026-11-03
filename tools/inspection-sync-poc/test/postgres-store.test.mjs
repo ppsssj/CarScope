@@ -36,7 +36,7 @@ test('PostgreSQL SessionStore: real database, cross-connection contention, recov
       assert.equal(await storeA.count(), 3);
       assert.equal(await storeB.count(), 3);
     });
-    await t.test('claim → submit → accept and restart-safe shared state', async () => {
+    await t.test('claim → submit → accept across two active connections', async () => {
       await reset();
       const svc = new SessionService({ store: storeA });
       const created = await svc.create({ taskId: 'washer-fluid' });
@@ -53,6 +53,17 @@ test('PostgreSQL SessionStore: real database, cross-connection contention, recov
       assert.equal(v.result.inspectionId, submitted.receipt.inspectionId);
       await new SessionService({ store: storeB }).accept(created.sessionId, created.receiverToken, submitted.receipt.resultDigest);
       assert.equal((await svc.view(created.sessionId, created.receiverToken)).sessionState, STATES.ACCEPTED);
+    });
+    await t.test('data survives closing one PostgreSQL pool and opening a fresh pool', async () => {
+      await reset();
+      const s = dummy();
+      await storeA.insert(s);
+      const freshPool = new Pool({ connectionString: uri, max: 1, connectionTimeoutMillis: 5000 });
+      try {
+        const recovered = await PostgreSQLSessionStore.open({ pool: freshPool });
+        assert.deepEqual(await recovered.get(s.id), s);
+        assert.equal(await recovered.idByTokenHash('invite', s.inviteHash), s.id);
+      } finally { await freshPool.end(); }
     });
     await t.test('one-time claim is linearizable across two pools', async () => {
       await reset();
