@@ -38,7 +38,7 @@ const STATIC = new Map([
   ['/src/protocol.mjs', ['src/protocol.mjs', 'text/javascript; charset=utf-8']],
   ['/mobile-ar-poc/public/inspection-result.mjs', ['../mobile-ar-poc/public/inspection-result.mjs', 'text/javascript; charset=utf-8']],
   // Pure schema-v2 validator dependencies, also imported by protocol.mjs on the legacy debug page.
-  ...['tire-result.mjs', 'inspection-tasks.mjs', 'handoff.mjs', 'checklist-result.mjs', 'charge-result.mjs'].map((name) => [
+  ...['tire-result.mjs', 'inspection-tasks.mjs', 'handoff.mjs', 'checklist-result.mjs', 'charge-result.mjs', 'brake-result.mjs'].map((name) => [
     `/mobile-ar-poc/public/${name}`, [`../mobile-ar-poc/public/${name}`, 'text/javascript; charset=utf-8'],
   ]),
 ]);

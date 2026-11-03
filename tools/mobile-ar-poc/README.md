@@ -1,5 +1,7 @@
 # CarScope 모바일 · 워셔액·타이어·EV 충전구 카메라 보조 점검
 
+P5-A3: `/#task=brake-fluid`에서 보닛 내부 리저버 위치 안내, 수동 2D 카메라 표시와 외부 액면·누출 의심·외관 체크리스트를 제공합니다. 확인 불가는 UNABLE이며 캡 개방·직접 보충·분해를 안내하지 않습니다. [구현·검증·재실행](../../docs/p5-a3-brake-fluid-mobile-ar.md) · [schema v2/Native 후속 계약](../../docs/contracts/brake-fluid-mobile-result-v2.md). `test:browser`에 브레이크액 회귀를 포함하고 `test:browser:brake`로 단독 실행합니다.
+
 P5-A2: `ev-charge.port`(충전구와 덮개)의 **주차 + 충전 중 아님 확인**, 카메라/수동 안내, 외관 세 항목 기록, 검토·수정·명시적 확정을 추가했다. 루트의 부품 링크 또는 `/#task=ev-charge.port`로 진입한다. 참조 IONIQ 5의 우측 후방 위치는 실제 차량 공통 위치로 일반화하지 않는다. 손상 징후를 기록하면 관찰을 중단하고 확인하지 못한 항목을 직접 기록하도록 안내한다.
 
 [충전구 구현·검증·재실행](../../docs/p5-a2-charge-port-mobile-ar.md) · [schema v2와 Native 후속 계약](../../docs/contracts/charge-port-mobile-result-v2.md) · [외부 증거](../../docs/evidence/p5-a2/README.md). 기존 카메라와 2D 위치 표시를 재사용하며 객체 인식·공간 추적·고전압 진단은 아니다. Node 합성 수신/수락까지 검증하며 실제 폰·Android 충전구 수신은 후속 검증 대상이다. `npm run test:browser`는 워셔액 Edge + 타이어/충전구 Chrome을 실행하고 `test:browser:charge`는 충전구만 실행한다.
