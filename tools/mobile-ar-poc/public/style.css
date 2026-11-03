@@ -107,3 +107,6 @@ body[data-checklist][data-step="review"] #camera { display:none; }
 .inspection-answers { border:0;padding:0; }
 .inspection-answers label { display:flex;gap:12px;align-items:center;min-height:56px;padding:14px;margin:10px 0;background:var(--card);border:1px solid var(--line);border-radius:10px; }
 .inspection-answers input { width:24px;height:24px;flex:none;accent-color:var(--brand); }
+
+/* Long checklist labels must wrap inside the mobile viewport, including Sync review. */
+body[data-checklist] .summary { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); overflow-wrap: anywhere; }
