@@ -79,12 +79,12 @@ class AvdSimulatorProvisioningTest {
             "\"audience\":\"carscope-avd-simulator\"" to "\"audience\":\"wrong\"",
             "\"apiOrigin\":\"https://carscope-lluo.onrender.com\"" to "\"apiOrigin\":\"https://other.example\"",
             "\"scope\":\"inspection:session:create\"" to "\"scope\":\"admin\"",
-            "\"registrationId\":\"AvdSimulatorSamples.registration\"" to "\"registrationId\":\"00000000-0000-4000-8000-000000000003\"",
+            ("\"registrationId\":\"" + AvdSimulatorSamples.registration + "\"") to "\"registrationId\":\"00000000-0000-4000-8000-000000000003\"",
             "\"expiresAt\":122000" to "\"expiresAt\":2000",
             "\"expiresAt\":122000" to "\"expiresAt\":122001",
             "\"issuedAt\":2000" to "\"issuedAt\":\"2000\"",
-            "\"credential\":\"AvdSimulatorSamples.token\"" to "\"credential\":\"short\"",
-            "\"credentialId\":\"AvdSimulatorSamples.grantId\"" to "\"credentialId\":\"bad\"",
+            ("\"credential\":\"" + AvdSimulatorSamples.token + "\"") to "\"credential\":\"short\"",
+            ("\"credentialId\":\"" + AvdSimulatorSamples.grantId + "\"") to "\"credentialId\":\"bad\"",
             "\"mode\":" to "\"unexpected\":true,\"mode\":",
             "\"mode\":" to "\"mode\":\"OTHER\",\"mode\":"
         )) rejects(raw.replace(a,b))
