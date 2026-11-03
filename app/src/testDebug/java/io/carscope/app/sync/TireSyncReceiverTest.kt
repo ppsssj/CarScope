@@ -80,7 +80,7 @@ class TireSyncReceiverTest {
         override fun cancel(id: String, receiver: ReceiverCredential, callback: (SyncReply<SyncReceiverView>) -> Unit) = view(id, receiver, callback)
     }
     @Test fun `client binds selected task preserves duplicate result rejects replacement and requires shown digest for accept`() {
-        for (task in SyncTasks.all.drop(1)) {
+        for (task in SyncTasks.tires) {
             val t = Transport(); val client = SyncReceiverClient(t) { 1L }
             var reply: SyncReply<SyncReceiverView>? = null
             client.create("https://mobile.example/", task) { assertTrue(it is SyncReply.Success) }
@@ -99,7 +99,7 @@ class TireSyncReceiverTest {
         }
     }
     @Test fun `tire polling retry cancel expire and late callbacks preserve lifecycle boundary`() {
-        for (task in SyncTasks.all.drop(1)) {
+        for (task in SyncTasks.tires) {
             val transport = Transport(); var clock = 1L
             val client = SyncReceiverClient(transport) { clock }
             val owner = SyncReceiverController(client, SyncReceiverScheduler { _, _ -> SyncCancellation {} }) {}
@@ -125,7 +125,7 @@ class TireSyncReceiverTest {
         }
     }
     @Test fun `accepted proof with trimmed result retains exactly the previously displayed user report`() {
-        for (task in SyncTasks.all.drop(1)) {
+        for (task in SyncTasks.tires) {
             val t = Transport(); val owner = SyncReceiverController(SyncReceiverClient(t) { 1L }, SyncReceiverScheduler { _, _ -> SyncCancellation {} }) {}
             owner.create("https://mobile.example/", task)
             val result = TireSamples.result(task)

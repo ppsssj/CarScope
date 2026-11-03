@@ -2,6 +2,8 @@
 
 P5-A2 JavaScript 구현 계약. Android 구현·기기 수신 완료를 뜻하지 않는다. [Sync 전송 계약](inspection-sync-v1.md), [기존 타이어 계약](tire-mobile-result-v2.md)을 유지한다.
 
+P5-B2B 후속: [Debug Native 구현·검증](../p5-b2b-native-charge-port-sync.md)을 추가했다. 아래의 Native 미구현/BLOCKED 설명은 P5-A2 작성 시점의 기준 상태다. AVD·실제 두 기기 E2E 완료는 별도이며 wire 계약은 변경하지 않는다.
+
 ## 작업·스키마
 
 - 정확한 task ID: **`ev-charge.port`**. 충전구와 덮개의 외부 육안 관찰을 하나의 작업으로 다룬다. `ev-charge.flap`은 독립 작업으로 허용하지 않는다.

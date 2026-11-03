@@ -9,9 +9,12 @@ internal enum class SyncSessionState { CREATED, CLAIMED, RESULT_SUBMITTED, ACCEP
 internal enum class ReportedStatus { OK, NEEDS_REFILL, UNSURE }
 internal enum class TireResponse { FOUND, NOT_FOUND, UNABLE }
 internal enum class TireReportedStatus { REVIEW_NEEDED, UNABLE, NO_FINDINGS_REPORTED }
+internal enum class ChargeAnswer { FOUND, NOT_FOUND, UNABLE }
+internal enum class ChargeReportedStatus { REVIEW_NEEDED, UNABLE, NO_FINDINGS_REPORTED }
 internal object SyncTasks {
-    val all = listOf("washer-fluid", "tire.front-left", "tire.front-right", "tire.rear-left", "tire.rear-right")
-    val labels = listOf("워셔액", "앞 왼쪽 타이어", "앞 오른쪽 타이어", "뒤 왼쪽 타이어", "뒤 오른쪽 타이어")
+    val tires = listOf("tire.front-left", "tire.front-right", "tire.rear-left", "tire.rear-right")
+    val all = listOf("washer-fluid") + tires + "ev-charge.port"
+    val labels = listOf("워셔액", "앞 왼쪽 타이어", "앞 오른쪽 타이어", "뒤 왼쪽 타이어", "뒤 오른쪽 타이어", "EV 충전구")
     fun label(taskId: String): String = labels[all.indexOf(taskId)]
 }
 internal enum class SyncFailure { NETWORK, TIMEOUT, UNAUTHORIZED, EXPIRED, CLOSED, CONFLICT, INVALID, RATE_LIMITED, SERVER }
@@ -88,7 +91,7 @@ internal data class CompletedTireInspection(
         else -> TireReportedStatus.NO_FINDINGS_REPORTED
     }
     override fun valid(): Boolean = try {
-        taskId in SyncTasks.all.drop(1) && status == computedStatus() &&
+        taskId in SyncTasks.tires && status == computedStatus() &&
             Regex("[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}").matches(inspectionId) &&
             listOf(startedAt, completedAt).all {
                 java.time.format.DateTimeFormatter.ofPattern("uuuu-MM-dd'T'HH:mm:ss.SSS'Z'").withZone(java.time.ZoneOffset.UTC).format(Instant.parse(it)) == it
@@ -97,6 +100,32 @@ internal data class CompletedTireInspection(
     override fun canonicalJson(): String {
         require(valid())
         return """{"aids":{"cameraUsed":$cameraUsed,"locationMarked":$locationMarked},"completedAt":"$completedAt","confirmation":"USER_REPORTED","inspectionId":"$inspectionId","method":"SELF","responses":{"damage":"$damage","debris":"$debris","wear":"$wear"},"schemaVersion":2,"source":"MOBILE","startedAt":"$startedAt","state":"COMPLETED","status":"$status","sync":"NOT_SENT","taskId":"$taskId"}"""
+    }
+}
+/** External visual observations only; independent of SDK port-open and charging availability. */
+internal data class ChargeResponses(val flapDamage: ChargeAnswer, val debris: ChargeAnswer, val visibleDamage: ChargeAnswer)
+internal data class ChargeAids(val cameraUsed: Boolean, val locationMarked: Boolean)
+internal data class CompletedChargeInspection(
+    override val inspectionId: String, override val startedAt: String, override val completedAt: String,
+    val responses: ChargeResponses, val aids: ChargeAids, val status: ChargeReportedStatus
+) : SyncInspection {
+    override val taskId: String get() = "ev-charge.port"
+    override val statusName: String get() = status.name
+    fun computedStatus(): ChargeReportedStatus = when {
+        ChargeAnswer.FOUND in listOf(responses.flapDamage, responses.debris, responses.visibleDamage) -> ChargeReportedStatus.REVIEW_NEEDED
+        ChargeAnswer.UNABLE in listOf(responses.flapDamage, responses.debris, responses.visibleDamage) -> ChargeReportedStatus.UNABLE
+        else -> ChargeReportedStatus.NO_FINDINGS_REPORTED
+    }
+    override fun valid(): Boolean = try {
+        status == computedStatus() &&
+            Regex("[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}").matches(inspectionId) &&
+            listOf(startedAt, completedAt).all {
+                java.time.format.DateTimeFormatter.ofPattern("uuuu-MM-dd'T'HH:mm:ss.SSS'Z'").withZone(java.time.ZoneOffset.UTC).format(Instant.parse(it)) == it
+            } && !Instant.parse(completedAt).isBefore(Instant.parse(startedAt))
+    } catch (_: Exception) { false }
+    override fun canonicalJson(): String {
+        require(valid())
+        return """{"aids":{"cameraUsed":${aids.cameraUsed},"locationMarked":${aids.locationMarked}},"completedAt":"$completedAt","confirmation":"USER_REPORTED","inspectionId":"$inspectionId","method":"SELF","responses":{"debris":"${responses.debris}","flapDamage":"${responses.flapDamage}","visibleDamage":"${responses.visibleDamage}"},"schemaVersion":2,"source":"MOBILE","startedAt":"$startedAt","state":"COMPLETED","status":"$status","sync":"NOT_SENT","taskId":"$taskId"}"""
     }
 }
 internal data class SyncReceiverView(

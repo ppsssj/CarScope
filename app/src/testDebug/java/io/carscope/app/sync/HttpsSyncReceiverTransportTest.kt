@@ -133,22 +133,23 @@ class HttpsSyncReceiverTransportTest {
     }
     private fun reason(r: SyncReply<*>): SyncFailure = (r as SyncReply.Failure).reason
 
-    @Test fun `real TLS four tire session bodies view accept cancel and wrong creation task rejection`() {
+    @Test fun `real TLS tire and charge session bodies view accept cancel and wrong creation task rejection`() {
         for (task in SyncTasks.all.drop(1)) Fixture().use { f -> f.transport(provider = ExplicitDebugTestCredentialProvider(f.origin)).use { transport ->
             f.status = 201; f.body = HttpSamples.creation.replace("washer-fluid", task)
             assertTrue(f.await<CreatedSyncSession> { transport.create(task, it) } is SyncReply.Success)
             assertEquals("""{"taskId":"$task"}""", f.bodies.first())
-            f.status = 200; f.body = TireSamples.wire(TireSamples.result(task))
+            f.status = 200; val record = if (task == "ev-charge.port") ChargeSamples.result() else TireSamples.result(task)
+            f.body = TireSamples.wire(record)
             assertTrue(f.await<SyncReceiverView> { transport.view(HttpSamples.ID, ReceiverCredential(HttpSamples.receiver), it) } is SyncReply.Success)
-            f.body = TireSamples.wire(TireSamples.result(task), "ACCEPTED")
-            assertTrue(f.await<SyncReceiverView> { transport.accept(HttpSamples.ID, ReceiverCredential(HttpSamples.receiver), TireSamples.result(task).digest(), it) } is SyncReply.Success)
+            f.body = TireSamples.wire(record, "ACCEPTED")
+            assertTrue(f.await<SyncReceiverView> { transport.accept(HttpSamples.ID, ReceiverCredential(HttpSamples.receiver), record.digest(), it) } is SyncReply.Success)
             f.body = HttpSamples.cancelled
             val cancelled = f.await<SyncReceiverView> { transport.cancel(HttpSamples.ID, ReceiverCredential(HttpSamples.receiver), it) } as SyncReply.Success
             assertEquals(task, cancelled.value.taskId)
             f.status = 201; f.body = HttpSamples.creation
             assertEquals(SyncFailure.INVALID, reason(f.await<CreatedSyncSession> { transport.create(task, it) }))
             val hits = f.hits.get()
-            assertEquals(SyncFailure.INVALID, reason(f.await<CreatedSyncSession> { transport.create("ev-charge.port", it) }))
+            assertEquals(SyncFailure.INVALID, reason(f.await<CreatedSyncSession> { transport.create("ev-charge.flap", it) }))
             assertEquals(hits, f.hits.get())
         } }
     }
