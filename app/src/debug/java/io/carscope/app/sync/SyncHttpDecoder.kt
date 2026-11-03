@@ -51,7 +51,7 @@ internal object SyncHttpDecoder {
     private fun exact(v: Map<String, Any?>, vararg fields: String) { if (v.keys != fields.toSet()) invalid() }
     private fun string(v: Any?): String = v as? String ?: invalid()
     private fun constant(v: Any?, expected: String) { if (v !is String || v != expected) invalid() }
-    private fun number(v: Any?): Long {
+    internal fun number(v: Any?): Long {
         val n = (v as? NumberLiteral)?.value ?: invalid()
         if (!Regex("0|[1-9][0-9]*").matches(n)) invalid()
         return n.toLongOrNull()?.takeIf { it <= 9007199254740991L } ?: invalid()

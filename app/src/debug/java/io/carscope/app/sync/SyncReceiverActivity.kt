@@ -23,6 +23,7 @@ open class SyncReceiverActivity : Activity() {
     private val handler = Handler(Looper.getMainLooper())
     private var owner: SyncReceiverController? = null
     private var transport: ConnectedSyncReceiverTransport? = null
+    private var provisioning: RefreshingProvisionedCredentialSource? = null
     private var check: SyncCancellation? = null
     private var generation = 0L
     private var stopped = true
@@ -47,7 +48,9 @@ open class SyncReceiverActivity : Activity() {
             if (x.keys != setOf("apiOrigin", "mobileRoot")) null else SyncEndpoint(x["apiOrigin"] as String, x["mobileRoot"] as String)
         }
     } catch (_: Exception) { null }
-    internal open fun credentialProvider(): SessionCreationCredentialProvider = DenyByDefaultCredentialProvider()
+    // Only a reviewed code integration may supply this source. No Intent/file/global setter opts into authentication.
+    internal open fun newProvisioningSource(endpoint: SyncEndpoint, dispatcher: SyncCallbackDispatcher): RefreshingProvisionedCredentialSource? = null
+    internal open fun credentialProvider(): SessionCreationCredentialProvider = provisioning?.provider() ?: DenyByDefaultCredentialProvider()
     internal open fun now(): Long = System.currentTimeMillis()
     internal open fun newTransport(endpoint: SyncEndpoint, dispatcher: SyncCallbackDispatcher): ConnectedSyncReceiverTransport =
         HttpsSyncReceiverTransport(endpoint, credentialProvider(), dispatcher)
@@ -87,6 +90,7 @@ open class SyncReceiverActivity : Activity() {
             listOf(probe, create, accept, cancel, retry).forEach { it.isEnabled = false }; return
         }
         val dispatcher = SyncCallbackDispatcher { action -> handler.post { if (!stopped && generation == current) action() } }
+        provisioning = newProvisioningSource(endpoint, dispatcher)
         val connectionTransport = newTransport(endpoint, dispatcher); transport = connectionTransport
         val scheduler = SyncReceiverScheduler { delay, action ->
             val runnable = Runnable { if (!stopped && generation == current) action() }; handler.postDelayed(runnable, delay)
@@ -97,6 +101,7 @@ open class SyncReceiverActivity : Activity() {
         connection.text = "HTTPS 주소 설정됨 · 연결/TLS 미확인 · 생성 인증 기본 거부"
         probe.isEnabled = true
         probe.setOnClickListener {
+            provisioning?.refresh { render(controller.state) }
             probe.isEnabled = false; connection.text = "HTTPS 서비스 확인 중…"
             check = connectionTransport.checkConnection { reply ->
                 probe.isEnabled = true
@@ -107,10 +112,12 @@ open class SyncReceiverActivity : Activity() {
         create.setOnClickListener { controller.create(endpoint.mobileRoot, SyncTasks.all[task.selectedItemPosition]) }
         accept.setOnClickListener { controller.accept() }; cancel.setOnClickListener { controller.cancel() }; retry.setOnClickListener { controller.retryPolling() }
         render(controller.state)
+        provisioning?.refresh { render(controller.state) }
         val tick = object : Runnable {
             override fun run() {
                 if (stopped || generation != current) return
                 controller.hideExpiredInvite(now())
+                render(controller.state) // Re-evaluate credential expiry; never performs provisioning I/O.
                 handler.postDelayed(this, 1000)
             }
         }; handler.post(tick)
@@ -170,9 +177,9 @@ open class SyncReceiverActivity : Activity() {
     }
     override fun onStop() {
         stopped = true; generation++; handler.removeCallbacksAndMessages(null); check?.cancel(); check = null
-        owner?.close(); owner = null; transport?.close(); transport = null; clearQr()
+        owner?.close(); owner = null; transport?.close(); transport = null; provisioning?.close(); provisioning = null; clearQr()
         listOf(create, accept, cancel, retry, probe).forEach { it.isEnabled = false }
         super.onStop()
     }
-    override fun onDestroy() { handler.removeCallbacksAndMessages(null); transport?.close(); clearQr(); super.onDestroy() }
+    override fun onDestroy() { handler.removeCallbacksAndMessages(null); transport?.close(); provisioning?.close(); clearQr(); super.onDestroy() }
 }

@@ -35,27 +35,31 @@ internal class ProvisionedSessionCreationCredentialProvider(
 ) : SessionCreationCredentialProvider {
     private val apiOrigin = endpoint.apiOrigin
     private val closed = AtomicBoolean(false)
-    init {
-        val uri = try { URI(issuer) } catch (_: Exception) { throw IllegalArgumentException("INVALID_AUTH_POLICY") }
-        require(issuer.length <= 512 && issuer.all { it.code in 33..126 } && uri.scheme == "https" && !uri.host.isNullOrBlank() &&
-            uri.userInfo == null && uri.query == null && uri.fragment == null && (uri.port == -1 || uri.port in 1..65535)) { "INVALID_AUTH_POLICY" }
-        require(audience.length in 1..256 && audience.all { it.code in 33..126 }) { "INVALID_AUTH_POLICY" }
-    }
+    init { requireCreationPolicy(issuer, audience) }
     override fun credential(endpoint: SyncEndpoint): SessionCreationCredential? = try {
         if (closed.get() || endpoint.apiOrigin != apiOrigin) null else {
-            val c = source.snapshot()
-            val at = now()
-            val identity = c?.identity
-            val id = Regex("[A-Za-z0-9:_-]{1,128}")
-            if (c == null || identity == null || !c.active || c.issuer != issuer || c.audience != audience ||
-                c.scope != setOf("inspection:session:create") || !id.matches(c.credentialId) ||
-                !listOf(identity.registrationId, identity.subject, identity.userId, identity.vehicleId, identity.deviceId).all(id::matches) ||
-                !identity.active || !identity.ownershipVerified || at < 0 || c.issuedAt < 0 || c.notBefore < c.issuedAt ||
-                c.notBefore > at || c.expiresAt <= at || c.expiresAt <= c.notBefore || c.expiresAt - c.issuedAt > 300_000 ||
-                listOf(at, c.issuedAt, c.notBefore, c.expiresAt, identity.expiresAt).any { it > 9_007_199_254_740_991L } ||
-                identity.expiresAt <= at || closed.get()) null else c.credential
+            val value = validatedProvisionedCredential(source.snapshot(), issuer, audience, now())
+            if (closed.get()) null else value
         }
     } catch (_: Exception) { null }
     override fun close() { if (closed.compareAndSet(false, true)) source.close() }
     override fun toString() = "ProvisionedSessionCreationCredentialProvider(REDACTED)"
+}
+
+internal fun requireCreationPolicy(issuer: String, audience: String) {
+    val uri = try { URI(issuer) } catch (_: Exception) { throw IllegalArgumentException("INVALID_AUTH_POLICY") }
+    require(issuer.length <= 512 && issuer.all { it.code in 33..126 } && uri.scheme == "https" && !uri.host.isNullOrBlank() &&
+        uri.userInfo == null && uri.query == null && uri.fragment == null && (uri.port == -1 || uri.port in 1..65535)) { "INVALID_AUTH_POLICY" }
+    require(audience.length in 1..256 && audience.all { it.code in 33..126 }) { "INVALID_AUTH_POLICY" }
+}
+
+internal fun validatedProvisionedCredential(c: ProvisionedCreationCredential?, issuer: String, audience: String, at: Long): SessionCreationCredential? {
+    val identity = c?.identity
+    val id = Regex("[A-Za-z0-9:_-]{1,128}")
+    return if (c == null || identity == null || !c.active || c.issuer != issuer || c.audience != audience ||
+        c.scope != setOf("inspection:session:create") || !id.matches(c.credentialId) ||
+        !listOf(identity.registrationId, identity.subject, identity.userId, identity.vehicleId, identity.deviceId).all(id::matches) ||
+        !identity.active || !identity.ownershipVerified || at < 0 || c.issuedAt < 0 || c.notBefore < c.issuedAt ||
+        c.notBefore > at || c.expiresAt <= at || c.expiresAt <= c.notBefore || c.expiresAt - c.issuedAt > 300_000 ||
+        listOf(at, c.issuedAt, c.notBefore, c.expiresAt, identity.expiresAt).any { it > 9_007_199_254_740_991L } || identity.expiresAt <= at) null else c.credential
 }
