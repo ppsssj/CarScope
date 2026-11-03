@@ -81,7 +81,7 @@ async function readJson(req) {
  * @param {boolean} [o.debugPage]         serve the debug page and its modules
  * @param {boolean} [o.tls]               add HSTS when served over TLS
  */
-export function createSyncHandler({ service, limiter = new RateLimiter(), authorizer = new ProductionSessionCreationAuthorizer(), log = () => {}, allowedOrigin = null, debugPage = false, tls = false }) {
+export function createSyncHandler({ service, limiter = new RateLimiter(), authorizer = new ProductionSessionCreationAuthorizer(), log = () => {}, allowedOrigin = null, debugPage = false, tls = false, trustedEdgeSecure = null }) {
   return async (req, res) => {
     const started = Date.now();
     const url = new URL(req.url, 'http://localhost');
@@ -127,12 +127,15 @@ export function createSyncHandler({ service, limiter = new RateLimiter(), author
         if (!tokenLimit.ok) { headers['Retry-After'] = String(tokenLimit.retryAfterS); send(429, { error: { code: ERRORS.RATE_LIMITED } }); return; }
       }
       const id = re.exec(url.pathname)[1];
+      // Never infer HTTPS from a client-supplied header here. Only a reviewed
+      // ingress adapter may explicitly certify managed edge TLS after host/proxy guards.
+      const secure = Boolean(req.socket.encrypted) || (typeof trustedEdgeSecure === 'function' && trustedEdgeSecure(req) === true);
       switch (name) {
         case 'POST /v1/sessions': {
-          if ((await authorizer.authorize({ token: bearer(req), remoteAddress: client, secure: Boolean(req.socket.encrypted) })) !== true) throw new SyncError(ERRORS.FORBIDDEN, 403);
+          if ((await authorizer.authorize({ token: bearer(req), remoteAddress: client, secure })) !== true) throw new SyncError(ERRORS.FORBIDDEN, 403);
           const body = await readJson(req);
           // The body may arrive after the credential expired/revoked. Recheck at the creation boundary.
-          if ((await authorizer.authorize({ token: bearer(req), remoteAddress: client, secure: Boolean(req.socket.encrypted) })) !== true) throw new SyncError(ERRORS.FORBIDDEN, 403);
+          if ((await authorizer.authorize({ token: bearer(req), remoteAddress: client, secure })) !== true) throw new SyncError(ERRORS.FORBIDDEN, 403);
           send(201, await service.create({ taskId: body.taskId }));
           return;
         }
