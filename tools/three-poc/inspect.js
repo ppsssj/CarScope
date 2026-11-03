@@ -15,6 +15,8 @@ import { buildInspectionComponents } from "./ioniq5-asset/inspection-components.
 import { buildEvBatteryPack, EV_BATTERY_ID } from "./ioniq5-asset/ev-battery.mjs";
 import { componentDistance, boxDistance } from "./inspection-camera.mjs";
 import { createTireInspection, updateTireInspection, inspectionProgress } from "./tire-inspection.mjs";
+import { inspectionStateMap } from './inspection-state-map.mjs';
+import { stateBadgeHtml, stateLegendHtml } from './inspection-state-view.mjs';
 import { guideHtml, summaryHtml } from "./tire-inspection-view.mjs";
 import { productSummaryHtml, sessionActions } from './inspection-product.mjs';
 import { TIRES, detachedTireInfo } from "./inspection-tires.mjs";
@@ -244,6 +246,7 @@ function enter(prev) {
     const title = $('panel').querySelector('h2');
     title.tabIndex = -1; title.focus({ preventScroll: true });
   }
+  syncInspectionMap();
   layout();
   if ([STATES.COMPONENT_SELECTION, STATES.TIRE_SELECTION, STATES.TIRE_SUMMARY].includes(state.name) && selectionView) {
     controls.minDistance = 1.3;
@@ -272,7 +275,7 @@ const crumbs = { IDLE: "", INSPECTION_OVERVIEW: "차량 점검", HOOD_OPENING: "
 const hints = { INSPECTION_OVERVIEW: "모델의 부위나 목록을 선택하세요", COMPONENT_SELECTION: "모델의 부품이나 목록을 선택하세요" };
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 const item = (x, action) => ['available', 'preview'].includes(x.status)
-  ? `<li><button type="button" class="item available ${x.status === 'preview' ? 'preview' : ''}" aria-pressed="${state.component === x.id}" data-action="${action}" data-id="${x.id}">${esc(x.label)}<span class="tag">${x.status === 'preview' ? '형상 보기' : '점검 가능'}</span></button></li>`
+  ? `<li><button type="button" class="item available ${x.status === 'preview' ? 'preview' : ''}" aria-pressed="${state.component === x.id}" data-action="${action}" data-id="${x.id}">${esc(x.label)}${M.tires.has(x.id)?stateBadgeHtml(inspectionStateMap(userInspection).find(r=>r.partId===x.id)):`<span class="tag">${x.status === 'preview' ? '형상 보기' : '점검 가능'}</span>`}</button></li>`
   : `<li><div class="item" aria-disabled="true">${esc(x.label)}<span class="tag">준비 중</span></div></li>`;
 
 const connectionLabels = { DETACHED: '미연동', ATTACHED: '앱 소유권 확보 · SDK 연결 완료를 뜻하지 않음', STOPPED: '화면 중지 · 이전 관측 무효화', SUPERSEDED: '다른 점검 화면이 세션을 소유함', UNAVAILABLE: '상태 전달 실패 · 이전 관측 무효화' };
@@ -319,7 +322,7 @@ function panelContents() {
         <div class="actions"><button type="button" class="secondary" data-action="back">타이어 목록으로</button></div>`;
     case S.TIRE_SELECTION:
       return `<div class="eyebrow">타이어 · 형상 탐색</div><h2>타이어 선택</h2><p>모델의 타이어·휠 또는 아래 목록을 선택하세요. 좌우는 차량 진행 방향 기준입니다.</p>
-        <ul class="items">${TIRES.map(t => item(t, 'tire')).join('')}</ul>
+        <ul class="items">${TIRES.map(t => item(t, 'tire')).join('')}</ul>${stateLegendHtml(userInspection)}
         <p role="status">육안 점검 완료 ${inspectionProgress(userInspection)}/4</p><p class="note">타이어를 선택해 육안 기록과 API 상태를 확인하세요. 수치 및 정상·비정상 판정은 제공하지 않습니다.</p>
         <div class="actions"><button type="button" class="primary" data-action="tire-summary">중간 결과 · 요약 보기</button><button type="button" class="secondary" data-action="back">점검 부위로</button></div>`;
     case S.TIRE_PREVIEW: {
@@ -337,7 +340,7 @@ function panelContents() {
       return '<div class="eyebrow">차량 점검</div><h2>모델의 보닛을 닫는 중</h2><p>완료되면 요청한 화면으로 이동합니다.</p>';
     case S.INSPECTION_OVERVIEW:
       return `<div class="eyebrow">차량 점검</div><h2>점검할 부위를 선택하세요</h2><p>3D 모델의 강조된 부위나 아래 목록에서 선택합니다.</p>
-        <ul class="items">${INSPECTION_AREAS.map((a) => a.id === 'ev-charge' && M.chargeInfo.status !== 'AVAILABLE' || a.id==='wipers'&&M.wiperInfo.status!=='AVAILABLE'||a.id==='lights'&&M.lights.size!==4 ? `<li><button type="button" class="item" disabled>${esc(a.label)} · 모델 위치 미검증</button></li>` : item(a, "area")).join("")}</ul>
+        <ul class="items">${INSPECTION_AREAS.map((a) => a.id === 'ev-charge' && M.chargeInfo.status !== 'AVAILABLE' || a.id==='wipers'&&M.wiperInfo.status!=='AVAILABLE'||a.id==='lights'&&M.lights.size!==4 ? `<li><button type="button" class="item" disabled>${esc(a.label)} · 모델 위치 미검증</button></li>` : item(a, "area")).join("")}</ul>${stateLegendHtml(userInspection)}
         ${M.chargeInfo.status !== 'AVAILABLE' ? '<p role="status">참조 모델에서 충전구 위치를 확인할 수 없어 이 항목을 사용할 수 없습니다.</p>' : ''}
         <p class="note">응답은 이 화면의 메모리에만 남습니다. 홈 복귀·종료·새로고침 시 지워집니다.</p>`;
     case S.HOOD_OPENING:
@@ -442,6 +445,8 @@ function renderGuide(focus) {
   if (!region) return;
   const scroll = $('panel').scrollTop;
   region.innerHTML = guideHtml(userInspection, state.component);
+  syncInspectionMap();
+  for(const button of $('panel').querySelectorAll('[data-action=tire]')){const row=inspectionMap.find(r=>r.partId===button.dataset.id);if(row)button.querySelector('.inspection-state').outerHTML=stateBadgeHtml(row);}
   if (focus !== 'confirm') region.querySelector(`[data-check="${focus}"]:checked`)?.focus({ preventScroll: true });
   else { const message = region.querySelector('[role="status"]'); message.tabIndex = -1; message.focus({ preventScroll: true }); }
   $('panel').scrollTop = scroll;
@@ -527,6 +532,14 @@ addEventListener("resize", () => {
   }, 180);
 });
 
+// The map tints existing cloned rubber materials only. Selection keeps its independent cyan emissive.
+let inspectionMap=inspectionStateMap(userInspection);
+function syncInspectionMap() {
+  inspectionMap=inspectionStateMap(userInspection);
+  for(const row of inspectionMap)for(const mesh of M.tires.get(row.partId)?.meshes??[]){
+    mesh.material.color.setHex(state.name===STATES.IDLE?mesh.userData.inspectionBaseColor:row.color);
+  }
+}
 // ---------- highlight and label ----------
 const _v = new THREE.Vector3();
 function screenPoint(obj, top = true) {
@@ -623,7 +636,10 @@ new GLTFLoader().load(params.get("model") ?? "./external/ioniq5.glb", (gltf) => 
     log('load-error', { message: String(error) });
     return;
   }
-  for (const [id, t] of M.tires) for (const mesh of t.pickMeshes) mesh.userData.inspectionTire = id;
+  for (const [id, t] of M.tires) {
+    for (const mesh of t.pickMeshes) mesh.userData.inspectionTire = id;
+    for (const mesh of t.meshes) mesh.userData.inspectionBaseColor=mesh.material.color.getHex();
+  }
   M.hood = gltf.scene.getObjectByName(H.HOOD_NODE);
   M.group = gltf.scene.getObjectByName(H.HOOD_GROUP);
   gltf.scene.updateMatrixWorld(true);
@@ -675,6 +691,7 @@ function dispose(reason) {
   disposeComponentStatus();
   disposeChargePortStatus();
   disposeVisibilityStatus();
+  userInspection=createTireInspection(crypto.randomUUID());syncInspectionMap();
   renderer.setAnimationLoop(null);
   controls.dispose();
   const before = { ...renderer.info.memory }, seen = new Set();
@@ -717,6 +734,8 @@ window.__inspect = {
   },
   batteryView: () => ({ visible: M.components.get(EV_BATTERY_ID)?.[0].visible, meta: M.components.get(EV_BATTERY_ID)?.[0].userData.meta, floorVisible: floor.visible, ringVisible: ring.visible, maxPolarAngle: controls.maxPolarAngle }),
   userInspection: () => userInspection,
+  inspectionMap: () => inspectionMap,
+  inspectionPaint: () => [...M.tires].map(([id,t])=>({id,colors:t.meshes.map(m=>m.material.color.getHex()),baseColors:t.meshes.map(m=>m.userData.inspectionBaseColor)})),
   hoodPoint: () => screenPoint(M.hoodMeshes[0], false),
   capPoint: () => screenPoint(M.cap),
   hitAt,
