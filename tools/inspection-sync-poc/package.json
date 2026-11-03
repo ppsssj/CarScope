@@ -12,7 +12,7 @@
     "receiver": "node bin/receiver.mjs",
     "readiness:host": "node bin/host-readiness.mjs",
     "test:https-e2e": "node --test test/https-e2e.test.mjs test/host-readiness.test.mjs",
-    "check": "node --check src/protocol.mjs && node --check src/sessions.mjs && node --check src/session-store.mjs && node --check src/rate-limit.mjs && node --check src/server.mjs && node --check public/sync-client.mjs && node --check public/debug.mjs && node --check bin/receiver.mjs && node --check src/sqlite-store.mjs && node --check src/creation-authorizer.mjs && node --check src/mobile-dev-server.mjs && node --check public/mobile-dev-entry.mjs && node --check public/mobile-handoff.mjs && node --check public/mobile-sync.mjs && node --check src/verified-creation-authorizer.mjs && node --check src/mobile-page.mjs && node --check src/https-mobile-service.mjs",
+    "check": "node --check src/protocol.mjs && node --check src/sessions.mjs && node --check src/session-store.mjs && node --check src/rate-limit.mjs && node --check src/server.mjs && node --check public/sync-client.mjs && node --check public/debug.mjs && node --check bin/receiver.mjs && node --check src/sqlite-store.mjs && node --check src/creation-authorizer.mjs && node --check src/mobile-dev-server.mjs && node --check public/mobile-dev-entry.mjs && node --check public/mobile-handoff.mjs && node --check public/mobile-sync.mjs && node --check src/verified-creation-authorizer.mjs && node --check src/mobile-page.mjs && node --check src/https-mobile-service.mjs && node --check src/postgres-store.mjs && node --check src/render-stateful.mjs",
     "test": "node --test test/*.test.mjs",
     "test:browser": "node test/browser.mjs",
     "test:sqlite": "node test/run-sqlite.mjs",
@@ -22,6 +22,11 @@
     "serve:mobile-dev": "node src/mobile-dev-server.mjs",
     "test:mobile-browser": "node test/mobile-browser.mjs",
     "serve:https": "node src/https-mobile-service.mjs",
-    "test:service-tls": "node --test test/auth-contract.test.mjs test/https-service.test.mjs"
+    "test:service-tls": "node --test test/auth-contract.test.mjs test/https-service.test.mjs",
+    "test:postgres": "node --test test/postgres-store.test.mjs",
+    "serve:render-stateful": "node src/render-stateful.mjs"
+  },
+  "dependencies": {
+    "pg": "8.23.1"
   }
 }
