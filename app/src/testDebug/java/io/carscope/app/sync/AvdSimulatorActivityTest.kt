@@ -18,6 +18,27 @@ class AvdSimulatorFixtureActivity : SyncReceiverActivity() {
     internal val exchange = PendingAvdSimulatorExchange()
     override fun endpoint() = AvdSimulatorSamples.endpoint
     override fun now() = clock
+    // Use an in-memory transport: Robolectric lifecycle tests must never call public Render.
+    override fun newTransport(endpoint: SyncEndpoint, dispatcher: SyncCallbackDispatcher): ConnectedSyncReceiverTransport =
+        object : ConnectedSyncReceiverTransport {
+            override fun creationAuthorized() = credentialProvider().credential(endpoint) != null
+            override fun checkConnection(callback: (SyncReply<Unit>) -> Unit): SyncCancellation {
+                callback(SyncReply.Success(Unit)); return SyncCancellation {}
+            }
+            override fun create(callback: (SyncReply<CreatedSyncSession>) -> Unit): SyncCancellation {
+                callback(SyncReply.Failure(SyncFailure.UNAUTHORIZED)); return SyncCancellation {}
+            }
+            override fun view(id: String, receiver: ReceiverCredential, callback: (SyncReply<SyncReceiverView>) -> Unit): SyncCancellation {
+                callback(SyncReply.Failure(SyncFailure.UNAUTHORIZED)); return SyncCancellation {}
+            }
+            override fun accept(id: String, receiver: ReceiverCredential, digest: String, callback: (SyncReply<SyncReceiverView>) -> Unit): SyncCancellation {
+                callback(SyncReply.Failure(SyncFailure.UNAUTHORIZED)); return SyncCancellation {}
+            }
+            override fun cancel(id: String, receiver: ReceiverCredential, callback: (SyncReply<SyncReceiverView>) -> Unit): SyncCancellation {
+                callback(SyncReply.Failure(SyncFailure.UNAUTHORIZED)); return SyncCancellation {}
+            }
+            override fun close() {}
+        }
     override fun newAvdSimulatorSource(endpoint: SyncEndpoint, dispatcher: SyncCallbackDispatcher) =
         RefreshingAvdSimulatorCredentialSource(endpoint, exchange) { clock }
 }
