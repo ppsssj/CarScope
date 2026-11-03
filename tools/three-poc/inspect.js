@@ -328,8 +328,8 @@ function panelContents() {
     case S.TIRE_PREVIEW: {
       const t = detachedTireInfo(state.component);
       return `<div class="eyebrow">타이어 · 상태 탐색</div><h2>${esc(t.label)}</h2><span class="badge detached">상태만 표시 · 수치 및 진단 미제공</span>
-        <dl class="tire-status"><dt>타이어 위치</dt><dd>${esc(t.label)} · 차량 진행 방향 기준</dd><dt>차량 부품 ID</dt><dd>${esc(t.vehiclePartId)}</dd>
-        </dl><div class="tire-nav"><button type="button" class="secondary" data-action="previous-tire">이전 타이어</button><button type="button" class="secondary" data-action="next-tire">다음 타이어</button></div>
+        <details class="part-identity"><summary>모델 위치·부품 ID</summary><dl class="tire-status"><dt>타이어 위치</dt><dd>${esc(t.label)} · 차량 진행 방향 기준</dd><dt>차량 부품 ID</dt><dd>${esc(t.vehiclePartId)}</dd>
+        </dl></details><div class="tire-nav"><button type="button" class="secondary" data-action="previous-tire">이전 타이어</button><button type="button" class="secondary" data-action="next-tire">다음 타이어</button></div>
         <section id="tireGuide">${guideHtml(userInspection, state.component)}</section><details class="sdk-details"><summary>Pleos API 상태 · 수동 기록과 별개</summary><div id="tireStatusContent">${tireStatusHtml(state.component)}</div></details>
         <p class="note">SUPPORTED는 API 기능 지원 여부입니다. STALE은 오래된 관측이며 정상·비정상 판정이 아닙니다.</p>
         <p class="note">커뮤니티 GLB의 기존 타이어 형상입니다. 실차 형상 정확도와 API 값·단위는 미검증이며 공기압 및 정상·비정상을 판단하지 않습니다.</p>
@@ -561,7 +561,8 @@ function paintHighlight(now) {
     const washerHint = id === 'washer-fluid-cap' && capOn && m === M.cap;
     if(m.userData.originalLight){if(selected)m.material.emissive.setHex(ACCENT);else m.material.emissive.copy(m.userData.originalLight.emissive);m.material.emissiveIntensity=selected?0.6:m.userData.originalLight.intensity;continue;}
     m.material.emissive.setHex(selected || washerHint ? ACCENT : 0);
-    m.material.emissiveIntensity = selected ? 0.6 : washerHint ? 0.25 + 0.45 * pulse : 0;
+    const confirmedTire=M.tires.has(id)&&inspectionMap.some(r=>r.partId===id&&r.completedAt!==null);
+    m.material.emissiveIntensity = selected ? (confirmedTire ? 0.12 : 0.6) : washerHint ? 0.25 + 0.45 * pulse : 0;
   }
   const label = $("capLabel");
   if (capOn && M.cap && M.bay.visible) {
@@ -741,7 +742,7 @@ window.__inspect = {
   hitAt,
   componentPoint: (id) => { const v = componentBounds(id).getCenter(new THREE.Vector3()).project(camera); return { x: (v.x+1)*innerWidth/2, y: (1-v.y)*innerHeight/2, inFront: v.z<1 }; },
   componentInfo: () => [...M.components].map(([id, meshes]) => ({ id, meshes: meshes.map(m => ({ id: m.name, target: m.userData.inspectionTarget, highlighted: m.material.emissiveIntensity > 0, meta: m.userData.meta })), bounds: { min: componentBounds(id).min.toArray(), max: componentBounds(id).max.toArray() } })),
-  tireInfo: () => [...M.tires].map(([id, t]) => ({ id, node: t.node, panel: tireStatus.forTire(id), meshes: t.meshes.map(m => ({ name: m.name, material: m.material.name, highlighted: m.material.emissiveIntensity > 0 && m.material.emissive.getHex() !== 0 })), wheelMeshes: t.pickMeshes.map(m => ({ name: m.name, material: m.material.name, highlighted: m.material.emissiveIntensity > 0 && m.material.emissive.getHex() !== 0 })), bounds: { min: t.bounds.min.toArray(), max: t.bounds.max.toArray() } })),
+  tireInfo: () => [...M.tires].map(([id, t]) => ({ id, node: t.node, panel: tireStatus.forTire(id), meshes: t.meshes.map(m => ({ name: m.name, material: m.material.name, selectionIntensity:m.material.emissiveIntensity, highlighted: m.material.emissiveIntensity > 0 && m.material.emissive.getHex() !== 0 })), wheelMeshes: t.pickMeshes.map(m => ({ name: m.name, material: m.material.name, highlighted: m.material.emissiveIntensity > 0 && m.material.emissive.getHex() !== 0 })), bounds: { min: t.bounds.min.toArray(), max: t.bounds.max.toArray() } })),
   cameraPose: () => ({ position: camera.position.toArray(), target: controls.target.toArray() }),
   zoom,
   view: () => ({ azimuthDeg: +THREE.MathUtils.radToDeg(controls.getAzimuthalAngle()).toFixed(1), polarDeg: +THREE.MathUtils.radToDeg(controls.getPolarAngle()).toFixed(1), distance: +camera.position.distanceTo(controls.target).toFixed(3) }),
