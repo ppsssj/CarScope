@@ -31,9 +31,12 @@ for artifact, debug in artifacts:
         assert (b"Lio/carscope/app/sync/ProvisionedSessionCreationCredentialProvider;" in dex) == debug, artifact.name
         assert b"Lio/carscope/app/sync/ReceiverFixtureActivity;" not in dex, artifact.name
         assert b"Lio/carscope/app/sync/EntryHostActivity;" not in dex, artifact.name
-        for name in ("HttpsProvisioningExchange", "RefreshingProvisionedCredentialSource", "ProvisioningDecoder", "EnrollmentCredential"):
+        for name in ("HttpsProvisioningExchange", "RefreshingProvisionedCredentialSource", "ProvisioningDecoder", "EnrollmentCredential",
+                     "AvdSimulatorPolicy", "AvdSimulatorEnrollment", "AvdSimulatorGrant",
+                     "HttpsAvdSimulatorGrantExchange", "RefreshingAvdSimulatorCredentialSource"):
             assert (f"Lio/carscope/app/sync/{name};".encode() in dex) == debug, (artifact.name, name)
-        for name in ("ProvisioningLifecycleTest", "HttpsProvisioningIntegrationTest", "ProvisioningFixtureActivity", "PendingProvisioningExchange"):
+        for name in ("ProvisioningLifecycleTest", "HttpsProvisioningIntegrationTest", "ProvisioningFixtureActivity", "PendingProvisioningExchange",
+                     "AvdSimulatorProvisioningTest", "AvdSimulatorActivityTest", "AvdSimulatorFixtureActivity", "PendingAvdSimulatorExchange"):
             assert f"Lio/carscope/app/sync/{name};".encode() not in dex, (artifact.name, name)
         assert b"SYNC_ENROLLMENT_FIXTURE" not in dex, artifact.name
         assert not any("native-auth-sync" in n or "authority-fixture.mjs" in n for n in archive.namelist()), artifact.name
@@ -45,7 +48,8 @@ suite = ET.parse(report).getroot()
 assert int(suite.get("tests")) >= 15
 assert int(suite.get("tests")) >= 17
 assert all(int(suite.get(key, "0")) == 0 for key in ("failures", "errors", "skipped"))
-for name, minimum in (("SyncHttpDecoderTest", 8), ("HttpsSyncReceiverTransportTest", 10), ("SyncReceiverActivityTest", 8), ("InspectionSyncEntryTest", 3), ("ProvisionedSessionCredentialProviderTest", 7), ("ProvisioningLifecycleTest", 4), ("ProvisioningActivityTest", 2), ("HttpsProvisioningIntegrationTest", 1)):
+for name, minimum in (("SyncHttpDecoderTest", 8), ("HttpsSyncReceiverTransportTest", 10), ("SyncReceiverActivityTest", 8), ("InspectionSyncEntryTest", 3), ("ProvisionedSessionCredentialProviderTest", 7), ("ProvisioningLifecycleTest", 4), ("ProvisioningActivityTest", 2), ("HttpsProvisioningIntegrationTest", 1),
+                      ("AvdSimulatorProvisioningTest", 3), ("AvdSimulatorActivityTest", 2)):
     report = ROOT / f"app/build/test-results/testDebugUnitTest/TEST-io.carscope.app.sync.{name}.xml"
     current = ET.parse(report).getroot()
     assert int(current.get("tests")) >= minimum, name
