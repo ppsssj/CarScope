@@ -1,6 +1,6 @@
 # P6-D2 — PostgreSQL SessionStore foundation
 
-This is a **storage-only PR**. No credentials, Render configuration or Android/AVD settings are changed.
+This is a **storage-and-server-code PR**. No credentials, LIVE Render configuration or Android/AVD settings are changed.
 It is not evidence of real phone-to-car E2E. The existing Render preflight remains the only deployed server,
 with session creation **DENIED**.
 
@@ -19,7 +19,7 @@ with session creation **DENIED**.
 
 ## Limits / blockers
 
-- There is **no Render stateful HTTP entrypoint** in this PR. Creating the database alone does not activate sync.
+- `render-stateful.mjs` is a separate Render HTTP ingress + PostgreSQL bootstrap. It requires `DATABASE_URL` and will not start without database availability. Session creation is permanently DENIED in this milestone. The existing `render-preflight.mjs` remains untouched.
 - There is **no trusted credential issuer, vehicle ownership/registration proof, revocation service,
   or Android enrollment**. All real creation authorizations remain denied.
 - No production DB was touched. GitHub test DB is isolated localhost and uses disposable credentials.
@@ -41,3 +41,26 @@ Remove-Item Env:PG_TEST_URL
 ```
 
 The integration test TRUNCATEs its dedicated database tables; never use operational DB credentials.
+
+## Render staging deployment, only after CI and PR review
+
+1. In the same Render workspace and Singapore region, create a dedicated PostgreSQL database.
+   For temporary manual E2E research, Free is allowed with **30-day expiry and no backup**.
+2. Use **Internal Database URL** only, added as a secret environment variable `DATABASE_URL`
+   on the Render Web Service. Never paste connection URLs in chat, screenshots or GitHub.
+3. Keep `NODE_VERSION=22.16.0`; Render should already supply `RENDER=true`,
+   `RENDER_EXTERNAL_URL` and `PORT`.
+4. After PR merges, change Build Command to
+   `npm install --prefix tools/inspection-sync-poc --ignore-scripts --no-audit --no-fund --package-lock=false && node --check tools/inspection-sync-poc/src/render-stateful.mjs`
+   and Start Command to `node tools/inspection-sync-poc/src/render-stateful.mjs`.
+   Health Check Path remains `/healthz`, and auto-deploy remains OFF.
+5. Before the first deploy, keep the current live preflight for rollback. Check Build Logs and
+   verify `/healthz` returns `mode:STATEFUL_DENY_DEFAULT` and `sessionCreation:DENIED`.
+   GET of an arbitrary nonexistent session without a bearer token must return 401.
+6. This does **not** allow creating a QR session. Real issuer/registration/revocation/Android
+   enrollment integration is a separate reviewed step. Do not inject fixture credentials.
+
+**Risks to review before any actual public sync**: Render reverse proxy trust boundary,
+PG schema/migration privileges, deployment rollback, free DB expiry, external access lock-down,
+privacy and retention, rate limiting per trusted client identity (ingress remoteAddress may be
+shared by all users), token revocation and OEM vs simulated vehicle registration.
