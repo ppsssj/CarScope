@@ -198,7 +198,7 @@ internal class RefreshingAvdSimulatorCredentialSource(
         val started = try {
             exchange.fetch { grant -> synchronized(this) {
                 if (!closed && generation == mine) {
-                    value = grant.takeIf { it.expiresAt > now() }
+                    value = grant?.takeIf { it.expiresAt > now() }
                     pending = null
                     callback(value != null)
                 }
