@@ -15,6 +15,7 @@ import {BRAKE_CHECKS} from '../../mobile-ar-poc/public/brake-result.mjs';
 import {CHARGE_CHECKS} from '../../mobile-ar-poc/public/charge-result.mjs';
 import {TIRE_CHECKS} from '../../mobile-ar-poc/public/tire-result.mjs';
 import {ANSWERS} from '../../mobile-ar-poc/public/checklist-result.mjs';
+import {extraTask} from '../../mobile-ar-poc/public/extra-tasks.mjs';
 
 export class ReceiverClient {
   #token = null;
@@ -58,7 +59,7 @@ export function describeReceived(view) {
   return [
     `항목: ${taskLabel(r?.taskId ?? view.taskId ?? 'washer-fluid') ?? '미지원 항목'} 셀프 점검`,
     `사용자 보고 결과: ${r ? STATUS_TEXT[r.status]?.label ?? r.status : '없음'} (${r?.confirmation ?? '-'})`,
-    ...(r?.schemaVersion === 2 ? (r.taskId === 'brake-fluid' ? BRAKE_CHECKS : r.taskId === 'ev-charge.port' ? CHARGE_CHECKS : TIRE_CHECKS).map(c=>`${c.label}: ${ANSWERS[r.responses[c.id]]}`) : []),
+    ...(r?.schemaVersion === 2 ? (extraTask(r.taskId)?.checks ?? (r.taskId === 'brake-fluid' ? BRAKE_CHECKS : r.taskId === 'ev-charge.port' ? CHARGE_CHECKS : TIRE_CHECKS)).map(c=>`${c.label}: ${ANSWERS[r.responses[c.id]]}`) : []),
     `완료 시각: ${r ? new Date(r.completedAt).toLocaleString('ko-KR') : '-'}`,
     `전송 상태: ${view.sessionState === 'ACCEPTED' ? '수락됨' : view.sessionState === 'RESULT_SUBMITTED' ? '서버 수신 확인됨 · 수락 대기' : view.sessionState}`,
     '주의: 사용자가 직접 확인해 보고한 결과이며 실제 차량 센서 진단이 아닙니다.',

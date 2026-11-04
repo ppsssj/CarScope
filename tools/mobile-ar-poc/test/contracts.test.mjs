@@ -65,7 +65,7 @@ test('contain mapping preserves landscape/portrait position and letterboxing', (
 });
 
 function mockStream() {
-  const track = { stops: 0, stop() { this.stops++; }, addEventListener(type, handler) { this.ended = handler; } };
+  const track = { stops: 0, stop() { this.stops++; }, addEventListener(type, handler) { this[type] = handler; } };
   return { track, getTracks: () => [track] };
 }
 test('camera asks for rear-facing video only; stop cleans up and disconnects video', async () => {

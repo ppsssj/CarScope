@@ -7,6 +7,7 @@ import {tireResult,TIRE_CHECKS} from '../../mobile-ar-poc/public/tire-result.mjs
 import {chargeResult,CHARGE_CHECKS} from '../../mobile-ar-poc/public/charge-result.mjs';
 import {brakeResult,BRAKE_CHECKS} from '../../mobile-ar-poc/public/brake-result.mjs';
 import {SUPPORTED_TASKS,checkEnvelope,resultDigest} from '../../inspection-sync-poc/src/protocol.mjs';
+import {EXTRA_TASKS} from '../../mobile-ar-poc/public/extra-tasks.mjs';
 import {inspectionStateMap,INSPECTION_STATES} from '../inspection-state-map.mjs';
 import {INSPECTION_AREAS} from '../inspection-flow.mjs';
 const doc=readFileSync(new URL('../../../docs/contracts/mobile-result-to-3d-session-v1.md',import.meta.url),'utf8');
@@ -18,9 +19,11 @@ function record(task,value){if(task==='washer-fluid')return completeInspection(s
 
 test('proposal task/schema/part/response keys match existing producers without activating an ingress',()=>{
   assert.equal(spec.proposalVersion,1);assert.equal(spec.integrationState,'DESIGN_ONLY_NO_INGRESS');
-  assert.deepEqual(spec.taskBindings.map(x=>x.taskId).sort(),[...SUPPORTED_TASKS].sort());
+  // P7-B adds mobile/Node tasks without activating or rewriting this seven-task 3D design.
+  assert.deepEqual([...spec.taskBindings.map(x=>x.taskId),...EXTRA_TASKS.map(x=>x.id)].sort(),[...SUPPORTED_TASKS].sort());
   assert.equal(new Set(spec.taskBindings.map(x=>x.taskId)).size,7);
   const parts=INSPECTION_AREAS.flatMap(a=>a.components.map(c=>c.id));
+  for(const task of EXTRA_TASKS)assert.ok(parts.includes(task.id),`additive mobile task has an existing model selection ID: ${task.id}`);
   for(const binding of spec.taskBindings){assert.ok(parts.includes(binding.partId));
     assert.equal(binding.schemaVersion,binding.taskId==='washer-fluid'?1:2);
     assert.deepEqual(binding.responseKeys,binding.schemaVersion===1?[]:profile(binding.taskId).checks.map(c=>c.id));}
