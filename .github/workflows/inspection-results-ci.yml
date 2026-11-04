@@ -31,3 +31,7 @@ jobs:
         run: npm run test:results-browser --prefix tools/three-poc
         env:
           CARSCOPE_EVIDENCE_DIR: C:/CarScope-External/p7-c1/ci
+      - name: History UI DOM with demo provider (no GLB, Native, issuer or production API)
+        run: npm run test:history-browser --prefix tools/three-poc
+        env:
+          CARSCOPE_EVIDENCE_DIR: C:/CarScope-External/p8-b1/ci
