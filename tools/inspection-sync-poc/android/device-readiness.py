@@ -87,7 +87,12 @@ def collect(sdk, serial, run=None):
         out['vehicleServiceVersion'] = match[1] if match else None
         enabled = call(['shell', 'cmd', 'package', 'list', 'packages', '-e', '--user', user, SERVICE])
         out['vehicleServiceEnabled'] = enabled == 'package:' + SERVICE
-        ready = (out['bootCompleted'] == '1' and out['api'] == '34' and out['systemUiPid'].isdigit()
+        # AAOS can run SystemUI for both the system and foreground users.
+        # Keep every PID in the evidence; this remains an inventory, not a stability gate.
+        system_ui_pids = out['systemUiPid'].split()
+        system_ui_present = bool(system_ui_pids) and all(
+            re.fullmatch(r'[1-9][0-9]*', pid) for pid in system_ui_pids)
+        ready = (out['bootCompleted'] == '1' and out['api'] == '34' and system_ui_present
                  and out['webview'] and out['vehicleServiceVersion'] and out['vehicleServiceEnabled'])
         out['status'] = 'PASS' if ready else 'BLOCKED'
         out['reason'] = 'READ_ONLY_IDENTITY_SNAPSHOT_ONLY' if ready else 'DEVICE_HEALTH_PREREQUISITE_MISSING'
