@@ -61,6 +61,10 @@
 
 ## CI
 
-PR 체크를 따른다. `postgres-integration`은 PG16 합성 인증 범위, `preflight-gates`는 네트워크·DB 없는 게이트 범위, `decoder-probe`는 JVM decoder 범위에 한정한다. 운영 Render·브라우저·AVD·실차 결과가 아니다.
+`4e82d31` PR 실행: [PostgreSQL 16 통합](https://github.com/ppsssj/CarScope/actions/runs/41844166725) PASS, [Preflight gates·Kotlin decoder](https://github.com/ppsssj/CarScope/actions/runs/41844166988) PASS, [Sync Ubuntu/Windows](https://github.com/ppsssj/CarScope/actions/runs/41844166898) PASS, Android·core·geometry·tire·3D 결과 CI PASS.
+
+**GitGuardian은 FAIL이다.** 탐지 2건은 판정 표식 문자열 `PRODUCTION_AUTH_BLOCKED`가 있는 줄(`bin/deployment-preflight.mjs:104`, `test/deployment-preflight.test.mjs:354`)의 Generic High Entropy 오탐으로 판단했다. 실제 자격 증명이 아니고 임시 PG 비밀번호는 diff에 없다. 커밋 이력에 남아 있어 force push 없이는 체크가 해소되지 않으므로, 대시보드에서 소유자가 판단해야 한다.
+
+`postgres-integration`은 PG16 합성 인증 범위, `preflight-gates`는 네트워크·DB 없는 게이트 범위, `decoder-probe`는 JVM decoder 범위에 한정한다. 운영 Render·브라우저·AVD·실차 결과가 아니다.
 
 원본 로그는 작업 PC `C:\carscope-external\p8-c1\logs\`에 있으며 Git에 포함하지 않는다. DB URL·비밀번호·토큰·APK는 기록하지 않는다. 설계와 절차는 [P8-C1 문서](../../p8-c1-deployment-readiness.md)를 따른다.
