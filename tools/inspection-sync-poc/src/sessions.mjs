@@ -15,6 +15,7 @@
 // (ACCEPTED, CANCELLED, EXPIRED) are final: nothing replaces them.
 import { createHash, randomBytes, randomUUID } from 'node:crypto';
 import { ERRORS, PROTOCOL, PROTOCOL_VERSION, SUPPORTED_TASKS, TOKEN_BYTES, checkEnvelope, isToken, resultDigest } from './protocol.mjs';
+import { historyAuthority } from './history.mjs';
 
 export const STATES = Object.freeze({ CREATED: 'CREATED', CLAIMED: 'CLAIMED', RESULT_SUBMITTED: 'RESULT_SUBMITTED', ACCEPTED: 'ACCEPTED', EXPIRED: 'EXPIRED', CANCELLED: 'CANCELLED' });
 const TERMINAL = new Set([STATES.ACCEPTED, STATES.EXPIRED, STATES.CANCELLED]);
@@ -49,7 +50,7 @@ export class SessionService {
   // ---------- vehicle receiver ----------
 
   /** New pairing session. Returns both tokens exactly once; only their hashes are kept. */
-  async create({ taskId }) {
+  async create({ taskId }, { historyBinding } = {}) {
     if (!SUPPORTED_TASKS.includes(taskId)) fail(ERRORS.BAD_REQUEST, 400);
     const t = this.now(), receiver = this.token(), invite = this.token();
     const session = {
@@ -57,6 +58,7 @@ export class SessionService {
       inviteExpiresAt: t + this.limits.inviteTtlMs, expiresAt: t + this.limits.sessionTtlMs,
       receiverHash: hashToken(receiver), inviteHash: hashToken(invite), submitHash: null,
       result: null, resultDigest: null, inspectionId: null, receivedAt: null, acceptedAt: null, endedAt: null, purgeResultAt: null,
+      ...(historyBinding ? {historyAuthority:historyAuthority(historyBinding)} : {}),
     };
     // Capacity check and insert are one atomic store operation (no count-then-insert gap).
     const cap = { maxSessions: this.limits.maxSessions };

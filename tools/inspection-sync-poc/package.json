@@ -24,6 +24,7 @@
     "serve:https": "node src/https-mobile-service.mjs",
     "test:service-tls": "node --test test/auth-contract.test.mjs test/https-service.test.mjs",
     "test:postgres": "node --test test/postgres-store.test.mjs",
+    "test:history": "node --test test/history.test.mjs test/history-postgres.test.mjs",
     "serve:render-stateful": "node src/render-stateful.mjs",
     "test:avd-simulator": "node --test test/avd-simulator.test.mjs",
     "admin:avd": "node bin/avd-simulator-admin.mjs"

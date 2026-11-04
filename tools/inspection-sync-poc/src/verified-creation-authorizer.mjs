@@ -46,17 +46,20 @@ export class VerifiedSessionCreationAuthorizer {
       ![binding.userId, binding.vehicleId, binding.deviceId].every(id) || binding.active !== true || binding.ownershipVerified !== true || !time(binding.expiresAt)) return false;
     const active = await this.#revocations.isActive({ issuer: c.issuer, credentialId: c.credentialId, registrationId: c.registrationId, signal });
     const at = this.#now();
-    return !signal.aborted && active === true && this.#validClaim(c, at) && binding.expiresAt > at;
+    if(signal.aborted || active!==true || !this.#validClaim(c,at) || binding.expiresAt<=at)return false;
+    return {authorityNamespace:'VERIFIED_VEHICLE',authorityIssuer:c.issuer,userId:binding.userId,vehicleId:binding.vehicleId,deviceId:binding.deviceId,registrationId:binding.registrationId,bindingVerifiedAt:at};
   }
-  async authorize({ token, secure } = {}) {
+  async resolveHistoryAuthority({ token, secure } = {}) {
     if (secure !== true || typeof token !== 'string' || !/^[A-Za-z0-9_-]{32,128}$/.test(token)) return false;
     const ctrl = new AbortController(); let timer;
     try {
-      return await Promise.race([
+      const result=await Promise.race([
         this.#check(token, ctrl.signal),
         new Promise((resolve) => { timer = setTimeout(() => { ctrl.abort(); resolve(false); }, this.#timeout); }),
-      ]) === true;
+      ]);
+      return result && typeof result==='object'?Object.freeze(result):null;
     } catch { return false; } // Never log adapter exceptions, tokens, claims or registration identities.
     finally { clearTimeout(timer); ctrl.abort(); }
   }
+  async authorize(request) { return Boolean(await this.resolveHistoryAuthority(request)); }
 }

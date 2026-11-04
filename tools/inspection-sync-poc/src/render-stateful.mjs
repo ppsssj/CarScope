@@ -61,7 +61,7 @@ export async function startRenderStateful({ pool, publicOrigin, host = '127.0.0.
           res.writeHead(403, headers); res.end(); return;
         }
         if (!req.url?.startsWith('/') || req.url.startsWith('//') ||
-            req.url.includes('\\') || req.url.includes('#') || req.url.includes('?')) {
+            req.url.includes('\\') || req.url.includes('#') || (req.url.includes('?') && new URL(req.url,origin).pathname!=='/v1/inspection-records')) {
           res.writeHead(400, headers); res.end(); return;
         }
         if (req.url === '/simulator/provision') {
