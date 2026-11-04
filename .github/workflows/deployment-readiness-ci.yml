@@ -1,0 +1,66 @@
+name: Deployment readiness CI
+
+# Gates and unit-level compatibility only. No job can reach Render, an operational database or a device.
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  preflight-gates:
+    name: Preflight gates (no network, no database)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: tools/inspection-sync-poc
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0 # the legacy decoder snapshot is compared with git history
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '22.16.0'
+      - run: npm install --ignore-scripts --no-audit --no-fund --package-lock=false
+      - run: npm run check:preflight
+      - run: node bin/deployment-preflight.mjs static
+      - run: node bin/deployment-preflight.mjs compat
+      - run: node bin/deployment-preflight.mjs render
+      - name: Legacy snapshot must have been compared, not skipped
+        run: node bin/deployment-preflight.mjs compat --json | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{const c=JSON.parse(s).checks.find(x=>x.id==='LEGACY_DECODER_SNAPSHOT');if(c.status!=='PASS')process.exit(1)})"
+
+  decoder-probe:
+    name: Real Kotlin decoders against both server responses (no device)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      GRADLE_OPTS: -Dorg.gradle.workers.max=1 -Dorg.gradle.daemon=false
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: temurin
+          java-version: '17'
+          overwrite-settings: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '22.16.0'
+      - name: Install public Android 34 stubs and build tools
+        run: |
+          test -x "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" 'platforms;android-34' 'build-tools;35.0.0'
+      - name: Execute legacy and current decoders
+        run: node tools/inspection-sync-poc/preflight/run-decoder-probe.mjs --work "$RUNNER_TEMP/decoder-probe"

@@ -1,5 +1,9 @@
 # 로드맵 및 진입 조건
 
+## P8-C1 — 배포 준비 게이트와 통합 Preflight
+
+Render 배포 전 검사를 읽기 전용 CLI와 격리 PostgreSQL 통합 테스트로 자동화하고, APK·서버 호환성, 배포 순서, DDL·백업·복구, P9 체크리스트를 정리한다. **Render 배포와 운영 DB 변경은 하지 않았다.** `RENDER_DEPLOYMENT_NOT_RUN`, `PRODUCTION_AUTH_BLOCKED`, `DEVICE_E2E_NOT_RUN`이며 `serverNow`는 PR #78 병합 전까지 BLOCKED다. [배포 준비](p8-c1-deployment-readiness.md), [P9 체크리스트](p9-e2e-checklist.md), [증거 인덱스](evidence/p8-c1/README.md).
+
 ## P8-B1 — 3D 차량 점검 기록 UI
 
 기존 3D 점검 화면에 저장된 과거 기록의 목록·필터·더 보기·상세·상태 화면과 현재 세션 비교를 추가하고, 인증과 분리된 read provider 경계를 정의했다. 실제 백엔드 DTO 코드로 계약을 검증했으나 표시 데이터는 합성이다. **운영 조회는 issuer 부재로 BLOCKED**이며 배포 화면은 `UNAVAILABLE`, 기기 E2E는 NOT_RUN이다. [설계·경계](p8-b1-inspection-history-ui.md), [증거 인덱스](evidence/p8-b1-history-ui/README.md).

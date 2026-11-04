@@ -1,0 +1,24 @@
+package io.carscope.app.sync
+
+import java.io.File
+import org.junit.Test
+
+/**
+ * Copied by run-decoder-probe.mjs into an exported tree of the revision under test. Never part of the app sources.
+ * Runs that revision's real SyncHttpDecoder.created and records the verdict; it asserts nothing about the outcome.
+ */
+class DeployCompatProbeTest {
+    private val id = "12345678-1234-4123-8123-123456789abc"
+    private val oldServer = """{"sessionId":"$id","taskId":"washer-fluid","receiverToken":"${"R".repeat(43)}","inviteToken":"${"I".repeat(43)}","inviteExpiresAt":2000000000000,"expiresAt":2000001000000}"""
+    private val newServer = oldServer.dropLast(1) + ",\"serverNow\":1999999000000}"
+
+    private fun verdict(body: String) = try {
+        SyncHttpDecoder.created(body.toByteArray(), "application/json; charset=utf-8"); "ACCEPTED"
+    } catch (_: SyncHttpDecoder.Invalid) { "REJECTED" }
+
+    @Test fun record() {
+        val target = File("build/deploy-compat-probe.json")
+        target.parentFile.mkdirs()
+        target.writeText("""{"oldServer":"${verdict(oldServer)}","newServer":"${verdict(newServer)}"}""")
+    }
+}
