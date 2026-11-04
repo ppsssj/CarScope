@@ -27,7 +27,7 @@ inspect.js의 고정 Android adapter import
  → 기존 C1 후보 → 사용자 ‘이 기록 적용’ → 기존 부품/상태/요약 projection
 ```
 
-서버 clock 필드가 없는 현재 응답에서는 binding 단계에서 중단한다. 이후 사용자가 Native에서 수락해도 첫 차단 원인을 유지해 3D에 `SERVER_CLOCK_UNAVAILABLE`로 표시한다. 이를 우회하는 생산 테스트 어댑터는 없다. `NATIVE_3D_BRIDGE_IMPLEMENTED`는 전송 코드가 있다는 뜻이며 운영 완료/실제 ACCEPTED 전달 PASS를 뜻하지 않는다. 배포 연결 상태는 `NATIVE_3D_BLOCKED`다.
+서버 clock 필드가 없는 응답(P7-C3 이전 서버, 현재 미배포 Render 포함)에서는 binding 단계에서 중단한다. 이후 사용자가 Native에서 수락해도 첫 차단 원인을 유지해 3D에 `SERVER_CLOCK_UNAVAILABLE`로 표시한다. 이를 우회하는 생산 테스트 어댑터는 없다. `NATIVE_3D_BRIDGE_IMPLEMENTED`는 전송 코드가 있다는 뜻이며 운영 완료/실제 ACCEPTED 전달 PASS를 뜻하지 않는다. 배포 연결 상태는 `NATIVE_3D_BLOCKED`다.
 
 ## 신뢰·proof·수명주기
 

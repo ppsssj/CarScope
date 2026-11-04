@@ -2,7 +2,11 @@
 
 ## P7-C2 — Native ACCEPTED → 3D 전달
 
-고정 자산 RPC, token 없는 proof 저장소, Android 어댑터를 C1 소비자에 연결했다. 계약은 합성 clock으로 검증했으나, 실제 전달은 서버 생성 응답의 `serverNow` 부재로 **BLOCKED**이고 기기 E2E는 NOT_RUN이다. [구현](p7-c2-native-3d-bridge.md), [검증·해제 조건](p7-c2-validation.md).
+고정 자산 RPC, token 없는 proof 저장소, Android 어댑터를 C1 소비자에 연결했다. 계약은 합성 clock으로 검증했으나, 실제 전달은 배포된 서버 생성 응답의 `serverNow` 부재로 **BLOCKED**이고 기기 E2E는 NOT_RUN이다. [구현](p7-c2-native-3d-bridge.md), [검증·해제 조건](p7-c2-validation.md).
+
+## P7-C3 — 서버 시각 계약
+
+인증된 세션 생성 응답에 `serverNow`를 추가했다. Render 배포와 기기 E2E는 NOT_RUN이므로 실제 ACCEPTED는 아직 3D에 전달되지 않는다. 배포 전에 Debug APK를 P7-C2 이후 빌드로 갱신해야 한다. [구현·검증·배포 순서](p7-c3-server-clock.md).
 
 ## P7 Native — 17-task 수신 통합
 

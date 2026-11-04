@@ -14,7 +14,7 @@ request/response는 각각 최대 16KiB, response는 선언 Content-Length와 �
 
 | 호출 | 요청 | 성공 |
 | --- | --- | --- |
-| POST /v1/sessions | 생성 credential, `{taskId: washer-fluid}` | 201, 정확히 sessionId/taskId/receiverToken/inviteToken/inviteExpiresAt/expiresAt |
+| POST /v1/sessions | 생성 credential, `{taskId: washer-fluid}` | 201, 정확히 sessionId/taskId/receiverToken/inviteToken/inviteExpiresAt/expiresAt/serverNow. Native는 `serverNow` 없는 이전 서버 응답도 받지만 3D 전달은 차단한다([시각 계약](p7-c2-server-clock-proposal.md)) |
 | GET /v1/sessions/:id | receiver credential | 200, 정확히 sessionId/taskId/sessionState/expiresAt/result/resultDigest/receivedAt/acceptedAt |
 | POST /v1/sessions/:id/accept | receiver credential, resultDigest | 200, 위 full view, 반드시 ACCEPTED |
 | POST /v1/sessions/:id/cancel | receiver credential, body 없음 | 200, 정확히 sessionId/sessionState=CANCELLED |
