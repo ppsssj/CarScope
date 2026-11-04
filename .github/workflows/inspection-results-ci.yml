@@ -1,0 +1,33 @@
+name: 3D mobile inspection results CI
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  results:
+    name: 17-part results boundary and browser (synthetic)
+    runs-on: windows-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '22.16.0'
+      - run: npm ci --ignore-scripts --prefix tools/three-poc
+      - run: npm ci --ignore-scripts --prefix tools/mobile-ar-poc
+      - run: npm run check:results --prefix tools/three-poc
+      - run: npm test --prefix tools/three-poc
+      - run: npm run test:android-assets --prefix tools/three-poc
+      - name: Desktop and mobile DOM with test-only authority (no GLB or Native)
+        run: npm run test:results-browser --prefix tools/three-poc
+        env:
+          CARSCOPE_EVIDENCE_DIR: C:/CarScope-External/p7-c1/ci

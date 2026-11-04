@@ -1,5 +1,7 @@
 # 모바일 결과 → 3D 세션 연결 계약 v1 (설계)
 
+> P7-C1 후속: 17개 매핑과 별도 모바일 후보/선택 소비자는 [Native→3D ACCEPTED 계약 v1](native-to-3d-accepted-v1.md)에서 구현한다. 아래 7개 설계 표는 당시 기준으로 보존한다. 실제 Native 전달 경로는 여전히 미완료이며 일반 JSON 주입 경로를 추가하지 않는다.
+
 P5-A5, 기준 main fdffd96. **설계 계약이며 수신/적용 구현은 아직 없다.** 아래 JSON은 계약 메타데이터이며 실제 수신 결과가 아니다. 3D UI는 이를 import하지 않으며 임의 JSON, URL fragment, postMessage, 전역 함수, localStorage로 모바일 결과를 주입하는 경로를 제공하지 않는다.
 
 ## 현재 경계와 선택

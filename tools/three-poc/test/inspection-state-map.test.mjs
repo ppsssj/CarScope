@@ -59,7 +59,7 @@ test('summary/detail use one projection and distinguish record time/source from 
     assert.ok(!/정상 판정|안전함|source="PLEOS"|source="MOBILE"/.test(html));
   }
   const legend=stateLegendHtml(s);for(const label of ['미점검','이상 징후 보고','확인 불가','발견 사항 없음'])assert.ok(legend.includes(label));
-  assert.match(legend,/모바일·Native 결과는 이 화면에 수신되지/);assert.equal(stateRecordHtml(s,'washer-fluid-cap'),'');
+  assert.match(legend,/모바일·Native 결과는 로컬 타이어 기록에 합치지/);assert.equal(stateRecordHtml(s,'washer-fluid-cap'),'');
 });
 
 test('compact summary keeps scope available after results and one semantic original timestamp in detail',()=>{

@@ -16,6 +16,10 @@ import { buildEvBatteryPack, EV_BATTERY_ID } from "./ioniq5-asset/ev-battery.mjs
 import { componentDistance, boxDistance } from "./inspection-camera.mjs";
 import { createTireInspection, updateTireInspection, inspectionProgress } from "./tire-inspection.mjs";
 import { inspectionStateMap } from './inspection-state-map.mjs';
+import {targetForPart} from './mobile-result-contract.mjs';
+import {createNativeInspectionResults} from './native-inspection-results.mjs';
+import {projectInspectionResults} from './inspection-results.mjs';
+import {partResultHtml,resultSummaryHtml} from './inspection-results-view.mjs';
 import { stateBadgeHtml, stateLegendHtml } from './inspection-state-view.mjs';
 import { guideHtml, summaryHtml } from "./tire-inspection-view.mjs";
 import { productSummaryHtml, sessionActions } from './inspection-product.mjs';
@@ -210,7 +214,7 @@ function driveCamera(name, dur = 1100) {
     target = bounds.getCenter(new THREE.Vector3());
     dir = M.lights.has(name)?M.lights.get(name).sightline.direction:Object.values(EV_CHARGE_IDS).includes(name) ? [-0.6, 0.38, 1] : name === EV_BATTERY_ID ? [0.7, -1, -0.5] : M.tires.has(name) ? tireCameraDirection(name) : [1.2, 2.8, Math.sign(target.z) * 0.55];
     dist = componentDistance(size.toArray(), camera.fov, innerWidth, innerHeight, panelBox());
-  } else [target, dir, dist] = VIEWS[name];
+  } else [target, dir, dist] = VIEWS[name] ?? VIEWS.overview;
   controls.minDistance = meshes ? 0.55 : 1.3;
   controls.maxDistance = ['tires', 'overview'].includes(name) ? Math.max(11, dist) : 11;
   camTween = { name, fromPos: camera.position.clone(), fromTarget: controls.target.clone(), toTarget: target.clone(), toPos: target.clone().add(new THREE.Vector3(...dir).normalize().multiplyScalar(dist * (meshes || ['tires', 'overview'].includes(name) ? 1 : fitScale()))), t0: performance.now(), dur: ms(dur) };
@@ -219,8 +223,13 @@ function driveCamera(name, dur = 1100) {
 const ease = (t) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2);
 
 let userInspection = createTireInspection(crypto.randomUUID());
+// No Native result adapter is installed in this build. A future reviewed composition import
+// may supply {adapter}; never obtain it from a window property, query, postMessage or JSON.
+const mobileResults=createNativeInspectionResults();
+const mobileExpiryTimer=setInterval(()=>{if(state.name!==STATES.IDLE)mobileResults.tick();},1000);
 function enter(prev) {
-  if (state.name === STATES.IDLE) userInspection = createTireInspection(crypto.randomUUID());
+  if (state.name === STATES.IDLE) {mobileResults.endSession();userInspection = createTireInspection(crypto.randomUUID());}
+  else if(prev.name===STATES.IDLE)mobileResults.startSession(userInspection.sessionId);
   clearTimeout(refit);
   // Flush OrbitControls inertia without changing the current pose before a scripted move.
   const position = camera.position.clone(), target = controls.target.clone(), damping = controls.enableDamping;
@@ -232,8 +241,8 @@ function enter(prev) {
   }
   if (selectionView && state.component) selectionView.component = state.component;
   document.body.dataset.state = state.name;
-  M.charge.visible = M.chargeInfo.status === 'AVAILABLE' && [STATES.INSPECTION_OVERVIEW, STATES.INSPECTION_SUMMARY, STATES.CHARGE_PORT_PREVIEW].includes(state.name);
-  M.wipers.visible=M.wiperInfo.status==='AVAILABLE'&&[STATES.INSPECTION_OVERVIEW,STATES.INSPECTION_SUMMARY,STATES.VISIBILITY_PREVIEW].includes(state.name);
+  M.charge.visible = M.chargeInfo.status === 'AVAILABLE' && [STATES.PART_RESULT,STATES.INSPECTION_OVERVIEW, STATES.INSPECTION_SUMMARY, STATES.CHARGE_PORT_PREVIEW].includes(state.name);
+  M.wipers.visible=M.wiperInfo.status==='AVAILABLE'&&[STATES.PART_RESULT,STATES.INSPECTION_OVERVIEW,STATES.INSPECTION_SUMMARY,STATES.VISIBILITY_PREVIEW].includes(state.name);
   const underbody = state.name === STATES.EV_BATTERY_PREVIEW;
   floor.visible = ring.visible = !underbody;
   for (const mesh of M.components.get(EV_BATTERY_ID) ?? []) mesh.visible = underbody;
@@ -241,7 +250,7 @@ function enter(prev) {
   hovered = false;
   driveHood(hoodTarget(state));
   render();
-  if ([STATES.VISIBILITY_PREVIEW, STATES.CHARGE_PORT_PREVIEW, STATES.EV_BATTERY_PREVIEW, STATES.COMPONENT_PREVIEW, STATES.WASHER_SELECTED, STATES.TIRE_PREVIEW, STATES.INSPECTION_SUMMARY, STATES.TIRE_SUMMARY].includes(state.name)) {
+  if ([STATES.PART_RESULT,STATES.VISIBILITY_PREVIEW, STATES.CHARGE_PORT_PREVIEW, STATES.EV_BATTERY_PREVIEW, STATES.COMPONENT_PREVIEW, STATES.WASHER_SELECTED, STATES.TIRE_PREVIEW, STATES.INSPECTION_SUMMARY, STATES.TIRE_SUMMARY].includes(state.name)) {
     $('panel').scrollTop = 0;
     const title = $('panel').querySelector('h2');
     title.tabIndex = -1; title.focus({ preventScroll: true });
@@ -274,8 +283,8 @@ function componentBounds(id) {
 const crumbs = { IDLE: "", INSPECTION_OVERVIEW: "차량 점검", HOOD_OPENING: "차량 점검 › 보닛", HOOD_CLOSING: "차량 점검", COMPONENT_SELECTION: "차량 점검 › 보닛", WASHER_SELECTED: "차량 점검 › 보닛 › 워셔액", MOBILE_HANDOFF_READY: "차량 점검 › 보닛 › 워셔액" };
 const hints = { INSPECTION_OVERVIEW: "모델의 부위나 목록을 선택하세요", COMPONENT_SELECTION: "모델의 부품이나 목록을 선택하세요" };
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
-const item = (x, action) => ['available', 'preview'].includes(x.status)
-  ? `<li><button type="button" class="item available ${x.status === 'preview' ? 'preview' : ''}" aria-pressed="${state.component === x.id}" data-action="${action}" data-id="${x.id}">${esc(x.label)}${M.tires.has(x.id)?stateBadgeHtml(inspectionStateMap(userInspection).find(r=>r.partId===x.id)):`<span class="tag">${x.status === 'preview' ? '형상 보기' : '점검 가능'}</span>`}</button></li>`
+const item = (x, action) => ['available', 'preview'].includes(x.status)||targetForPart(x.id)
+  ? `<li><button type="button" class="item available ${x.status === 'preview' ? 'preview' : ''}" aria-pressed="${state.component === x.id}" data-action="${x.status==='planned'?'result-detail':action}" data-id="${x.id}">${esc(x.label)}${targetForPart(x.id)?stateBadgeHtml(projectInspectionResults(userInspection,mobileResults.snapshot).find(r=>r.partId===x.id)):`<span class="tag">${x.status === 'preview' ? '형상 보기' : '점검 가능'}</span>`}${x.status==='planned'?'<small>목록 접근 · 형상 미구현</small>':''}</button></li>`
   : `<li><div class="item" aria-disabled="true">${esc(x.label)}<span class="tag">준비 중</span></div></li>`;
 
 const connectionLabels = { DETACHED: '미연동', ATTACHED: '앱 소유권 확보 · SDK 연결 완료를 뜻하지 않음', STOPPED: '화면 중지 · 이전 관측 무효화', SUPERSEDED: '다른 점검 화면이 세션을 소유함', UNAVAILABLE: '상태 전달 실패 · 이전 관측 무효화' };
@@ -290,6 +299,13 @@ function tireStatusHtml(id) {
 function panelContents() {
   const S = STATES;
   switch (state.name) {
+    case S.PART_RESULT:{
+      const target=targetForPart(state.component),available=!!targetMeshes(state.component)?.length;
+      return `<div class="eyebrow">부품별 점검 결과 · 사용자 보고</div><h2>${esc(target.label)}</h2>
+        <p class="note">${available?'기존 참조 형상의 카메라 이동과 선택 강조를 사용합니다. 실제 차량의 부품 위치·형상 일치는 미검증입니다.':'이 부품의 3D 형상이 없거나 위치를 검증하지 못했습니다. 목록에서 결과만 확인하며 대체 형상을 생성하지 않습니다.'}</p>
+        ${target.area==='tires'?`<button type="button" class="secondary" data-action="tire" data-id="${target.partId}">로컬 타이어 직접 입력 열기</button>`:''}
+        <button type="button" class="secondary" data-action="back">전체 점검 요약으로</button>`;
+    }
     case S.VISIBILITY_PREVIEW:{
       const part=areaOf(state).components.find(c=>c.id===state.component),wiper=state.area==='wipers';
       return `<div class="eyebrow">${wiper?'전면 와이퍼 · 한 유리 영역':'전조등 · 전역 SDK 보고'}</div><h2>${esc(part.label)}</h2>
@@ -316,7 +332,7 @@ function panelContents() {
         <p class="note">하부를 보기 위해 화면의 바닥 장식을 숨겼습니다. 실제 차량 아래로 진입하거나 배터리를 열도록 안내하는 절차가 아닙니다.</p>
         <p class="note">SoC는 원시 Integer이며 단위·범위가 미검증입니다. 충전 스위치 값은 충전 진행 상태나 안전 판정이 아닙니다.</p>
         <div class="actions"><button type="button" class="secondary" data-action="back">점검 부위로</button></div>`;
-    case S.INSPECTION_SUMMARY: return productSummaryHtml(userInspection);
+    case S.INSPECTION_SUMMARY: return productSummaryHtml(userInspection,mobileResults.snapshot);
     case S.TIRE_SUMMARY:
       return `<div class="eyebrow">타이어 · 육안 기록</div><h2>네 타이어 점검 요약</h2>${summaryHtml(userInspection)}
         <div class="actions"><button type="button" class="secondary" data-action="back">타이어 목록으로</button></div>`;
@@ -347,9 +363,9 @@ function panelContents() {
       return `<div class="eyebrow">보닛</div><h2>보닛을 여는 중</h2><p>차량 전방으로 이동합니다.</p><div class="progress"><i id="hoodProgress"></i></div>
         <div class="actions"><button type="button" class="secondary" data-action="back">취소</button></div>`;
     case S.COMPONENT_SELECTION:
-      return `<div class="eyebrow">보닛 · 전방 수납부</div><h2>점검 항목</h2><p>모델의 부품이나 목록에서 고르세요. 워셔액 외 항목은 추정 형상만 탐색할 수 있습니다.</p>
+      return `<div class="eyebrow">보닛 · 전방 수납부</div><h2>점검 항목</h2><p>모델의 부품이나 목록에서 고르세요. 형상 안내와 사용자 점검 결과를 별도로 확인할 수 있습니다.</p>
         <ul class="items">${areaOf(state).components.map((c) => item(c, "component")).join("")}</ul>
-        <p class="note">밝은 베이지색 리저버와 무광 케이스는 추정 부품 모델입니다. 저전도 냉각수는 형상과 안내가 준비 중입니다.</p>
+        <p class="note">밝은 베이지색 리저버와 무광 케이스는 추정 부품 모델입니다. 저전도 냉각수 형상은 미구현이며 목록에서 결과 상세만 확인합니다.</p>
         <div class="actions"><button type="button" class="secondary" data-action="back">점검 부위로</button></div>`;
     case S.COMPONENT_PREVIEW: {
       const c = areaOf(state).components.find(c => c.id === state.component);
@@ -380,10 +396,24 @@ function panelContents() {
   }
 }
 
+function resultSdkBody(){
+  const task=targetForPart(state.component);if(state.name!==STATES.PART_RESULT||!task)return '';
+  if(task.area==='tires')return tireStatusHtml(task.partId);
+  if(task.area==='ev-charge')return chargePortStatusHtml();
+  if(['wipers','lights'].includes(task.area))return visibilityStatusHtml(visibilityFeaturesForPart(task.partId));
+  if(['washer-fluid-cap','brake-fluid-reservoir'].includes(task.partId))return componentStatusHtml(task.partId);
+  return '<p class="note">이 부품의 SDK 관측 전달은 미지원입니다. 모바일 보고로 대체하지 않습니다.</p>';
+}
+function refreshResultSdk(){const region=$('resultSdkContent');if(region)region.innerHTML=resultSdkBody();}
 function panelHtml() {
   const hasStatus = state.name === STATES.EV_BATTERY_PREVIEW || state.name === STATES.WASHER_SELECTED || state.name === STATES.COMPONENT_PREVIEW && state.component === 'brake-fluid-reservoir';
   const status = hasStatus ? `<details class="sdk-details"${state.name === STATES.EV_BATTERY_PREVIEW ? ' open' : ''}><summary>Pleos API 지원 및 SDK 보고 상태</summary><div id="componentStatusContent">${componentStatusHtml(state.component)}</div></details>` : '';
-  return panelContents() + status + sessionActions(state);
+  const result=targetForPart(state.component)?`<div id="mobilePartResults">${partResultHtml(userInspection,mobileResults.snapshot,state.component)}</div>`:'';
+  let resultSdk='';
+  if(state.name===STATES.PART_RESULT){
+    resultSdk=`<details class="sdk-details"><summary>SDK 관측 · 사용자 보고와 별개</summary><div id="resultSdkContent">${resultSdkBody()}</div></details>`;
+  }
+  return panelContents() + result + resultSdk + status + sessionActions(state);
 }
 
 let toastTimer = null;
@@ -392,6 +422,7 @@ function render() {
   $('home').inert = state.name !== STATES.IDLE;
   $('panel').inert = state.name === STATES.IDLE;
   $("crumb").textContent = state.name === STATES.INSPECTION_SUMMARY ? '차량 점검 › 전체 요약' : state.area === 'tires' ? `차량 점검 › 타이어${state.component ? ' › ' + detachedTireInfo(state.component).label : ''}` : state.name === STATES.COMPONENT_PREVIEW ? `차량 점검 › 보닛 › ${areaOf(state).components.find(c => c.id === state.component).label}` : crumbs[state.name];
+  if(state.name===STATES.PART_RESULT)$('crumb').textContent='차량 점검 › '+targetForPart(state.component).label;
   if (state.name === STATES.EV_BATTERY_PREVIEW) $('crumb').textContent = '차량 점검 › EV 배터리';
   if (state.name === STATES.CHARGE_PORT_PREVIEW) $('crumb').textContent = '차량 점검 › EV 충전구';
   if(state.name===STATES.VISIBILITY_PREVIEW)$('crumb').textContent='차량 점검 › '+(state.area==='wipers'?'전면 와이퍼':'전조등');
@@ -402,26 +433,31 @@ function render() {
   if (hint) toastTimer = setTimeout(() => $("toast").classList.remove("on"), 4000);
 }
 tireStatus.subscribe(() => {
+  refreshResultSdk();
   const region = $('tireStatusContent');
   if (region && state.name === STATES.TIRE_PREVIEW) region.innerHTML = tireStatusHtml(state.component);
 });
 // Explicit browser fixture mode; the Android shell enables the same read-only client by default.
 if (params.get('tireStatus') === 'fixture') enableTireStatus();
 componentStatus.subscribe(() => {
+  refreshResultSdk();
   const region = $('componentStatusContent');
   if (region) region.innerHTML = componentStatusHtml(state.component);
 });
 if (params.get('componentStatus') === 'fixture') enableComponentStatus();
-chargePortStatus.subscribe(() => { const region = $('chargePortStatusContent'); if (region) region.innerHTML = chargePortStatusHtml(); });
+chargePortStatus.subscribe(() => { refreshResultSdk();const region = $('chargePortStatusContent'); if (region) region.innerHTML = chargePortStatusHtml(); });
 if (params.get('chargeStatus') === 'fixture') enableChargePortStatus();
-visibilityStatus.subscribe(()=>{const region=$('visibilityStatusContent');if(region)region.innerHTML=visibilityStatusHtml(visibilityFeaturesForPart(state.component));});
+visibilityStatus.subscribe(()=>{refreshResultSdk();const region=$('visibilityStatusContent');if(region)region.innerHTML=visibilityStatusHtml(visibilityFeaturesForPart(state.component));});
 if(params.get('visibilityStatus')==='fixture')enableVisibilityStatus();
 
 $("panel").addEventListener("click", (e) => {
   const b = e.target.closest("[data-action]");
   if (!b) return;
   const a = b.dataset.action;
-  if (a === 'confirm-tire' && state.name === STATES.TIRE_PREVIEW && b.dataset.id === state.component) {
+  if(a==='result-detail')dispatch({type:EVENTS.OPEN_RESULT,id:b.dataset.id});
+  else if(a==='select-result'&&b.dataset.session===userInspection.sessionId)mobileResults.select(b.dataset.task,b.dataset.record);
+  else if(a==='request-mobile'){const started=mobileResults.request(b.dataset.task);$('toast').textContent=started?'Native에 점검 생성을 요청했습니다. 검증된 연결 응답을 기다리세요.':'Native 전달 경로 미완료 · 요청을 시작할 수 없습니다.';$('toast').classList.add('on');}
+  else if (a === 'confirm-tire' && state.name === STATES.TIRE_PREVIEW && b.dataset.id === state.component) {
     const next = updateTireInspection(userInspection, { type: 'CONFIRM', tireId: state.component, sessionId: b.dataset.session, at: Date.now() });
     if (next !== userInspection) { userInspection = next; renderGuide('confirm'); }
   }
@@ -484,6 +520,7 @@ function hitAt(x, y) {
 }
 function pickTarget(x, y) {
   const h = hitAt(x, y);
+  if(state.name===STATES.PART_RESULT){const id=h?.kind==='washer'?'washer-fluid-cap':h?.id;if(targetForPart(id))return {type:EVENTS.OPEN_RESULT,id};}
   if([STATES.INSPECTION_OVERVIEW,STATES.INSPECTION_SUMMARY].includes(state.name)&&h?.kind==='visibility')return {type:EVENTS.SELECT_AREA,id:WIPER_PARTS.includes(h.id)?'wipers':'lights',partId:h.id};
   if(state.name===STATES.VISIBILITY_PREVIEW&&h?.kind==='visibility')return {type:EVENTS.SELECT_VISIBILITY_PART,id:h.id};
   if ([STATES.INSPECTION_OVERVIEW, STATES.INSPECTION_SUMMARY].includes(state.name) && h?.kind === 'charge') return { type: EVENTS.SELECT_AREA, id: 'ev-charge', partId: h.id };
@@ -533,13 +570,21 @@ addEventListener("resize", () => {
 });
 
 // The map tints existing cloned rubber materials only. Selection keeps its independent cyan emissive.
-let inspectionMap=inspectionStateMap(userInspection);
+let inspectionMap=projectInspectionResults(userInspection,mobileResults.snapshot);
+const resultBaseColors=new WeakMap();
 function syncInspectionMap() {
-  inspectionMap=inspectionStateMap(userInspection);
-  for(const row of inspectionMap)for(const mesh of M.tires.get(row.partId)?.meshes??[]){
-    mesh.material.color.setHex(state.name===STATES.IDLE?mesh.userData.inspectionBaseColor:row.color);
+  inspectionMap=projectInspectionResults(userInspection,mobileResults.snapshot);
+  for(const row of inspectionMap)for(const mesh of targetMeshes(row.partId)??[]){
+    if(!resultBaseColors.has(mesh.material))resultBaseColors.set(mesh.material,mesh.userData.inspectionBaseColor??mesh.material.color.getHex());
+    mesh.material.color.setHex(state.name===STATES.IDLE||!M.tires.has(row.partId)&&row.status==='NOT_INSPECTED'?resultBaseColors.get(mesh.material):row.color);
   }
 }
+mobileResults.subscribe(()=>{syncInspectionMap();if(!window.__inspectReady)return;const scroll=$('panel').scrollTop,focused=document.activeElement;
+  const region=$('mobilePartResults');if(region)region.innerHTML=partResultHtml(userInspection,mobileResults.snapshot,state.component);
+  const summary=$('allResults');if(summary)summary.innerHTML=resultSummaryHtml(userInspection,mobileResults.snapshot);
+  if(focused?.dataset.record&&!document.contains(focused))$('panel').querySelector(`[data-record="${focused.dataset.record}"]`)?.focus({preventScroll:true});
+  $('panel').scrollTop=scroll;
+});
 // ---------- highlight and label ----------
 const _v = new THREE.Vector3();
 function screenPoint(obj, top = true) {
@@ -692,6 +737,8 @@ function dispose(reason) {
   disposeComponentStatus();
   disposeChargePortStatus();
   disposeVisibilityStatus();
+  mobileResults.dispose();
+  clearInterval(mobileExpiryTimer);
   userInspection=createTireInspection(crypto.randomUUID());syncInspectionMap();
   renderer.setAnimationLoop(null);
   controls.dispose();
@@ -708,6 +755,8 @@ function dispose(reason) {
   log("disposed", out);
   return out;
 }
+addEventListener('pagehide',()=>dispose('pagehide'),{once:true});
+addEventListener('pageshow',event=>{if(event.persisted)location.reload();});
 
 // Test and developer hooks (no vehicle control here: a visual flow only).
 window.__inspect = {
@@ -735,7 +784,10 @@ window.__inspect = {
   },
   batteryView: () => ({ visible: M.components.get(EV_BATTERY_ID)?.[0].visible, meta: M.components.get(EV_BATTERY_ID)?.[0].userData.meta, floorVisible: floor.visible, ringVisible: ring.visible, maxPolarAngle: controls.maxPolarAngle }),
   userInspection: () => userInspection,
-  inspectionMap: () => inspectionMap,
+  inspectionMap: () => inspectionStateMap(userInspection),
+  resultMap:()=>inspectionMap,
+  resultPaint:()=>[...targetGroups()].filter(([id])=>targetForPart(id)).map(([id,meshes])=>({partId:id,colors:meshes.map(m=>m.material.color.getHex()),baseColors:meshes.map(m=>resultBaseColors.get(m.material))})),
+  nativeResults:()=>mobileResults.snapshot,
   inspectionPaint: () => [...M.tires].map(([id,t])=>({id,colors:t.meshes.map(m=>m.material.color.getHex()),baseColors:t.meshes.map(m=>m.userData.inspectionBaseColor)})),
   hoodPoint: () => screenPoint(M.hoodMeshes[0], false),
   capPoint: () => screenPoint(M.cap),

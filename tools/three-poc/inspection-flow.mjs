@@ -5,6 +5,7 @@
 
 import { TIRES } from './inspection-tires.mjs';
 import { WIPER_PARTS, LIGHT_PARTS } from './visibility-parts.mjs';
+import {targetForPart} from './mobile-result-contract.mjs';
 
 export const STATES = Object.freeze({
   IDLE: 'IDLE',
@@ -20,6 +21,7 @@ export const STATES = Object.freeze({
   EV_BATTERY_PREVIEW: 'EV_BATTERY_PREVIEW',
   CHARGE_PORT_PREVIEW: 'CHARGE_PORT_PREVIEW',
   VISIBILITY_PREVIEW: 'VISIBILITY_PREVIEW',
+  PART_RESULT: 'PART_RESULT',
 });
 
 export const EVENTS = Object.freeze({
@@ -27,10 +29,11 @@ export const EVENTS = Object.freeze({
   SELECT_COMPONENT: 'SELECT_COMPONENT', SELECT_TIRE: 'SELECT_TIRE', REQUEST_HANDOFF: 'REQUEST_HANDOFF', BACK: 'BACK', EXIT: 'EXIT',
   SELECT_CHARGE_PART: 'SELECT_CHARGE_PART',
   SELECT_VISIBILITY_PART: 'SELECT_VISIBILITY_PART',
+  OPEN_RESULT: 'OPEN_RESULT',
 });
 
-// Inspection areas. Only `available` entries can be selected; `planned` ones are listed as not yet
-// implemented. Component ids match tools/ioniq5-asset/service-components.mjs SERVICE_EVIDENCE.
+// Geometry navigation keeps its existing availability policy. Planned entries may open a
+// separate result detail without claiming geometry. IDs match SERVICE_EVIDENCE/visibility parts.
 export const INSPECTION_AREAS = Object.freeze([
   {
     id: 'hood', label: '보닛 · 전방 수납부', status: 'available',
@@ -77,12 +80,19 @@ export function transition(state, event, ctx = {}) {
   };
   const selectTire = () => TIRES.some(t => t.id === event.id) && state.component !== event.id
     ? to(S.TIRE_PREVIEW, { area: 'tires', component: event.id }) : state;
+  if(type===E.OPEN_RESULT&&![S.IDLE,S.HOOD_CLOSING].includes(state.name)){
+    const target=targetForPart(event.id);return target?to(S.PART_RESULT,{component:target.partId,area:target.area,afterClose:null}):state;
+  }
   if (type === E.SHOW_SUMMARY && state.name !== S.IDLE) {
     if (state.name === S.INSPECTION_SUMMARY || (state.name === S.HOOD_CLOSING && [S.IDLE, S.INSPECTION_SUMMARY].includes(state.afterClose))) return state;
     return hoodTarget(state) > 0 || state.name === S.HOOD_CLOSING
       ? close(S.INSPECTION_SUMMARY) : to(S.INSPECTION_SUMMARY, { area: null, component: null, afterClose: null });
   }
   switch (state.name) {
+    case S.PART_RESULT:
+      if(type===E.SELECT_TIRE&&state.area==='tires'&&TIRES.some(t=>t.id===event.id))return to(S.TIRE_PREVIEW,{component:event.id});
+      if(type===E.BACK||type===E.EXIT)return state.area==='hood'?close(type===E.EXIT?S.IDLE:S.INSPECTION_SUMMARY):type===E.EXIT?initialState():to(S.INSPECTION_SUMMARY,{area:null,component:null});
+      return state;
     case S.IDLE:
       return type === E.START ? to(S.INSPECTION_OVERVIEW) : state;
     case S.INSPECTION_OVERVIEW:
@@ -160,12 +170,14 @@ export const areaOf = (state) => INSPECTION_AREAS.find((a) => a.id === state.are
 
 /** Hood angle the page animates toward while in `state`. */
 export function hoodTarget(state) {
+  if(state.name===S.PART_RESULT)return state.area==='hood'?HOOD_OPEN_DEG:0;
   return [S.HOOD_OPENING, S.COMPONENT_SELECTION, S.WASHER_SELECTED, S.COMPONENT_PREVIEW, S.MOBILE_HANDOFF_READY].includes(state.name) ? HOOD_OPEN_DEG : 0;
 }
 
 /** Named camera goal for `state`: home orbit, overview, engine bay or washer close-up. */
 export function cameraGoal(state) {
   switch (state.name) {
+    case S.PART_RESULT:return state.component==='lcw-coolant-reservoir'?'bay':state.component;
     case S.IDLE: return 'home';
     case S.INSPECTION_SUMMARY: case S.INSPECTION_OVERVIEW: return 'overview';
     case S.TIRE_SUMMARY: case S.TIRE_SELECTION: return 'tires';
