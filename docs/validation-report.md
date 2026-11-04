@@ -1,5 +1,11 @@
 # CarScope 검증 보고서
 
+## P7 Native — 신규 10개 / 총 17 task 수신 통합 (2026-11-04)
+
+#72 병합 main과 #71의 기존 7-task 수신기를 일반 merge한 별도 브랜치에서 신규 10개 exact profile을 연결했다. Native QR 생성·strict schema-v2 디코딩·결과 표시·digest·명시적 Accept를 기존 공통 흐름으로 처리한다. Native가 컴파일 후 내보낸 allowlist/part/schema/keys를 실제 모바일/Node 및 인계 문서와 자동 대조한다.
+
+새 실행: app 211 PASS, core 37 PASS/1 SKIP(외부 parts 미지정), 모바일 80 PASS, sync 127 PASS/4 SKIP(PG 미설정), 3D Node 81 PASS. 실제 모바일 생성기 1,740개 조합과 Native canonical bytes/digest 일치, 17개 각각의 QR bitmap/결과/단일 Accept와 오류·중복·만료·취소 검사 PASS. 실제 loopback TLS/SQLite·테스트 인증기관·모바일 SyncClient·Native controller의 17-task E2E PASS. Debug/Release APK·Release AAB·lint(0 error/22 warning)·5개 경계/계약 스크립트 PASS. 실제 AVD/스마트폰·실차·ANR 재검증은 NOT_RUN이며 #71의 실제 SDK 관측과 ANR 증거를 보존했다. [전체 명령·범위](p7-c-native-17-tasks.md), [실패·재실행·증거 인덱스](evidence/p7-native-17/README.md).
+
 ## P7-A — SDK AVD 표시와 Native 브레이크액 수신 (2026-11-04)
 
 새 실행: app JVM/Robolectric 205 PASS, core 37 PASS/1 SKIP(외부 자산 미지정), 3D UI Node 81 PASS, Android 자산 1 PASS, sync Node 107 PASS/4 SKIP(Postgres 미설정). Debug/Release APK·Release AAB·lint(0 error/23 warning) 및 Debug/Release 경계 PASS. Native QR task는 기존 6개에 brake-fluid를 추가해 7개이며, 실제 모바일 생성기/클라이언트→로컬 TLS/SQLite→Native 수신→명시적 Accept→모바일 ACCEPTED 통합 검증 PASS. 실제 폰·실제 차량 결과가 아니다.

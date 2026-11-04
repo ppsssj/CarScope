@@ -1,5 +1,7 @@
 # 아키텍처와 P0 계약
 
+[P7 Native 17-task 통합](p7-c-native-17-tasks.md)은 #72의 exact task/part/responseKeys를 기존 Debug Native 체크리스트 profile에 등록한다. QR·strict decoding·digest·명시적 Accept는 공통 client/controller를 재사용하며 SDK 관측·3D 상태·운영 인증과 독립이다. 현재 전체 allowlist는 모바일/Node/Native 간 자동 비교한다.
+
 P7-A는 기존 Debug Component/Tire 캐시와 3D 패널을 재사용하고, Native 모바일 수신의 엄격한 schema-v2 체크리스트 profile에 `brake-fluid`를 추가한다. SDK 관측과 USER_REPORTED 결과는 독립이며 실제 기기 지원과 선언 목록을 구분한다. [부품·task 매핑](contracts/p7-part-coverage.md), [실행 결과](p7-a-pleos-runtime.md).
 
 ## 계층

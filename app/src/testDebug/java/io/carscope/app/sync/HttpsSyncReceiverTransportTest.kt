@@ -138,7 +138,7 @@ class HttpsSyncReceiverTransportTest {
             f.status = 201; f.body = HttpSamples.creation.replace("washer-fluid", task)
             assertTrue(f.await<CreatedSyncSession> { transport.create(task, it) } is SyncReply.Success)
             assertEquals("""{"taskId":"$task"}""", f.bodies.first())
-            f.status = 200; val record = when (task) { "ev-charge.port" -> ChargeSamples.result(); "brake-fluid" -> BrakeSamples.result(); else -> TireSamples.result(task) }
+            f.status = 200; val record = NativeTaskSamples.result(task)
             f.body = TireSamples.wire(record)
             assertTrue(f.await<SyncReceiverView> { transport.view(HttpSamples.ID, ReceiverCredential(HttpSamples.receiver), it) } is SyncReply.Success)
             f.body = TireSamples.wire(record, "ACCEPTED")

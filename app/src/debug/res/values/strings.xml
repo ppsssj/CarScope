@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="inspection_sync_entry_tasks">모바일 부품 점검 결과 수신 · %1$d개 항목 (Debug)</string>
+</resources>

@@ -31,7 +31,7 @@ internal class ActivityFakeTransport : ConnectedSyncReceiverTransport {
     var cancelFailure = false
     var result = false
     var taskId = "washer-fluid"
-    private val record: SyncInspection get() = when (taskId) { "washer-fluid" -> HttpSamples.result; "ev-charge.port" -> ChargeSamples.result(); "brake-fluid" -> BrakeSamples.result(); else -> TireSamples.result(taskId) }
+    private val record: SyncInspection get() = NativeTaskSamples.result(taskId)
     override fun creationAuthorized() = !closed
     override fun checkConnection(callback: (SyncReply<Unit>) -> Unit): SyncCancellation { callback(probeFailure?.let { SyncReply.Failure(it) } ?: SyncReply.Success(Unit)); return SyncCancellation {} }
     override fun create(callback: (SyncReply<CreatedSyncSession>) -> Unit): SyncCancellation {
@@ -75,8 +75,8 @@ class SyncReceiverActivityTest {
     private fun <T : View> view(activity: SyncReceiverActivity, tag: String): T = activity.findViewById<ViewGroup>(android.R.id.content).findViewWithTag(tag)
     private fun text(activity: SyncReceiverActivity, tag: String): String = view<TextView>(activity, tag).text.toString()
     private fun poll() { shadowOf(Looper.getMainLooper()).idleFor(2, TimeUnit.SECONDS) }
-    @Test fun `each selected tire and charge port renders three independent user answers and explicit single accept`() {
-        for (index in 1 until SyncTasks.all.size) {
+    @Test fun `each of seventeen tasks renders exact QR independent user answers and explicit single accept`() {
+        for (index in SyncTasks.all.indices) {
             val b = Robolectric.buildActivity(ReceiverFixtureActivity::class.java).setup(); val a = b.get()
             view<Spinner>(a, "task").setSelection(index)
             view<Button>(a, "create").performClick()
@@ -88,9 +88,10 @@ class SyncReceiverActivityTest {
             a.fake.result = true; poll()
             val text = text(a, "result")
             val details = if (a.fake.taskId == "ev-charge.port") listOf("덮개 손상: 보이는 범위에서 발견하지 못함", "이물질·오염: 발견 보고", "눈에 보이는 변형·변색: 확인 불가", "충전 가능·고전압 시스템 안전 판정이 아닙니다")
-                else if (a.fake.taskId == "brake-fluid") listOf("외부 액면·MIN/MAX 표시: 보이는 범위에서 발견하지 못함", "누출 의심 흔적: 발견 보고", "리저버·캡 외관 손상: 확인 불가", "SDK 브레이크액 레벨·안전 판정과 별개")
+                else if (a.fake.taskId in SyncChecklistTasks.profiles) SyncChecklistTasks.profiles.getValue(a.fake.taskId).responseLabels.values.zip(listOf("보이는 범위에서 발견하지 못함","발견 보고","확인 불가")) { label,answer -> "$label: $answer" } + "SDK 관측·안전 판정과 별개"
+                else if (a.fake.taskId == "washer-fluid") listOf("보충 필요")
                 else listOf("손상: 보이는 범위에서 발견하지 못함", "이물질: 발견 보고", "불균일 마모: 확인 불가")
-            for (label in details + listOf(SyncTasks.labels[index], "REVIEW_NEEDED", "SELF · USER_REPORTED", "안전·정상·주행 가능 판정이 아닙니다")) assertTrue(label, text.contains(label))
+            for (label in details + listOf(SyncTasks.labels[index], "SELF · USER_REPORTED", "안전·정상·주행 가능 판정이 아닙니다")) assertTrue(label, text.contains(label))
             assertEquals(0, a.fake.accepted); assertTrue(view<Button>(a, "accept").isEnabled)
             a.fake.defer = true
             view<Button>(a, "accept").performClick(); view<Button>(a, "accept").performClick()

@@ -9,6 +9,8 @@ import { startInspection, completeInspection } from '../mobile-ar-poc/public/ins
 import { tireResult, TIRE_CHECKS } from '../mobile-ar-poc/public/tire-result.mjs';
 import { chargeResult, CHARGE_CHECKS } from '../mobile-ar-poc/public/charge-result.mjs';
 import { brakeResult, BRAKE_CHECKS } from '../mobile-ar-poc/public/brake-result.mjs';
+import { extraTask } from '../mobile-ar-poc/public/extra-tasks.mjs';
+import { getExtraResult } from '../mobile-ar-poc/public/extra-result.mjs';
 const proof = process.env.SYNC_ENROLLMENT_FIXTURE;
 delete process.env.SYNC_ENROLLMENT_FIXTURE;
 if (!/^[A-Za-z0-9_-]{43}$/.test(proof ?? '')) throw new Error('MISSING_PRIVATE_FIXTURE_PROOF');
@@ -32,7 +34,8 @@ try {
       let result;
       if (taskId === 'washer-fluid') result = completeInspection(startInspection(), 'UNSURE');
       else {
-        const [profile,checks] = taskId === 'brake-fluid' ? [brakeResult,BRAKE_CHECKS] : taskId === 'ev-charge.port' ? [chargeResult,CHARGE_CHECKS] : [tireResult,TIRE_CHECKS];
+        const extra = extraTask(taskId);
+        const [profile,checks] = extra ? [getExtraResult(taskId),extra.checks] : taskId === 'brake-fluid' ? [brakeResult,BRAKE_CHECKS] : taskId === 'ev-charge.port' ? [chargeResult,CHARGE_CHECKS] : [tireResult,TIRE_CHECKS];
         result = profile.start(taskId);
         for (const check of checks) result = profile.answer(result,check.id,'UNABLE');
         result = profile.complete(result);

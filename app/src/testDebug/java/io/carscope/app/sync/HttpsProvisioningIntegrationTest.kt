@@ -19,12 +19,13 @@ import org.junit.Test
 /** Actual loopback TLS and SQLite, synthetic authority. No Android/AVD/login/issuer claim. */
 class HttpsProvisioningIntegrationTest {
     @Test fun `HTTPS provisioning refresh revocation expiry and reconnection gate Native creation against remote authority`() {
-        runIntegration(false)
+        runIntegration(emptyList())
     }
-    @Test fun `all seven QR tasks cross real TLS mobile submission Native display explicit Accept and mobile receipt`() {
-        runIntegration(true)
+    @Test fun `all seventeen QR tasks cross real TLS mobile submission Native display explicit Accept and mobile receipt`() {
+        // Separate short-lived services keep the unchanged 10 creates/minute limiter in force.
+        SyncTasks.all.chunked(8).forEach { runIntegration(it) }
     }
-    private fun runIntegration(coverage: Boolean) {
+    private fun runIntegration(tasks: List<String>) {
         val root = generateSequence(File(System.getProperty("user.dir") ?: ".").canonicalFile) { it.parentFile }
             .first { File(it, "tools/native-auth-sync/fixture.mjs").isFile }
         val proof = Base64.getUrlEncoder().withoutPadding().encodeToString(ByteArray(32).also(SecureRandom()::nextBytes))
@@ -63,10 +64,10 @@ class HttpsProvisioningIntegrationTest {
             }
             transport.use {
                 assertFalse(transport.creationAuthorized()); refresh(true)
-                if (!coverage) create(true)
+                if (tasks.isEmpty()) create(true)
                 // Real TLS + SQLite + shipped mobile constructors/client + actual Native controller.
                 // Synthetic authority/user answers. No AVD, optical scan or real phone claim.
-                for (task in if (coverage) SyncTasks.all else emptyList()) {
+                for (task in tasks) {
                     val owner = SyncReceiverController(SyncReceiverClient(transport, System::currentTimeMillis), SyncReceiverScheduler { _, _ -> SyncCancellation {} }) {}
                     owner.create(endpoint.mobileRoot, task); drain()
                     assertEquals(task, java.net.URI(owner.state.qr!!.value).fragment.substringAfter("task=").substringBefore("&"))
@@ -83,7 +84,7 @@ class HttpsProvisioningIntegrationTest {
                     output.write(status.toString() + "\n"); output.flush(); assertEquals("ACCEPTED", read()["sessionState"].asString)
                     owner.close()
                 }
-                if (!coverage) {
+                if (tasks.isEmpty()) {
                 command("revoke"); create(false) // Server revocation is authoritative even before the local lease expires.
                 refresh(false)
                 command("rotate"); refresh(true); create(true)

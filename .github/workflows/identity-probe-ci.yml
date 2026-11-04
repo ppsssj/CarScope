@@ -52,7 +52,9 @@ jobs:
       - name: Validate Kotlin status projection with the JavaScript consumer
         run: node tools/three-poc/check-tire-native-contract.mjs app/build/test-results/tire-ui-v1.json
       - name: Verify sync receiver Debug and Release boundary
-        run: python3 tools/inspection-sync-poc/android/check-boundary.py
+        run: |
+          python3 tools/inspection-sync-poc/android/check-boundary.py
+          node tools/native-task-sync/contract.mjs app/build/test-results/native-tasks-v2.json
       - name: Verify public SDK component declarations and Debug-only cache boundary
         run: |
           python3 -B -m unittest discover -s tools/component-probe -p 'test_*.py' -v

@@ -38,7 +38,7 @@ class InspectionSyncEntryTest {
         val root = a.findViewById<ViewGroup>(android.R.id.content).getChildAt(0) as ViewGroup
         assertEquals(2, root.childCount); assertSame(button(a), root.getChildAt(0))
         assertTrue(root.getChildAt(1) is android.webkit.WebView)
-        assertTrue(button(a).text.contains("워셔액")); assertTrue(button(a).text.contains("타이어")); assertTrue(button(a).text.contains("충전구"))
+        assertTrue(button(a).text.contains("모바일 부품 점검")); assertTrue(button(a).text.contains("17개 항목"))
         b.destroy()
     }
     @Test fun `entry sends one explicit credential-free Intent and Back leaves parent content intact`() {
