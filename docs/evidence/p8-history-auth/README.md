@@ -30,7 +30,7 @@
 
 ## CI
 
-PR의 PostgreSQL workflow와 Sync workflow 결과는 PR 체크에서 확인한다. CI 성공은 해당 job 범위(Node·SQLite·실제 PG16 합성 인증)에 한정한다.
+`d7f56e3` PR 실행: [PostgreSQL 16 통합](https://github.com/ppsssj/CarScope/actions/runs/41831880806) PASS(기존 PG·History 및 `history-auth-postgres`), [Sync Ubuntu/Windows](https://github.com/ppsssj/CarScope/actions/runs/41831880869) PASS, 그 밖의 저장소 CI PASS. 이 링크 이후 문서만 바꾼 커밋의 결과는 PR 체크를 따른다. CI 성공은 해당 job 범위(Node·SQLite·실제 PG16 합성 인증)에 한정하며 실제 소유권·운영 Render·기기 검증이 아니다.
 
 ## 미실행
 
