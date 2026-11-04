@@ -1,6 +1,6 @@
 # P7-C2 Native ACCEPTED → 3D
 
-기준 main `8cb87c9c4573542ca1eb9e359c064410f4af5d57`. PR #71/#72/#73/#74 병합을 확인하고 `feat/p7-c2-native-3d-bridge`에서 시작했다. 이 문서는 구현 경계이며 실기기 E2E 성공 증거가 아니다.
+`8cb87c9`(PR #71/#72/#73/#74 병합)에서 `feat/p7-c2-native-3d-bridge`로 시작해 Codex B 중단 후 인계받았고, main `2435087`(P8-A1 포함) 위로 재정렬했다. 이 문서는 구현 경계이며 실기기 E2E 성공 증거가 아니다.
 
 ## 소유 구조와 결정
 
@@ -27,7 +27,7 @@ inspect.js의 고정 Android adapter import
  → 기존 C1 후보 → 사용자 ‘이 기록 적용’ → 기존 부품/상태/요약 projection
 ```
 
-서버 clock 필드가 없는 현재 응답에서는 binding 단계에서 중단한다. 이를 우회하는 생산 테스트 어댑터는 없다. `NATIVE_3D_BRIDGE_IMPLEMENTED`는 전송 코드가 있다는 뜻이며 운영 완료/실제 ACCEPTED 전달 PASS를 뜻하지 않는다. 배포 연결 상태는 `NATIVE_3D_BLOCKED`다.
+서버 clock 필드가 없는 현재 응답에서는 binding 단계에서 중단한다. 이후 사용자가 Native에서 수락해도 첫 차단 원인을 유지해 3D에 `SERVER_CLOCK_UNAVAILABLE`로 표시한다. 이를 우회하는 생산 테스트 어댑터는 없다. `NATIVE_3D_BRIDGE_IMPLEMENTED`는 전송 코드가 있다는 뜻이며 운영 완료/실제 ACCEPTED 전달 PASS를 뜻하지 않는다. 배포 연결 상태는 `NATIVE_3D_BLOCKED`다.
 
 ## 신뢰·proof·수명주기
 
@@ -37,6 +37,7 @@ inspect.js의 고정 Android adapter import
 - binding은 localSessionId/generation, syncSessionId, 정확한 taskId/partId, 원본 expiry, 보수적인 서버 시각 상한을 고정한다. IDs/digest/원본 결과/수신·수락 시각을 검증한 뒤 Native가 proofId를 발급한다. 중복 Accept는 처음 proof를 유지한다. verifyAccepted는 입력을 echo하지 않고 이 Native 저장소의 결과를 재해시하고 보관된 proof와 정확히 대조한다.
 - Native UI 열기 콜백도 localSessionId/generation/taskId를 캡처한다. 현재 요청인지 확인하고 이전 controller 세대를 reset한 뒤에만 수신 콜백을 arm한다. 새 요청 등록과 UI 실행 사이에 도착한 이전 HTTP callback은 binding을 만들 수 없다.
 - Native `onPause`에서 binding/proof를 폐기하고 `onStop`에서 기존 receiver의 HTTP/poll/provisioning/credential을 닫는다. destroy는 영구 폐기한다. 저장 상태/프로세스 싱글턴에 권한을 넣지 않는다. 재생성 시 새 owner이며, 기존 WebView 세션은 새 로컬 점검을 시작해야 한다. 이전 generation의 open도 재사용하지 않는다. renderer 종료 시 현재 WebView를 없애고 Activity를 종료한다.
+- 상속한 `FLAG_SECURE`는 Native 패널이 보이는 동안만 켠다. QR·수신 결과를 보호하되 기존 3D 화면의 캡처를 막지 않는다. stop 없는 pause로 bridge가 폐기되면 패널도 닫아 잠금 해제된 receiver를 남기지 않는다.
 - C1 소비자의 검증·원본 timestamp·별도 모바일 후보/명시 선택·17개 매핑·로컬 타이어/SDK 분리·재질 복구를 유지한다. LCW 등 미구현 형상은 기존 목록 상세를 사용한다. 이미 사용자가 선택한 보고는 C1의 기존 정책대로 전달 종료 표시와 함께 로컬 점검 종료까지 보존하며, 새 후보 적용은 막는다.
 
 ## 서버 인계 및 검증

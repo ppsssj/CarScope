@@ -1,5 +1,9 @@
 # 로드맵 및 진입 조건
 
+## P7-C2 — Native ACCEPTED → 3D 전달
+
+고정 자산 RPC, token 없는 proof 저장소, Android 어댑터를 C1 소비자에 연결했다. 계약은 합성 clock으로 검증했으나, 실제 전달은 서버 생성 응답의 `serverNow` 부재로 **BLOCKED**이고 기기 E2E는 NOT_RUN이다. [구현](p7-c2-native-3d-bridge.md), [검증·해제 조건](p7-c2-validation.md).
+
 ## P7 Native — 17-task 수신 통합
 
 #72 병합 계약을 기준으로 기존 7개 + 신규 10개 Native QR/strict decoding/결과/digest/명시적 Accept를 공통 profile 구조에 연결한다. [구현·재실행·검증 범위](p7-c-native-17-tasks.md), [증거 인덱스](evidence/p7-native-17/README.md). 실제 AVD/스마트폰 검증과 이전 ANR 해결은 별도 미완료이며 SDK API 재실행·Geometry·운영 인증 변경을 포함하지 않는다.
