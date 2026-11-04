@@ -76,3 +76,16 @@ npm run test:history
 History PG 테스트는 loopback만 허용하고 UUID 기반 전용 schema를 생성·정리한다. Render URL은 거부한다. 다른 기존 PG 테스트는 자체 테스트 DB를 쓰므로 공유/운영 DB에서 실행하면 안 된다. CI는 postgres:16 임시 service에 기존 PG/AVD/관리자/History 테스트를 순서대로 실행한다. `PG_TEST_URL`이 없으면 실제 PG 항목은 skip이며 PASS로 세지 않는다.
 
 검증 결과 및 CI 실행 인덱스는 [증거 인덱스](evidence/p8-history/README.md)에 기록한다. 원본 로그·인증서·DB URL·QR·이미지·기기 자료는 Git에 넣지 않는다.
+
+## 변경 파일 목록 (18개)
+
+| 그룹 | 파일 |
+|---|---|
+| CI | `.github/workflows/postgres-store-ci.yml` |
+| 실행/검사 | `tools/inspection-sync-poc/package.json` |
+| 영구 저장/조회 | `src/history.mjs`, `src/postgres-history-schema.sql`, `src/postgres-store.mjs` |
+| HTTP/인증/세션 | `src/history-authorizer.mjs`, `src/server.mjs`, `src/render-stateful.mjs`, `src/sessions.mjs`, `src/verified-creation-authorizer.mjs`, `src/avd-simulator-credentials.mjs` |
+| 테스트 | `test/history.test.mjs`, `test/history-postgres.test.mjs`, `test/history-fixtures.mjs`, `test/history-restart-child.mjs` |
+| 문서 | `docs/contracts/p8-inspection-history-v1.md`, `docs/p8-a1-inspection-history-backend.md`, `docs/evidence/p8-history/README.md` |
+
+표의 `src/`, `test/`는 `tools/inspection-sync-poc/` 기준이다. 기존 base PostgreSQL DDL 파일은 변경하지 않는다.

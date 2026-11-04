@@ -15,7 +15,7 @@
 | `npm run test:sqlite` | Windows, Node 22.16.0: 기존 service/race 21 PASS / 0 FAIL | 외부 `sqlite-final.log` |
 | PostgreSQL workflow 최초 구현 | Ubuntu / Node 22.16.0 / 실제 postgres:16: 기존 PG 8 + AVD 6 + admin 2 + History 12 PASS | [61205e2 CI](https://github.com/ppsssj/CarScope/actions/runs/41812199011) |
 | PostgreSQL workflow 경계 보강 | 동일 격리 CI: 기존 16 + History 15 PASS, 0 FAIL / 0 SKIP | [aeb3816 CI](https://github.com/ppsssj/CarScope/actions/runs/41813028521) |
-| 별도 Node 프로세스 재시작 조회 | 추가 테스트 구현; 최종 PR CI 결과로 확인 필요 | `test/history-restart-child.mjs` |
+| PR PostgreSQL / 별도 Node 프로세스 재시작 조회 | 실제 PG16: 기존 16 + History 15 PASS / 0 FAIL / 0 SKIP. 새 서버·pool 재시작, 원본 세션 purge 및 별도 Node 프로세스 조회 모두 PASS | [5c7d976 PR CI](https://github.com/ppsssj/CarScope/actions/runs/41813698330), `test/history-restart-child.mjs` |
 | Render migration / 실 소유권 / 스마트폰 / AVD | NOT_RUN / AUTH_BLOCKED | 운영 접근·데이터 변경 없음 |
 
 History PG의 15는 최상위 테스트 1개 + subtest 14개이며 17-task 반복을 17개 독립 TAP 테스트로 부풀리지 않는다. 로컬 `npm test`의 실제 PG 항목 5개는 PG_TEST_URL 미설정으로 skip이다. 로컬 Docker daemon은 연결 불가였고 PG를 로컬에서 실행한 것으로 주장하지 않는다. 임시 PostgreSQL CI는 실제 SQL/transaction 검증이고 사용자 입력/소유권은 합성이다.
