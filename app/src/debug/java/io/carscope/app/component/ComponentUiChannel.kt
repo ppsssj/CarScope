@@ -17,7 +17,9 @@ internal class ComponentOwner(private val source: PleosComponentDataSource) {
 }
 internal object ComponentProcessOwner {
     @Volatile private var owner: ComponentOwner? = null
-    @Synchronized fun get(context: Context): ComponentOwner = owner ?: ComponentOwner(PleosComponentDataSource({ createComponentSdkSession(context.applicationContext) })).also { owner = it }
+    @Synchronized fun get(context: Context): ComponentOwner = owner ?: ComponentOwner(PleosComponentDataSource(
+        { createComponentSdkSession(context.applicationContext) }, log = { android.util.Log.i("CarScopeComponent", it) }
+    )).also { owner = it }
 }
 internal fun createComponentSdkSession(context: Context): ComponentSession {
     if (!context.packageManager.hasSystemFeature(android.content.pm.PackageManager.FEATURE_AUTOMOTIVE)) throw ComponentEnvironmentUnsupported()

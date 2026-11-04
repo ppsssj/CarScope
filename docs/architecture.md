@@ -1,5 +1,7 @@
 # 아키텍처와 P0 계약
 
+P7-A는 기존 Debug Component/Tire 캐시와 3D 패널을 재사용하고, Native 모바일 수신의 엄격한 schema-v2 체크리스트 profile에 `brake-fluid`를 추가한다. SDK 관측과 USER_REPORTED 결과는 독립이며 실제 기기 지원과 선언 목록을 구분한다. [부품·task 매핑](contracts/p7-part-coverage.md), [실행 결과](p7-a-pleos-runtime.md).
+
 ## 계층
 
 ```text

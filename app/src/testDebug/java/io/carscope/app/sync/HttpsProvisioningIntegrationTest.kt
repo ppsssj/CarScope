@@ -19,6 +19,12 @@ import org.junit.Test
 /** Actual loopback TLS and SQLite, synthetic authority. No Android/AVD/login/issuer claim. */
 class HttpsProvisioningIntegrationTest {
     @Test fun `HTTPS provisioning refresh revocation expiry and reconnection gate Native creation against remote authority`() {
+        runIntegration(false)
+    }
+    @Test fun `all seven QR tasks cross real TLS mobile submission Native display explicit Accept and mobile receipt`() {
+        runIntegration(true)
+    }
+    private fun runIntegration(coverage: Boolean) {
         val root = generateSequence(File(System.getProperty("user.dir") ?: ".").canonicalFile) { it.parentFile }
             .first { File(it, "tools/native-auth-sync/fixture.mjs").isFile }
         val proof = Base64.getUrlEncoder().withoutPadding().encodeToString(ByteArray(32).also(SecureRandom()::nextBytes))
@@ -56,7 +62,28 @@ class HttpsProvisioningIntegrationTest {
                 if (!expected) assertEquals(SyncFailure.UNAUTHORIZED, (result as SyncReply.Failure).reason)
             }
             transport.use {
-                assertFalse(transport.creationAuthorized()); refresh(true); create(true)
+                assertFalse(transport.creationAuthorized()); refresh(true)
+                if (!coverage) create(true)
+                // Real TLS + SQLite + shipped mobile constructors/client + actual Native controller.
+                // Synthetic authority/user answers. No AVD, optical scan or real phone claim.
+                for (task in if (coverage) SyncTasks.all else emptyList()) {
+                    val owner = SyncReceiverController(SyncReceiverClient(transport, System::currentTimeMillis), SyncReceiverScheduler { _, _ -> SyncCancellation {} }) {}
+                    owner.create(endpoint.mobileRoot, task); drain()
+                    assertEquals(task, java.net.URI(owner.state.qr!!.value).fragment.substringAfter("task=").substringBefore("&"))
+                    val submission = JsonObject().apply { addProperty("op", "mobile-submit"); addProperty("qr", owner.state.qr!!.value) }
+                    output.write(submission.toString() + "\n"); output.flush()
+                    val receipt = read(); assertTrue(receipt["ok"].asBoolean); assertEquals(task, receipt["taskId"].asString)
+                    assertEquals(ReceiverPhase.WAITING, owner.state.phase); assertFalse(owner.state.canAccept)
+                    owner.poll(); drain(); assertEquals(ReceiverPhase.RESULT_SUBMITTED, owner.state.phase)
+                    assertTrue(owner.state.canAccept); assertEquals(task, owner.state.result!!.taskId)
+                    assertEquals(receipt["receipt"].asJsonObject["resultDigest"].asString, owner.state.digest)
+                    val status = JsonObject().apply { addProperty("op", "mobile-status"); addProperty("taskId", task) }
+                    output.write(status.toString() + "\n"); output.flush(); assertEquals("RESULT_SUBMITTED", read()["sessionState"].asString)
+                    owner.accept(); drain(); assertEquals(ReceiverPhase.ACCEPTED, owner.state.phase); assertFalse(owner.state.canAccept)
+                    output.write(status.toString() + "\n"); output.flush(); assertEquals("ACCEPTED", read()["sessionState"].asString)
+                    owner.close()
+                }
+                if (!coverage) {
                 command("revoke"); create(false) // Server revocation is authoritative even before the local lease expires.
                 refresh(false)
                 command("rotate"); refresh(true); create(true)
@@ -73,6 +100,7 @@ class HttpsProvisioningIntegrationTest {
                     connections = { (it.toURL().openConnection() as HttpsURLConnection).apply { sslSocketFactory = tls.socketFactory } }).use { slow ->
                     var callbacks = 0; slow.fetch { callbacks++; assertNull(it) }; drain()
                     queue.poll(350, TimeUnit.MILLISECONDS)?.invoke(); assertEquals(1, callbacks)
+                }
                 }
                 source.invalidate(); assertFalse(transport.creationAuthorized())
             }

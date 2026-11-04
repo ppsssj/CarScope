@@ -159,6 +159,14 @@ open class SyncReceiverActivity : Activity() {
         } + if (state.failure != null) "\n요청 실패: ${failureMessage(state.failure)} · 취소/수락 성공이 아닙니다." else ""
         summary.text = state.result?.let { result ->
             val detail = when (result) {
+                is CompletedChecklistInspection -> {
+                    fun answer(value: ChecklistAnswer) = when (value) {
+                        ChecklistAnswer.FOUND -> "발견 보고"; ChecklistAnswer.NOT_FOUND -> "보이는 범위에서 발견하지 못함"; ChecklistAnswer.UNABLE -> "확인 불가"
+                    }
+                    SyncChecklistTasks.profiles.getValue(result.taskId).responseLabels.entries.joinToString("\n") {
+                        "${it.value}: ${answer(result.responses.getValue(it.key))}"
+                    } + "\n종합: ${result.statusName}\n외부 육안 보고이며 SDK 브레이크액 레벨·안전 판정과 별개입니다."
+                }
                 is CompletedChargeInspection -> {
                     fun answer(value: ChargeAnswer) = when (value) {
                         ChargeAnswer.FOUND -> "발견 보고"; ChargeAnswer.NOT_FOUND -> "보이는 범위에서 발견하지 못함"; ChargeAnswer.UNABLE -> "확인 불가"

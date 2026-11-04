@@ -13,8 +13,8 @@ internal enum class ChargeAnswer { FOUND, NOT_FOUND, UNABLE }
 internal enum class ChargeReportedStatus { REVIEW_NEEDED, UNABLE, NO_FINDINGS_REPORTED }
 internal object SyncTasks {
     val tires = listOf("tire.front-left", "tire.front-right", "tire.rear-left", "tire.rear-right")
-    val all = listOf("washer-fluid") + tires + "ev-charge.port"
-    val labels = listOf("워셔액", "앞 왼쪽 타이어", "앞 오른쪽 타이어", "뒤 왼쪽 타이어", "뒤 오른쪽 타이어", "EV 충전구")
+    val all = listOf("washer-fluid") + tires + "ev-charge.port" + SyncChecklistTasks.profiles.keys
+    val labels = listOf("워셔액", "앞 왼쪽 타이어", "앞 오른쪽 타이어", "뒤 왼쪽 타이어", "뒤 오른쪽 타이어", "EV 충전구") + SyncChecklistTasks.profiles.values.map { it.label }
     fun label(taskId: String): String = labels[all.indexOf(taskId)]
 }
 internal enum class SyncFailure { NETWORK, TIMEOUT, UNAUTHORIZED, EXPIRED, CLOSED, CONFLICT, INVALID, RATE_LIMITED, SERVER }
