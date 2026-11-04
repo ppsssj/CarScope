@@ -1,8 +1,12 @@
 # 로드맵 및 진입 조건
 
+## P9-A1 — 기기 E2E 실행 절차 정정
+
+`sync-endpoint.json`과 GLB 배치 절차를 추가하고, DENY_DEFAULT 상태에서 세션 생성을 기대하던 단계를 바로잡아 기본 상태·시뮬레이터·enrollment·세션·`serverNow`·Native→3D를 분리했다. 문서 수정만 있으며 **기기 E2E와 Render 배포는 NOT_RUN이다.** [실행 절차](p9-e2e-checklist.md), [증거 인덱스](evidence/p9-a1/README.md).
+
 ## P8-C1 — 배포 준비 게이트와 통합 Preflight
 
-Render 배포 전 검사를 읽기 전용 CLI와 격리 PostgreSQL 통합 테스트로 자동화하고, APK·서버 호환성, 배포 순서, DDL·백업·복구, P9 체크리스트를 정리한다. **Render 배포와 운영 DB 변경은 하지 않았다.** `RENDER_DEPLOYMENT_NOT_RUN`, `PRODUCTION_AUTH_BLOCKED`, `DEVICE_E2E_NOT_RUN`이며 `serverNow`는 PR #78 병합 전까지 BLOCKED다. [배포 준비](p8-c1-deployment-readiness.md), [P9 체크리스트](p9-e2e-checklist.md), [증거 인덱스](evidence/p8-c1/README.md).
+Render 배포 전 검사를 읽기 전용 CLI와 격리 PostgreSQL 통합 테스트로 자동화하고, APK·서버 호환성, 배포 순서, DDL·백업·복구, P9 체크리스트를 정리한다. **Render 배포와 운영 DB 변경은 하지 않았다.** `RENDER_DEPLOYMENT_NOT_RUN`, `PRODUCTION_AUTH_BLOCKED`, `DEVICE_E2E_NOT_RUN`이며 `serverNow`는 main에 병합됐으나 Render에는 미배포다. [배포 준비](p8-c1-deployment-readiness.md), [P9 체크리스트](p9-e2e-checklist.md), [증거 인덱스](evidence/p8-c1/README.md).
 
 ## P8-B1 — 3D 차량 점검 기록 UI
 
@@ -14,7 +18,7 @@ Render 배포 전 검사를 읽기 전용 CLI와 격리 PostgreSQL 통합 테스
 
 ## P7-C2 — Native ACCEPTED → 3D 전달
 
-고정 자산 RPC, token 없는 proof 저장소, Android 어댑터를 C1 소비자에 연결했다. 계약은 합성 clock으로 검증했으나, 실제 전달은 배포된 서버 생성 응답의 `serverNow` 부재로 **BLOCKED**이고 기기 E2E는 NOT_RUN이다. [구현](p7-c2-native-3d-bridge.md), [검증·해제 조건](p7-c2-validation.md).
+고정 자산 RPC, token 없는 proof 저장소, Android 어댑터를 C1 소비자에 연결했다. 계약은 합성 clock으로 검증했으나, 실제 전달은 신규 서버 미배포와 운영 세션 생성 `DENIED`로 **BLOCKED**이고 기기 E2E는 NOT_RUN이다. [구현](p7-c2-native-3d-bridge.md), [검증·해제 조건](p7-c2-validation.md).
 
 ## P7-C3 — 서버 시각 계약
 

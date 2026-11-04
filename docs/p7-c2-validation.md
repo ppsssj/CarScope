@@ -1,6 +1,6 @@
 # P7-C2 검증 기록
 
-> 후속: [P7-C3](p7-c3-server-clock.md)가 서버 코드에 `serverNow`를 추가했다. 아래 표와 코드 위치는 P7-C2 실행 시점 기록이다. 해제 조건 1의 구현은 끝났고 배포와 E2E는 남아 있다. Referer 항목의 정적 분석 결과도 P7-C3 문서에 있다.
+> 후속: [P7-C3](p7-c3-server-clock.md)가 서버 코드에 `serverNow`를 추가했다. PR #78이 main(`8a6f559`)에 병합됐다. 아래 검증 표는 P7-C2 실행 시점 기록이다. **Render에는 아직 배포되지 않았고** E2E도 남아 있다. 실행 절차는 [P9](p9-e2e-checklist.md)다. Referer 항목의 정적 분석 결과도 P7-C3 문서에 있다.
 
 코드 기준 `9097eed8f1e06d496fe4dae58fe0353ba38b570f`(main `2435087` 위). 실행일 2026-11-04, Windows 10, Node 22.16.0, Chrome 156.0.8078.80. 원본 로그·캡처는 Git 밖 `C:\carscope-external\p7-c2-claude\`에 있고, 이 문서가 증거 인덱스다. Codex B의 이전 실행(`C:\carscope-external\p7-c2\`)은 새 실행 근거로 쓰지 않았다.
 
@@ -10,7 +10,7 @@
 |---|---|---|
 | `NATIVE_3D_BRIDGE_IMPLEMENTED` | PASS | Kotlin 소유자·RPC·고정 어댑터·C1 소비자 연결 코드가 있고 빌드된다. |
 | `NATIVE_3D_CONTRACT_VERIFIED` | PASS (합성 clock 한정) | 컴파일된 Kotlin 저장소와 실제 JS 소비자가 17개 task 계약을 통과한다. `serverNow`는 테스트가 주입했다. |
-| `NATIVE_3D_BLOCKED` | **BLOCKED** | 현재 서버의 생성 응답에는 `serverNow`가 없어(`tools/inspection-sync-poc/src/sessions.mjs:69`) 실제 세션은 binding을 만들 수 없다. 실제 ACCEPTED는 현재 3D에 전달되지 않는다. |
+| `NATIVE_3D_BLOCKED` | **BLOCKED** (운영) | 서버 코드에는 `serverNow`가 있다(PR #78). 운영 Render는 최신 코드로 배포되지 않았고 세션 생성도 `DENIED`이므로 실제 ACCEPTED는 아직 3D에 전달되지 않는다. P7-C2 실행 당시에는 서버 코드에도 필드가 없었다. |
 | `NATIVE_3D_DEVICE_E2E_NOT_RUN` | NOT_RUN | AVD·스마트폰·Render 광학 E2E를 실행하지 않았다. |
 
 ## 새 실행
@@ -55,6 +55,6 @@
 
 ## 해제 조건
 
-1. Sync 서버가 [시각 계약안](contracts/p7-c2-server-clock-proposal.md)의 `serverNow`를 구현·배포한다. 이번 범위 밖이며 서버 코드를 변경하지 않았다.
-2. 실제 Render 응답에서 필드를 확인한 뒤 새 세션으로 AVD·스마트폰 E2E를 수행한다.
+1. Sync 서버의 [시각 계약](contracts/p7-c2-server-clock-proposal.md) `serverNow`: 구현 완료(PR #78). **배포는 미완료**다.
+2. 신규 서버 배포와 시뮬레이터 활성화 뒤 새 세션으로 AVD·스마트폰 E2E를 수행한다. 기기는 값을 표시하지 않으므로 배포 커밋과 3D binding 결과로 판정한다([P9 C5](p9-e2e-checklist.md#c5-servernow-확인)).
 3. 완료 범위: 부품 요청 → QR → 제출 → Native Accept → 3D 후보 → 사용자 선택, 그리고 취소·만료·화면 종료·재생성.

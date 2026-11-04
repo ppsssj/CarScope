@@ -1,6 +1,6 @@
 # P8-C1 배포 준비와 통합 Preflight
 
-기준: `main` `40344d6`(PR #76, #77 병합)에서 작성하고 `a99d7aa`(PR #79 병합)를 merge했다. PR #79는 `tools/inspection-sync-poc/**`와 `app/**`를 바꾸지 않아 이 문서의 게이트·DDL·호환성 표에 영향이 없다. **PR #78(`serverNow`)은 미병합**이며 이 브랜치에 코드를 복사하지 않았다. 이번 작업은 배포 준비와 검증 자동화다. **Render 배포, 운영 DB 변경, 운영 migration, AVD 실행은 하지 않았다.** 실행 근거는 [증거 인덱스](evidence/p8-c1/README.md), 기기 검증 준비는 [P9 체크리스트](p9-e2e-checklist.md)에 있다.
+기준: `main` `40344d6`(PR #76, #77 병합)에서 작성하고 `a99d7aa`(PR #79 병합)를 merge했다. PR #79는 `tools/inspection-sync-poc/**`와 `app/**`를 바꾸지 않아 이 문서의 게이트·DDL·호환성 표에 영향이 없다. 이후 PR #78(`serverNow`)이 병합되어 현재 main은 `8a6f559`이고, P9-A1에서 절차를 이에 맞췄다. **서버 코드는 main에 있지만 Render에는 아직 배포되지 않았다.** 이 작업은 배포 준비와 검증 자동화다. **Render 배포, 운영 DB 변경, 운영 migration, AVD 실행은 하지 않았다.** 실행 근거는 [증거 인덱스](evidence/p8-c1/README.md), 기기 검증 준비는 [P9 체크리스트](p9-e2e-checklist.md)에 있다.
 
 ## 판정
 
@@ -17,9 +17,9 @@
 조사와 테스트에서 확인한 내용이다. 앞의 네 개는 절차에 직접 영향을 준다.
 
 1. **배포가 곧 migration이다.** `render-stateful.mjs`는 시작할 때 `PostgreSQLSessionStore.open()`을 호출하고, 이 호출이 base·History DDL을 `DATABASE_URL`에 적용한다. 별도 migration 단계가 없다. Deploy를 누르기 전에 백업해야 한다.
-2. **Auto-Deploy가 켜져 있으면 PR 병합만으로 DDL과 응답 변경이 운영에 적용된다.** 문서상 꺼져 있어야 하지만 실제 값은 `NOT_VERIFIED`다. 병합 전에 대시보드에서 확인한다.
+2. **Auto-Deploy가 켜져 있으면 PR 병합만으로 DDL과 응답 변경이 운영에 적용된다.** 2026-11-05 사용자가 OFF를 확인했다. 도구가 읽은 값은 아니므로 게이트는 MANUAL이며, Manual Deploy 전에 다시 확인한다.
 3. **서비스 DB 역할은 스키마 CREATE 권한과 테이블 소유권이 있어야 한다.** `CREATE ... IF NOT EXISTS`는 객체가 이미 있어도 권한을 먼저 검사하므로, DML만 가진 역할은 migration이 끝난 뒤에도 시작할 때마다 `42501`로 실패한다(`deployment-postgres.test.mjs`로 재현). 최소 권한 런타임 역할은 현재 불가능하다. 서버 코드를 고칠 사안이라 이번 범위에서는 재현과 보고만 했고, `database` 게이트가 `DB_STARTUP_PRIVILEGE`로 잡는다.
-4. **운영의 `serverNow`는 현재 모드에서 확인할 수 없다.** 2026-11-04 `/healthz`는 `STATEFUL_DENY_DEFAULT`, `sessionCreation: DENIED`였다. 생성이 거부되므로 생성 응답을 관찰하려면 시뮬레이터 모드를 사용자가 별도로 승인해 켜야 한다([P9](p9-e2e-checklist.md)).
+4. **운영의 `serverNow`는 직접 관찰할 수 없다.** 2026-11-05 `/healthz`는 `STATEFUL_DENY_DEFAULT`, `sessionCreation: DENIED`다. 이 상태에서는 어떤 APK로도 세션을 만들 수 없다. 시뮬레이터 모드를 승인해 켜도 기기는 값을 표시·기록하지 않으므로 배포 커밋과 3D binding 결과로 간접 판정한다([P9 C5](p9-e2e-checklist.md#c5-servernow-확인)).
 5. `/v1` 요청은 거부되더라도 PostgreSQL rate limiter를 지나며 `cs_rate_windows`에 쓴다. 그래서 `probe`는 기본적으로 `/healthz`만 호출한다. `/v1` 프로브는 `--approve-rate-window-writes`가 있어야 실행한다.
 6. `CREATE INDEX IF NOT EXISTS`는 인덱스가 있어도 시작할 때마다 대상 테이블에 잠깐 ShareLock을 잡을 수 있다(PostgreSQL 동작에 근거, 이 환경에서 측정하지 않음). 재시작 순간 쓰기가 짧게 대기할 수 있다.
 
@@ -99,7 +99,7 @@ Remove-Item Env:CARSCOPE_READONLY_DB
 | 신규(`09f3490` PR #76부터) | 기존 | PASS | UNSUPPORTED (`SERVER_CLOCK_UNAVAILABLE`) |
 | 신규 | 신규 | PASS | PASS (계약 수준. 기기 E2E는 NOT_RUN) |
 
-표는 세 경로로 고정했다. `compat`은 Kotlin 소스의 `fun created`에서 정책을 읽어 이 트리의 실제 응답에 적용한다. 구버전 소스는 `preflight/legacy-decoder-created-2435087.kt.txt`이며 git 이력과 같은지 검사한다. `run-decoder-probe.mjs`는 두 리비전의 실제 Kotlin decoder를 JVM에서 실행한다. `classifyApk`는 빌드된 APK의 DEX 문자열로 세대를 구분한다. 어떤 APK가 기기에 설치됐는지는 증명하지 못한다.
+표는 코드·계약 수준의 호환성이다. 운영이 `DENIED`인 동안 Native 세션 생성은 APK와 무관하게 거부되므로 시뮬레이터 모드 전에는 이 표의 PASS를 기기에서 관찰할 수 없다. 표는 세 경로로 고정했다. `compat`은 Kotlin 소스의 `fun created`에서 정책을 읽어 이 트리의 실제 응답에 적용한다. 구버전 소스는 `preflight/legacy-decoder-created-2435087.kt.txt`이며 git 이력과 같은지 검사한다. `run-decoder-probe.mjs`는 두 리비전의 실제 Kotlin decoder를 JVM에서 실행한다. `classifyApk`는 빌드된 APK의 DEX 문자열로 세대를 구분한다. 어떤 APK가 기기에 설치됐는지는 증명하지 못한다.
 
 ## 배포 순서
 
@@ -107,15 +107,16 @@ Remove-Item Env:CARSCOPE_READONLY_DB
 
 | 순서 | 작업 | 확인 |
 |---|---|---|
-| 0 | Auto-Deploy가 Off인지 확인. On이면 PR #78 병합을 멈춘다 | `render --auto-deploy off` |
-| 1 | PR #76 이후 main에서 Debug APK 빌드 | `compat --apk`가 `NEW_DECODER`, SHA-256 기록 |
-| 2 | 사용 중인 모든 AVD·기기에 이 APK를 설치 | [P9 A단계](p9-e2e-checklist.md). 구버전 기기를 남기지 않는다 |
-| 3 | 기존 서버에서 단독 Native 동작 확인. 3D는 `SERVER_CLOCK_UNAVAILABLE`이 정상 | P9 B단계 |
-| 4 | PR #78 병합. Auto-Deploy Off이므로 운영은 아직 바뀌지 않는다 | CI, `static`의 `SERVER_NOW_CONTRACT` PASS |
-| 5 | 운영 DB 백업과 읽기 전용 검사 | 아래 절차 |
-| 6 | Render Manual Deploy로 main 배포. 이때 DDL이 적용된다 | `/healthz`, `render --deployed-commit` |
-| 7 | 배포 후 확인 | 아래 절차 |
-| 8 | 시뮬레이터 모드 승인 후 E2E | P9 C단계 이후 |
+| 0 | Auto-Deploy Off 재확인. 2026-11-05 사용자 확인 | `render --auto-deploy off` (MANUAL) |
+| 1 | Debug APK 확보. **완료:** `8a6f559`, SHA-256 `b11f3a79…dd3d4`, `NEW_DECODER` | [P9 A](p9-e2e-checklist.md#a-apk-식별과-설치) |
+| 2 | 사용 중인 모든 AVD·기기에 이 APK 설치와 endpoint·GLB 배치 | [P9 A](p9-e2e-checklist.md#a-apk-식별과-설치), [B](p9-e2e-checklist.md#b-기기-준비). 구버전 기기를 남기지 않는다 |
+| 3 | 현재 서버의 기본 상태 확인. `DENIED`이므로 **세션 생성 비활성이 합격이다** | [P9 C1](p9-e2e-checklist.md#c1-기본-서버-상태-deny_default) |
+| 4 | PR #78 병합. **완료:** `8a6f559`. 운영은 아직 바뀌지 않았다 | `static`의 `SERVER_NOW_CONTRACT` PASS |
+| 5 | 운영 DB 백업, 읽기 전용 검사, 별도 DB 복원 리허설 | 아래 절차 |
+| 6 | Render Manual Deploy로 main 배포. 이때 DDL이 적용된다. **시뮬레이터 변수는 함께 넣지 않는다** | `/healthz`, `render --deployed-commit` |
+| 7 | 배포 후 확인. 신규 코드도 `STATEFUL_DENY_DEFAULT`, `DENIED`여야 한다 | 아래 절차, P9 C1 재확인 |
+| 8 | 시뮬레이터 활성화, enrollment, Native 세션, `serverNow`, Native→3D를 단계별 승인으로 진행 | [P9 C2~C6](p9-e2e-checklist.md#c-서버와-세션-단계) |
+| 9 | 실행 후 시뮬레이터 모드 복원 | [P9 H](p9-e2e-checklist.md#h-실행-후-복원-g9) |
 
 서버만 되돌리는 것은 신규 APK에 안전하다(신규 + 기존 = PASS). 구버전 APK를 다시 설치하는 롤백은 서버가 기존 버전일 때만 가능하다.
 
@@ -151,9 +152,9 @@ History를 여는 환경변수는 없다. `startRenderStateful({historyAuthority
 
 | 항목 | 상태 | 확인 방법 |
 |---|---|---|
-| `/healthz` | PASS (2026-11-04 단일 관측) | `probe`. `STATEFUL_DENY_DEFAULT`, `DENIED`, `historyRead` 없음 |
+| `/healthz` | PASS (2026-11-05 단일 관측) | `probe`. `STATEFUL_DENY_DEFAULT`, `DENIED`, `historyRead` 없음 |
 | main과 배포 커밋 일치 | NOT_VERIFIED | 대시보드 Events의 최근 Deploy 커밋을 `render --deployed-commit`에 입력 |
-| Auto-Deploy | NOT_VERIFIED | Settings > Build & Deploy > Auto-Deploy |
+| Auto-Deploy | MANUAL (2026-11-05 사용자 OFF 확인) | Settings > Build & Deploy > Auto-Deploy. Deploy 직전 재확인 |
 | 환경변수 | NOT_VERIFIED | Environment 화면의 **이름만** `--env-names-file`로 입력 |
 | 운영 DB 스키마·버전 | NOT_VERIFIED | 승인 후 읽기 전용 `database` |
 | 운영 History 403 | NOT_VERIFIED | 승인 후 `--approve-rate-window-writes`. 코드 경로는 PG 테스트로 검증 |
@@ -192,7 +193,7 @@ History를 여는 환경변수는 없다. `startRenderStateful({historyAuthority
 | `/healthz` 503 `UNAVAILABLE` | 서버는 떠 있으나 DB 응답 없음 | DB 상태 확인. 자동으로 다른 저장소로 전환하지 않는다 |
 | `database`의 `DB_BASE_SCHEMA`/`DB_HISTORY_MIGRATION`이 미지원 버전 FAIL | DB가 코드보다 새 버전 | 코드를 더 새 버전으로 맞춘다. 버전 행을 수정하지 않는다 |
 | 구버전 APK에서 `INVALID` | 신규 서버와 구버전 decoder 조합 | 신규 APK 설치. 서버 롤백은 최후 수단 |
-| 신규 APK에서 `SERVER_CLOCK_UNAVAILABLE` | 기존 서버 또는 RTT 5000ms 초과 | 배포 커밋 확인. 시간 조건을 완화하지 않는다 |
+| 신규 APK에서 `3D 연결 차단` 문구 (`SERVER_CLOCK_UNAVAILABLE`) | 기존 서버, RTT 5000ms 초과 또는 전달 예산 초과. 화면으로 구분되지 않는다 | 배포 커밋 확인. 시간 조건을 완화하지 않는다 |
 
 ### 코드 롤백
 
@@ -208,7 +209,7 @@ DB 복원은 데이터 손상이 확인되고 사용자가 별도로 승인한 �
 1. `probe`: `STATEFUL_DENY_DEFAULT`, `DENIED`, `historyRead` 없음
 2. 승인 시 `probe --approve-rate-window-writes`: records 403, session 401, 생성 403
 3. 승인 시 읽기 전용 `database`: `DB_HISTORY_MIGRATION` PASS, 행 수가 백업과 모순되지 않음
-4. 시뮬레이터 모드 승인 뒤 인증된 생성 응답의 `serverNow`: [P9 C단계](p9-e2e-checklist.md)
+4. 시뮬레이터 모드 승인 뒤 `serverNow` 간접 판정: [P9 C5](p9-e2e-checklist.md#c5-servernow-확인)
 
 ## 통합 테스트가 추가한 경계
 
@@ -229,5 +230,5 @@ DB 복원은 데이터 손상이 확인되고 사용자가 별도로 승인한 �
 - 구버전 판정은 `2435087` 기준이다. 더 오래된 APK는 task 목록 등 다른 이유로도 실패할 수 있어 지원 대상으로 삼지 않는다.
 - `classifyApk`는 문자열 존재로 세대를 구분한다. 난독화된 빌드에는 쓸 수 없다.
 - `ENV_CANNOT_ENABLE_AUTH`는 정적 스캔이다. `pg`가 읽는 `PG*` 변수 같은 외부 라이브러리는 범위 밖이며, 인증 판단에는 관여하지 않는다.
-- 시계 안정성, 빠른 제출의 거짓 거부, WebView Referer는 PR #78의 `docs/p7-c3-server-clock.md`가 남긴 미해결 항목 그대로다.
+- 시계 안정성, 빠른 제출의 거짓 거부, WebView Referer는 [P7-C3](p7-c3-server-clock.md)가 남긴 미해결 항목 그대로다.
 - 최소 권한 DB 역할 불가(사실 3)는 별도 과제가 필요하다. 예를 들어 migration을 시작 경로에서 분리하는 방안이 있으나 이번에 변경하지 않았다.
