@@ -20,7 +20,7 @@ import { MemorySessionStore } from './session-store.mjs';
 import { RateLimiter } from './rate-limit.mjs';
 import { ProductionSessionCreationAuthorizer, LocalTestSessionCreationAuthorizer } from './creation-authorizer.mjs';
 import { HistoryService, HistoryError } from './history.mjs';
-import { DenyHistoryAuthorizer } from './history-authorizer.mjs';
+import { DenyHistoryAuthorizer, assertHistoryAuthorizerDeployable } from './history-authorizer.mjs';
 
 export const MAX_BODY_BYTES = 16 * 1024;
 const API_HEADERS = {
@@ -184,6 +184,7 @@ export async function startSyncServer({ host = '127.0.0.1', port = 4180, store =
   if (!loopbackHost && !(tlsCert && tlsKey)) throw new Error('Refusing a non-loopback bind without TLS (set SYNC_TLS_CERT and SYNC_TLS_KEY)');
   if (Boolean(tlsCert) !== Boolean(tlsKey)) throw new Error('Both TLS certificate and key are required');
   if (!loopbackHost && (authorizer.testOnly || historyAuthorizer.testOnly || debugPage)) throw new Error('Test authorizers and debug pages require a loopback bind');
+  assertHistoryAuthorizerDeployable(historyAuthorizer, { host });
   const service = new SessionService({ store, now, limits });
   await service.sweep(); // reconcile overdue/retained rows before accepting any request after restart
   const handler = createSyncHandler({ service, limiter: limiter ?? new RateLimiter({ rates, now }), authorizer, historyAuthorizer, log, allowedOrigin, debugPage, tls: Boolean(tlsCert) });

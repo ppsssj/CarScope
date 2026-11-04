@@ -6,16 +6,24 @@ import { PostgreSQLSessionStore, PostgreSQLRateLimiter } from './postgres-store.
 import { SessionService } from './sessions.mjs';
 import { createSyncHandler } from './server.mjs';
 import { ProductionSessionCreationAuthorizer } from './creation-authorizer.mjs';
+import { assertHistoryAuthorizerDeployable } from './history-authorizer.mjs';
+import { httpsHistoryAuthorizer } from './https-history-authority.mjs';
 import { AvdSimulatorCredentialStore } from './avd-simulator-credentials.mjs';
 import { serveAvdSimulatorProvision } from './avd-simulator-http.mjs';
 import { DEFAULT_RATES } from './rate-limit.mjs';
 import { MOBILE_HEADERS, serveMobilePage } from './mobile-page.mjs';
 import { httpsOrigin } from '../bin/host-readiness.mjs';
 
-export async function startRenderStateful({ pool, publicOrigin, host = '127.0.0.1', port = 0, sweepMs = 30_000, enableAvdSimulation = false } = {}) {
+export async function startRenderStateful({ pool, publicOrigin, host = '127.0.0.1', port = 0, sweepMs = 30_000, enableAvdSimulation = false, historyAuthority, historyAuthorizer } = {}) {
   const origin = httpsOrigin(publicOrigin);
   if (!Number.isSafeInteger(port) || port < 0 || port > 65535 ||
       !Number.isSafeInteger(sweepMs) || sweepMs < 1000) throw new Error('INVALID_RENDER_STATEFUL_CONFIG');
+  // History stays DENY_DEFAULT unless a reviewed bootstrap passes a fixed authority configuration in code.
+  // No arbitrary authorizer object, and a simulated registry never shares a process with vehicle-owner reads.
+  if (historyAuthorizer !== undefined) throw new Error('AUTHORIZER_OVERRIDE_FORBIDDEN');
+  if (historyAuthority && enableAvdSimulation) throw new Error('HISTORY_AUTHORITY_WITH_AVD_SIMULATION_FORBIDDEN');
+  const historyRead = historyAuthority ? httpsHistoryAuthorizer(historyAuthority) : null;
+  if (historyRead) assertHistoryAuthorizerDeployable(historyRead, { host });
   // Startup must prove PostgreSQL availability and complete schema initialization before listening.
   const store = await PostgreSQLSessionStore.open({ pool });
   let server, timer, stopping, sweep = Promise.resolve();
@@ -30,10 +38,11 @@ export async function startRenderStateful({ pool, publicOrigin, host = '127.0.0.
     const api = createSyncHandler({
       service, limiter, tls: true, log: () => {},
       authorizer: simStore || new ProductionSessionCreationAuthorizer(),
-      // Render-managed TLS is terminated at the ingress; this callback is opt-in
-      // only for the explicitly enabled AVD simulation mode. The outer request
+      ...(historyRead ? { historyAuthorizer: historyRead } : {}),
+      // Render-managed TLS is terminated at the ingress; this callback is opt-in only for the
+      // explicitly enabled AVD simulation mode or a reviewed history authority. The outer request
       // handler rejects unverified Host / Origin / X-Forwarded-Proto first.
-      trustedEdgeSecure: simStore ? req => req.headers.host === new URL(origin).host &&
+      trustedEdgeSecure: simStore || historyRead ? req => req.headers.host === new URL(origin).host &&
         req.headers['x-forwarded-proto'] === 'https' &&
         (!req.headers.origin || req.headers.origin === origin) : null,
     });
@@ -46,7 +55,8 @@ export async function startRenderStateful({ pool, publicOrigin, host = '127.0.0.
             res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
             res.end(JSON.stringify({status:'UP',
               mode: simStore ? 'STATEFUL_AVD_SIMULATION' : 'STATEFUL_DENY_DEFAULT',
-              sessionCreation: simStore ? 'OPERATOR_APPROVED_AVD_ONLY' : 'DENIED'}));
+              sessionCreation: simStore ? 'OPERATOR_APPROVED_AVD_ONLY' : 'DENIED',
+              ...(historyRead ? { historyRead: 'AUTHORITY_ADAPTER_CONFIGURED' } : {})}));
           } catch {
             res.writeHead(503, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
             res.end('{"status":"UNAVAILABLE"}');

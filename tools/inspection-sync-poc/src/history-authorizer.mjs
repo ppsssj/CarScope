@@ -15,7 +15,29 @@ export class DenyHistoryAuthorizer {
     return null;
   }
 }
+const RESERVED_ISSUER_HOST =
+  /(^|\.)(invalid|test|example|localhost)$|^example\.(com|net|org)$|^127\.|^\[::1\]$|^0\.0\.0\.0$/i;
+/**
+ * Test credentials and reserved fixture issuers run on a loopback bind outside a managed environment only.
+ * This blocks mis-composition; it is not evidence that a non-test issuer is trustworthy.
+ */
+export function assertHistoryAuthorizerDeployable(authorizer, { host, env = process.env } = {}) {
+  const loopback = ['127.0.0.1', '::1', 'localhost'].includes(host),
+    managed = env.RENDER === 'true' || env.NODE_ENV === 'production',
+    issuer = authorizer?.issuer;
+  const fixture =
+    authorizer?.testOnly === true ||
+    (typeof issuer === 'string' && RESERVED_ISSUER_HOST.test(new URL(issuer).hostname));
+  if (fixture && (!loopback || managed)) throw new Error('TEST_HISTORY_AUTHORIZER_FORBIDDEN');
+}
 export class VerifiedHistoryReadAuthorizer {
+  #issuer;
+  #audience;
+  #verifier;
+  #registrations;
+  #revocations;
+  #now;
+  #timeoutMs;
   constructor({
     issuer,
     audience,
@@ -34,18 +56,19 @@ export class VerifiedHistoryReadAuthorizer {
       timeoutMs > 5000
     )
       throw new Error('INVALID_HISTORY_AUTH_POLICY');
-    Object.assign(this, {
-      issuer,
-      audience,
-      credentialVerifier,
-      registrationProvider,
-      revocations,
-      now,
-      timeoutMs,
-    });
+    this.#issuer = issuer;
+    this.#audience = audience;
+    this.#verifier = credentialVerifier;
+    this.#registrations = registrationProvider;
+    this.#revocations = revocations;
+    this.#now = now;
+    this.#timeoutMs = timeoutMs;
     this.testOnly = [credentialVerifier, registrationProvider, revocations].some((x) => x?.testOnly === true);
   }
-  validClaim(c, at) {
+  get issuer() {
+    return this.#issuer;
+  }
+  #validClaim(c, at) {
     return (
       exact(c, [
         'active',
@@ -60,8 +83,8 @@ export class VerifiedHistoryReadAuthorizer {
         'registrationId',
       ]) &&
       c.active === true &&
-      c.issuer === this.issuer &&
-      c.audience === this.audience &&
+      c.issuer === this.#issuer &&
+      c.audience === this.#audience &&
       id(c.subject) &&
       id(c.credentialId) &&
       id(c.registrationId) &&
@@ -75,19 +98,19 @@ export class VerifiedHistoryReadAuthorizer {
       c.expiresAt - c.issuedAt <= MAX_CREDENTIAL_TTL_MS
     );
   }
-  async check(token, signal) {
+  async #check(token, signal) {
     if (
       ![
-        this.credentialVerifier?.verify,
-        this.registrationProvider?.resolve,
-        this.revocations?.isActive,
+        this.#verifier?.verify,
+        this.#registrations?.resolve,
+        this.#revocations?.isActive,
       ].every((x) => typeof x === 'function')
     )
       return null;
-    const claim = structuredClone(await this.credentialVerifier.verify({ token, signal }));
-    if (signal.aborted || !this.validClaim(claim, this.now())) return null;
+    const claim = structuredClone(await this.#verifier.verify({ token, signal }));
+    if (signal.aborted || !this.#validClaim(claim, this.#now())) return null;
     const binding = structuredClone(
-      await this.registrationProvider.resolve({
+      await this.#registrations.resolve({
         issuer: claim.issuer,
         subject: claim.subject,
         registrationId: claim.registrationId,
@@ -116,14 +139,14 @@ export class VerifiedHistoryReadAuthorizer {
       !time(binding.expiresAt)
     )
       return null;
-    const active = await this.revocations.isActive({
+    const active = await this.#revocations.isActive({
         issuer: claim.issuer,
         credentialId: claim.credentialId,
         registrationId: claim.registrationId,
         signal,
       }),
-      at = this.now();
-    if (signal.aborted || active !== true || !this.validClaim(claim, at) || binding.expiresAt <= at)
+      at = this.#now();
+    if (signal.aborted || active !== true || !this.#validClaim(claim, at) || binding.expiresAt <= at)
       return null;
     return historyAuthority({
       authorityNamespace: 'VERIFIED_VEHICLE',
@@ -141,12 +164,12 @@ export class VerifiedHistoryReadAuthorizer {
     let timer;
     try {
       return await Promise.race([
-        this.check(token, controller.signal),
+        this.#check(token, controller.signal),
         new Promise((resolve) => {
           timer = setTimeout(() => {
             controller.abort();
             resolve(null);
-          }, this.timeoutMs);
+          }, this.#timeoutMs);
         }),
       ]);
     } catch {
