@@ -24,6 +24,8 @@ internal object AvdSimulatorPolicy {
     const val ENROLLMENT_MAX_TTL_MS = 86_400_000L
     private val UUID = Regex("[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}")
     private val TOKEN = Regex("[A-Za-z0-9_-]{43}")
+    class GrantNotYetValid : IllegalArgumentException("PROVISION_GRANT_NOT_YET_VALID")
+    class GrantExpired : IllegalArgumentException("PROVISION_GRANT_EXPIRED")
 
     fun endpointAllowed(endpoint: SyncEndpoint) =
         endpoint.apiOrigin == API_ORIGIN && endpoint.mobileRoot.trimEnd('/') == API_ORIGIN
@@ -67,8 +69,10 @@ internal object AvdSimulatorPolicy {
         val expiresAt = SyncHttpDecoder.number(x["expiresAt"])
         require(TOKEN.matches(credential) && UUID.matches(credentialId) &&
             registrationId == expectedRegistration && issuedAt <= notBefore &&
-            notBefore <= at && expiresAt > at && expiresAt > notBefore &&
+            expiresAt > notBefore &&
             expiresAt - issuedAt <= GRANT_MAX_TTL_MS)
+        if (notBefore > at) throw GrantNotYetValid()
+        if (expiresAt <= at) throw GrantExpired()
         return AvdSimulatorGrant(SessionCreationCredential(credential), expiresAt)
     }
 }
@@ -106,6 +110,9 @@ internal class HttpsAvdSimulatorGrantExchange(
 
     init { require(AvdSimulatorPolicy.endpointAllowed(endpoint) && timeoutMs in 1..10000) }
 
+    private class HttpRejected(val status: Int) : Exception()
+    private class HeadersRejected : Exception()
+
     private inner class Call : SyncCancellation {
         val cancelled = AtomicBoolean(false)
         val completed = AtomicBoolean(false)
@@ -125,7 +132,13 @@ internal class HttpsAvdSimulatorGrantExchange(
             }
         }
         val timer = try {
-            deadlines.schedule({ finish(null); call.connection?.disconnect() }, timeoutMs.toLong(), TimeUnit.MILLISECONDS)
+            deadlines.schedule({
+                if (call.completed.compareAndSet(false, true)) {
+                    Log.w(logTag, "PROVISION_TIMEOUT")
+                    dispatcher.post { if (!closed.get() && !call.cancelled.get()) callback(null) }
+                    call.connection?.disconnect()
+                }
+            }, timeoutMs.toLong(), TimeUnit.MILLISECONDS)
         } catch (_: Exception) { calls.remove(call); finish(null); return call }
         try {
             val task = worker.submit {
@@ -147,14 +160,10 @@ internal class HttpsAvdSimulatorGrantExchange(
                         c.doOutput = true; c.setFixedLengthStreamingMode(body.size)
                         c.outputStream.use { it.write(body) }
                         val status = c.responseCode
-                        if (status != 200) {
-                            Log.w(logTag, "PROVISION_HTTP_STATUS_${status}")
-                            error("INVALID_SIMULATOR_PROVISION")
-                        }
+                        if (status != 200) throw HttpRejected(status)
                         if (c.contentLengthLong > SyncHttpDecoder.MAX_BYTES ||
                             c.getHeaderField("Content-Encoding")?.let { it != "identity" } == true) {
-                            Log.w(logTag, "PROVISION_RESPONSE_HEADERS_REJECTED")
-                            error("INVALID_SIMULATOR_PROVISION")
+                            throw HeadersRejected()
                         }
                         val bytes = ByteArrayOutputStream()
                         c.inputStream.use { input ->
@@ -177,10 +186,19 @@ internal class HttpsAvdSimulatorGrantExchange(
                     grant = null
                     // Deliberately omit exception messages, stack traces, request/response bodies and token values.
                     val category = when (e) {
+                        is HttpRejected -> when (e.status) {
+                            401 -> "PROVISION_HTTP_UNAUTHORIZED"
+                            403 -> "PROVISION_HTTP_FORBIDDEN"
+                            429 -> "PROVISION_HTTP_RATE_LIMITED"
+                            else -> "PROVISION_HTTP_REJECTED"
+                        }
+                        is HeadersRejected -> "PROVISION_RESPONSE_HEADERS_REJECTED"
                         is SocketTimeoutException -> "PROVISION_TIMEOUT"
                         is SSLException -> "PROVISION_TLS_REJECTED"
                         is UnknownHostException -> "PROVISION_DNS_FAILURE"
                         is SyncHttpDecoder.Invalid -> "PROVISION_RESPONSE_INVALID_JSON"
+                        is AvdSimulatorPolicy.GrantNotYetValid -> "PROVISION_GRANT_NOT_YET_VALID"
+                        is AvdSimulatorPolicy.GrantExpired -> "PROVISION_GRANT_EXPIRED"
                         is IllegalArgumentException -> "PROVISION_RESPONSE_CONTRACT_REJECTED"
                         else -> "PROVISION_REQUEST_FAILED"
                     }
@@ -223,16 +241,21 @@ internal class RefreshingAvdSimulatorCredentialSource(
     @Synchronized fun refresh(callback: (Boolean) -> Unit = {}) {
         invalidate(); if (closed) return
         val mine = generation
+        var completed = false
         val started = try {
             exchange.fetch { grant -> synchronized(this) {
-                if (!closed && generation == mine) {
+                if (!closed && generation == mine && !completed) {
+                    completed = true
                     value = grant?.takeIf { it.expiresAt > now() }
                     pending = null
                     callback(value != null)
                 }
             } }
-        } catch (_: Exception) { callback(false); return }
-        if (closed || mine != generation) started.cancel() else pending = started
+        } catch (_: Exception) {
+            if (!closed && generation == mine && !completed) { completed = true; callback(false) }
+            return
+        }
+        if (closed || mine != generation) started.cancel() else if (!completed) pending = started
     }
 
     @Synchronized fun invalidate() {

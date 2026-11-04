@@ -468,3 +468,14 @@ MainActivity의 메모리 HTML에 `html,body`의 viewport 크기와 SVG의 `disp
 앱 로그에는 EGL ES 3.1/3.2 context 오류, 프레임 skip, destroyed WebView 관련 Chromium 경고가 있습니다. 현재 캡처 범위에서 CarScope의 FATAL/ANR은 발견하지 않았고, exit-info의 앱 종료 원인은 재설치(PACKAGE UPDATED)였습니다. 이미지의 별도 profile 프로세스 SIGABRT와 입력기 예외는 존재하므로 시스템 전체가 오류 없이 안정적이라고 보고하지 않습니다. provider 부재/네트워크 차단 오류 주입, process-death 복원, 장시간 반복·메모리 profiling, 실차/다른 기기 검증은 NOT_RUN입니다.
 
 **P1-B의 문서/API 대조 및 읽기 전용 어댑터 설계에 조건부 진입 가능**합니다. 빌드·설치·Mock의 기본 실행 기반을 실제로 확보했습니다. 다만 현재 PC의 cold launch/표시 시차와 Pleos 시스템 프로세스 안정성은 남은 제한이며, 신뢰할 수 있는 SDK 연결·수신 지연 검증은 지원 사양 환경에서 재검증해야 합니다. Vehicle SDK 2.3.1/2.3.2와 대상 Vehicle Service 버전 확정, 아티팩트·권한·capability 검증도 여전히 필요합니다. 이번 단계에서 SDK 실제 연동은 수행하지 않았습니다.
+
+## P6-D5 — AVD 인증 런타임 조사 (2026-11-04 KST)
+
+기준 main/PR #67 merge는 f58c575. 최초 AVD 장애 원인은 미확인이다. 별도 재현한
+refresh 중복 callback 결함을 수정하고 고정 시각/HTTP/deadline 진단을 추가했다.
+이번 실행: app 193 PASS, core 37 PASS/1 SKIP(IONIQ5_PARTS 없음), Node 107 PASS/4 SKIP
+(PG_TEST_URL 없음). Debug/Release APK·Release AAB·lint(오류 0, warning 23)·sync 경계 검사 PASS.
+전체 app 검사 첫 시도는 생성 자산 누락으로 실패·중단했고 CI 자산 준비 후 재실행하여 통과했다.
+실제 AVD는 NO_EXACT_CONNECTED_DEVICE로 BLOCKED, QR·폰 E2E는 NOT_RUN.
+Health는 UP/STATEFUL_DENY_DEFAULT/DENIED. Render/실제 DB 변경 및 실제 인증 요청 없음.
+[조사·재실행·승인 조건](p6-d5-avd-auth-runtime.md), [증거 인덱스](evidence/p6-d5/README.md).
