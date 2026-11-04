@@ -17,10 +17,13 @@ import { buildEvBatteryPack, EV_BATTERY_ID } from "./ioniq5-asset/ev-battery.mjs
 import { componentDistance, boxDistance } from "./inspection-camera.mjs";
 import { createTireInspection, updateTireInspection, inspectionProgress } from "./tire-inspection.mjs";
 import { inspectionStateMap } from './inspection-state-map.mjs';
-import {targetForPart} from './mobile-result-contract.mjs';
+import {targetForPart,targetForTask} from './mobile-result-contract.mjs';
 import {createNativeInspectionResults} from './native-inspection-results.mjs';
 import {projectInspectionResults} from './inspection-results.mjs';
 import {partResultHtml,resultSummaryHtml} from './inspection-results-view.mjs';
+import {createInspectionHistoryStore} from './inspection-history-store.mjs';
+import {EMPTY_HISTORY_FILTERS} from './inspection-history-contract.mjs';
+import {historyPanelHtml,historyListResultsHtml,historyDetailResultsHtml,historyFilterHtml,historyFilterSummaryText,historyEntryZoneHtml} from './inspection-history-view.mjs';
 import { stateBadgeHtml, stateLegendHtml } from './inspection-state-view.mjs';
 import { guideHtml, summaryHtml } from "./tire-inspection-view.mjs";
 import { productSummaryHtml, sessionActions } from './inspection-product.mjs';
@@ -34,7 +37,7 @@ import { measureFrontWiperSupport, buildFrontWiperGeometry } from "./ioniq5-asse
 import { sourceWorldParts } from './charge-port-model.mjs';
 import { measureEvChargePortSupport, buildEvChargePort, EV_CHARGE_IDS } from "./ioniq5-asset/ev-charge-port.mjs";
 import { resolveTireTargets, tireCameraDirection } from "./tire-targets.mjs";
-import { STATES, EVENTS, INSPECTION_AREAS, initialState, transition, hoodTarget, cameraGoal, areaOf, HOOD_OPEN_DEG } from "./inspection-flow.mjs";
+import { STATES, EVENTS, INSPECTION_AREAS, initialState, transition, hoodTarget, cameraGoal, areaOf, isHistoryState, HOOD_OPEN_DEG } from "./inspection-flow.mjs";
 
 const params = new URLSearchParams(location.search);
 const $ = (id) => document.getElementById(id);
@@ -228,7 +231,19 @@ let userInspection = createTireInspection(crypto.randomUUID());
 // Never obtain an adapter from a window property, query, postMessage or JSON.
 const mobileResults=createNativeInspectionResults({adapter:createAndroidNativeInspectionAdapter()});
 const mobileExpiryTimer=setInterval(()=>{if(state.name!==STATES.IDLE)mobileResults.tick();},1000);
+// No verified History read provider exists yet (issuer BLOCKED), so this page shows UNAVAILABLE and sends
+// nothing. Compose a reviewed Native provider here only; never from a window property, query, postMessage or JSON.
+const inspectionHistory=createInspectionHistoryStore({provider:null});
+let historyListScroll=0;
+function syncHistory(prev){
+  const was=isHistoryState(prev),now=isHistoryState(state);
+  if(now&&!was)inspectionHistory.openList(state.component?{taskId:targetForPart(state.component)?.taskId}:EMPTY_HISTORY_FILTERS);
+  if(was&&!now)inspectionHistory.closeList();
+  if(prev.name===STATES.HISTORY_DETAIL&&state.name===STATES.HISTORY_LIST)inspectionHistory.closeDetail();
+  if(prev.name===STATES.HISTORY_LIST&&state.name===STATES.HISTORY_DETAIL){historyListScroll=$('panel').scrollTop;inspectionHistory.openDetail(state.recordId);}
+}
 function enter(prev) {
+  syncHistory(prev);
   if (state.name === STATES.IDLE) {mobileResults.endSession();userInspection = createTireInspection(crypto.randomUUID());}
   else if(prev.name===STATES.IDLE)mobileResults.startSession(userInspection.sessionId);
   clearTimeout(refit);
@@ -242,8 +257,8 @@ function enter(prev) {
   }
   if (selectionView && state.component) selectionView.component = state.component;
   document.body.dataset.state = state.name;
-  M.charge.visible = M.chargeInfo.status === 'AVAILABLE' && [STATES.PART_RESULT,STATES.INSPECTION_OVERVIEW, STATES.INSPECTION_SUMMARY, STATES.CHARGE_PORT_PREVIEW].includes(state.name);
-  M.wipers.visible=M.wiperInfo.status==='AVAILABLE'&&[STATES.PART_RESULT,STATES.INSPECTION_OVERVIEW,STATES.INSPECTION_SUMMARY,STATES.VISIBILITY_PREVIEW].includes(state.name);
+  M.charge.visible = M.chargeInfo.status === 'AVAILABLE' && [STATES.HISTORY_LIST,STATES.HISTORY_DETAIL,STATES.PART_RESULT,STATES.INSPECTION_OVERVIEW, STATES.INSPECTION_SUMMARY, STATES.CHARGE_PORT_PREVIEW].includes(state.name);
+  M.wipers.visible=M.wiperInfo.status==='AVAILABLE'&&[STATES.HISTORY_LIST,STATES.HISTORY_DETAIL,STATES.PART_RESULT,STATES.INSPECTION_OVERVIEW,STATES.INSPECTION_SUMMARY,STATES.VISIBILITY_PREVIEW].includes(state.name);
   const underbody = state.name === STATES.EV_BATTERY_PREVIEW;
   floor.visible = ring.visible = !underbody;
   for (const mesh of M.components.get(EV_BATTERY_ID) ?? []) mesh.visible = underbody;
@@ -251,11 +266,16 @@ function enter(prev) {
   hovered = false;
   driveHood(hoodTarget(state));
   render();
-  if ([STATES.PART_RESULT,STATES.VISIBILITY_PREVIEW, STATES.CHARGE_PORT_PREVIEW, STATES.EV_BATTERY_PREVIEW, STATES.COMPONENT_PREVIEW, STATES.WASHER_SELECTED, STATES.TIRE_PREVIEW, STATES.INSPECTION_SUMMARY, STATES.TIRE_SUMMARY].includes(state.name)) {
+  if ([STATES.HISTORY_LIST,STATES.HISTORY_DETAIL,STATES.PART_RESULT,STATES.VISIBILITY_PREVIEW, STATES.CHARGE_PORT_PREVIEW, STATES.EV_BATTERY_PREVIEW, STATES.COMPONENT_PREVIEW, STATES.WASHER_SELECTED, STATES.TIRE_PREVIEW, STATES.INSPECTION_SUMMARY, STATES.TIRE_SUMMARY].includes(state.name)) {
     $('panel').scrollTop = 0;
     const title = $('panel').querySelector('h2');
     title.tabIndex = -1; title.focus({ preventScroll: true });
   }
+  // Back to the list resumes where the user was; back out of History returns to its entry control.
+  if(prev.name===STATES.HISTORY_DETAIL&&state.name===STATES.HISTORY_LIST){
+    $('panel').scrollTop=historyListScroll;
+    $('panel').querySelector(`[data-record="${prev.recordId}"]`)?.focus({preventScroll:true});
+  }else if(isHistoryState(prev)&&state.name===prev.historyReturn)$('panel').querySelector('[data-action="open-history"]')?.focus();
   syncInspectionMap();
   layout();
   if ([STATES.COMPONENT_SELECTION, STATES.TIRE_SELECTION, STATES.TIRE_SUMMARY].includes(state.name) && selectionView) {
@@ -406,15 +426,33 @@ function resultSdkBody(){
   return '<p class="note">이 부품의 SDK 관측 전달은 미지원입니다. 모바일 보고로 대체하지 않습니다.</p>';
 }
 function refreshResultSdk(){const region=$('resultSdkContent');if(region)region.innerHTML=resultSdkBody();}
+const historySessionRow=record=>{const partId=record?.partId??targetForTask(inspectionHistory.snapshot.filters.taskId)?.partId;return partId?projectInspectionResults(userInspection,mobileResults.snapshot).find(r=>r.partId===partId):null;};
+function refreshHistory(){
+  const region=$('historyResults');if(!region||!isHistoryState(state))return;
+  const snapshot=inspectionHistory.snapshot,focused=document.activeElement,scroll=$('panel').scrollTop,moreFocused=focused?.dataset?.action==='history-more',before=region.querySelectorAll('[data-record]').length,inside=region.contains(focused)&&focused!==region;
+  region.innerHTML=state.name===STATES.HISTORY_DETAIL?historyDetailResultsHtml(snapshot,historySessionRow(snapshot.detail.record)):historyListResultsHtml(snapshot,historySessionRow());
+  if(inside&&!document.contains(focused)){
+    // After "more", focus moves to the first new row; otherwise to the same control, or the region itself.
+    const newRow=region.querySelectorAll('[data-record]')[before];
+    const next=moreFocused?newRow??region.querySelector('[data-action="history-more"]'):focused.dataset.record?region.querySelector(`[data-record="${focused.dataset.record}"]`):null;
+    (next??region).focus({preventScroll:true});
+  }
+  const filterSummary=$('historyFilterSummary');if(filterSummary)filterSummary.textContent=historyFilterSummaryText(snapshot.filters);
+  $('panel').scrollTop=scroll;
+}
 function panelHtml() {
+  if(isHistoryState(state)){const snapshot=inspectionHistory.snapshot;return historyPanelHtml(state,snapshot,state.name===STATES.HISTORY_DETAIL?historySessionRow(snapshot.detail.record):historySessionRow())+sessionActions(state);}
   const hasStatus = state.name === STATES.EV_BATTERY_PREVIEW || state.name === STATES.WASHER_SELECTED || state.name === STATES.COMPONENT_PREVIEW && state.component === 'brake-fluid-reservoir';
   const status = hasStatus ? `<details class="sdk-details"${state.name === STATES.EV_BATTERY_PREVIEW ? ' open' : ''}><summary>Pleos API 지원 및 SDK 보고 상태</summary><div id="componentStatusContent">${componentStatusHtml(state.component)}</div></details>` : '';
-  const result=targetForPart(state.component)?`<div id="mobilePartResults">${partResultHtml(userInspection,mobileResults.snapshot,state.component)}</div>`:'';
-  let resultSdk='';
+  let result=targetForPart(state.component)?`<div id="mobilePartResults">${partResultHtml(userInspection,mobileResults.snapshot,state.component)}</div>`:'';
+  let resultSdk='',past='';
   if(state.name===STATES.PART_RESULT){
-    resultSdk=`<details class="sdk-details"><summary>SDK 관측 · 사용자 보고와 별개</summary><div id="resultSdkContent">${resultSdkBody()}</div></details>`;
+    // Three separate sources for one part: this session's reports, stored records, and live SDK observations.
+    result=`<section class="source-zone" data-source-zone="SESSION"><span class="zone-tag">현재 세션 · 이 화면 메모리</span>${result}</section>`;
+    past=historyEntryZoneHtml(targetForPart(state.component).label);
+    resultSdk=`<details class="sdk-details source-zone" data-source-zone="SDK"><summary>SDK 관측 · 사용자 보고와 별개</summary><div id="resultSdkContent">${resultSdkBody()}</div></details>`;
   }
-  return panelContents() + result + resultSdk + status + sessionActions(state);
+  return panelContents() + result + past + resultSdk + status + sessionActions(state);
 }
 
 let toastTimer = null;
@@ -424,6 +462,7 @@ function render() {
   $('panel').inert = state.name === STATES.IDLE;
   $("crumb").textContent = state.name === STATES.INSPECTION_SUMMARY ? '차량 점검 › 전체 요약' : state.area === 'tires' ? `차량 점검 › 타이어${state.component ? ' › ' + detachedTireInfo(state.component).label : ''}` : state.name === STATES.COMPONENT_PREVIEW ? `차량 점검 › 보닛 › ${areaOf(state).components.find(c => c.id === state.component).label}` : crumbs[state.name];
   if(state.name===STATES.PART_RESULT)$('crumb').textContent='차량 점검 › '+targetForPart(state.component).label;
+  if(isHistoryState(state))$('crumb').textContent=state.name===STATES.HISTORY_DETAIL?'차량 점검 › 과거 점검 기록 › 상세':'차량 점검 › 과거 점검 기록';
   if (state.name === STATES.EV_BATTERY_PREVIEW) $('crumb').textContent = '차량 점검 › EV 배터리';
   if (state.name === STATES.CHARGE_PORT_PREVIEW) $('crumb').textContent = '차량 점검 › EV 충전구';
   if(state.name===STATES.VISIBILITY_PREVIEW)$('crumb').textContent='차량 점검 › '+(state.area==='wipers'?'전면 와이퍼':'전조등');
@@ -456,6 +495,16 @@ $("panel").addEventListener("click", (e) => {
   if (!b) return;
   const a = b.dataset.action;
   if(a==='result-detail')dispatch({type:EVENTS.OPEN_RESULT,id:b.dataset.id});
+  else if(a==='open-history')dispatch({type:EVENTS.OPEN_HISTORY});
+  else if(a==='history-detail')dispatch({type:EVENTS.OPEN_HISTORY_DETAIL,recordId:b.dataset.record});
+  else if(a==='history-session-part')dispatch({type:EVENTS.OPEN_RESULT,id:b.dataset.id});
+  else if(a==='history-more')inspectionHistory.loadMore();
+  else if(a==='history-retry')inspectionHistory.retry();
+  else if(a==='history-reset-filters'){
+    inspectionHistory.setFilters(EMPTY_HISTORY_FILTERS);
+    const filters=$('panel').querySelector('.history-filters');
+    if(filters){filters.outerHTML=historyFilterHtml(inspectionHistory.snapshot);$('panel').querySelector('.history-filters summary').focus({preventScroll:true});}
+  }
   else if(a==='select-result'&&b.dataset.session===userInspection.sessionId)mobileResults.select(b.dataset.task,b.dataset.record);
   else if(a==='request-mobile'){const started=mobileResults.request(b.dataset.task);$('toast').textContent=started?'Native에 점검 생성을 요청했습니다. 검증된 연결 응답을 기다리세요.':'Native 전달 경로 미완료 · 요청을 시작할 수 없습니다.';$('toast').classList.add('on');}
   else if (a === 'confirm-tire' && state.name === STATES.TIRE_PREVIEW && b.dataset.id === state.component) {
@@ -494,6 +543,12 @@ $('panel').addEventListener('change', e => {
   const next = updateTireInspection(userInspection, { type: 'ANSWER', tireId: state.component, sessionId: input.dataset.session, checkId: input.dataset.check, answer: input.value });
   if (next !== userInspection) { userInspection = next; renderGuide(input.dataset.check); }
 });
+$('panel').addEventListener('change',e=>{
+  const form=e.target.closest?.('#historyFilterForm');
+  if(!form||state.name!==STATES.HISTORY_LIST)return;
+  inspectionHistory.setFilters(Object.fromEntries(new FormData(form)));
+});
+$('panel').addEventListener('submit',e=>{if(e.target.id==='historyFilterForm')e.preventDefault();});
 $("start").addEventListener("click", () => dispatch({ type: EVENTS.START }));
 $("back").addEventListener("click", () => dispatch({ type: EVENTS.BACK }));
 $("capButton").addEventListener("click", () => dispatch({ type: EVENTS.SELECT_COMPONENT, id: "washer-fluid-cap" }));
@@ -583,9 +638,15 @@ function syncInspectionMap() {
 mobileResults.subscribe(()=>{syncInspectionMap();if(!window.__inspectReady)return;const scroll=$('panel').scrollTop,focused=document.activeElement;
   const region=$('mobilePartResults');if(region)region.innerHTML=partResultHtml(userInspection,mobileResults.snapshot,state.component);
   const summary=$('allResults');if(summary)summary.innerHTML=resultSummaryHtml(userInspection,mobileResults.snapshot);
+  if(isHistoryState(state)){refreshHistory();return;}
   if(focused?.dataset.record&&!document.contains(focused))$('panel').querySelector(`[data-record="${focused.dataset.record}"]`)?.focus({preventScroll:true});
   $('panel').scrollTop=scroll;
 });
+inspectionHistory.subscribe(refreshHistory);
+// Access can change while the screen is away, so paused or hidden pages keep no records (same fixed signals as SDK status).
+addEventListener('carscope-tire-inactive',()=>inspectionHistory.suspend());
+addEventListener('carscope-tire-active',()=>{if(!document.hidden)inspectionHistory.resume();});
+document.addEventListener('visibilitychange',()=>{if(document.hidden)inspectionHistory.suspend();else inspectionHistory.resume();});
 // ---------- highlight and label ----------
 const _v = new THREE.Vector3();
 function screenPoint(obj, top = true) {
@@ -739,6 +800,7 @@ function dispose(reason) {
   disposeChargePortStatus();
   disposeVisibilityStatus();
   mobileResults.dispose();
+  inspectionHistory.dispose();
   clearInterval(mobileExpiryTimer);
   userInspection=createTireInspection(crypto.randomUUID());syncInspectionMap();
   renderer.setAnimationLoop(null);
@@ -789,6 +851,7 @@ window.__inspect = {
   resultMap:()=>inspectionMap,
   resultPaint:()=>[...targetGroups()].filter(([id])=>targetForPart(id)).map(([id,meshes])=>({partId:id,colors:meshes.map(m=>m.material.color.getHex()),baseColors:meshes.map(m=>resultBaseColors.get(m.material))})),
   nativeResults:()=>mobileResults.snapshot,
+  history:()=>inspectionHistory.snapshot,
   inspectionPaint: () => [...M.tires].map(([id,t])=>({id,colors:t.meshes.map(m=>m.material.color.getHex()),baseColors:t.meshes.map(m=>m.userData.inspectionBaseColor)})),
   hoodPoint: () => screenPoint(M.hoodMeshes[0], false),
   capPoint: () => screenPoint(M.cap),

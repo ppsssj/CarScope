@@ -103,4 +103,6 @@ Authorization: Bearer <별도 history-read credential>
 
 Codex B는 403을 빈 기록 목록이나 인증 성공으로 표시하지 않는다. 목록 선택 후 recordId로 상세 조회하고 page.nextCursor를 그대로 전달한다. `NO_FINDINGS_REPORTED`를 안전/정상 판정으로 바꾸지 않는다. `source: USER_REPORTED` 및 `sdkDataIncluded:false`를 유지하고 Pleos SDK 관측값·STALE 시각과 합치지 않는다. Native Accept 성공 응답은 기존 형식이며 recordId 추가는 없다. 목록 갱신으로 기록을 찾는다. Memory/SQLite 실행에는 영구 History 보장이 없다.
 
+클라이언트 소비자는 [P8-B1 UI](../p8-b1-inspection-history-ui.md)에 있다. 이 절의 지침을 구현하며 read provider가 없어 운영 조회는 BLOCKED다.
+
 추가 task/schema는 기존 protocol 검증, migration task/part/schema 제약, fixtures/테스트를 함께 확장해야 한다. DTO v1은 이 17개 task만 지원한다.

@@ -128,6 +128,33 @@
   .record-picker [aria-pressed="true"]{border:2px solid #82b7dd;background:#192c3e}
   .part-results pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px}
   .result-error{border-left:3px solid #d9bd72;padding-left:10px}
+  .source-zone{margin-top:16px;border:1px solid var(--line);border-left:4px solid var(--zone,var(--line));border-radius:10px;padding:12px;overflow-wrap:anywhere}
+  .source-zone[data-source-zone="SESSION"]{--zone:#7fd1b9}
+  .source-zone[data-source-zone="HISTORY"]{--zone:#b79cf0}
+  .source-zone[data-source-zone="SDK"]{--zone:var(--warn)}
+  .source-zone .part-results{margin-top:6px;border-top:0;padding-top:0}
+  .zone-tag{display:inline-block;font-size:12px;font-weight:600;color:var(--zone);margin-bottom:6px}
+  .zone-row{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px}
+  .source-zone .secondary{width:100%;margin-top:8px}
+  .history-card{display:flex;flex-wrap:wrap;gap:6px 8px;align-items:center}
+  .history-card:hover{background:#262233}
+  .history-part{font-weight:600;flex:1 1 auto;min-width:0}
+  .history-card small{display:block;width:100%;color:var(--muted);overflow-wrap:anywhere}
+  .history-filters{margin-top:12px;border-top:1px solid var(--line)}
+  .history-filters summary{min-height:44px;padding:12px 0;cursor:pointer}
+  .history-filters form{display:grid;gap:10px}
+  .history-filters label{display:grid;gap:4px;font-size:13px;color:var(--muted)}
+  .history-filters select,.history-filters input{font:inherit;color:var(--text);background:var(--surface-2);border:1px solid var(--line);border-radius:8px;min-height:44px;padding:8px;width:100%;min-width:0}
+  .history-dates{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px}
+  .history-message{margin-top:16px;border-left:3px solid #d9bd72;padding:2px 0 2px 10px;overflow-wrap:anywhere}
+  .history-message .secondary{width:100%;margin-top:8px}
+  .history-loading{margin-top:16px}
+  .history-more{width:100%;margin-top:12px}
+  .history-demo{margin:12px 0 0!important;border:1px dashed var(--warn);border-radius:8px;padding:8px 10px;color:var(--warn)!important;font-size:13px}
+  .history-demo-chip{color:var(--warn)!important;font-weight:600}
+  .history-original summary{min-height:44px;padding:12px 0;cursor:pointer;color:var(--muted)}
+  .history-original pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px}
+  #historyResults:focus{outline:none}
   @media (prefers-reduced-motion:reduce){#panel,#home,#toast{transition:none}}
 </style>
 <script type="importmap">
@@ -146,7 +173,7 @@
 <div id="home">
   <button id="start" type="button" disabled>차량 점검</button>
   <span class="hint">드래그해 회전 · 휠로 확대/축소</span>
-  <span class="hint">점검 기록은 홈 복귀·종료·새로고침 시 지워집니다.</span>
+  <span class="hint">현재 점검 응답은 홈 복귀·종료·새로고침 시 지워집니다.</span>
 </div>
 <aside id="panel" aria-live="polite"></aside>
 <div id="capLabel"><button type="button" id="capButton">워셔액</button></div>

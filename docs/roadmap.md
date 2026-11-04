@@ -1,5 +1,9 @@
 # 로드맵 및 진입 조건
 
+## P8-B1 — 3D 차량 점검 기록 UI
+
+기존 3D 점검 화면에 저장된 과거 기록의 목록·필터·더 보기·상세·상태 화면과 현재 세션 비교를 추가하고, 인증과 분리된 read provider 경계를 정의했다. 실제 백엔드 DTO 코드로 계약을 검증했으나 표시 데이터는 합성이다. **운영 조회는 issuer 부재로 BLOCKED**이며 배포 화면은 `UNAVAILABLE`, 기기 E2E는 NOT_RUN이다. [설계·경계](p8-b1-inspection-history-ui.md), [증거 인덱스](evidence/p8-b1-history-ui/README.md).
+
 ## P8-A2 — History 인증 어댑터 경계
 
 영구 점검 기록 조회를 고정 HTTPS authority에 연결할 수 있는 어댑터와 코드 전용 Render 주입 경계를 구현하고, 합성 authority·실제 TLS·격리 PostgreSQL로 실패 차단을 검증한다. **운영 인증은 미완료**이며 배포 경로는 403 DENY_DEFAULT를 유지한다. 신뢰 issuer·차량 소유권 근거·폐기 서비스가 없어 BLOCKED, 기기 E2E는 NOT_RUN이다. [설계·차단 조건](p8-a2-history-auth.md), [증거 인덱스](evidence/p8-history-auth/README.md).
