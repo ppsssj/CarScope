@@ -1,4 +1,4 @@
-# P6-D5 — AVD 인증 런타임 조사와 재실행
+# P6-D5 — 인증 처리 안정화 및 진단 보강
 
 최초 AVD 장애 원인은 **미확인**이다. 이 PR은 P6-D5 완료나 실제 QR 성공을 주장하지
 않는다. 별도로 재현한 refresh 중복 callback 결함을 수정하고 다음 실측의 진단을
@@ -15,8 +15,10 @@
   guest CPU/load/memory/시각/등록 파일 상태와 과거 logcat은 수집 불가.
 - `/healthz` 첫 시도는 20초 내 실패. 두 번째 credential-free GET은
   `UP / STATEFUL_DENY_DEFAULT / DENIED`. 첫 실패를 서버 인증 실패로 해석하지 않음.
-- 사용자 제공 과거 사실(PC provision 200, 약 95분 enrollment 잔여, AVD-PC 약 -1초,
+- 사용자 제공 과거 사실(PC provision 200, 약 95분 enrollment 잔여,
   private file 존재)은 이번 실행의 재검증 결과가 아니다. 현재 유효성은 가정하지 않음.
+  과거 `AVD_CLOCK_DELTA_SECONDS=-1`은 초 단위 절삭 영향을 받으므로 실제 시계 오차의
+  증거로 사용하지 않는다.
 
 ## 조사 A–H
 
@@ -25,7 +27,7 @@
 | A enrollment | exact JSON fields, UTF-8, UUIDv4, 43자 proof, 최대 24h, 만료·symlink 거부. API/mobile origin 모두 고정 origin과 일치해야 함 |
 | B HTTPS | 고정 HTTPS URI가 Host/SNI를 결정. 플랫폼 CA/hostname verifier 유지. POST JSON, redirect 금지, 5초 connect/read/전체 deadline, 응답 크기/encoding 검사. 실제 AVD ingress 결과는 미확인 |
 | C grant | Node 반환 12개 필드와 Kotlin exact keys 일치. mode/origin/audience/scope/registration/flags/token/UUID/정수 검증. Any/Boolean identity 비교 경고는 존재하나 이번 조사에서 최초 장애 원인으로 입증되지 않음 |
-| D 시각 | 서버 issuedAt=notBefore, expiresAt=issuedAt+120000. Android는 notBefore<=now<expiresAt 요구. AVD가 뒤처지고 응답이 빠르면 거부될 수 있으나 과거 응답 당시 시각·코드가 없어 가설에 그침. 허용 오차 추가 없음 |
+| D 시각 | 서버 issuedAt=notBefore, expiresAt=issuedAt+120000. Android는 notBefore<=now<expiresAt 요구. 과거 초 단위 delta는 실제 시계 오차의 증거가 아니며 응답 당시 정밀 시각·코드도 없어 시계 오차 원인을 입증하지 못함. 허용 오차 추가 없음 |
 | E refresh | generation으로 이전 refresh/close callback 차단. 동일 generation의 두 번째 callback은 기존에 차단하지 않았음. 실패 뒤 성공으로 재인가되거나 성공 뒤 실패로 grant가 유실됨을 새 테스트로 재현 |
 | F provider | 동일 endpoint의 유효한 메모리 snapshot만 반환. transport.creationAuthorized는 provider!=null이며 closed면 false. 별도 grant 복사/저장 경로 없음 |
 | G Activity | onStart가 source→transport→controller 생성 후 refresh. callback과 1초 tick에서 render. IDLE/FAILED/CANCELLED/EXPIRED이면서 not busy이고 authorized일 때 Create 활성화. onStop에서 generation/handler/source/transport/QR 정리 |
@@ -45,6 +47,21 @@
 `PROVISION_HTTP_UNAUTHORIZED`, `PROVISION_HTTP_FORBIDDEN`,
 `PROVISION_HTTP_RATE_LIMITED`, `PROVISION_HTTP_REJECTED`만 기록한다.
 본문·bearer·proof·인증 URL·예외 메시지/스택은 기록하지 않는다.
+
+### PR #68 리뷰 전 로그 중복 수정
+
+HTTP/헤더 거부 지점에서 먼저 로그를 남기고 일반 예외를 던져 공통 catch가
+`PROVISION_REQUEST_FAILED`를 추가하는 문제가 회귀 테스트에서 재현됐다(수정 전
+집중 검사 5개 중 1개 FAIL). `HttpRejected`/`HeadersRejected` 내부 예외를 공통 catch에서
+분류하여 해당 거부 코드 하나만 기록한다. timeout/TLS/DNS/JSON 진단과 인증 검증 정책은
+그대로다. 로그 회귀는 정확한 코드 목록과 throwable 부재를 검사하며, 수정 후 집중
+검사 5개가 PASS했다. 이 추가 작업에서는 Render/DB/AVD/실제 인증/Geometry 작업을
+수행하지 않았다.
+
+추가 수정 후 `.\gradlew.bat :app:testDebugUnitTest --rerun-tasks --console=plain
+--max-workers=1 '-Dorg.gradle.jvmargs=-Xmx768m -Dfile.encoding=UTF-8'
+'-Pkotlin.compiler.execution.strategy=in-process'` 재실행: 29 suites / 195 PASS,
+실패·오류·SKIP 0 (29 tasks 모두 실행). 아래 193개 결과는 최초 커밋의 이전 실행 기록이다.
 
 ## 변경 파일
 
@@ -171,7 +188,8 @@ HTTPS 모바일 점검→제출→차량 RESULT_SUBMITTED→차량에서 명시�
 ## 정리와 다음 우선순위
 
 1. 안정된 AVD와 개별 승인 확보 후 신규 grant의 고정 코드·시각·버튼 상태를 수집하여
-   최초 장애를 특정한다. 지금은 Draft PR이며 병합 전 CI 및 코드 리뷰가 필요하다.
+   최초 장애를 특정한다. 이 PR의 목적은 인증 처리 안정화 및 진단 보강이며,
+   실제 QR E2E 완료를 의미하지 않는다. 병합 전 최종 HEAD의 CI 및 코드 리뷰가 필요하다.
 2. 실제 서버 grant로 QR 생성/만료/취소/기본 거부를 검증한다.
 3. washer-fluid 광학 스캔 E2E, 그다음 타이어 대표 E2E를 수행한다.
 4. 종료 시 각각 승인받아 DB 등록 revoke, Render 환경변수 제거/재배포 및 deny health

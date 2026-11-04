@@ -110,6 +110,9 @@ internal class HttpsAvdSimulatorGrantExchange(
 
     init { require(AvdSimulatorPolicy.endpointAllowed(endpoint) && timeoutMs in 1..10000) }
 
+    private class HttpRejected(val status: Int) : Exception()
+    private class HeadersRejected : Exception()
+
     private inner class Call : SyncCancellation {
         val cancelled = AtomicBoolean(false)
         val completed = AtomicBoolean(false)
@@ -157,19 +160,10 @@ internal class HttpsAvdSimulatorGrantExchange(
                         c.doOutput = true; c.setFixedLengthStreamingMode(body.size)
                         c.outputStream.use { it.write(body) }
                         val status = c.responseCode
-                        if (status != 200) {
-                            Log.w(logTag, when (status) {
-                                401 -> "PROVISION_HTTP_UNAUTHORIZED"
-                                403 -> "PROVISION_HTTP_FORBIDDEN"
-                                429 -> "PROVISION_HTTP_RATE_LIMITED"
-                                else -> "PROVISION_HTTP_REJECTED"
-                            })
-                            error("INVALID_SIMULATOR_PROVISION")
-                        }
+                        if (status != 200) throw HttpRejected(status)
                         if (c.contentLengthLong > SyncHttpDecoder.MAX_BYTES ||
                             c.getHeaderField("Content-Encoding")?.let { it != "identity" } == true) {
-                            Log.w(logTag, "PROVISION_RESPONSE_HEADERS_REJECTED")
-                            error("INVALID_SIMULATOR_PROVISION")
+                            throw HeadersRejected()
                         }
                         val bytes = ByteArrayOutputStream()
                         c.inputStream.use { input ->
@@ -192,6 +186,13 @@ internal class HttpsAvdSimulatorGrantExchange(
                     grant = null
                     // Deliberately omit exception messages, stack traces, request/response bodies and token values.
                     val category = when (e) {
+                        is HttpRejected -> when (e.status) {
+                            401 -> "PROVISION_HTTP_UNAUTHORIZED"
+                            403 -> "PROVISION_HTTP_FORBIDDEN"
+                            429 -> "PROVISION_HTTP_RATE_LIMITED"
+                            else -> "PROVISION_HTTP_REJECTED"
+                        }
+                        is HeadersRejected -> "PROVISION_RESPONSE_HEADERS_REJECTED"
                         is SocketTimeoutException -> "PROVISION_TIMEOUT"
                         is SSLException -> "PROVISION_TLS_REJECTED"
                         is UnknownHostException -> "PROVISION_DNS_FAILURE"

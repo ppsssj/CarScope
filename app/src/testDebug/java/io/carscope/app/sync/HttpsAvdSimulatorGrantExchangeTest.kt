@@ -4,16 +4,19 @@ import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.net.SocketTimeoutException
 import java.net.URL
+import java.net.UnknownHostException
 import java.security.cert.Certificate
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
 import javax.net.ssl.HttpsURLConnection
+import javax.net.ssl.SSLException
 import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
+import org.robolectric.shadows.ShadowLog
 
 /** Deterministic platform-connection fixture. Never opens a socket or supplies a trust override. */
 @RunWith(RobolectricTestRunner::class)
@@ -24,7 +27,9 @@ class HttpsAvdSimulatorGrantExchangeTest {
         private val body: String = AvdSimulatorSamples.grant(),
         private val encoding: String? = null,
         private val failure: Boolean = false,
-        private val gate: CountDownLatch? = null
+        private val gate: CountDownLatch? = null,
+        private val exception: Exception? = null,
+        private val declaredLength: Long? = null
     ) : HttpsURLConnection(URL(AvdSimulatorPolicy.API_ORIGIN + "/simulator/provision")) {
         val output = ByteArrayOutputStream()
         val disconnected = CountDownLatch(1)
@@ -32,10 +37,11 @@ class HttpsAvdSimulatorGrantExchangeTest {
         override fun getResponseCode(): Int {
             gate?.await(2, TimeUnit.SECONDS)
             if (failure) throw SocketTimeoutException("synthetic error must not be logged")
+            exception?.let { throw it }
             return status
         }
         override fun getContentType() = "application/json; charset=utf-8"
-        override fun getContentLengthLong() = body.toByteArray().size.toLong()
+        override fun getContentLengthLong() = declaredLength ?: body.toByteArray().size.toLong()
         override fun getHeaderField(name: String?) = if (name == "Content-Encoding") encoding else null
         override fun getInputStream() = ByteArrayInputStream(body.toByteArray())
         override fun disconnect() { disconnected.countDown() }
@@ -53,6 +59,37 @@ class HttpsAvdSimulatorGrantExchangeTest {
                 assertEquals(AvdSimulatorPolicy.API_ORIGIN + "/simulator/provision", uri.toString())
                 c
             })
+
+    private fun assertFailureLog(c: Connection, expected: String) {
+        ShadowLog.clear()
+        val queue = LinkedBlockingQueue<() -> Unit>()
+        exchange(c, queue).use { exchange ->
+            exchange.fetch { assertNull(it) }
+            requireNotNull(queue.poll(3, TimeUnit.SECONDS))()
+            val logs = ShadowLog.getLogsForTag("CarScopeAvdAuth")
+            assertEquals(listOf(expected), logs.map { it.msg })
+            assertTrue(logs.all { it.throwable == null })
+        }
+    }
+
+    @Test fun `HTTP denials and rejected response headers log only their fixed category once`() {
+        for ((status, code) in listOf(401 to "PROVISION_HTTP_UNAUTHORIZED", 403 to "PROVISION_HTTP_FORBIDDEN",
+            429 to "PROVISION_HTTP_RATE_LIMITED", 302 to "PROVISION_HTTP_REJECTED", 503 to "PROVISION_HTTP_REJECTED")) {
+            assertFailureLog(Connection(status = status), code)
+        }
+        assertFailureLog(Connection(encoding = "gzip"), "PROVISION_RESPONSE_HEADERS_REJECTED")
+        assertFailureLog(Connection(declaredLength = SyncHttpDecoder.MAX_BYTES + 1L), "PROVISION_RESPONSE_HEADERS_REJECTED")
+    }
+
+    @Test fun `timeout TLS DNS and malformed JSON retain fixed diagnostics without exception details`() {
+        val detail = "synthetic-sensitive-detail"
+        assertFailureLog(Connection(exception = SocketTimeoutException(detail)), "PROVISION_TIMEOUT")
+        assertFailureLog(Connection(exception = SSLException(detail)), "PROVISION_TLS_REJECTED")
+        assertFailureLog(Connection(exception = UnknownHostException(detail)), "PROVISION_DNS_FAILURE")
+        assertFailureLog(Connection(body = "{invalid-json"), "PROVISION_RESPONSE_INVALID_JSON")
+        assertFailureLog(Connection(body = "{}"), "PROVISION_RESPONSE_CONTRACT_REJECTED")
+        assertFailureLog(Connection(body = AvdSimulatorSamples.grant(2100)), "PROVISION_GRANT_EXPIRED")
+    }
 
     @Test fun `verified response flows through provider to creation authorization and strict request settings`() {
         val c = Connection(); val queue = LinkedBlockingQueue<() -> Unit>()
