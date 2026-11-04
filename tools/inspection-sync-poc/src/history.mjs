@@ -77,14 +77,20 @@ export function historyDto(row, detail=false) {
 }
 export class HistoryService {
   constructor({store}={}){this.store=store;}
+  async verify(row,owner){
+    if(!row.originalResult || !SUPPORTED_TASKS.includes(row.taskId) || !['authorityNamespace','authorityIssuer','userId','vehicleId'].every(k=>row[k]===owner[k]) ||
+      checkEnvelope({protocol:'inspection-sync',protocolVersion:1,result:row.originalResult},row.taskId).length || await resultDigest(row.originalResult)!==row.resultDigest ||
+      row.inspectionId!==row.originalResult.inspectionId || row.schemaVersion!==row.originalResult.schemaVersion || row.inspectionStatus!==row.originalResult.status || partIdForTask(row.taskId)!==row.partId)fail('INTERNAL',500);
+  }
   async list(principal,params){const query=historyQuery(params,principal);if(typeof this.store?.historyList!=='function')fail('FORBIDDEN',403);
     const rows=await this.store.historyList(query),hasMore=rows.length>query.limit,visible=rows.slice(0,query.limit),last=visible.at(-1);
+    await Promise.all(visible.map(row=>this.verify(row,query.owner)));
     const nextCursor=hasMore?Buffer.from(JSON.stringify({v:1,completedAt:last.completedAt,recordId:last.recordId,fingerprint:query.fingerprint})).toString('base64url'):null;
     return {schemaVersion:1,items:visible.map(r=>historyDto(r)),page:{limit:query.limit,hasMore,nextCursor}};
   }
   async detail(principal,recordId){const owner=scope(principal);if(!uuid(recordId))fail();
     if(typeof this.store?.historyGet!=='function')fail('FORBIDDEN',403);const row=await this.store.historyGet(owner,recordId);if(!row)fail('NOT_FOUND',404);
-    if(checkEnvelope({protocol:'inspection-sync',protocolVersion:1,result:row.originalResult},row.taskId).length || await resultDigest(row.originalResult)!==row.resultDigest)fail('INTERNAL',500);
+    await this.verify(row,owner);
     return {schemaVersion:1,record:historyDto(row,true)};
   }
 }

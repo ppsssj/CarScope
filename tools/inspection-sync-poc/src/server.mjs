@@ -139,12 +139,11 @@ export function createSyncHandler({ service, history = new HistoryService({store
           if ((await authorizer.authorize({ token: bearer(req), remoteAddress: client, secure })) !== true) throw new SyncError(ERRORS.FORBIDDEN, 403);
           const body = await readJson(req);
           // The body may arrive after the credential expired/revoked. Recheck at the creation boundary.
-          if ((await authorizer.authorize({ token: bearer(req), remoteAddress: client, secure })) !== true) throw new SyncError(ERRORS.FORBIDDEN, 403);
           let historyBinding;
           if(typeof authorizer.resolveHistoryAuthority==='function'){
             historyBinding=await authorizer.resolveHistoryAuthority({token:bearer(req),remoteAddress:client,secure});
             if(!historyBinding)throw new SyncError(ERRORS.FORBIDDEN,403);
-          }
+          } else if ((await authorizer.authorize({ token: bearer(req), remoteAddress: client, secure })) !== true) throw new SyncError(ERRORS.FORBIDDEN, 403);
           send(201, await service.create({ taskId: body.taskId },{historyBinding}));
           return;
         }
@@ -152,7 +151,10 @@ export function createSyncHandler({ service, history = new HistoryService({store
         case 'GET /v1/inspection-records/:id': {
           const principal=await historyAuthorizer.resolve({token:bearer(req),secure,remoteAddress:client});
           if(!principal)throw new SyncError(ERRORS.FORBIDDEN,403);
-          send(200,name==='GET /v1/inspection-records'?await history.list(principal,url.searchParams):await history.detail(principal,id));return;
+          const payload=name==='GET /v1/inspection-records'?await history.list(principal,url.searchParams):await history.detail(principal,id);
+          const current=await historyAuthorizer.resolve({token:bearer(req),secure,remoteAddress:client});
+          if(!current || !['authorityNamespace','authorityIssuer','userId','vehicleId'].every(k=>principal[k]===current[k]))throw new SyncError(ERRORS.FORBIDDEN,403);
+          send(200,payload);return;
         }
         case 'GET /v1/sessions/:id': send(200, await service.view(id, bearer(req))); return;
         case 'POST /v1/sessions/:id/accept': { const body = await readJson(req); send(200, await service.accept(id, bearer(req), body.resultDigest)); return; }

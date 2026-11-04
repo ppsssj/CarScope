@@ -93,6 +93,29 @@ test('history: actual PostgreSQL atomic acceptance, authenticated TLS reads, res
     await assert.rejects(()=>service.accept(bad.sessionId,bad.receiverToken,changedDigest),{code:'CONFLICT'});
     assert.equal((await service.view(bad.sessionId,bad.receiverToken)).sessionState,'RESULT_SUBMITTED');assert.equal(await count(),before+1);
     const otherOwner=await prepared(result,'B');await assert.rejects(()=>service.accept(otherOwner.sessionId,otherOwner.receiverToken,digest),{code:'CONFLICT'});
+    const concurrent=historyResult('light-low-beam-left-0'),one=await prepared(concurrent),two=await prepared(concurrent),concurrentDigest=await resultDigest(concurrent),beforeRace=await count();
+    const equal=await Promise.all([service.accept(one.sessionId,one.receiverToken,concurrentDigest),svcB.accept(two.sessionId,two.receiverToken,concurrentDigest)]);
+    assert.ok(equal.every(r=>r.sessionState==='ACCEPTED'));assert.equal(await count(),beforeRace+1);
+    const conflict=historyResult('light-high-beam-left-0'),different=historyResult(conflict.taskId,{inspectionId:conflict.inspectionId,completedAt:Date.parse(conflict.completedAt),answer:'FOUND'});
+    const left=await prepared(conflict),right=await prepared(different),leftDigest=await resultDigest(conflict),rightDigest=await resultDigest(different);
+    const mixed=await Promise.allSettled([service.accept(left.sessionId,left.receiverToken,leftDigest),svcB.accept(right.sessionId,right.receiverToken,rightDigest)]);
+    assert.equal(mixed.filter(r=>r.status==='fulfilled').length,1);assert.equal(mixed.find(r=>r.status==='rejected').reason.code,'CONFLICT');assert.equal(await count(),beforeRace+2);
+  });
+  await t.test('revocation or owner change during a database read prevents the response; another owner reads only their records',async()=>{
+    const originalList=store.historyList.bind(store),grant=auth.grants.get(auth.tokens.Aread);
+    try{
+      store.historyList=async query=>{const rows=await originalList(query);grant.active=false;return rows;};
+      assert.equal((await call('GET','/v1/inspection-records')).status,403);
+      grant.active=true;
+      store.historyList=async query=>{const rows=await originalList(query);auth.owners.A.vehicleId='vehicle-B';return rows;};
+      assert.equal((await call('GET','/v1/inspection-records')).status,403);
+    }finally{store.historyList=originalList;grant.active=true;auth.owners.A.vehicleId='vehicle-A';}
+    const result=historyResult('brake-fluid'),session=await prepared(result,'B');
+    await service.accept(session.sessionId,session.receiverToken,await resultDigest(result));
+    const list=await call('GET','/v1/inspection-records',{token:auth.tokens.Bread});assert.equal(list.status,200);assert.equal(list.body.items.length,1);
+    const recordId=list.body.items[0].recordId;
+    assert.deepEqual((await call('GET','/v1/inspection-records/'+recordId,{token:auth.tokens.Bread})).body.record.originalResult,result);
+    assert.equal((await call('GET','/v1/inspection-records/'+recordId)).status,404);
   });
   await t.test('actual DB archive failure rolls back ACCEPTED and token writes, recovery succeeds once',async()=>{
     const result=historyResult('battery-12v'),s=await prepared(result),digest=await resultDigest(result),before=await count();
@@ -148,6 +171,25 @@ test('history: actual PostgreSQL atomic acceptance, authenticated TLS reads, res
     await Promise.all([store.initialize(),other.initialize()]);assert.equal(Number((await a.query('SELECT version FROM cs_history_schema_meta WHERE id=1')).rows[0].version),1);
     const before=await count();await a.query('UPDATE cs_history_schema_meta SET version=2 WHERE id=1');
     try{await assert.rejects(()=>store.initialize(),/UNSUPPORTED_HISTORY_SCHEMA/);assert.equal(await count(),before);}finally{await a.query('UPDATE cs_history_schema_meta SET version=1 WHERE id=1');}
+  });
+  await t.test('database outage fails closed; new pool recovers without a phantom ACCEPTED record',async()=>{
+    const outagePool=pool(),outageStore=await PostgreSQLSessionStore.open({pool:outagePool});
+    const result=historyResult('tire.rear-left'),session=await prepared(result),digest=await resultDigest(result),before=await count();
+    await outagePool.end();const offline=new SessionService({store:outageStore,now:()=>now});
+    await assert.rejects(()=>offline.accept(session.sessionId,session.receiverToken,digest));
+    assert.equal((await service.view(session.sessionId,session.receiverToken)).sessionState,'RESULT_SUBMITTED');assert.equal(await count(),before);
+    const recovered=new SessionService({store:await PostgreSQLSessionStore.open({pool:pool()}),now:()=>now});
+    await recovered.accept(session.sessionId,session.receiverToken,digest);assert.equal(await count(),before+1);
+  });
+  await t.test('legacy valid pre-epoch completion timestamps remain queryable and corrupted stored digests never read as valid',async()=>{
+    const result=historyResult('washer-fluid',{completedAt:Date.UTC(1960,0,1)}),session=await prepared(result),digest=await resultDigest(result);
+    await service.accept(session.sessionId,session.receiverToken,digest);
+    const row=(await a.query('SELECT record_id FROM cs_inspection_records WHERE inspection_id=$1',[result.inspectionId])).rows[0];
+    const range=new URLSearchParams({from:'1959-01-01T00:00:00.000Z',to:'1961-01-01T00:00:00.000Z'});
+    assert.equal((await call('GET','/v1/inspection-records?'+range)).body.items[0].completedAt,Date.UTC(1960,0,1));
+    await a.query('UPDATE cs_inspection_records SET result_digest=$2 WHERE record_id=$1',[row.record_id,'sha256:'+'0'.repeat(64)]);
+    try{assert.equal((await call('GET','/v1/inspection-records/'+row.record_id)).status,500);assert.equal((await call('GET','/v1/inspection-records?'+range)).status,500);}
+    finally{await a.query('UPDATE cs_inspection_records SET result_digest=$2 WHERE record_id=$1',[row.record_id,digest]);}
   });
 });
 

@@ -50,7 +50,7 @@ export class VerifiedSessionCreationAuthorizer {
     return {authorityNamespace:'VERIFIED_VEHICLE',authorityIssuer:c.issuer,userId:binding.userId,vehicleId:binding.vehicleId,deviceId:binding.deviceId,registrationId:binding.registrationId,bindingVerifiedAt:at};
   }
   async resolveHistoryAuthority({ token, secure } = {}) {
-    if (secure !== true || typeof token !== 'string' || !/^[A-Za-z0-9_-]{32,128}$/.test(token)) return false;
+    if (secure !== true || typeof token !== 'string' || !/^[A-Za-z0-9_-]{32,128}$/.test(token)) return null;
     const ctrl = new AbortController(); let timer;
     try {
       const result=await Promise.race([
@@ -58,7 +58,7 @@ export class VerifiedSessionCreationAuthorizer {
         new Promise((resolve) => { timer = setTimeout(() => { ctrl.abort(); resolve(false); }, this.#timeout); }),
       ]);
       return result && typeof result==='object'?Object.freeze(result):null;
-    } catch { return false; } // Never log adapter exceptions, tokens, claims or registration identities.
+    } catch { return null; } // Never log adapter exceptions, tokens, claims or registration identities.
     finally { clearTimeout(timer); ctrl.abort(); }
   }
   async authorize(request) { return Boolean(await this.resolveHistoryAuthority(request)); }

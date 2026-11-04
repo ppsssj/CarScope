@@ -50,7 +50,8 @@ test('history auth timeout/outage/expiry fails closed without positive caching',
 test('history query is bounded, exact, cursor scoped and date range is half-open',async()=>{
   const f=historyAuthFixture({now:()=>1000}),a=await f.read.resolve({token:f.tokens.Aread,secure:true});
   for(const raw of ['limit=0','limit=101','limit=1&limit=2','limit=1e1','taskId=alias','status=SAFE','userId=user-B','from=2026-02-30T00:00:00.000Z','cursor=bad','from=2026-01-01T00:00:00.000Z&to=2026-01-01T00:00:00.000Z'])assert.throws(()=>historyQuery(new URLSearchParams(raw),a),{code:'BAD_REQUEST'});
-  const query=historyQuery(new URLSearchParams('limit=1&taskId=washer-fluid'),a),row={recordId:randomUUID(),completedAt:1};
+  const query=historyQuery(new URLSearchParams('limit=1&taskId=washer-fluid'),a),result=historyResult('washer-fluid');
+  const row={...await acceptedRecord({id:randomUUID(),taskId:result.taskId,state:'ACCEPTED',inspectionId:result.inspectionId,result,resultDigest:await resultDigest(result),receivedAt:1000,acceptedAt:1000,historyAuthority:a}),createdAt:1000};
   const service=new HistoryService({store:{async historyList(){return [row,{...row,recordId:randomUUID()}];}}});
   const page=await service.list(a,new URLSearchParams('limit=1&taskId=washer-fluid'));assert.equal(page.page.hasMore,true);
   assert.equal(historyQuery(new URLSearchParams({limit:'1',taskId:'washer-fluid',cursor:page.page.nextCursor}),a).fingerprint,query.fingerprint);
