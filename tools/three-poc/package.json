@@ -8,8 +8,9 @@
     "serve": "node serve.mjs",
     "test": "node --test test/*.test.mjs",
     "test:android-assets": "node --test test-integration/*.test.mjs",
-    "check:results": "node --check inspect.js && node --check android-native-inspection-adapter.mjs && node --check mobile-result-contract.mjs && node --check native-inspection-results.mjs && node --check inspection-results.mjs && node --check inspection-results-view.mjs && node --check inspection-flow.mjs",
-    "test:results-browser": "node test/browser-inspection-results.mjs"
+    "check:results": "node --check inspect.js && node --check android-native-inspection-adapter.mjs && node --check mobile-result-contract.mjs && node --check native-inspection-results.mjs && node --check inspection-results.mjs && node --check inspection-results-view.mjs && node --check inspection-flow.mjs && node --check inspection-history-contract.mjs && node --check inspection-history-store.mjs && node --check inspection-history-view.mjs",
+    "test:results-browser": "node test/browser-inspection-results.mjs",
+    "test:history-browser": "node test/browser-inspection-history.mjs"
   },
   "dependencies": {
     "qrcode": "1.5.4",
