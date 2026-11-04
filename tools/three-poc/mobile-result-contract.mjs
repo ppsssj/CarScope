@@ -18,16 +18,17 @@ export const exact=(o,keys)=>!!o&&typeof o==='object'&&!Array.isArray(o)&&Object
 export const epoch=t=>Number.isSafeInteger(t)&&t>=0&&t<=8640000000000000;
 export const identifier=s=>typeof s==='string'&&/^[A-Za-z0-9._:-]{1,128}$/.test(s);
 export const digestShape=s=>typeof s==='string'&&/^sha256:[0-9a-f]{64}$/.test(s);
-function timestamp(s,version){
+function timestamp(s,version,allowPreEpoch=false){
   if(typeof s!=='string'||!(version===1?/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z$/:/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/).test(s))return false;
-  const at=Date.parse(s);return epoch(at)&&new Date(at).toISOString()===(s.length===20?s.replace('Z','.000Z'):s);
+  const at=Date.parse(s);return (allowPreEpoch?Number.isSafeInteger(at):epoch(at))&&new Date(at).toISOString()===(s.length===20?s.replace('Z','.000Z'):s);
 }
-export function validateMobileResult(r){
+// allowPreEpoch is only for stored history, whose contract preserves a valid pre-epoch user time.
+export function validateMobileResult(r,{allowPreEpoch=false}={}){
   const t=targetForTask(r?.taskId);if(!t)return false;
   if(!exact(r,['schemaVersion','inspectionId','taskId','method','source','state','startedAt','aids',...(t.schemaVersion===2?['responses']:[]),'status','confirmation','completedAt','sync']))return false;
   if(r.schemaVersion!==t.schemaVersion||typeof r.inspectionId!=='string'||!/[a-f0-9]/.test(r.inspectionId)||!(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/).test(r.inspectionId))return false;
   if(r.method!=='SELF'||r.source!=='MOBILE'||r.state!=='COMPLETED'||r.confirmation!=='USER_REPORTED'||r.sync!=='NOT_SENT')return false;
-  if(!timestamp(r.startedAt,t.schemaVersion)||!timestamp(r.completedAt,t.schemaVersion)||Date.parse(r.startedAt)>Date.parse(r.completedAt))return false;
+  if(!timestamp(r.startedAt,t.schemaVersion,allowPreEpoch)||!timestamp(r.completedAt,t.schemaVersion,allowPreEpoch)||Date.parse(r.startedAt)>Date.parse(r.completedAt))return false;
   if(!exact(r.aids,['cameraUsed','locationMarked'])||Object.values(r.aids).some(v=>typeof v!=='boolean'))return false;
   if(t.schemaVersion===1)return ['OK','NEEDS_REFILL','UNSURE'].includes(r.status);
   if(!exact(r.responses,t.responseKeys)||Object.values(r.responses).some(v=>typeof v!=='string'||!['FOUND','NOT_FOUND','UNABLE'].includes(v)))return false;

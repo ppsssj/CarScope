@@ -6,6 +6,7 @@
 import { TIRES } from './inspection-tires.mjs';
 import { WIPER_PARTS, LIGHT_PARTS } from './visibility-parts.mjs';
 import {targetForPart} from './mobile-result-contract.mjs';
+import {isRecordId} from './inspection-history-contract.mjs';
 
 export const STATES = Object.freeze({
   IDLE: 'IDLE',
@@ -22,6 +23,7 @@ export const STATES = Object.freeze({
   CHARGE_PORT_PREVIEW: 'CHARGE_PORT_PREVIEW',
   VISIBILITY_PREVIEW: 'VISIBILITY_PREVIEW',
   PART_RESULT: 'PART_RESULT',
+  HISTORY_LIST: 'HISTORY_LIST', HISTORY_DETAIL: 'HISTORY_DETAIL',
 });
 
 export const EVENTS = Object.freeze({
@@ -30,6 +32,7 @@ export const EVENTS = Object.freeze({
   SELECT_CHARGE_PART: 'SELECT_CHARGE_PART',
   SELECT_VISIBILITY_PART: 'SELECT_VISIBILITY_PART',
   OPEN_RESULT: 'OPEN_RESULT',
+  OPEN_HISTORY: 'OPEN_HISTORY', OPEN_HISTORY_DETAIL: 'OPEN_HISTORY_DETAIL',
 });
 
 // Geometry navigation keeps its existing availability policy. Planned entries may open a
@@ -64,6 +67,32 @@ const S = STATES, E = EVENTS;
 const available = (list, id) => list.find((x) => x.id === id && x.status === 'available');
 
 export const initialState = () => ({ name: S.IDLE, area: null, component: null, afterClose: null });
+export const isHistoryState = (state) => state.name === S.HISTORY_LIST || state.name === S.HISTORY_DETAIL;
+
+// Past records are a read-only overlay: area/component (and so hood and camera) stay as they were,
+// and leaving restores the exact screen. Nothing here touches the session or its selections.
+function historyTransition(state, event) {
+  const base = { area: state.area, component: state.component, afterClose: null };
+  const closeHood = (afterClose) => ({ ...base, name: S.HOOD_CLOSING, component: null, afterClose });
+  const hoodOpen = hoodTarget(state) > 0;
+  switch (event.type) {
+    case E.OPEN_HISTORY_DETAIL:
+      return state.name === S.HISTORY_LIST && isRecordId(event.recordId) ? { ...state, name: S.HISTORY_DETAIL, recordId: event.recordId } : state;
+    case E.BACK:
+      if (state.name === S.HISTORY_DETAIL) return { ...state, name: S.HISTORY_LIST, recordId: null };
+      return { ...base, name: state.historyReturn };
+    case E.OPEN_RESULT: {
+      const target = targetForPart(event.id);
+      return target ? { name: S.PART_RESULT, component: target.partId, area: target.area, afterClose: null } : state;
+    }
+    case E.SHOW_SUMMARY:
+      return hoodOpen ? closeHood(S.INSPECTION_SUMMARY) : { name: S.INSPECTION_SUMMARY, area: null, component: null, afterClose: null };
+    case E.EXIT:
+      return hoodOpen ? closeHood(S.IDLE) : initialState();
+    default:
+      return state;
+  }
+}
 
 /**
  * Next state for `event`, or the same object when the event does not apply (duplicate clicks,
@@ -80,6 +109,9 @@ export function transition(state, event, ctx = {}) {
   };
   const selectTire = () => TIRES.some(t => t.id === event.id) && state.component !== event.id
     ? to(S.TIRE_PREVIEW, { area: 'tires', component: event.id }) : state;
+  if (isHistoryState(state)) return historyTransition(state, event);
+  if (type === E.OPEN_HISTORY) return [S.INSPECTION_OVERVIEW, S.INSPECTION_SUMMARY, S.PART_RESULT].includes(state.name)
+    ? to(S.HISTORY_LIST, { historyReturn: state.name, recordId: null }) : state;
   if(type===E.OPEN_RESULT&&![S.IDLE,S.HOOD_CLOSING].includes(state.name)){
     const target=targetForPart(event.id);return target?to(S.PART_RESULT,{component:target.partId,area:target.area,afterClose:null}):state;
   }
@@ -170,7 +202,7 @@ export const areaOf = (state) => INSPECTION_AREAS.find((a) => a.id === state.are
 
 /** Hood angle the page animates toward while in `state`. */
 export function hoodTarget(state) {
-  if(state.name===S.PART_RESULT)return state.area==='hood'?HOOD_OPEN_DEG:0;
+  if(state.name===S.PART_RESULT||isHistoryState(state))return state.area==='hood'?HOOD_OPEN_DEG:0;
   return [S.HOOD_OPENING, S.COMPONENT_SELECTION, S.WASHER_SELECTED, S.COMPONENT_PREVIEW, S.MOBILE_HANDOFF_READY].includes(state.name) ? HOOD_OPEN_DEG : 0;
 }
 
@@ -178,6 +210,7 @@ export function hoodTarget(state) {
 export function cameraGoal(state) {
   switch (state.name) {
     case S.PART_RESULT:return state.component==='lcw-coolant-reservoir'?'bay':state.component;
+    case S.HISTORY_LIST: case S.HISTORY_DETAIL:return !state.component?'overview':state.component==='lcw-coolant-reservoir'?'bay':state.component;
     case S.IDLE: return 'home';
     case S.INSPECTION_SUMMARY: case S.INSPECTION_OVERVIEW: return 'overview';
     case S.TIRE_SUMMARY: case S.TIRE_SELECTION: return 'tires';

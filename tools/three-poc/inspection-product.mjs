@@ -18,9 +18,11 @@ export function productSummaryHtml(session,mobile) {
 
 export function sessionActions(state) {
   if (state.name === 'IDLE') return '';
+  const history = ['HISTORY_LIST', 'HISTORY_DETAIL'].includes(state.name);
   return `<nav class="session-actions" aria-label="점검 세션">${['INSPECTION_SUMMARY', 'HOOD_CLOSING'].includes(state.name) ? '' :
-    '<button type="button" class="secondary" data-action="product-summary">전체 점검 요약</button>'}
-    <button type="button" class="secondary" data-action="exit">점검 종료 · 기록 지우기</button></nav>`;
+    `<button type="button" class="secondary" data-action="product-summary">${history ? '현재 점검 · ' : ''}전체 점검 요약</button>`}
+    ${['INSPECTION_OVERVIEW', 'INSPECTION_SUMMARY', 'PART_RESULT'].includes(state.name) ? '<button type="button" class="secondary" data-action="open-history">점검 기록 · 저장된 과거 기록</button>' : ''}
+    <button type="button" class="secondary" data-action="exit">점검 종료 · ${history ? '현재 세션 ' : ''}기록 지우기</button>${history ? '<p class="note">저장된 과거 기록은 삭제되지 않습니다.</p>' : ''}</nav>`;
 }
 
 // Same one-step Back semantics as the browser. Closing at home is an explicit native-only boundary.
