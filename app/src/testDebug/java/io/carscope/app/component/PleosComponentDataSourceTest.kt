@@ -31,6 +31,30 @@ internal fun testComponentValues(f: ComponentFeature): Set<String>? = when (f) {
     ComponentFeature.LOW_BEAM, ComponentFeature.HIGH_BEAM -> LIGHT_STATES; else -> null
 }
 class PleosComponentDataSourceTest {
+    @Test fun `diagnostics distinguish capability current event and local cleanup without exception details`() {
+        val worker = ComponentTestWorker()
+        val sdk = ComponentFakeSession()
+        val messages = mutableListOf<String>()
+        val source = PleosComponentDataSource({ sdk }, worker, { 1000L }, messages::add)
+        source.start(); worker.drain()
+        ComponentFeature.entries.forEach { feature ->
+            sdk.capabilities.getValue(feature).first(ComponentCapability(feature == ComponentFeature.WASHER))
+        }
+        worker.drain()
+        sdk.getters.getValue(ComponentFeature.WASHER).first(ComponentValue.Flag(false)); worker.drain()
+        sdk.events.getValue(ComponentFeature.WASHER).first(ComponentValue.Flag(true)); worker.drain()
+        sdk.events.getValue(ComponentFeature.WASHER).second(SecurityException("SECRET_MARKER")); worker.drain()
+        source.stop(); worker.drain()
+        assertTrue(messages.any { it.startsWith("capability safety.washer-fluid-warning readable=true") })
+        assertTrue(messages.any { it.startsWith("current safety.washer-fluid-warning raw=Flag(value=false)") })
+        assertTrue(messages.any { it.startsWith("event safety.washer-fluid-warning raw=Flag(value=true)") })
+        assertTrue(messages.any { it.contains("status=PERMISSION_DENIED") })
+        assertTrue(messages.any { it == "release returned; remote acknowledgement UNVERIFIED" })
+        assertFalse(messages.any { it.contains("SECRET_MARKER") })
+        val count = messages.size
+        sdk.events.getValue(ComponentFeature.WASHER).first(ComponentValue.Flag(false)); worker.drain()
+        assertEquals(count, messages.size)
+    }
     private class Fixture {
         val worker = ComponentTestWorker(); var at = 1000L; val sessions = mutableListOf<ComponentFakeSession>()
         val source = PleosComponentDataSource({ ComponentFakeSession().also(sessions::add) }, worker, { at })

@@ -29,7 +29,8 @@ internal data class ComponentDiagnostics(val phase: String = "IDLE", val pending
 
 internal class PleosComponentDataSource(
     private val factory: () -> ComponentSession, private val worker: ComponentDispatcher = ComponentWorker(),
-    private val clock: () -> Long = System::currentTimeMillis
+    private val clock: () -> Long = System::currentTimeMillis,
+    private val log: (String) -> Unit = {}
 ) {
     private class Session(val sdk: ComponentSession, val epoch: Long) {
         var accepting = true; var pending = 0; var timedOut = 0; var cleanupFailures = 0; var releaseAttempted = false
@@ -60,7 +61,9 @@ internal class PleosComponentDataSource(
         session = s; snapshotEpoch = s.epoch
         try {
             s.sdk.initialize()
+            log("initialize returned; connection UNVERIFIED until callback")
             for (f in ComponentFeature.entries) request<ComponentCapability?>(s, { done, failed -> s.sdk.capability(f, done, failed) }, { fail(f, it, true) }) { cap, _ ->
+                log("capability ${f.id} readable=${cap?.readable} values=${cap?.values}")
                 when {
                     cap == null -> reset(f, ComponentStatus.UNVERIFIED, "NULL_CAPABILITY")
                     !cap.readable -> reset(f, ComponentStatus.UNSUPPORTED, "NO_READ_CAPABILITY")
@@ -71,12 +74,15 @@ internal class PleosComponentDataSource(
                         change(f) { it.copy(capabilityStatus = ComponentStatus.SUPPORTED, reason = "AWAITING_VALUE") }
                         if (f.subscribed) {
                             s.registrations.add(f)
-                            try { s.sdk.subscribe(f, { value -> val at = clock(); worker.execute { if (accepts(s)) { s.revisions[f] = s.revisions.getValue(f) + 1; publish(s, f, value, at) } } },
+                            try { s.sdk.subscribe(f, { value -> val at = clock(); worker.execute { if (accepts(s)) { s.revisions[f] = s.revisions.getValue(f) + 1; log("event ${f.id} raw=$value receivedAt=$at"); publish(s, f, value, at) } } },
                                 { error -> worker.execute { if (accepts(s)) { s.revisions[f] = s.revisions.getValue(f) + 1; fail(f, error, false) } } }) }
                             catch (e: Exception) { fail(f, e, false) }
                         }
                         val revision = s.revisions.getValue(f)
-                        request<ComponentValue?>(s, { done, failed -> s.sdk.read(f, done, failed) }, { if (revision == s.revisions[f]) fail(f, it, false) }) { value, at -> if (revision == s.revisions[f]) publish(s, f, value, at) }
+                        request<ComponentValue?>(s, { done, failed -> s.sdk.read(f, done, failed) }, { if (revision == s.revisions[f]) fail(f, it, false) }) { value, at ->
+                            if (revision == s.revisions[f]) { log("current ${f.id} raw=$value receivedAt=$at"); publish(s, f, value, at) }
+                            else log("late current ignored ${f.id}")
+                        }
                     }
                 }
             }
@@ -110,6 +116,7 @@ internal class PleosComponentDataSource(
     }
     private fun fail(f: ComponentFeature, error: Exception, capability: Boolean) {
         val status = when(error) { is ComponentEnvironmentUnsupported -> ComponentStatus.UNSUPPORTED; is SecurityException -> ComponentStatus.PERMISSION_DENIED; else -> ComponentStatus.ERROR }
+        log("failed ${f.id} status=$status type=${error.javaClass.simpleName}")
         change(f) { it.copy(capabilityStatus = if (capability) status else it.capabilityStatus, availabilityStatus = status, value = null, observedAt = null, reason = status.name) }
     }
     private fun reset(f: ComponentFeature, status: ComponentStatus, reason: String) = change(f) { ComponentReading(f, status, status, reason = reason) }
@@ -118,14 +125,15 @@ internal class PleosComponentDataSource(
         if (clear) snapshot = ComponentSnapshot.empty("SESSION_STOPPED")
         val s = session ?: return
         s.accepting = false
-        for (f in s.registrations) try { s.sdk.unsubscribe(f) } catch (_: Exception) { s.cleanupFailures++ }
+        for (f in s.registrations) try { s.sdk.unsubscribe(f); log("unsubscribe returned ${f.id}; remote acknowledgement UNVERIFIED") } catch (_: Exception) { s.cleanupFailures++; log("unsubscribe failed ${f.id}; cleanup UNRESOLVED") }
+        log("stopping pending=${s.pending}")
         s.registrations.clear(); finishClose(); diagnose()
     }
     private fun finishClose() {
         val s = session ?: return
         if (!s.accepting && s.pending == 0 && s.cleanupFailures == 0 && !s.releaseAttempted) {
             s.releaseAttempted = true
-            try { s.sdk.release() } catch (_: Exception) { s.cleanupFailures++; diagnose(); return }
+            try { s.sdk.release(); log("release returned; remote acknowledgement UNVERIFIED") } catch (_: Exception) { s.cleanupFailures++; log("release failed; cleanup UNRESOLVED"); diagnose(); return }
             session = null
             if (closed) closeWorker() else if (wanted) open()
         }

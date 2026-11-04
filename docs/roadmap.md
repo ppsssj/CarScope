@@ -1,5 +1,9 @@
 # 로드맵 및 진입 조건
 
+## P7-A — SDK 상태·부품 커버리지 / Native 브레이크액 수신
+
+공개 SDK 20개 domain/517개 선언 및 모델 부품 매핑, 기존 3D 패널 7종의 실제 AVD 데이터 표시, Native QR 6→7 task 확장과 로컬 TLS 모바일 제출→명시적 Accept 검증을 수행했다. AVD 화면 전환은 focus-event ANR로 FAIL, 이후 기기 조작을 중단했다. 실제 폰 광학 스캔·AVD Native QR 수신·도어/lifecycle 전체 재검증은 완료되지 않았다. 최대 커버리지 완료로 표시하지 않는다. [P7-A 결과·잔여 조건](p7-a-pleos-runtime.md), [부품 계약](contracts/p7-part-coverage.md).
+
 ## P0 — 복구 및 검증 기반
 
 - 기존 파일 19개 조사 및 로컬 복구 사본 보존. Git 초기화·삭제·push·PR 없음.

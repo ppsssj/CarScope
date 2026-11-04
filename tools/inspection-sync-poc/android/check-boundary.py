@@ -24,6 +24,9 @@ for artifact, debug in artifacts:
     with zipfile.ZipFile(artifact) as archive:
         dex = b"".join(archive.read(n) for n in archive.namelist() if n.endswith(".dex"))
         assert (b"Lio/carscope/app/sync/SyncReceiverController;" in dex) == debug, artifact.name
+        for name in ("SyncChecklistTasks", "CompletedChecklistInspection", "SyncChecklistProfile"):
+            assert (f"Lio/carscope/app/sync/{name};".encode() in dex) == debug, (artifact.name, name)
+        assert b"Lio/carscope/app/sync/BrakeSyncReceiverTest;" not in dex, artifact.name
         for marker in (b"Lio/carscope/app/sync/InspectionSyncEntry;", b"Lio/carscope/app/sync/SyncReceiverActivity;", b"Lio/carscope/app/sync/HttpsSyncReceiverTransport;", b"Lio/carscope/app/sync/SyncHttpDecoder;", b"Lcom/google/zxing/qrcode/QRCodeWriter;"):
             assert (marker in dex) == debug, (artifact.name, marker)
         assert b"Lio/carscope/app/sync/ExplicitDebugTestCredentialProvider;" not in dex, artifact.name
@@ -49,7 +52,7 @@ suite = ET.parse(report).getroot()
 assert int(suite.get("tests")) >= 15
 assert int(suite.get("tests")) >= 17
 assert all(int(suite.get(key, "0")) == 0 for key in ("failures", "errors", "skipped"))
-for name, minimum in (("SyncHttpDecoderTest", 8), ("HttpsSyncReceiverTransportTest", 10), ("SyncReceiverActivityTest", 8), ("InspectionSyncEntryTest", 3), ("ProvisionedSessionCredentialProviderTest", 7), ("ProvisioningLifecycleTest", 4), ("ProvisioningActivityTest", 2), ("HttpsProvisioningIntegrationTest", 1),
+for name, minimum in (("SyncHttpDecoderTest", 8), ("BrakeSyncReceiverTest", 3), ("HttpsSyncReceiverTransportTest", 10), ("SyncReceiverActivityTest", 8), ("InspectionSyncEntryTest", 3), ("ProvisionedSessionCredentialProviderTest", 7), ("ProvisioningLifecycleTest", 4), ("ProvisioningActivityTest", 2), ("HttpsProvisioningIntegrationTest", 2),
                       ("AvdSimulatorProvisioningTest", 5), ("AvdSimulatorActivityTest", 2), ("HttpsAvdSimulatorGrantExchangeTest", 3)):
     report = ROOT / f"app/build/test-results/testDebugUnitTest/TEST-io.carscope.app.sync.{name}.xml"
     current = ET.parse(report).getroot()

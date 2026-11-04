@@ -92,6 +92,7 @@ internal object SyncHttpDecoder {
     }
     private fun result(x: Map<String, Any?>): SyncInspection {
         when (task(x["taskId"])) {
+            in SyncChecklistTasks.profiles -> return checklistResult(x)
             "ev-charge.port" -> return chargeResult(x)
             in SyncTasks.tires -> return tireResult(x)
         }
@@ -100,6 +101,18 @@ internal object SyncHttpDecoder {
         for ((key, expected) in mapOf("taskId" to "washer-fluid", "method" to "SELF", "source" to "MOBILE", "state" to "COMPLETED", "confirmation" to "USER_REPORTED", "sync" to "NOT_SENT")) constant(x[key], expected)
         val aids = obj(x["aids"]); exact(aids, "cameraUsed", "locationMarked")
         return CompletedInspection(id(x["inspectionId"]), time(x["startedAt"]), time(x["completedAt"]), ReportedStatus.valueOf(string(x["status"])), flag(aids["cameraUsed"]), flag(aids["locationMarked"])).also { if (!it.valid()) invalid() }
+    }
+    private fun checklistResult(x: Map<String, Any?>): CompletedChecklistInspection {
+        exact(x, "schemaVersion", "inspectionId", "taskId", "method", "source", "state", "startedAt", "aids", "responses", "status", "confirmation", "completedAt", "sync")
+        if (number(x["schemaVersion"]) != 2L) invalid()
+        for ((key, expected) in mapOf("method" to "SELF", "source" to "MOBILE", "state" to "COMPLETED", "confirmation" to "USER_REPORTED", "sync" to "NOT_SENT")) constant(x[key], expected)
+        val taskId = task(x["taskId"])
+        val profile = SyncChecklistTasks.profiles[taskId] ?: invalid()
+        val aids = obj(x["aids"]); exact(aids, "cameraUsed", "locationMarked")
+        val responses = obj(x["responses"]); exact(responses, *profile.responseKeys.toTypedArray())
+        return CompletedChecklistInspection(id(x["inspectionId"]), taskId, time(x["startedAt"]), time(x["completedAt"]),
+            responses.mapValues { ChecklistAnswer.valueOf(string(it.value)) }, flag(aids["cameraUsed"]), flag(aids["locationMarked"]),
+            ChecklistReportedStatus.valueOf(string(x["status"]))).also { if (!it.valid()) invalid() }
     }
     private fun tireResult(x: Map<String, Any?>): CompletedTireInspection {
         exact(x, "schemaVersion", "inspectionId", "taskId", "method", "source", "state", "startedAt", "aids", "responses", "status", "confirmation", "completedAt", "sync")
