@@ -11,7 +11,7 @@ import android.widget.LinearLayout
 internal class InspectionSyncEntry(private val activity: Activity) {
     private var opening = false
     private val button = Button(activity).apply {
-        text = "워셔액·타이어·EV 충전구·브레이크액 점검 결과 수신 (Debug)"
+        text = activity.getString(io.carscope.app.R.string.inspection_sync_entry_tasks, SyncTasks.all.size)
         tag = "inspection-sync-entry"
         minHeight = 64
         setOnClickListener {

@@ -165,7 +165,7 @@ open class SyncReceiverActivity : Activity() {
                     }
                     SyncChecklistTasks.profiles.getValue(result.taskId).responseLabels.entries.joinToString("\n") {
                         "${it.value}: ${answer(result.responses.getValue(it.key))}"
-                    } + "\n종합: ${result.statusName}\n외부 육안 보고이며 SDK 브레이크액 레벨·안전 판정과 별개입니다."
+                    } + "\n종합: ${result.statusName}\n외부 육안 보고이며 SDK 관측·안전 판정과 별개입니다."
                 }
                 is CompletedChargeInspection -> {
                     fun answer(value: ChargeAnswer) = when (value) {
