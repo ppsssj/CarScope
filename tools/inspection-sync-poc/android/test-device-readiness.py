@@ -31,7 +31,7 @@ class ReadinessTest(unittest.TestCase):
         self.assertEqual(m.collect('/sdk', 'emulator-5554', run)['reason'], 'WRONG_AVD_IDENTITY')
         self.assertEqual(len(calls), 2)
 
-    def test_exact_target_snapshot_has_only_read_commands(self):
+    def snapshot(self, system_ui_pid='123'):
         calls = []
         def run(c):
             calls.append(c)
@@ -40,15 +40,30 @@ class ReadinessTest(unittest.TestCase):
             if c[-1] == 'sys.boot_completed': return '1'
             if c[-1] == 'ro.build.version.release': return '14'
             if c[-1] == 'ro.build.version.sdk': return '34'
-            if 'pidof' in c: return '123'
+            if 'pidof' in c: return system_ui_pid
             if c[-1] == 'webviewupdate': return 'Current WebView package (name, version): (com.android.webview, 123)'
             if c[-1] == 'get-current-user': return '10'
             if 'dumpsys' in c: return 'versionName=2.3.22'
             return 'package:' + m.SERVICE
         r = m.collect('/sdk', 'emulator-5554', run)
+        return r, calls
+
+    def test_exact_target_snapshot_has_only_read_commands(self):
+        r, calls = self.snapshot()
         self.assertEqual(r['status'], 'PASS')
         self.assertTrue(all(c[1:3] == ['-s', 'emulator-5554'] for c in calls[1:]))
         self.assertFalse(any(set(c) & {'install', 'start', 'force-stop', 'kill', 'reverse', 'reboot', 'logcat'} for c in calls))
+
+    def test_multi_user_system_ui_pids_are_valid_inventory(self):
+        r, _ = self.snapshot('1064 1560')
+        self.assertEqual(r['status'], 'PASS')
+        self.assertEqual(r['systemUiPid'], '1064 1560')
+
+    def test_missing_or_malformed_system_ui_pids_remain_blocked(self):
+        for value in ['', ' ', '0', '-1', '1064 broken', '1064 0', '１２３']:
+            with self.subTest(value=value):
+                r, _ = self.snapshot(value)
+                self.assertEqual(r['status'], 'BLOCKED')
 
     def test_only_https_root_without_secrets_is_accepted(self):
         for value in ['http://localhost', 'https://u:p@host/', 'https://host/?token=x', 'https://host/#token', 'https://host/?', 'https://host/#', 'https://host/path', 'https://host:0', 'https://host/\n']:
