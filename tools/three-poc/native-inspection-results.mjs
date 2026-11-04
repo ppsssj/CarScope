@@ -6,7 +6,7 @@ const deliveryKeys=['bindingId','localSessionId','generation','syncSessionId','t
 const proofKeys=['version','proofId','sessionState','bindingId','localSessionId','generation','syncSessionId','taskId','inspectionId','resultDigest','receivedAt','acceptedAt'];
 
 /** Trusted composition only: adapter.open/verifyAccepted are never selected by URL, JSON or globals.
- * Production inspect.js supplies no adapter until Native implements the documented verified channel.
+ * Production inspect.js composes the fixed Android asset adapter; other origins remain disconnected.
  * Test adapters live under test/, are not packaged, and cannot reach a production page's closure.
  */
 export function createNativeInspectionResults({adapter=null,now=()=>performance.now(),hash=digestResult}={}){
@@ -59,7 +59,7 @@ export function createNativeInspectionResults({adapter=null,now=()=>performance.
     startSession(session){endSession();if(closed||!identifier(session))return false;localSessionId=session;const epochId=generation;
       if(!adapter||typeof adapter.open!=='function'||typeof adapter.verifyAccepted!=='function'){connection='INCOMPLETE_NATIVE';emit();return false;}
       connection='ADAPTER_CONNECTED';
-      try{const stop=adapter.open(Object.freeze({localSessionId:session,generation:epochId,onBinding:r=>onBinding(r,session,epochId),onAccepted:r=>onAccepted(r,session,epochId),onTerminal:r=>terminal(r,session,epochId),onUnavailable:()=>{if(current(session,epochId)){for(const b of bindings.values())b.state='CLOSED';connection='UNAVAILABLE';emit();}}}));
+      try{const stop=adapter.open(Object.freeze({localSessionId:session,generation:epochId,onBinding:r=>onBinding(r,session,epochId),onAccepted:r=>onAccepted(r,session,epochId),onTerminal:r=>terminal(r,session,epochId),onUnavailable:reason=>{if(current(session,epochId)){notice=['SERVER_CLOCK_UNAVAILABLE','BINDING_DELIVERY_TIMEOUT'].includes(reason)?reason:null;for(const b of bindings.values())b.state='CLOSED';connection='UNAVAILABLE';emit();}}}));
         if(typeof stop!=='function')throw Error('Unsubscribe required');detach=stop;
       }catch{for(const b of bindings.values())b.state='CLOSED';connection='UNAVAILABLE';}emit();return connection==='ADAPTER_CONNECTED';
     },

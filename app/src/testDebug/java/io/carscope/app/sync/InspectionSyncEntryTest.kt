@@ -32,13 +32,14 @@ class EntryHostActivity : Activity() {
 @Config(sdk = [28])
 class InspectionSyncEntryTest {
     private fun button(a: Activity): Button = a.findViewById<ViewGroup>(android.R.id.content).findViewWithTag("inspection-sync-entry")
-    @Test fun `actual inspection hosts a native entry beside its unchanged WebView`() {
+    @Test fun `actual inspection hosts receiver panel and WebView in one Activity`() {
         // No resume: this integration/layout test deliberately does not start the Pleos SDK lease.
         val b = Robolectric.buildActivity(InspectionActivity::class.java).create(); val a = b.get()
         val root = a.findViewById<ViewGroup>(android.R.id.content).getChildAt(0) as ViewGroup
-        assertEquals(2, root.childCount); assertSame(button(a), root.getChildAt(0))
-        assertTrue(root.getChildAt(1) is android.webkit.WebView)
-        assertTrue(button(a).text.contains("모바일 부품 점검")); assertTrue(button(a).text.contains("17개 항목"))
+        assertEquals(2, root.childCount)
+        assertTrue(root.getChildAt(0) is android.webkit.WebView)
+        assertEquals(View.GONE, root.getChildAt(1).visibility)
+        assertNotNull(root.findViewWithTag<Button>("return-to-3d"))
         b.destroy()
     }
     @Test fun `entry sends one explicit credential-free Intent and Back leaves parent content intact`() {

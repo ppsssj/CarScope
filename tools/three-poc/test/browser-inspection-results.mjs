@@ -33,7 +33,7 @@ try{
     assert.equal(await page.evaluate(()=>Object.keys(__inspect).some(k=>/receive|inject|accept/i.test(k))),false);
     summary.checks.push('PASS actual production page: no adapter, postMessage/fragment/JSON cannot create completion');
     // Network interception in this test context only. The committed page still constructs no adapter.
-    await page.route('**/inspect.js',async route=>{const response=await route.fetch(),source=await response.text();assert.ok(source.includes('createNativeInspectionResults()'));await route.fulfill({response,body:`import {fixtureAdapter} from './test/native-results-browser-fixture.mjs';\n`+source.replace('createNativeInspectionResults()','createNativeInspectionResults({adapter:fixtureAdapter})')});});
+    await page.route('**/inspect.js',async route=>{const response=await route.fetch(),source=await response.text();assert.ok(source.includes('createNativeInspectionResults({adapter:createAndroidNativeInspectionAdapter()})'));await route.fulfill({response,body:`import {fixtureAdapter} from './test/native-results-browser-fixture.mjs';\n`+source.replace('createNativeInspectionResults({adapter:createAndroidNativeInspectionAdapter()})','createNativeInspectionResults({adapter:fixtureAdapter})')});});
     await open();const sdkBefore=await page.evaluate(()=>JSON.stringify([__inspect.tireStatus(),__inspect.componentStatus(),__inspect.visibilityStatus()]));
     // Existing local tire controls remain independently usable.
     await page.locator('[data-action=area][data-id=tires]').click();await page.locator('[data-action=tire][data-id="tire.front-left"]').first().click();

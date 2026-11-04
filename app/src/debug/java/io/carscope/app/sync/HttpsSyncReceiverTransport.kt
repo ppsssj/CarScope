@@ -130,10 +130,13 @@ internal class HttpsSyncReceiverTransport(
     override fun create(taskId: String, callback: (SyncReply<CreatedSyncSession>) -> Unit): SyncCancellation = submit(callback) { call ->
         if (taskId !in SyncTasks.all) return@submit SyncReply.Failure(SyncFailure.INVALID)
         val credential = credentials.credential(endpoint) ?: return@submit SyncReply.Failure(SyncFailure.UNAUTHORIZED)
+        val started = System.nanoTime() / 1_000_000
         val r = request(call, "POST", "/v1/sessions", credential.authorizationValue(), "{\"taskId\":\"$taskId\"}")
         if (r.status != 201) SyncReply.Failure(SyncHttpDecoder.error(r.bytes, r.type, r.status))
         else {
+            val ended = System.nanoTime() / 1_000_000
             val created = SyncHttpDecoder.created(r.bytes, r.type)
+            created.clock = created.serverNow?.let { SyncServerClock.fromResponse(it, started, ended) }
             if (created.taskId != taskId) throw SyncHttpDecoder.Invalid()
             expiries[created.sessionId] = created.expiresAt; tasks[created.sessionId] = taskId
             SyncReply.Success(created)
