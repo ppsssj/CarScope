@@ -1,6 +1,6 @@
 # P8-C1 배포 준비와 통합 Preflight
 
-기준: `main` `40344d6`(PR #76, #77 병합). **PR #78(`serverNow`)은 미병합**이며 이 브랜치에 코드를 복사하지 않았다. 이번 작업은 배포 준비와 검증 자동화다. **Render 배포, 운영 DB 변경, 운영 migration, AVD 실행은 하지 않았다.** 실행 근거는 [증거 인덱스](evidence/p8-c1/README.md), 기기 검증 준비는 [P9 체크리스트](p9-e2e-checklist.md)에 있다.
+기준: `main` `40344d6`(PR #76, #77 병합)에서 작성하고 `a99d7aa`(PR #79 병합)를 merge했다. PR #79는 `tools/inspection-sync-poc/**`와 `app/**`를 바꾸지 않아 이 문서의 게이트·DDL·호환성 표에 영향이 없다. **PR #78(`serverNow`)은 미병합**이며 이 브랜치에 코드를 복사하지 않았다. 이번 작업은 배포 준비와 검증 자동화다. **Render 배포, 운영 DB 변경, 운영 migration, AVD 실행은 하지 않았다.** 실행 근거는 [증거 인덱스](evidence/p8-c1/README.md), 기기 검증 준비는 [P9 체크리스트](p9-e2e-checklist.md)에 있다.
 
 ## 판정
 

@@ -82,7 +82,8 @@ P7-C2가 가장 먼저 확인할 항목으로 남긴 위험이다. 실패해도 
 | E5 | 3D 결과 후보 | `receivedAt`/`acceptedAt`이 서버 값 그대로. 관측 시각을 화면 시각으로 덮어쓰지 않음 |
 | E6 | 사용자 선택 | 선택 전 자동 적용 없음. SDK 관측값과 합치지 않음 |
 | E7 | History 저장 (승인 후 읽기 전용 SQL) | `SELECT authority_namespace,task_id,result_digest,accepted_at FROM cs_inspection_records ORDER BY created_at DESC LIMIT 5`, `authority_namespace=AVD_SIMULATOR`, 소유자 열 NULL |
-| E8 | History 조회 | 현재 **403이 합격이다.** `PRODUCTION_AUTH_BLOCKED`. 빈 목록이나 성공으로 표시하면 FAIL. 실제 소유자 조회는 issuer가 생긴 뒤의 별도 과제다 |
+| E8 | History 화면 (P8-B1) | 배포 페이지는 read provider가 없어 요청을 보내지 않는다. 진입 후 `UNAVAILABLE`과 "저장된 기록이 없다는 뜻이 아닙니다"가 합격이다. 빈 목록, 데모 데이터 표시, 또는 History 요청 발생은 FAIL. Back·회전·Native 일시 중지를 함께 확인한다. [P8-B1](p8-b1-inspection-history-ui.md) |
+| E9 | History API (승인 후) | 앱이 아니라 `probe --approve-rate-window-writes`로 확인한다. **403이 합격이다.** `PRODUCTION_AUTH_BLOCKED`, `HISTORY_UI_AUTH_BLOCKED`. 실제 소유자 조회는 issuer와 Native read provider가 생긴 뒤의 별도 과제다 |
 
 ## F. 취소·만료·복귀·재생성
 
