@@ -36,7 +36,8 @@ for artifact, debug in artifacts:
                      "HttpsAvdSimulatorGrantExchange", "RefreshingAvdSimulatorCredentialSource"):
             assert (f"Lio/carscope/app/sync/{name};".encode() in dex) == debug, (artifact.name, name)
         for name in ("ProvisioningLifecycleTest", "HttpsProvisioningIntegrationTest", "ProvisioningFixtureActivity", "PendingProvisioningExchange",
-                     "AvdSimulatorProvisioningTest", "AvdSimulatorActivityTest", "AvdSimulatorFixtureActivity", "PendingAvdSimulatorExchange"):
+                     "AvdSimulatorProvisioningTest", "AvdSimulatorActivityTest", "AvdSimulatorFixtureActivity", "PendingAvdSimulatorExchange",
+                     "HttpsAvdSimulatorGrantExchangeTest"):
             assert f"Lio/carscope/app/sync/{name};".encode() not in dex, (artifact.name, name)
         assert b"SYNC_ENROLLMENT_FIXTURE" not in dex, artifact.name
         assert not any("native-auth-sync" in n or "authority-fixture.mjs" in n for n in archive.namelist()), artifact.name
@@ -49,7 +50,7 @@ assert int(suite.get("tests")) >= 15
 assert int(suite.get("tests")) >= 17
 assert all(int(suite.get(key, "0")) == 0 for key in ("failures", "errors", "skipped"))
 for name, minimum in (("SyncHttpDecoderTest", 8), ("HttpsSyncReceiverTransportTest", 10), ("SyncReceiverActivityTest", 8), ("InspectionSyncEntryTest", 3), ("ProvisionedSessionCredentialProviderTest", 7), ("ProvisioningLifecycleTest", 4), ("ProvisioningActivityTest", 2), ("HttpsProvisioningIntegrationTest", 1),
-                      ("AvdSimulatorProvisioningTest", 3), ("AvdSimulatorActivityTest", 2)):
+                      ("AvdSimulatorProvisioningTest", 5), ("AvdSimulatorActivityTest", 2), ("HttpsAvdSimulatorGrantExchangeTest", 3)):
     report = ROOT / f"app/build/test-results/testDebugUnitTest/TEST-io.carscope.app.sync.{name}.xml"
     current = ET.parse(report).getroot()
     assert int(current.get("tests")) >= minimum, name

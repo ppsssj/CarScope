@@ -27,6 +27,51 @@ internal class PendingAvdSimulatorExchange : AvdSimulatorGrantExchange {
 }
 
 class AvdSimulatorProvisioningTest {
+    @Test fun `one millisecond before notBefore is rejected without clock tolerance and exact expiry is denied`() {
+        val raw = AvdSimulatorSamples.grant().toByteArray()
+        assertThrows(AvdSimulatorPolicy.GrantNotYetValid::class.java) {
+            AvdSimulatorPolicy.grant(raw, "application/json", AvdSimulatorSamples.endpoint, AvdSimulatorSamples.registration, 1999)
+        }
+        assertNotNull(AvdSimulatorPolicy.grant(raw, "application/json", AvdSimulatorSamples.endpoint, AvdSimulatorSamples.registration, 2000))
+        assertThrows(AvdSimulatorPolicy.GrantExpired::class.java) {
+            AvdSimulatorPolicy.grant(raw, "application/json", AvdSimulatorSamples.endpoint, AvdSimulatorSamples.registration, 122000)
+        }
+    }
+
+    @Test fun `each refresh consumes only its first callback including synchronous completion`() {
+        val pending = PendingAvdSimulatorExchange()
+        val source = RefreshingAvdSimulatorCredentialSource(AvdSimulatorSamples.endpoint, pending) { 2100 }
+        var completions = 0
+        source.refresh { completions++ }
+        val first = pending.callbacks.last()
+        first(null)
+        first(AvdSimulatorSamples.value())
+        assertNull(source.snapshot())
+        assertEquals(1, completions)
+        source.refresh { completions++ }
+        val second = pending.callbacks.last()
+        second(AvdSimulatorSamples.value())
+        second(null)
+        assertNotNull(source.snapshot())
+        assertEquals(2, completions)
+        source.close()
+
+        var cancellations = 0
+        val synchronous = object : AvdSimulatorGrantExchange {
+            override fun fetch(callback: (AvdSimulatorGrant?) -> Unit): SyncCancellation {
+                callback(AvdSimulatorSamples.value())
+                return SyncCancellation { cancellations++ }
+            }
+        }
+        val inline = RefreshingAvdSimulatorCredentialSource(AvdSimulatorSamples.endpoint, synchronous) { 2100 }
+        inline.refresh()
+        assertNotNull(inline.snapshot())
+        inline.invalidate()
+        assertNull(inline.snapshot())
+        assertEquals(0, cancellations) // Completed work must not be installed as pending.
+        inline.close()
+    }
+
     @Test fun `operator file accepts only fixed public origin strict fields and currently valid proof`() {
         val root = Files.createTempDirectory("carscope-avd-proof-").toFile()
         try {
