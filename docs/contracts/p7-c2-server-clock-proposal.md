@@ -1,4 +1,6 @@
-# P7-C2: 서버 시각 확장안 — Codex A 인계, 서버 미변경
+# P7-C2: 서버 시각 확장안 — P7-C3에서 서버 구현
+
+> P7-C3가 이 계약의 서버 쪽을 구현했다([구현·검증](../p7-c3-server-clock.md)). Render 배포는 아직 없으므로 배포 서버의 동작은 달라지지 않았다. 아래 ‘현재’와 ‘후속 작업’ 서술은 P7-C2 시점 이력이다. 시각 의미와 검증 규칙은 그대로 유효하다.
 
 현재 `POST /v1/sessions`는 session/task/receiver/invite/두 만료 시각만 반환한다. `GET`/`accept` view에는 원본 `receivedAt`, `acceptedAt`이 있다. `serverNow`는 없다. Node HTTP가 자동으로 붙이는 초 단위 `Date`는 서비스의 주입 가능한 `now()` 및 Render 프록시 시계와의 오차 상한을 계약하지 않는다. `expiresAt - 고정 TTL`, Android wall clock, JS `Date.now()`도 대체 근거로 사용하지 않는다.
 

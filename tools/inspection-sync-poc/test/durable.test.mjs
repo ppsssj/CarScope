@@ -85,7 +85,7 @@ test('SQLite: HTTP server restart restores result, duplicate/conflict, acceptanc
 
 test('SQLite: restart expires overdue results and preserves cancelled terminal state without result', async (t) => {
   const f = fixture(t); let now = 1000, store = f.open();
-  const svc = new SessionService({ store, now: () => now, limits: { sessionTtlMs: 50 } });
+  const svc = new SessionService({ store, now: () => now, limits: { inviteTtlMs: 50, sessionTtlMs: 50 } });
   const expired = await submitted(svc), cancelled = await submitted(svc);
   await svc.cancel(cancelled.sessionId, cancelled.receiverToken); store.close(); now += 51;
   store = f.open(); const s = await startSyncServer({ port: 0, store, now: () => now, log: () => {} });

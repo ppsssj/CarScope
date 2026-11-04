@@ -39,6 +39,10 @@ const isOverdue = (x, t) => !TERMINAL.has(x.state) && (t > x.expiresAt || (x.sta
 /** EXPIRED drops the result at once; the digest stays so a late accept is answered SESSION_EXPIRED, not CONFLICT. */
 const expiredCopy = (x, t) => ({ ...x, state: STATES.EXPIRED, endedAt: t, result: null });
 
+/** Date's own limit: every epoch here stays a plain JSON integer that the Native receiver accepts. */
+const MAX_EPOCH_MS = 8_640_000_000_000_000;
+const validEpoch = (v) => Number.isSafeInteger(v) && v >= 0 && v <= MAX_EPOCH_MS;
+
 export const newToken = () => randomBytes(TOKEN_BYTES).toString('base64url');
 export const hashToken = (token) => createHash('sha256').update(token, 'utf8').digest('hex');
 
@@ -49,13 +53,19 @@ export class SessionService {
 
   // ---------- vehicle receiver ----------
 
-  /** New pairing session. Returns both tokens exactly once; only their hashes are kept. */
+  /**
+   * New pairing session. Returns both tokens exactly once; only their hashes are kept.
+   * `serverNow` comes from this service's clock, read after the insert, in the epoch domain of expiresAt, receivedAt and
+   * acceptedAt. A bad or regressed clock fails the request instead of being corrected; a row already inserted then just
+   * expires like one whose response was lost, because its tokens were never returned.
+   */
   async create({ taskId }, { historyBinding } = {}) {
     if (!SUPPORTED_TASKS.includes(taskId)) fail(ERRORS.BAD_REQUEST, 400);
-    const t = this.now(), receiver = this.token(), invite = this.token();
+    const t = this.now(), inviteExpiresAt = t + this.limits.inviteTtlMs, expiresAt = t + this.limits.sessionTtlMs;
+    if (![t, inviteExpiresAt, expiresAt].every(validEpoch) || t >= inviteExpiresAt || inviteExpiresAt > expiresAt) fail(ERRORS.INTERNAL, 500);
+    const receiver = this.token(), invite = this.token();
     const session = {
-      id: this.newId(), taskId, state: STATES.CREATED, createdAt: t,
-      inviteExpiresAt: t + this.limits.inviteTtlMs, expiresAt: t + this.limits.sessionTtlMs,
+      id: this.newId(), taskId, state: STATES.CREATED, createdAt: t, inviteExpiresAt, expiresAt,
       receiverHash: hashToken(receiver), inviteHash: hashToken(invite), submitHash: null,
       result: null, resultDigest: null, inspectionId: null, receivedAt: null, acceptedAt: null, endedAt: null, purgeResultAt: null,
       ...(historyBinding ? {historyAuthority:historyAuthority(historyBinding)} : {}),
@@ -66,7 +76,9 @@ export class SessionService {
       await this.sweep();
       if (!(await this.store.insert(session, cap))) fail(ERRORS.CAPACITY, 503);
     }
-    return { sessionId: session.id, taskId, receiverToken: receiver, inviteToken: invite, inviteExpiresAt: session.inviteExpiresAt, expiresAt: session.expiresAt };
+    const serverNow = this.now();
+    if (!validEpoch(serverNow) || serverNow < t || serverNow >= inviteExpiresAt) fail(ERRORS.INTERNAL, 500);
+    return { sessionId: session.id, taskId, receiverToken: receiver, inviteToken: invite, inviteExpiresAt, expiresAt, serverNow };
   }
 
   /** Receiver view: state and, once submitted, the result. Wrong token and unknown id are indistinguishable. */

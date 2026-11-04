@@ -1,5 +1,7 @@
 # P7-C2 검증 기록
 
+> 후속: [P7-C3](p7-c3-server-clock.md)가 서버 코드에 `serverNow`를 추가했다. 아래 표와 코드 위치는 P7-C2 실행 시점 기록이다. 해제 조건 1의 구현은 끝났고 배포와 E2E는 남아 있다. Referer 항목의 정적 분석 결과도 P7-C3 문서에 있다.
+
 코드 기준 `9097eed8f1e06d496fe4dae58fe0353ba38b570f`(main `2435087` 위). 실행일 2026-11-04, Windows 10, Node 22.16.0, Chrome 156.0.8078.80. 원본 로그·캡처는 Git 밖 `C:\carscope-external\p7-c2-claude\`에 있고, 이 문서가 증거 인덱스다. Codex B의 이전 실행(`C:\carscope-external\p7-c2\`)은 새 실행 근거로 쓰지 않았다.
 
 ## 상태 요약

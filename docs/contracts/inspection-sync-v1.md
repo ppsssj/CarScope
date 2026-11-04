@@ -105,7 +105,7 @@ A 2xx response without such a receipt is **not** a success.
 
 | method & path | auth | body | success |
 |---|---|---|---|
-| `POST /v1/sessions` | caller must be loopback (stand-in for vehicle auth) | `{ "taskId": "washer-fluid" }` | 201 `{ sessionId, taskId, receiverToken, inviteToken, inviteExpiresAt, expiresAt }` |
+| `POST /v1/sessions` | caller must be loopback (stand-in for vehicle auth) | `{ "taskId": "washer-fluid" }` | 201 `{ sessionId, taskId, receiverToken, inviteToken, inviteExpiresAt, expiresAt, serverNow }` |
 | `GET /v1/sessions/:id` | receiver | – | 200 `{ sessionId, taskId, sessionState, expiresAt, result, resultDigest, receivedAt, acceptedAt }` |
 | `POST /v1/sessions/:id/accept` | receiver | `{ "resultDigest": "sha256:…" }` | 200 view (`ACCEPTED`); repeat with the same digest is idempotent |
 | `POST /v1/sessions/:id/cancel` | receiver | – | 200 `{ sessionId, sessionState: "CANCELLED" }` |
