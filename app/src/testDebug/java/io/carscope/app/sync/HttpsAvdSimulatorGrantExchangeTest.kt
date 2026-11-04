@@ -9,6 +9,8 @@ import java.security.cert.Certificate
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicLong
+import java.util.concurrent.atomic.AtomicInteger
 import javax.net.ssl.HttpsURLConnection
 import javax.net.ssl.SSLException
 import org.junit.Assert.*
@@ -52,13 +54,133 @@ class HttpsAvdSimulatorGrantExchangeTest {
         override fun getServerCertificates(): Array<Certificate> = emptyArray()
     }
 
-    private fun exchange(c: Connection, queue: LinkedBlockingQueue<() -> Unit>, timeout: Int = 1000) =
+    private fun exchange(c: Connection, queue: LinkedBlockingQueue<() -> Unit>, timeout: Int = 1000,
+        now: () -> Long = { 2100 }, monotonic: () -> Long = System::nanoTime,
+        pause: (Long) -> Unit = Thread::sleep, requests: AtomicInteger = AtomicInteger()) =
         HttpsAvdSimulatorGrantExchange(AvdSimulatorSamples.endpoint,
             AvdSimulatorPolicy.enrollment(AvdSimulatorSamples.enrollment().toByteArray(), AvdSimulatorSamples.endpoint, 2100),
-            SyncCallbackDispatcher { queue.put(it) }, { 2100 }, timeout, connections = { uri ->
+            SyncCallbackDispatcher { queue.put(it) }, now, timeout, connections = { uri ->
+                requests.incrementAndGet()
                 assertEquals(AvdSimulatorPolicy.API_ORIGIN + "/simulator/provision", uri.toString())
                 c
-            })
+            }, monotonicNanos = monotonic, pause = pause)
+
+    @Test fun `same response waits 1200ms without authorization before notBefore or another POST`() {
+        ShadowLog.clear()
+        val clock = AtomicLong(800); val elapsed = AtomicLong(); val requests = AtomicInteger()
+        val queue = LinkedBlockingQueue<() -> Unit>()
+        val c = Connection()
+        exchange(c, queue, 5000, clock::get, elapsed::get, { ms ->
+            assertTrue(clock.get() < 2000)
+            assertTrue(queue.isEmpty())
+            assertFalse(ShadowLog.getLogsForTag("CarScopeAvdAuth").any { it.msg == "PROVISION_GRANT_VERIFIED" })
+            clock.addAndGet(ms); elapsed.addAndGet(TimeUnit.MILLISECONDS.toNanos(ms))
+        }, requests).use { exchange ->
+            val source = RefreshingAvdSimulatorCredentialSource(AvdSimulatorSamples.endpoint, exchange, clock::get)
+            HttpsSyncReceiverTransport(AvdSimulatorSamples.endpoint, source.provider(), SyncCallbackDispatcher { it() }).use { transport ->
+                assertFalse(transport.creationAuthorized())
+                var callbacks = 0
+                source.refresh { callbacks++; assertTrue(it) }
+                val action = requireNotNull(queue.poll(3, TimeUnit.SECONDS))
+                assertFalse(transport.creationAuthorized())
+                action()
+                assertEquals(2000L, clock.get())
+                assertEquals(1, callbacks)
+                assertTrue(transport.creationAuthorized())
+                assertEquals(1, requests.get())
+                assertNull(queue.poll(100, TimeUnit.MILLISECONDS))
+                assertEquals(listOf("PROVISION_GRANT_VERIFIED"), ShadowLog.getLogsForTag("CarScopeAvdAuth").map { it.msg })
+            }
+        }
+    }
+
+    @Test fun `three second monotonic wait cap rejects even when wall clock stays frozen or jumps valid at cap`() {
+        for (jump in listOf(false, true)) {
+            ShadowLog.clear()
+            val elapsed = AtomicLong(); val clock = AtomicLong(800); val requests = AtomicInteger()
+            val queue = LinkedBlockingQueue<() -> Unit>()
+            exchange(Connection(), queue, 5000, clock::get, elapsed::get, { ms ->
+                val t = elapsed.addAndGet(TimeUnit.MILLISECONDS.toNanos(ms))
+                if (jump && t >= TimeUnit.SECONDS.toNanos(3)) clock.set(2000)
+            }, requests).use { exchange ->
+                var callbacks = 0
+                exchange.fetch { callbacks++; assertNull(it) }
+                requireNotNull(queue.poll(3, TimeUnit.SECONDS))()
+                assertEquals(TimeUnit.SECONDS.toNanos(3), elapsed.get())
+                assertEquals(1, requests.get()); assertEquals(1, callbacks)
+                assertEquals(listOf("PROVISION_GRANT_NOT_YET_VALID"), ShadowLog.getLogsForTag("CarScopeAvdAuth").map { it.msg })
+                assertNull(queue.poll(100, TimeUnit.MILLISECONDS))
+            }
+        }
+    }
+
+    @Test fun `grant that expires during wait is rejected with no additional request`() {
+        ShadowLog.clear()
+        val clock = AtomicLong(1999); val elapsed = AtomicLong(); val requests = AtomicInteger()
+        val queue = LinkedBlockingQueue<() -> Unit>()
+        exchange(Connection(body = AvdSimulatorSamples.grant(2001)), queue, 5000, clock::get, elapsed::get, { ms ->
+            clock.set(2001); elapsed.addAndGet(TimeUnit.MILLISECONDS.toNanos(ms))
+        }, requests).use { exchange ->
+            exchange.fetch { assertNull(it) }
+            requireNotNull(queue.poll(3, TimeUnit.SECONDS))()
+            assertEquals(1, requests.get())
+            assertEquals(listOf("PROVISION_GRANT_EXPIRED"), ShadowLog.getLogsForTag("CarScopeAvdAuth").map { it.msg })
+        }
+    }
+
+    @Test fun `wait cannot extend original five second request deadline`() {
+        ShadowLog.clear()
+        val elapsed = AtomicLong(); val clock = AtomicLong(800); val requests = AtomicInteger()
+        val queue = LinkedBlockingQueue<() -> Unit>()
+        exchange(Connection(), queue, 5000, clock::get, elapsed::get, { _ ->
+            // Simulate scheduling delay past the original deadline with an otherwise valid grant.
+            elapsed.set(TimeUnit.SECONDS.toNanos(5)); clock.set(2000)
+        }, requests).use { exchange ->
+            var callbacks = 0
+            exchange.fetch { callbacks++; assertNull(it) }
+            requireNotNull(queue.poll(3, TimeUnit.SECONDS))()
+            assertEquals(1, callbacks); assertEquals(1, requests.get())
+            assertEquals(listOf("PROVISION_TIMEOUT"), ShadowLog.getLogsForTag("CarScopeAvdAuth").map { it.msg })
+            assertNull(queue.poll(100, TimeUnit.MILLISECONDS))
+        }
+    }
+
+    @Test fun `cancel close and request timeout during wait prevent late authorization and duplicate callbacks`() {
+        for (end in listOf("cancel", "close", "timeout")) {
+            ShadowLog.clear()
+            val waiting = CountDownLatch(1); val release = CountDownLatch(1); val exited = CountDownLatch(1)
+            val clock = AtomicLong(800); val requests = AtomicInteger()
+            val queue = LinkedBlockingQueue<() -> Unit>(); val c = Connection()
+            val exchange = exchange(c, queue, if (end == "timeout") 300 else 5000, clock::get,
+                pause = {
+                    waiting.countDown()
+                    // Emulate a late/non-cooperative operation; completion must still be ignored.
+                    try { release.await(3, TimeUnit.SECONDS) } catch (_: InterruptedException) { }
+                    clock.set(2000); exited.countDown()
+                }, requests = requests)
+            try {
+                var callbacks = 0
+                val source = RefreshingAvdSimulatorCredentialSource(AvdSimulatorSamples.endpoint, exchange, clock::get)
+                source.refresh { callbacks++; assertFalse(it) }
+                assertTrue(waiting.await(3, TimeUnit.SECONDS))
+                when (end) {
+                    "cancel" -> source.invalidate()
+                    "close" -> source.close()
+                    else -> requireNotNull(queue.poll(3, TimeUnit.SECONDS))()
+                }
+                release.countDown()
+                assertTrue(exited.await(3, TimeUnit.SECONDS))
+                assertTrue(c.disconnected.await(3, TimeUnit.SECONDS))
+                assertNull(queue.poll(100, TimeUnit.MILLISECONDS))
+                assertNull(source.snapshot())
+                assertEquals(if (end == "timeout") 1 else 0, callbacks)
+                assertEquals(1, requests.get())
+                val logs = ShadowLog.getLogsForTag("CarScopeAvdAuth")
+                assertFalse(logs.any { it.msg == "PROVISION_GRANT_VERIFIED" })
+                assertTrue(logs.all { it.throwable == null && it.msg.matches(Regex("PROVISION_[A-Z_]+")) })
+            } finally { release.countDown(); exchange.close() }
+        }
+    }
 
     private fun assertFailureLog(c: Connection, expected: String) {
         ShadowLog.clear()
@@ -127,12 +249,15 @@ class HttpsAvdSimulatorGrantExchangeTest {
     @Test fun `deadline callback wins over late successful worker and cancellation suppresses queued result`() {
         val gate = CountDownLatch(1); val c = Connection(gate = gate)
         val queue = LinkedBlockingQueue<() -> Unit>()
-        exchange(c, queue, 80).use { exchange ->
+        val requests = AtomicInteger()
+        exchange(c, queue, 80, requests = requests).use { exchange ->
             var count = 0
             exchange.fetch { count++; assertNull(it) }
             requireNotNull(queue.poll(3, TimeUnit.SECONDS))()
             gate.countDown()
-            assertTrue(c.disconnected.await(3, TimeUnit.SECONDS))
+            // The deadline may win before the worker opens any connection.
+            // In that case no disconnect is possible or required.
+            if (requests.get() > 0) assertTrue(c.disconnected.await(3, TimeUnit.SECONDS))
             assertNull(queue.poll(150, TimeUnit.MILLISECONDS))
             assertEquals(1, count)
         }

@@ -98,7 +98,9 @@ internal class HttpsAvdSimulatorGrantExchange(
     private val endpoint: SyncEndpoint, private val enrollment: AvdSimulatorEnrollment,
     private val dispatcher: SyncCallbackDispatcher, private val now: () -> Long = System::currentTimeMillis,
     private val timeoutMs: Int = 5000,
-    private val connections: (URI) -> HttpsURLConnection = { it.toURL().openConnection() as HttpsURLConnection }
+    private val connections: (URI) -> HttpsURLConnection = { it.toURL().openConnection() as HttpsURLConnection },
+    private val monotonicNanos: () -> Long = System::nanoTime,
+    private val pause: (Long) -> Unit = Thread::sleep
 ) : AvdSimulatorGrantExchange {
     // Log only fixed diagnostic categories. Never log a proof, grant, URL with credentials or exception message.
     private val logTag = "CarScopeAvdAuth"
@@ -124,6 +126,12 @@ internal class HttpsAvdSimulatorGrantExchange(
 
     override fun fetch(callback: (AvdSimulatorGrant?) -> Unit): SyncCancellation {
         val call = Call()
+        val started = monotonicNanos()
+        fun ensureActive() {
+            if (call.completed.get() || closed.get()) throw InterruptedException()
+            if (monotonicNanos() - started >= TimeUnit.MILLISECONDS.toNanos(timeoutMs.toLong()))
+                throw SocketTimeoutException()
+        }
         if (closed.get()) return call
         calls.add(call)
         fun finish(result: AvdSimulatorGrant?) {
@@ -176,8 +184,25 @@ internal class HttpsAvdSimulatorGrantExchange(
                                 bytes.write(buffer, 0, n)
                             }
                         }
-                        grant = AvdSimulatorPolicy.grant(bytes.toByteArray(), c.contentType, endpoint,
-                            enrollment.registrationId, now())
+                        // Retain this exact response; waiting never issues another provision request.
+                        val response = bytes.toByteArray()
+                        val contentType = c.contentType
+                        val validationStarted = monotonicNanos()
+                        var waiting = false
+                        while (true) {
+                            ensureActive()
+                            if (waiting && monotonicNanos() - validationStarted >= TimeUnit.SECONDS.toNanos(3))
+                                throw AvdSimulatorPolicy.GrantNotYetValid()
+                            try {
+                                grant = AvdSimulatorPolicy.grant(response, contentType, endpoint,
+                                    enrollment.registrationId, now())
+                                ensureActive()
+                                break
+                            } catch (_: AvdSimulatorPolicy.GrantNotYetValid) {
+                                waiting = true
+                                pause(50)
+                            }
+                        }
                         Log.i(logTag, "PROVISION_GRANT_VERIFIED")
                     } else {
                         Log.w(logTag, "PROVISION_ENROLLMENT_EXPIRED_OR_CANCELLED")
