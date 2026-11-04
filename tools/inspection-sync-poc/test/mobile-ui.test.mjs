@@ -78,7 +78,7 @@ test('mobile controller: completed only, duplicate buttons, SENT distinct from v
 });
 
 test('mobile controller: CANCELLED and EXPIRED differ, stop polling, close discards credentials', async (t) => {
-  let now = Date.now(); const s = await startMobileDevServer({ now: () => now, authorizer: new LocalTestSessionCreationAuthorizer(), limits: { sessionTtlMs: 10 } }); t.after(() => s.stop());
+  let now = Date.now(); const s = await startMobileDevServer({ now: () => now, authorizer: new LocalTestSessionCreationAuthorizer(), limits: { inviteTtlMs: 10, sessionTtlMs: 10 } }); t.after(() => s.stop());
   for (const terminal of ['CANCELLED', 'EXPIRED']) {
     const p = await s.service.create({ taskId: 'washer-fluid' }), client = new SyncClient({ baseUrl: s.url }), timer = sched();
     const ui = new MobileSync({ invite: p.inviteToken, client, ...timer }); await ui.claim();

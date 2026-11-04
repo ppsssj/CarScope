@@ -282,6 +282,7 @@ class HttpsSyncReceiverTransportTest {
             }
             transport.use {
                 val created = await(transport::create)
+                assertTrue(requireNotNull(created.serverNow) < created.inviteExpiresAt); assertNotNull(created.clock) // real server field, not a sample
                 val claim = JsonParser.parseString(phone("/v1/claim", created.invite.fragment().substringAfter("invite="), null)).asJsonObject
                 val envelope = "{\"protocol\":\"inspection-sync\",\"protocolVersion\":1,\"result\":${HttpSamples.result.canonicalJson()}}"
                 val firstReceipt = JsonParser.parseString(phone("/v1/submissions", claim["submitToken"].asString, envelope)).asJsonObject

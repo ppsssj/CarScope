@@ -4,7 +4,9 @@ import { randomUUID } from 'node:crypto';
 import http from 'node:http';
 import { startRenderStateful } from '../src/render-stateful.mjs';
 import { PostgreSQLSessionStore } from '../src/postgres-store.mjs';
-import { SessionService, STATES, hashToken, newToken } from '../src/sessions.mjs';
+import { DEFAULT_LIMITS, SessionService, STATES, hashToken, newToken } from '../src/sessions.mjs';
+import { startSyncServer } from '../src/server.mjs';
+import { LocalTestSessionCreationAuthorizer } from '../src/creation-authorizer.mjs';
 import { startInspection, completeInspection } from '../../mobile-ar-poc/public/inspection-result.mjs';
 import { PROTOCOL, PROTOCOL_VERSION } from '../src/protocol.mjs';
 
@@ -92,6 +94,33 @@ test('PostgreSQL SessionStore: real database, cross-connection contention, recov
       assert.equal(await storeB.delete(s.id, () => true), true);
       assert.equal(await storeA.idByTokenHash('invite', s.inviteHash), null);
       assert.equal(await storeA.get(s.id), null);
+    });
+    await t.test('creation serverNow over HTTP shares the epoch domain of rows stored in PostgreSQL', async () => {
+      await reset();
+      let at = 1_793_740_000_000;
+      const service = new SessionService({ store: storeA, now: () => at });
+      const app = await startSyncServer({ port: 0, store: storeA, now: () => at, authorizer: new LocalTestSessionCreationAuthorizer(), log: () => {} });
+      try {
+        const response = await fetch(`${app.url}/v1/sessions`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{"taskId":"washer-fluid"}' });
+        assert.equal(response.status, 201);
+        const text = await response.text(), created = JSON.parse(text);
+        assert.match(text, /"serverNow":1793740000000[,}]/);
+        assert.equal(created.inviteExpiresAt, at + DEFAULT_LIMITS.inviteTtlMs);
+        assert.equal(created.expiresAt, at + DEFAULT_LIMITS.sessionTtlMs);
+        assert.ok(!text.includes(hashToken(created.receiverToken)));
+        const row = await storeB.get(created.sessionId);
+        assert.equal(row.createdAt, created.serverNow);
+        assert.equal(row.expiresAt, created.expiresAt);
+        const claim = await service.claim(created.inviteToken);
+        at += 5_000;
+        const result = completeInspection(startInspection(), 'OK');
+        const { receipt } = await service.submit(claim.submitToken, { protocol: PROTOCOL, protocolVersion: PROTOCOL_VERSION, result });
+        at += 1_000;
+        const accepted = await service.accept(created.sessionId, created.receiverToken, receipt.resultDigest);
+        assert.equal(accepted.receivedAt, created.serverNow + 5_000);
+        assert.equal(accepted.acceptedAt, created.serverNow + 6_000);
+        assert.ok(accepted.acceptedAt <= accepted.expiresAt);
+      } finally { await app.stop(); }
     });
     await t.test('Render stateful HTTP ingress has PostgreSQL health and hard-denied creation', async () => {
       await reset();

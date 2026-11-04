@@ -171,7 +171,7 @@ test('race: sweep running concurrently with transitions (seeded fuzz across the 
     let t = Date.parse('2026-11-01T10:00:00Z'), ticking = false;
     const now = () => (ticking ? (t += 1) : t);
     const cs = controlledStore({ yields: () => (ticking ? Math.floor(rnd() * 3) : 0) });
-    const svc = new SessionService({ store: cs.store, now, limits: { sessionTtlMs: 60_000, acceptedRetentionMs: 2, tombstoneMs: 4 } });
+    const svc = new SessionService({ store: cs.store, now, limits: { inviteTtlMs: 60_000, sessionTtlMs: 60_000, acceptedRetentionMs: 2, tombstoneMs: 4 } });
     const p = await submitted(svc);
     t = p.expiresAt - Math.floor(rnd() * 8);
     ticking = true;

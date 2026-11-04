@@ -25,7 +25,8 @@ test('authenticated TLS: QR v2, lost submit ACK, duplicate, view, explicit accep
   const create = async () => {
     const r = await call('POST', '/v1/sessions', credential, { taskId: 'washer-fluid' });
     assert.equal(r.status, 201);
-    assert.deepEqual(Object.keys(r.body).sort(), ['sessionId', 'taskId', 'receiverToken', 'inviteToken', 'inviteExpiresAt', 'expiresAt'].sort());
+    assert.deepEqual(Object.keys(r.body).sort(), ['sessionId', 'taskId', 'receiverToken', 'inviteToken', 'inviteExpiresAt', 'expiresAt', 'serverNow'].sort());
+    assert.equal(r.body.serverNow, now);
     assert.notEqual(r.body.receiverToken, r.body.inviteToken);
     secrets.push(r.body.receiverToken, r.body.inviteToken); return r.body;
   };
