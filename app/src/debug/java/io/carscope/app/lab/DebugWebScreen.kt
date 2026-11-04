@@ -32,8 +32,10 @@ internal class DebugWebScreen(
     private val componentStatusJson: (() -> String)? = null,
     private val chargePortStatusJson: (() -> String)? = null,
     private val visibilityStatusJson: (() -> String)? = null,
+    private val inspectionBridge: ((String) -> String)? = null,
 ) {
-    private var view: WebView? = null
+    @Volatile private var view: WebView? = null
+    @Volatile private var currentPage: String? = null
     private var backGeneration = 0
 
     fun create(query: String): WebView {
@@ -54,9 +56,19 @@ internal class DebugWebScreen(
             }
         }
         web.webViewClient = object : WebViewClient() {
+            override fun onPageStarted(view: WebView, url: String, favicon: android.graphics.Bitmap?) {
+                if (view === this@DebugWebScreen.view) currentPage = url
+            }
             override fun shouldInterceptRequest(view: WebView, request: WebResourceRequest): WebResourceResponse {
                 val url = request.url
                 if (!DebugWebOrigin.trusted(url.toString(), host, request.method)) return notFound()
+                if (url.path == "/native-inspection-v1") {
+                    if (view !== this@DebugWebScreen.view || inspectionBridge == null ||
+                        !NativeInspectionOrigin.allowed(url.toString(), host, request.method, request.isForMainFrame,
+                            currentPage, request.requestHeaders.entries.firstOrNull { it.key.equals("Referer", true) }?.value)) return notFound()
+                    val command = url.getQueryParameter("command") ?: return notFound()
+                    return ok("application/json", csp, inspectionBridge.invoke(command).byteInputStream(Charsets.UTF_8))
+                }
                 val path = url.path.orEmpty().trimStart('/').ifEmpty { "index.html" }
                 if (path.contains("..")) return notFound()
                 if (path == "visibility-status.json") {
@@ -97,7 +109,7 @@ internal class DebugWebScreen(
             override fun onRenderProcessGone(view: WebView, detail: RenderProcessGoneDetail): Boolean {
                 // The renderer (and its GL context) died; this WebView is unusable. Close the screen, keep the app.
                 Log.e(tag, "lifecycle render-process-gone crashed=${detail.didCrash()} priority=${detail.rendererPriorityAtExit()}")
-                this@DebugWebScreen.view = null
+                this@DebugWebScreen.view = null; currentPage = null
                 (view.parent as? ViewGroup)?.removeView(view)
                 view.destroy()
                 activity.finish()
@@ -149,7 +161,7 @@ internal class DebugWebScreen(
             it.stopLoading()
             it.destroy()
         }
-        view = null
+        view = null; currentPage = null
         Log.i(tag, "lifecycle destroy")
     }
 

@@ -38,11 +38,13 @@ internal class SyncQrPayload(val value: String) {
 }
 internal class CreatedSyncSession(
     val sessionId: String, val receiver: ReceiverCredential, val invite: InviteCredential,
-    val inviteExpiresAt: Long, val expiresAt: Long, val taskId: String = "washer-fluid"
+    val inviteExpiresAt: Long, val expiresAt: Long, val taskId: String = "washer-fluid",
+    val serverNow: Long? = null
 ) {
+    var clock: SyncServerClock? = null; internal set
     override fun toString(): String = "CreatedSyncSession(REDACTED)"
 }
-internal data class ReceiverSession(val expiresAt: Long, val qr: SyncQrPayload, val inviteExpiresAt: Long = expiresAt)
+internal data class ReceiverSession(val expiresAt: Long, val qr: SyncQrPayload, val inviteExpiresAt: Long = expiresAt, val sessionId: String? = null, val clock: SyncServerClock? = null)
 
 internal sealed interface SyncInspection {
     val inspectionId: String
@@ -130,7 +132,8 @@ internal data class CompletedChargeInspection(
 }
 internal data class SyncReceiverView(
     val sessionId: String, val sessionState: SyncSessionState, val expiresAt: Long,
-    val result: SyncInspection? = null, val resultDigest: String? = null, val taskId: String = "washer-fluid"
+    val result: SyncInspection? = null, val resultDigest: String? = null, val taskId: String = "washer-fluid",
+    val receivedAt: Long? = null, val acceptedAt: Long? = null
 )
 internal sealed class SyncReply<out T> {
     data class Success<T>(val value: T) : SyncReply<T>()

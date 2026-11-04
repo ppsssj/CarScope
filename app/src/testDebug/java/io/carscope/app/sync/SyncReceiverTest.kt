@@ -55,6 +55,16 @@ class SyncReceiverTest {
         assertFalse(result.copy(completedAt = "2020-01-01T00:00:00.000Z").valid())
         assertFalse(result.copy(inspectionId = "VIN-secret").valid())
     }
+    @Test fun `accept cannot replace previously received server timestamp`() {
+        val f = Fixture(); f.start()
+        f.transport.reply = SyncReply.Success(view(SyncSessionState.RESULT_SUBMITTED, result).copy(receivedAt = 10))
+        f.owner.poll()
+        f.transport.reply = SyncReply.Success(view(SyncSessionState.ACCEPTED, result).copy(receivedAt = 11, acceptedAt = 12))
+        f.owner.accept()
+        assertEquals(ReceiverPhase.FAILED, f.owner.state.phase)
+        assertEquals(SyncFailure.INVALID, f.owner.state.failure)
+        assertFalse(f.owner.state.explicitlyAccepted)
+    }
     @Test fun `creation keeps receiver credential out of QR and diagnostics`() {
         val f = Fixture(); f.start()
         assertEquals(ReceiverPhase.WAITING, f.owner.state.phase)

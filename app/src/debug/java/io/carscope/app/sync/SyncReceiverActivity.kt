@@ -28,6 +28,8 @@ open class SyncReceiverActivity : Activity() {
     private var check: SyncCancellation? = null
     private var generation = 0L
     private var stopped = true
+    private var suppressBridgeState = false
+    private var lockedTask: String? = null
     private var qrBitmap: Bitmap? = null
     private var shownQr: SyncQrPayload? = null
     private lateinit var task: Spinner
@@ -43,6 +45,16 @@ open class SyncReceiverActivity : Activity() {
     private lateinit var retry: Button
     private lateinit var probe: Button
 
+    internal open fun onReceiverState(state: SyncReceiverState) {}
+    internal fun receiverTask(taskId: String) {
+        require(taskId in SyncTasks.all)
+        suppressBridgeState = true
+        try { owner?.reset() } finally { suppressBridgeState = false }
+        lockedTask = taskId
+        task.setSelection(SyncTasks.all.indexOf(taskId))
+        task.isEnabled = false
+    }
+    internal fun resetReceiver() { lockedTask = null; owner?.reset() }
     internal open fun endpoint(): SyncEndpoint? = try {
         val file = File(filesDir, "sync-endpoint.json")
         if (!file.isFile || file.length() > 2048) null else {
@@ -129,7 +141,7 @@ open class SyncReceiverActivity : Activity() {
                     else "서비스 연결 실패 · ${failureMessage((reply as SyncReply.Failure).reason)}"
             }
         }
-        create.setOnClickListener { controller.create(endpoint.mobileRoot, SyncTasks.all[task.selectedItemPosition]) }
+        create.setOnClickListener { controller.create(endpoint.mobileRoot, lockedTask ?: SyncTasks.all[task.selectedItemPosition]) }
         accept.setOnClickListener { controller.accept() }; cancel.setOnClickListener { controller.cancel() }; retry.setOnClickListener { controller.retryPolling() }
         render(controller.state)
         provisioning?.refresh { render(controller.state) }
@@ -145,6 +157,7 @@ open class SyncReceiverActivity : Activity() {
     }
     private fun render(state: SyncReceiverState) {
         if (stopped) return
+        if (!suppressBridgeState) onReceiverState(state)
         status.text = when (state.phase) {
             ReceiverPhase.WAITING -> if (state.qr == null && state.inviteExpiresAt?.let { now() > it } == true)
                 "WAITING · QR 초대 만료 · 새 스캔 불가. 이미 연결된 점검은 계속 기다립니다. 새 QR이 필요하면 취소 후 다시 요청하세요."
@@ -194,7 +207,7 @@ open class SyncReceiverActivity : Activity() {
             } catch (_: Exception) { image.visibility = View.GONE; status.text = "FAILED · QR 표시 실패. 요청을 취소하고 다시 시작하세요." }
         }
         create.isEnabled = transport?.creationAuthorized() == true && !state.busy && state.phase in listOf(ReceiverPhase.IDLE, ReceiverPhase.FAILED, ReceiverPhase.CANCELLED, ReceiverPhase.EXPIRED)
-        task.isEnabled = create.isEnabled
+        task.isEnabled = create.isEnabled && lockedTask == null
         accept.isEnabled = state.canAccept; cancel.isEnabled = state.canCancel; retry.isEnabled = state.retryAvailable && !state.busy
     }
     private fun clearQr() { image.setImageDrawable(null); image.visibility = View.GONE; qrBitmap?.recycle(); qrBitmap = null; shownQr = null }

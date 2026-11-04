@@ -1,5 +1,7 @@
 # P7-C1 Native ACCEPTED → 3D 전달 계약 v1
 
+> P7-C2 후속: 고정 Android 자산 RPC 어댑터와 Native 소유자를 [구현](../p7-c2-native-3d-bridge.md)했다. 아래 C1 당시 ‘경로 미완료’ 기록은 이력이다. 현재 서버의 serverNow 부재로 실전 binding은 BLOCKED이며 Native/스마트폰 E2E PASS가 아니다. 인터페이스/필수 proof 검증은 유지한다.
+
 상태: **프런트엔드 소비자 구현, 실제 Native 전달 경로 미완료**. 시작 main `18403af`에서 PR #71 head `f9a61c2`를 읽기만 했다. 작업 중 PR #71/#73이 병합되어 최종 기준을 최신 main `b396394`로 재정렬했다. Native 17-task decoder/수락 지원은 기준 코드에 포함되지만 아래 전달 채널은 아직 없다. 이 변경은 `app/**`·모바일/Sync 서버·운영 설정·GLB를 수정하지 않는다. 아래 인터페이스를 Codex A에게 인계한다.
 
 ## 결정과 신뢰 경계
