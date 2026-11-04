@@ -54,4 +54,4 @@
 
 ## CI
 
-PR checks 결과는 해당 job 범위에 한정한다. `inspection-results-ci`는 DOM_ONLY 합성 검사이며 GLB·Native·운영 API를 포함하지 않는다. 실행 링크는 PR에 기록한다.
+결과는 해당 job 범위에 한정한다. [PR #79](https://github.com/ppsssj/CarScope/pull/79), commit `4c6de21`에서 모든 check가 PASS했다. [`17-part results boundary and browser (synthetic)`](https://github.com/ppsssj/CarScope/actions/runs/41842594838)에 신규 History DOM 단계가 포함된다. 이 job은 DOM_ONLY 합성 검사이며 GLB·Native·운영 API를 포함하지 않는다.
