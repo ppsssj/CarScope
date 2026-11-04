@@ -35,7 +35,7 @@ class NativeInspectionBridgeTest {
         val f = Fixture(); val state = f.state(clockValue = null); f.bridge.state(state)
         val poll = f.rpc("poll")
         assertEquals(0, poll["bindings"].asJsonArray.size()); assertEquals(0, poll["accepted"].asJsonArray.size())
-        assertTrue(poll["unavailable"].asString in setOf("SERVER_CLOCK_UNAVAILABLE", "ACCEPTED_NOT_BOUND"))
+        assertEquals("SERVER_CLOCK_UNAVAILABLE", poll["unavailable"].asString) // explicit Accept must not mask the cause
         assertNull(SyncServerClock.fromResponse(1000, 100, 99))
         assertNull(SyncServerClock.fromResponse(1000, 100, 5101))
         assertNull(f.clock.upperNow(999))
@@ -115,19 +115,38 @@ class NativeInspectionBridgeTest {
     @Test fun `real Kotlin vault is consumed by fixed JS adapter and existing C1 consumer for all 17 tasks`() {
         val f = Fixture()
         for (task in SyncTasks.all) f.bridge.state(f.state(task, UUID.randomUUID().toString()))
+        assertEquals(17, runNodeConsumer(f)["records"].asInt)
+    }
+    @Test fun `current server without serverNow blocks the real JS consumer instead of delivering explicit Accept`() {
+        val f = Fixture(); f.bridge.state(f.state(clockValue = null))
+        val done = runNodeConsumer(f, "blocked")
+        assertEquals(0, done["records"].asInt); assertEquals("SERVER_CLOCK_UNAVAILABLE", done["notice"].asString)
+    }
+    @Test fun `asset RPC rejects a second pending task oversized bodies and unknown trust keys`() {
+        val f = Fixture(); f.request()
+        assertTrue(f.request("battery-12v").has("error"))
+        assertTrue(f.request().has("ok")) // the same pending task only reopens the Native panel
+        assertEquals(listOf("washer-fluid"), f.requests.map { it.taskId })
+        assertTrue(f.rpc("poll", mapOf("trusted" to true)).has("error"))
+        assertTrue(f.rpc("poll", mapOf("sessionState" to "ACCEPTED")).has("error"))
+        assertTrue(f.rpc("poll", mapOf("x" to "a".repeat(4096))).has("error"))
+        assertTrue(f.rpc("open").has("ok")) // the current owner is unchanged by rejected commands
+    }
+    private fun runNodeConsumer(f: Fixture, mode: String? = null): com.google.gson.JsonObject {
         val root = NativeTaskSamples.root()
-        val process = ProcessBuilder("node", File(root, "tools/three-poc/test/native-bridge-consumer.mjs").path).directory(root)
-            .redirectError(File(root, "app/build/native-3d-node-stderr.txt")).start()
+        val stderr = File(root, "app/build/native-3d-node-stderr${mode?.let { "-$it" } ?: ""}.txt")
+        val process = ProcessBuilder(listOfNotNull("node", File(root, "tools/three-poc/test/native-bridge-consumer.mjs").path, mode))
+            .directory(root).redirectError(stderr).start()
         val input = process.inputStream.bufferedReader(); val output = process.outputStream.bufferedWriter()
-        var done = false
+        var done: com.google.gson.JsonObject? = null
         while (true) {
             val line = input.readLine() ?: break
             val message = JsonParser.parseString(line).asJsonObject
-            if (message.has("done")) { assertEquals(17, message["records"].asInt); done = true; break }
+            if (message.has("done")) { done = message; break }
             output.write(f.bridge.handle(message["command"].asString)); output.newLine(); output.flush()
         }
         assertTrue(process.waitFor(15, TimeUnit.SECONDS))
-        assertEquals(File(root, "app/build/native-3d-node-stderr.txt").readText(), 0, process.exitValue())
-        assertTrue(done)
+        assertEquals(stderr.readText(), 0, process.exitValue())
+        return requireNotNull(done)
     }
 }

@@ -125,7 +125,8 @@ internal class NativeInspectionBridge(
         }
         val e = entries.values.find { it.binding["syncSessionId"] == id && it.binding["taskId"] == task }
         if (state.phase == ReceiverPhase.ACCEPTED) {
-            if (e == null || !live(e) || !state.explicitlyAccepted) { notice = "ACCEPTED_NOT_BOUND"; return }
+            // Keep the first blocking cause (e.g. SERVER_CLOCK_UNAVAILABLE) so 3D shows why Accept cannot apply.
+            if (e == null || !live(e) || !state.explicitlyAccepted) { notice = notice ?: "ACCEPTED_NOT_BOUND"; return }
             val result = state.result ?: return
             val received = state.receivedAt ?: return
             val accepted = state.acceptedAt ?: return

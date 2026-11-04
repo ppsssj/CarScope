@@ -3,6 +3,7 @@ package io.carscope.app.sync
 import android.os.Looper
 import android.view.View
 import android.view.ViewGroup
+import android.view.WindowManager
 import android.webkit.WebView
 import android.widget.Button
 import android.widget.Spinner
@@ -53,5 +54,27 @@ class NativeInspectionActivityTest {
         assertTrue(a.fake.closed)
         assertTrue(rpc("poll").contains("UNAVAILABLE"))
         b.destroy()
+    }
+    @Test fun `only the Native panel is secure and pause revokes bridge and returns to the 3D page`() {
+        val b = Robolectric.buildActivity(BridgeHostFixtureActivity::class.java).create().start()
+        val a = b.get()
+        val root = a.findViewById<ViewGroup>(android.R.id.content).getChildAt(0) as ViewGroup
+        val web = root.getChildAt(0) as WebView; val panel = root.getChildAt(1)
+        val bridge = ReflectionHelpers.getField<NativeInspectionBridge>(a, "bridge")
+        fun secure() = a.window.attributes.flags and WindowManager.LayoutParams.FLAG_SECURE != 0
+        fun rpc(op: String, extra: String = "") = bridge.handle("""{"op":"$op","localSessionId":"host","generation":1$extra}""")
+        val request = """, "taskId":"battery-12v","partId":"battery-12v""""
+        assertFalse(secure())
+        rpc("open"); shadowOf(Looper.getMainLooper()).idle()
+        rpc("request", request); shadowOf(Looper.getMainLooper()).idle()
+        assertTrue(secure()); assertEquals(View.VISIBLE, panel.visibility); assertEquals(View.GONE, web.visibility)
+        root.findViewWithTag<Button>("return-to-3d").performClick()
+        assertFalse(secure()); assertEquals(View.GONE, panel.visibility); assertEquals(View.VISIBLE, web.visibility)
+        rpc("request", request); shadowOf(Looper.getMainLooper()).idle()
+        assertTrue(secure())
+        b.pause(); shadowOf(Looper.getMainLooper()).idle() // pause without stop: dialog or multi-window focus loss
+        assertTrue(rpc("poll").contains("UNAVAILABLE"))
+        assertFalse(secure()); assertEquals(View.GONE, panel.visibility); assertEquals(View.VISIBLE, web.visibility)
+        b.stop().destroy()
     }
 }

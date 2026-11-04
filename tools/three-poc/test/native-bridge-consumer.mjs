@@ -19,6 +19,15 @@ globalThis.fetch=async url=>{
 };
 const adapter=createAndroidNativeInspectionAdapter(),consumer=createNativeInspectionResults({adapter});
 consumer.startSession('native-contract');
+if(process.argv[2]==='blocked'){
+  // Current Sync server: creation has no serverNow, so the Kotlin bridge refuses to bind.
+  while(consumer.snapshot.connection==='ADAPTER_CONNECTED')await new Promise(resolve=>setTimeout(resolve,10));
+  assert.equal(consumer.snapshot.connection,'UNAVAILABLE');assert.equal(consumer.snapshot.notice,'SERVER_CLOCK_UNAVAILABLE');
+  assert.equal(consumer.snapshot.records.length,0);assert.equal(consumer.snapshot.bindings.length,0);
+  consumer.dispose();clearTimeout(timeout);lines.close();
+  process.stdout.write(JSON.stringify({done:true,records:0,notice:'SERVER_CLOCK_UNAVAILABLE'})+'\n');
+  process.exit(0);
+}
 const local=createTireInspection('native-contract'),original=JSON.stringify(local);
 const sdk=Object.freeze({source:'SDK',observedAt:123,value:false}),sdkOriginal=JSON.stringify(sdk);
 while(consumer.snapshot.records.length<17){

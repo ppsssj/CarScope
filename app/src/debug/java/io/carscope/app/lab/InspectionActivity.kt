@@ -4,6 +4,7 @@ import android.os.Handler
 import android.os.Looper
 import android.view.View
 import android.view.ViewGroup
+import android.view.WindowManager
 import android.widget.Button
 import android.widget.FrameLayout
 import android.widget.LinearLayout
@@ -39,6 +40,8 @@ open class InspectionActivity : SyncReceiverActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // The parent protects its QR/result UI. Keep that on the receiver panel only, not the existing 3D page.
+        window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
         val nativeView = findViewById<ViewGroup>(android.R.id.content).getChildAt(0)
         (nativeView.parent as ViewGroup).removeView(nativeView)
         receiverPanel = LinearLayout(this).apply {
@@ -62,7 +65,7 @@ open class InspectionActivity : SyncReceiverActivity() {
                     if (bridge.arm(request)) showReceiver(true)
                 }
             }
-        }, { bridgeHandler.post { if (!bridgeStopped) resetReceiver() } },
+        }, { bridgeHandler.post { if (!bridgeStopped) { resetReceiver(); showReceiver(false) } } },
             { request -> bridgeHandler.post { if (!bridgeStopped && bridge.isCurrent(request)) showReceiver(true) } })
         tireStatus = TireUiChannel(TireProcessOwner.get(applicationContext))
         componentStatus = ComponentUiChannel(ComponentProcessOwner.get(applicationContext))
@@ -114,9 +117,11 @@ open class InspectionActivity : SyncReceiverActivity() {
         }
     }
     private fun showReceiver(show: Boolean) {
+        if (show) window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
         showingReceiver = show
         receiverPanel.visibility = if (show) View.VISIBLE else View.GONE
         inspectionPanel.visibility = if (show) View.GONE else View.VISIBLE
+        if (!show) window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
     }
     override fun onDestroy() {
         bridge.destroy()

@@ -224,8 +224,8 @@ function driveCamera(name, dur = 1100) {
 const ease = (t) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2);
 
 let userInspection = createTireInspection(crypto.randomUUID());
-// No Native result adapter is installed in this build. A future reviewed composition import
-// may supply {adapter}; never obtain it from a window property, query, postMessage or JSON.
+// The reviewed Android asset adapter is the only composition; it returns null on any other origin.
+// Never obtain an adapter from a window property, query, postMessage or JSON.
 const mobileResults=createNativeInspectionResults({adapter:createAndroidNativeInspectionAdapter()});
 const mobileExpiryTimer=setInterval(()=>{if(state.name!==STATES.IDLE)mobileResults.tick();},1000);
 function enter(prev) {
