@@ -121,7 +121,7 @@ try {
   await page.setViewportSize({ width: 844, height: 390 });
   await page.waitForTimeout(600);
   const blueWide = await videoPoint(290 / 640, 220 / 480);
-  assert.ok((await markerPixel(blueWide))[2] > 200, 'mark re-projected after resize');
+  assert.equal((await S()).mark, null, 'resize invalidates manual position');
   assert.equal(await noOverflow(), true);
   await page.screenshot({ path: path.join(output, '04-landscape-marked.png'), fullPage: true });
   await page.setViewportSize({ width: 390, height: 844 });
@@ -132,7 +132,7 @@ try {
   await page.locator('#start').click();
   await page.waitForFunction(() => document.getElementById('status').textContent.includes('파란색 후보'));
   assert.equal((await S()).mark, null, 'restarted video starts without a stale mark');
-  pass('landscape resize keeps the mark on the same video point without overflow; stop ends tracks and clears the mark; restart works');
+  pass('landscape resize clears the old 2D mark without overflow; stop ends tracks and clears the mark; restart works');
 
   // Candidate regression: no candidate -> stale overlay cleared.
   await page.evaluate(() => paintFixture(false));
@@ -309,7 +309,7 @@ try {
   await page.goto(root + '/');
   await page.evaluate(() => Object.defineProperty(navigator, 'mediaDevices', { value: undefined, configurable: true }));
   await primary().click();
-  await page.waitForFunction(() => document.getElementById('status').textContent.includes('카메라 미지원'));
+  await page.waitForFunction(() => document.getElementById('status').textContent.includes('카메라를 쓸 수 없는 환경'));
   await page.setViewportSize({ width: 1280, height: 900 });
   assert.equal(await noOverflow(), true);
   await page.screenshot({ path: path.join(output, '10-desktop-unsupported.png'), fullPage: true });

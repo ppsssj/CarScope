@@ -5,6 +5,7 @@ import {tireFlow} from './tire-flow.mjs';
 import {CHARGE_CHECKS,CHARGE_ANSWERS,chargeResult} from './charge-result.mjs';
 import {BRAKE_CHECKS,BRAKE_ANSWERS,brakeResult} from './brake-result.mjs';
 import {createChecklistFlow} from './checklist-flow.mjs';
+import {getExtraProfile} from './extra-profiles.mjs';
 
 const tireProfile = {
   checks:TIRE_CHECKS,answers:TIRE_ANSWERS,result:tireResult,flow:tireFlow,hook:'__tireInspection',answerId:'tire-answers',
@@ -59,6 +60,7 @@ export const brakeProfile = Object.freeze({
   },
 });
 export function getChecklistProfile(id) {
+  if(getExtraProfile(id))return getExtraProfile(id);
   if(id===BRAKE_TASK.id)return brakeProfile;
   if(id===CHARGE_TASK.id)return chargeProfile;
   if(isTireTask(id))return Object.freeze({...tireProfile,...TIRE_TASKS.find(t=>t.id===id)});

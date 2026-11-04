@@ -33,9 +33,11 @@ export class CameraSession {
     }
     this.stream = stream;
     this.video.srcObject = stream;
-    for (const track of stream.getTracks()) track.addEventListener('ended', () => {
-      if (generation === this.generation) { this.stop(); this.onEnded(); }
-    }, { once: true });
+    for (const track of stream.getTracks()) for (const event of ['ended', 'mute']) {
+      track.addEventListener(event, () => {
+        if (generation === this.generation) { this.stop(); this.onEnded(); }
+      }, { once: true });
+    }
     try { await this.video.play(); }
     catch (error) { if (generation === this.generation) this.stop(); throw error; }
     return generation === this.generation;

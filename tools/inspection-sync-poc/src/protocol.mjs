@@ -6,11 +6,13 @@ import {validateBrakeResult} from '../../mobile-ar-poc/public/brake-result.mjs';
 import {validateChargeResult} from '../../mobile-ar-poc/public/charge-result.mjs';
 import {validateTireResult} from '../../mobile-ar-poc/public/tire-result.mjs';
 import {BRAKE_TASK,CHARGE_TASK,TIRE_TASKS,isTireTask} from '../../mobile-ar-poc/public/inspection-tasks.mjs';
+import {EXTRA_TASKS,isExtraTask} from '../../mobile-ar-poc/public/extra-tasks.mjs';
+import {validateExtraResult} from '../../mobile-ar-poc/public/extra-result.mjs';
 
 export const PROTOCOL = 'inspection-sync';
 export const PROTOCOL_VERSION = 1;
 export const QR_VERSION = 2;
-export const SUPPORTED_TASKS = Object.freeze([TASK_ID,...TIRE_TASKS.map(t=>t.id),CHARGE_TASK.id,BRAKE_TASK.id]);
+export const SUPPORTED_TASKS = Object.freeze([TASK_ID,...TIRE_TASKS.map(t=>t.id),CHARGE_TASK.id,BRAKE_TASK.id,...EXTRA_TASKS.map(t=>t.id)]);
 
 // 32 random bytes, base64url without padding: exactly 43 characters. Tokens are bearer secrets, not identities.
 export const TOKEN_BYTES = 32;
@@ -77,7 +79,7 @@ export function checkEnvelope(envelope, sessionTask) {
   const r = envelope.result;
   if (!r || typeof r !== 'object') return [...problems, 'result: missing'];
   if (r.state !== STATES.COMPLETED) problems.push('result: not COMPLETED');
-  for (const p of (r.taskId===BRAKE_TASK.id?validateBrakeResult(r):r.taskId===CHARGE_TASK.id?validateChargeResult(r):isTireTask(r.taskId)?validateTireResult(r):validateResult(r))) problems.push(`result: ${p}`);
+  for (const p of (isExtraTask(r.taskId)?validateExtraResult(r):r.taskId===BRAKE_TASK.id?validateBrakeResult(r):r.taskId===CHARGE_TASK.id?validateChargeResult(r):isTireTask(r.taskId)?validateTireResult(r):validateResult(r))) problems.push(`result: ${p}`);
   if (sessionTask && r.taskId !== sessionTask) problems.push('result: task mismatch');
   return problems;
 }

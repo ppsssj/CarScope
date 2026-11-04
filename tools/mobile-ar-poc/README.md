@@ -1,5 +1,7 @@
 # CarScope 모바일 · 워셔액·타이어·EV 충전구 카메라 보조 점검
 
+P7-B는 기존 7개에 냉각수·LCW·12V·퓨즈박스·좌우 전면 와이퍼·좌우 상향/하향등 10개를 추가해 **17개 카메라/수동 점검 task**를 제공한다. 공통 Checklist·CameraSession·2D Overlay·schema v1/v2·SyncClient를 재사용한다. [조사·구현·검증](../../docs/p7-b-mobile-ar-coverage.md) · [Codex A Native 인계 계약](../../docs/contracts/p7-b-mobile-tasks-v2.md) · [스마트폰 HTTPS 절차](P7_B_DEVICE_TEST.md). 실제 폰·Native 수락·객체 인식 정확도는 NOT_RUN이며 Node 수락과 구분한다. 새 객체 인식 모델/PoC는 추가하지 않았다.
+
 P5-A3: `/#task=brake-fluid`에서 보닛 내부 리저버 위치 안내, 수동 2D 카메라 표시와 외부 액면·누출 의심·외관 체크리스트를 제공합니다. 확인 불가는 UNABLE이며 캡 개방·직접 보충·분해를 안내하지 않습니다. [구현·검증·재실행](../../docs/p5-a3-brake-fluid-mobile-ar.md) · [schema v2/Native 후속 계약](../../docs/contracts/brake-fluid-mobile-result-v2.md). `test:browser`에 브레이크액 회귀를 포함하고 `test:browser:brake`로 단독 실행합니다.
 
 P5-A2: `ev-charge.port`(충전구와 덮개)의 **주차 + 충전 중 아님 확인**, 카메라/수동 안내, 외관 세 항목 기록, 검토·수정·명시적 확정을 추가했다. 루트의 부품 링크 또는 `/#task=ev-charge.port`로 진입한다. 참조 IONIQ 5의 우측 후방 위치는 실제 차량 공통 위치로 일반화하지 않는다. 손상 징후를 기록하면 관찰을 중단하고 확인하지 못한 항목을 직접 기록하도록 안내한다.
