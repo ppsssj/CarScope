@@ -20,6 +20,18 @@ claim의 정확한 필드는 `active, issuer, audience, subject, scope, issuedAt
 
 생성 권한은 기존 **`inspection:session:create`** 계약을 그대로 사용한다. 생성 시 검증된 바인딩만 세션에 캡처한다. 바인딩은 **생성 시점 증거**이며 Accept 시 운전자/OEM 재인증의 증거가 아니다. History 조회는 새로 현재 소유권을 검증하고 namespace + issuer + userId + vehicleId 모두로 SQL을 제한한다. 기기/등록이 갱신돼도 같은 사용자·차량의 기록은 조회할 수 있다. 소유자 변경 시 과거 소유자 기록을 새 소유자에게 이전하지 않는다.
 
+### P8-A2 HTTPS 어댑터 경계
+
+`httpsHistoryAuthorizer`는 위 세 인터페이스를 고정 HTTPS authority의 아래 경로에 연결한다. 실제 authority는 연결되어 있지 않으며(`HISTORY_PRODUCTION_ISSUER_BLOCKED`), 합성 fixture 검증은 실제 소유권 증명이 아니다. [설계와 차단 조건](../p8-a2-history-auth.md).
+
+| 고정 경로 | 요청 JSON | 200 응답 |
+|---|---|---|
+| `POST /history/verify` | `{token}` | 위 claim 10개 필드 또는 null |
+| `POST /history/registration` | `{issuer,subject,registrationId}` | 위 등록 9개 필드 또는 null |
+| `POST /history/active` | `{issuer,credentialId,registrationId}` | 정확히 `{"active":true}`일 때만 활성 |
+
+호출은 별도 서비스 관리 credential을 Authorization에 사용한다. 호출자 bearer는 verify 본문으로만 전달하며 TLS(`secure:true`) 요청에서만 전달한다. verify는 credential을 소모하지 않아야 한다(요청당 DB 전후 2회 검증). HTTP 200, JSON content type, 16KiB 상한, 중복 키 거부, redirect 거부를 적용하고 그 외 응답은 거부로 처리한다. Render는 `startRenderStateful({historyAuthority})`를 코드로 호출한 경우에만 이 어댑터를 쓰며 CLI·환경변수 경로는 없다.
+
 ## 목록
 
 ```http
