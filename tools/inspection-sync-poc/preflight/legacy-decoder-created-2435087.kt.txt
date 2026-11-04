@@ -1,0 +1,11 @@
+    fun created(bytes: ByteArray, type: String?): CreatedSyncSession = checked {
+        val x = objectBody(bytes, type)
+        exact(x, "sessionId", "taskId", "receiverToken", "inviteToken", "inviteExpiresAt", "expiresAt")
+        val taskId = task(x["taskId"])
+        val receiver = string(x["receiverToken"]); val invite = string(x["inviteToken"])
+        if (!token.matches(receiver) || !token.matches(invite) || receiver == invite) invalid()
+        val inviteExpiry = number(x["inviteExpiresAt"]); val expiry = number(x["expiresAt"])
+        if (inviteExpiry == 0L || expiry < inviteExpiry) invalid()
+        CreatedSyncSession(id(x["sessionId"]), ReceiverCredential(receiver), InviteCredential(invite), inviteExpiry, expiry, taskId)
+    }
+    fun view(
