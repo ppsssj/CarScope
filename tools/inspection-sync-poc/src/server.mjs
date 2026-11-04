@@ -19,6 +19,8 @@ import { SessionService, SyncError } from './sessions.mjs';
 import { MemorySessionStore } from './session-store.mjs';
 import { RateLimiter } from './rate-limit.mjs';
 import { ProductionSessionCreationAuthorizer, LocalTestSessionCreationAuthorizer } from './creation-authorizer.mjs';
+import { HistoryService, HistoryError } from './history.mjs';
+import { DenyHistoryAuthorizer } from './history-authorizer.mjs';
 
 export const MAX_BODY_BYTES = 16 * 1024;
 const API_HEADERS = {
@@ -44,6 +46,8 @@ const STATIC = new Map([
 ]);
 
 const ROUTES = [
+  ['GET', /^\/v1\/inspection-records$/, 'read', 'GET /v1/inspection-records'],
+  ['GET', /^\/v1\/inspection-records\/([0-9a-f-]{36})$/, 'read', 'GET /v1/inspection-records/:id'],
   ['POST', /^\/v1\/sessions$/, 'create', 'POST /v1/sessions'],
   ['GET', /^\/v1\/sessions\/([0-9a-f-]{36})$/, 'read', 'GET /v1/sessions/:id'],
   ['POST', /^\/v1\/sessions\/([0-9a-f-]{36})\/accept$/, 'read', 'POST /v1/sessions/:id/accept'],
@@ -81,7 +85,7 @@ async function readJson(req) {
  * @param {boolean} [o.debugPage]         serve the debug page and its modules
  * @param {boolean} [o.tls]               add HSTS when served over TLS
  */
-export function createSyncHandler({ service, limiter = new RateLimiter(), authorizer = new ProductionSessionCreationAuthorizer(), log = () => {}, allowedOrigin = null, debugPage = false, tls = false, trustedEdgeSecure = null }) {
+export function createSyncHandler({ service, history = new HistoryService({store:service.store}), historyAuthorizer = new DenyHistoryAuthorizer(), limiter = new RateLimiter(), authorizer = new ProductionSessionCreationAuthorizer(), log = () => {}, allowedOrigin = null, debugPage = false, tls = false, trustedEdgeSecure = null }) {
   return async (req, res) => {
     const started = Date.now();
     const url = new URL(req.url, 'http://localhost');
@@ -118,7 +122,7 @@ export function createSyncHandler({ service, limiter = new RateLimiter(), author
       }
       const [, re, cls, name] = route;
       routeName = name;
-      if (url.search) throw new SyncError(ERRORS.BAD_REQUEST, 400); // nothing travels in query strings
+      if (url.search && name!=='GET /v1/inspection-records') throw new SyncError(ERRORS.BAD_REQUEST, 400); // only history's bounded filters use queries
       const rl = await limiter.check(client, cls);
       if (!rl.ok) { headers['Retry-After'] = String(rl.retryAfterS); send(429, { error: { code: ERRORS.RATE_LIMITED } }); return; }
       const token = bearer(req);
@@ -135,9 +139,22 @@ export function createSyncHandler({ service, limiter = new RateLimiter(), author
           if ((await authorizer.authorize({ token: bearer(req), remoteAddress: client, secure })) !== true) throw new SyncError(ERRORS.FORBIDDEN, 403);
           const body = await readJson(req);
           // The body may arrive after the credential expired/revoked. Recheck at the creation boundary.
-          if ((await authorizer.authorize({ token: bearer(req), remoteAddress: client, secure })) !== true) throw new SyncError(ERRORS.FORBIDDEN, 403);
-          send(201, await service.create({ taskId: body.taskId }));
+          let historyBinding;
+          if(typeof authorizer.resolveHistoryAuthority==='function'){
+            historyBinding=await authorizer.resolveHistoryAuthority({token:bearer(req),remoteAddress:client,secure});
+            if(!historyBinding)throw new SyncError(ERRORS.FORBIDDEN,403);
+          } else if ((await authorizer.authorize({ token: bearer(req), remoteAddress: client, secure })) !== true) throw new SyncError(ERRORS.FORBIDDEN, 403);
+          send(201, await service.create({ taskId: body.taskId },{historyBinding}));
           return;
+        }
+        case 'GET /v1/inspection-records':
+        case 'GET /v1/inspection-records/:id': {
+          const principal=await historyAuthorizer.resolve({token:bearer(req),secure,remoteAddress:client});
+          if(!principal)throw new SyncError(ERRORS.FORBIDDEN,403);
+          const payload=name==='GET /v1/inspection-records'?await history.list(principal,url.searchParams):await history.detail(principal,id);
+          const current=await historyAuthorizer.resolve({token:bearer(req),secure,remoteAddress:client});
+          if(!current || !['authorityNamespace','authorityIssuer','userId','vehicleId'].every(k=>principal[k]===current[k]))throw new SyncError(ERRORS.FORBIDDEN,403);
+          send(200,payload);return;
         }
         case 'GET /v1/sessions/:id': send(200, await service.view(id, bearer(req))); return;
         case 'POST /v1/sessions/:id/accept': { const body = await readJson(req); send(200, await service.accept(id, bearer(req), body.resultDigest)); return; }
@@ -153,7 +170,7 @@ export function createSyncHandler({ service, limiter = new RateLimiter(), author
         case 'GET /v1/submissions/status': send(200, await service.status(bearer(req))); return;
       }
     } catch (error) {
-      if (error instanceof SyncError) send(error.status, { error: { code: error.code } });
+      if (error instanceof SyncError || error instanceof HistoryError) send(error.status, { error: { code: error.code } });
       else { send(500, { error: { code: ERRORS.INTERNAL } }); log('internal error'); }
     } finally {
       log(`${routeName} ${status} ${Date.now() - started}ms`);
@@ -162,14 +179,14 @@ export function createSyncHandler({ service, limiter = new RateLimiter(), author
 }
 
 /** Start a server; returns { server, service, stop }. */
-export async function startSyncServer({ host = '127.0.0.1', port = 4180, store = new MemorySessionStore(), now, limits, rates, limiter, authorizer = new ProductionSessionCreationAuthorizer(), tlsCert, tlsKey, allowedOrigin = null, debugPage = false, log = console.log, sweepMs = 30_000 } = {}) {
+export async function startSyncServer({ host = '127.0.0.1', port = 4180, store = new MemorySessionStore(), now, limits, rates, limiter, authorizer = new ProductionSessionCreationAuthorizer(), historyAuthorizer = new DenyHistoryAuthorizer(), tlsCert, tlsKey, allowedOrigin = null, debugPage = false, log = console.log, sweepMs = 30_000 } = {}) {
   const loopbackHost = ['127.0.0.1', '::1', 'localhost'].includes(host);
   if (!loopbackHost && !(tlsCert && tlsKey)) throw new Error('Refusing a non-loopback bind without TLS (set SYNC_TLS_CERT and SYNC_TLS_KEY)');
   if (Boolean(tlsCert) !== Boolean(tlsKey)) throw new Error('Both TLS certificate and key are required');
-  if (!loopbackHost && (authorizer.testOnly || debugPage)) throw new Error('Test authorizers and debug pages require a loopback bind');
+  if (!loopbackHost && (authorizer.testOnly || historyAuthorizer.testOnly || debugPage)) throw new Error('Test authorizers and debug pages require a loopback bind');
   const service = new SessionService({ store, now, limits });
   await service.sweep(); // reconcile overdue/retained rows before accepting any request after restart
-  const handler = createSyncHandler({ service, limiter: limiter ?? new RateLimiter({ rates, now }), authorizer, log, allowedOrigin, debugPage, tls: Boolean(tlsCert) });
+  const handler = createSyncHandler({ service, limiter: limiter ?? new RateLimiter({ rates, now }), authorizer, historyAuthorizer, log, allowedOrigin, debugPage, tls: Boolean(tlsCert) });
   const server = tlsCert ? https.createServer({ cert: await readFile(tlsCert), key: await readFile(tlsKey) }, handler) : http.createServer(handler);
   server.headersTimeout = 10_000; server.requestTimeout = 15_000;
   await new Promise((resolve, reject) => { server.once('error', reject); server.listen(port, host, resolve); });

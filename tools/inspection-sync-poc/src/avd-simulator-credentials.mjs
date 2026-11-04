@@ -98,6 +98,16 @@ export class AvdSimulatorCredentialStore {
       return true;
     });
   }
+  async resolveHistoryAuthority({token,secure,now=Date.now}={}) {
+    if(secure!==true||typeof token!=='string'||!TOKEN.test(token)||!finiteMs(now()))return null;
+    const at=now();
+    try{
+      const r=await this.#pool.query({text:`SELECT r.id FROM cs_avd_creation_grants g JOIN cs_avd_registrations r ON r.id=g.registration_id
+        WHERE g.token_hash=$1 AND g.revoked_at IS NULL AND g.issued_at<=$2 AND g.expires_at>$2 AND r.revoked_at IS NULL AND r.expires_at>$2 LIMIT 1`,values:[HASH(token),at],query_timeout:1500});
+      if(r.rows.length!==1)return null;
+      return {authorityNamespace:'AVD_SIMULATOR',authorityIssuer:'carscope:avd-simulator',userId:null,vehicleId:null,deviceId:null,registrationId:r.rows[0].id,bindingVerifiedAt:at};
+    }catch{return null;}
+  }
   async prune({ now = Date.now } = {}) {
     const at = now(); if (!finiteMs(at)) throw new Error('INVALID_CLOCK');
     // Retain registration metadata for explicit operator revocation/audit; remove expired bearer grants only.

@@ -3,6 +3,7 @@
 import { createHash } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import { DEFAULT_RATES } from './rate-limit.mjs';
+import { acceptedRecord, sameRecordIdentity, HistoryError } from './history.mjs';
 
 const transitions = Object.freeze({
   CREATED: ['CREATED', 'CLAIMED', 'CANCELLED', 'EXPIRED'],
@@ -46,10 +47,14 @@ export class PostgreSQLSessionStore {
   }
   async initialize() {
     return this.#transaction(async c => {
+      await c.query('SELECT pg_advisory_xact_lock(821801)');
       const schema = await readFile(new URL('./postgres-schema.sql', import.meta.url), 'utf8');
       await c.query(schema);
       const meta = await c.query('SELECT version FROM cs_schema_meta WHERE id=1');
       if (meta.rows.length !== 1 || integer(meta.rows[0].version) !== 1) throw new Error('UNSUPPORTED_POSTGRES_SCHEMA');
+      await c.query(await readFile(new URL('./postgres-history-schema.sql', import.meta.url),'utf8'));
+      const history = await c.query('SELECT version FROM cs_history_schema_meta WHERE id=1');
+      if(history.rows.length!==1 || integer(history.rows[0].version)!==1)throw new Error('UNSUPPORTED_HISTORY_SCHEMA');
     });
   }
   async #lockCapacity(c) {
@@ -103,6 +108,7 @@ export class PostgreSQLSessionStore {
       if (before.result && next.result && JSON.stringify(before.result) !== JSON.stringify(next.result)) throw new Error('IMMUTABLE_SUBMITTED_RESULT');
       await c.query('UPDATE cs_sessions SET data=$2::jsonb WHERE id=$1', [id, JSON.stringify(next)]);
       await this.#replaceTokens(c, next);
+      if(before.state!=='ACCEPTED' && next.state==='ACCEPTED')await this.#archive(c,await acceptedRecord(next));
       return clone(next);
     });
   }
@@ -127,6 +133,42 @@ export class PostgreSQLSessionStore {
   async count() {
     const r = await this.#pool.query('SELECT COUNT(*)::int AS n FROM cs_sessions');
     return integer(r.rows[0].n);
+  }
+  #record(row) {
+    const keys={recordId:'record_id',inspectionId:'inspection_id',syncSessionId:'sync_session_id',taskId:'task_id',partId:'part_id',schemaVersion:'schema_version',inspectionStatus:'inspection_status',originalResult:'original_result',resultDigest:'result_digest',completedAt:'completed_at',receivedAt:'received_at',acceptedAt:'accepted_at',authorityNamespace:'authority_namespace',authorityIssuer:'authority_issuer',userId:'user_id',vehicleId:'vehicle_id',deviceId:'device_id',registrationId:'registration_id',bindingVerifiedAt:'binding_verified_at',createdAt:'created_at'};
+    const out=Object.fromEntries(Object.entries(keys).map(([js,sql])=>[js,row[sql]]));
+    for(const key of ['schemaVersion','receivedAt','acceptedAt','bindingVerifiedAt','createdAt'])if(out[key]!==null)out[key]=integer(out[key]);
+    out.completedAt=Number(out.completedAt);if(!Number.isSafeInteger(out.completedAt))throw new Error('INVALID_DATABASE_INTEGER');
+    return out;
+  }
+  async #archive(c, record) {
+    const keys=['recordId','inspectionId','syncSessionId','taskId','partId','schemaVersion','inspectionStatus','originalResult','resultDigest','completedAt','receivedAt','acceptedAt','authorityNamespace','authorityIssuer','userId','vehicleId','deviceId','registrationId','bindingVerifiedAt'];
+    const values=keys.map(k=>k==='originalResult'?JSON.stringify(record[k]):record[k]);values.push(Date.now());
+    const r=await c.query(`INSERT INTO cs_inspection_records(record_id,inspection_id,sync_session_id,task_id,part_id,schema_version,inspection_status,original_result,result_digest,completed_at,received_at,accepted_at,authority_namespace,authority_issuer,user_id,vehicle_id,device_id,registration_id,binding_verified_at,created_at)
+      VALUES(${values.map((_,i)=>'$'+(i+1)).join(',')}) ON CONFLICT(inspection_id) DO NOTHING RETURNING record_id`,values);
+    if(!r.rowCount){
+      // A separate statement sees a concurrent winner after ON CONFLICT has waited for its commit.
+      const old=await c.query('SELECT * FROM cs_inspection_records WHERE inspection_id=$1',[record.inspectionId]);
+      if(old.rows.length!==1 || !sameRecordIdentity(this.#record(old.rows[0]),record))throw new HistoryError('CONFLICT',409);
+    }
+  }
+  async historyList(query) {
+    const {owner}=query,values=[owner.authorityNamespace,owner.authorityIssuer,owner.userId,owner.vehicleId];
+    const where=['authority_namespace=$1','authority_issuer=$2','user_id=$3','vehicle_id=$4'];
+    const add=(sql,value)=>{values.push(value);where.push(sql.replace('?', '$'+values.length));};
+    if(query.taskId!==null)add('task_id=?',query.taskId);
+    if(query.partId!==null)add('part_id=?',query.partId);
+    if(query.status!==null)add('inspection_status=?',query.status);
+    if(query.from!==null)add('completed_at>=?',query.from);
+    if(query.to!==null)add('completed_at<?',query.to);
+    if(query.after){values.push(query.after.completedAt,query.after.recordId);where.push(`(completed_at,record_id)<($${values.length-1}::bigint,$${values.length}::uuid)`);}
+    values.push(query.limit+1);
+    const r=await this.#pool.query(`SELECT * FROM cs_inspection_records WHERE ${where.join(' AND ')} ORDER BY completed_at DESC,record_id DESC LIMIT $${values.length}`,values);
+    return r.rows.map(row=>this.#record(row));
+  }
+  async historyGet(owner,recordId) {
+    const r=await this.#pool.query('SELECT * FROM cs_inspection_records WHERE record_id=$1 AND authority_namespace=$2 AND authority_issuer=$3 AND user_id=$4 AND vehicle_id=$5',[recordId,owner.authorityNamespace,owner.authorityIssuer,owner.userId,owner.vehicleId]);
+    return r.rows[0]?this.#record(r.rows[0]):null;
   }
   async rateCheck(client, route, { rates = DEFAULT_RATES, now = Date.now, maxKeys = 10000 } = {}) {
     const rate = rates[route];
