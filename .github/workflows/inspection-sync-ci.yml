@@ -42,6 +42,9 @@ jobs:
         working-directory: tools/mobile-ar-poc
       - name: All original AR-01 unit tests with explicit fixture clock
         run: npm run test:ar01
+      - name: Mobile AR module syntax
+        run: npm run check
+        working-directory: tools/mobile-ar-poc
       - name: AR-02A Edge browser regression
         if: runner.os == 'Windows'
         run: npm run test:browser

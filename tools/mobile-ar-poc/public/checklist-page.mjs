@@ -1,7 +1,7 @@
 import {taskLinks} from './inspection-tasks.mjs';
 import {getChecklistProfile} from './checklist-profiles.mjs';
 import {InspectionCamera} from './inspection-camera.mjs';
-import {renderSummary,actionGate} from './inspection-ui.mjs';
+import {renderSummary,actionGate,mountLocationGuide} from './inspection-ui.mjs';
 export function prepareChecklistPage(taskId,{locked=false}={}){const task=getChecklistProfile(taskId);
   document.title=`CarScope · ${task.label} 점검`;document.body.dataset.checklist='true';if(task.hook==='__tireInspection')document.body.dataset.tire='true';document.body.dataset.step='intro';
   document.body.innerHTML=`<header class="bar"><div class="bar-row"><p class="brand">CarScope <span>${task.label}</span></p><button id="cancel" class="ghost" hidden>점검 취소</button></div><ol id="progress" aria-label="진행 단계"><li data-n="1">준비</li><li data-n="2">위치 찾기</li><li data-n="3">육안 점검</li><li data-n="4">결과</li></ol></header>
@@ -18,6 +18,7 @@ export function prepareChecklistPage(taskId,{locked=false}={}){const task=getChe
   <footer class="actions"><button id="back" class="secondary">뒤로</button><button id="primary" class="primary">카메라로 점검 시작</button></footer>`;
 }
 export function startChecklistPage({handoff,onComplete=()=>{},onRestart=()=>{}}){const $=id=>document.getElementById(id),task=getChecklistProfile(handoff.task);let state=task.flow.initial(task.id),restartAfter=0;
+  mountLocationGuide(task,$('camera'));
   const run=actionGate(),canCamera=()=>state.mode==='camera'&&['locate','check'].includes(state.step);
   const camera=new InspectionCamera({video:$('video'),overlay:$('overlay'),stage:$('stage'),start:$('start'),stop:$('stop'),clear:$('clear-mark'),placeholder:$('placeholder'),canRun:canCamera,targetLabel:task.label,
     drawGuide:(ctx,r,d)=>task.drawGuide(ctx,r,d,{index:state.index,step:state.step}),

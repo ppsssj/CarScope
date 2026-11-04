@@ -110,3 +110,9 @@ body[data-checklist][data-step="review"] #camera { display:none; }
 
 /* Long checklist labels must wrap inside the mobile viewport, including Sync review. */
 body[data-checklist] .summary { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); overflow-wrap: anywhere; }
+
+.part-location { display:none; }
+body[data-step="locate"] .part-location, body[data-step="check"] .part-location { display:block; }
+.wheel-map { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px; }
+.wheel-map span { padding:8px;border:1px solid var(--line);border-radius:8px; }
+.wheel-map [aria-current] { border:2px solid var(--brand);font-weight:700;background:#eaf3fd; }
