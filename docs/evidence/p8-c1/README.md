@@ -49,6 +49,29 @@
 
 개발 중 수정: CRLF 체크아웃에서 SQL 주석이 제거되지 않던 DDL 파서, 레거시 스냅샷 들여쓰기, Windows의 `gradlew.bat` 호출. 제품 판정 조건이나 임계값은 완화하지 않았다.
 
+## PR #79 merge 후 재실행 (2026-11-04)
+
+`a99d7aa`를 merge한 `addfbfb` 트리. 환경은 위와 같다. 충돌은 `docs/roadmap.md`뿐이었고 두 항목을 모두 보존했다. PR #79는 `tools/inspection-sync-poc/**`와 `app/**`를 바꾸지 않았다. PR #78 코드는 포함하지 않았다.
+
+| 실행 | 결과 |
+|---|---|
+| `npm run check`, `test:legacy`, `test:sqlite`, `test:ar01` | PASS, 48 / 21 / 80 |
+| `npm test` (`PG_TEST_URL` 없음) | 178 중 169 PASS / 9 SKIP / 0 FAIL. SKIP은 실제 PG 항목 |
+| PG `deployment-postgres` | 20 PASS |
+| `preflight regression`, PG 회귀 | pass=52, pass=61, fail=0 skip=0 |
+| `preflight database` (격리 DB) | FAIL 0 |
+| 3D `check:results`, `npm test` | PASS, 152건 실패 0 |
+| `test:android-assets` | PASS, 4건 실패 0 |
+| `test:history-browser` DOM, 실제 GLB | PASS, 1440·390 DOM, 1440·430 GLB. provider 없는 실제 페이지는 UNAVAILABLE, 요청 없음. 합성 provider이며 실제 기록 조회가 아니다 |
+| `test:results-browser` DOM, 실제 GLB | PASS, 합성 authority |
+| 캡처 확인 | `3d-production-unavailable-1440`, `3d-list-430`을 직접 열어 확인 |
+| Android `:app:testDebugUnitTest :app:assembleDebug :app:assembleRelease --rerun-tasks` | PASS, 229건 실패 0 |
+| `:app:bundleRelease`, identity·tire `build-contract`, `check-boundary.py` | PASS. Release APK/AAB에 Debug 자산·클래스 없음 |
+| APK 세대 | Debug `NEW_DECODER`, Release `NO_SYNC_DECODER`. 설치하지 않음 |
+| core | PASS |
+
+문서 수정: PR #79 이후 배포 화면은 History 요청을 보내지 않으므로 P9의 History 항목을 화면(`UNAVAILABLE`)과 API(403)로 나눴다.
+
 ## 운영 관측
 
 | 관측 | 결과 |
@@ -63,7 +86,7 @@
 
 `4e82d31` PR 실행: [PostgreSQL 16 통합](https://github.com/ppsssj/CarScope/actions/runs/41844166725) PASS, [Preflight gates·Kotlin decoder](https://github.com/ppsssj/CarScope/actions/runs/41844166988) PASS, [Sync Ubuntu/Windows](https://github.com/ppsssj/CarScope/actions/runs/41844166898) PASS, Android·core·geometry·tire·3D 결과 CI PASS.
 
-**GitGuardian은 FAIL이다.** 탐지 2건은 판정 표식 문자열 `PRODUCTION_AUTH_BLOCKED`가 있는 줄(`bin/deployment-preflight.mjs:104`, `test/deployment-preflight.test.mjs:354`)의 Generic High Entropy 오탐으로 판단했다. 실제 자격 증명이 아니고 임시 PG 비밀번호는 diff에 없다. 커밋 이력에 남아 있어 force push 없이는 체크가 해소되지 않으므로, 대시보드에서 소유자가 판단해야 한다.
+**GitGuardian은 FAIL이다. 성공으로 세지 않는다.** 사고 #39589213의 탐지 2건은 판정 표식 문자열 `PRODUCTION_AUTH_BLOCKED`가 있는 줄(`bin/deployment-preflight.mjs:104`, `test/deployment-preflight.test.mjs:354`)의 Generic High Entropy 오탐으로 판단했다. 실제 자격 증명이 아니고 임시 PG 비밀번호는 diff에 없다. 이 판단은 탐지 줄과 diff를 확인한 것이며 대시보드 상태를 바꾸지 않았다. 커밋 이력에 남아 있어 force push 없이는 체크가 해소되지 않으므로, 대시보드 처리는 소유자에게 남겨 둔다.
 
 `postgres-integration`은 PG16 합성 인증 범위, `preflight-gates`는 네트워크·DB 없는 게이트 범위, `decoder-probe`는 JVM decoder 범위에 한정한다. 운영 Render·브라우저·AVD·실차 결과가 아니다.
 
