@@ -133,6 +133,23 @@ class HttpsSyncReceiverTransportTest {
     }
     private fun reason(r: SyncReply<*>): SyncFailure = (r as SyncReply.Failure).reason
 
+    @Test fun `real TLS preserves optional creation clock and accepted server epochs without HTTP Date fallback`() {
+        Fixture().use { f -> f.transport(provider = ExplicitDebugTestCredentialProvider(f.origin)).use { transport ->
+            f.status = 201; f.body = HttpSamples.creation
+            val legacy = f.await<CreatedSyncSession> { transport.create(it) } as SyncReply.Success
+            assertNull(legacy.value.clock)
+            f.body = HttpSamples.creation.dropLast(1) + ",\"serverNow\":100000}"
+            val created = f.await<CreatedSyncSession> { transport.create(it) } as SyncReply.Success
+            assertEquals(100000L, created.value.serverNow)
+            val clock = requireNotNull(created.value.clock)
+            assertTrue(clock.upperAtReceipt >= 100000L)
+            assertTrue(clock.upperAtReceipt <= 105000L)
+            f.status = 200; f.body = HttpSamples.view("ACCEPTED")
+            val accepted = f.await<SyncReceiverView> { transport.accept(HttpSamples.ID, ReceiverCredential(HttpSamples.receiver), HttpSamples.result.digest(), it) } as SyncReply.Success
+            assertEquals(1L, accepted.value.receivedAt); assertEquals(2L, accepted.value.acceptedAt)
+        } }
+    }
+
     @Test fun `real TLS tire and charge session bodies view accept cancel and wrong creation task rejection`() {
         for (task in SyncTasks.all.drop(1)) Fixture().use { f -> f.transport(provider = ExplicitDebugTestCredentialProvider(f.origin)).use { transport ->
             f.status = 201; f.body = HttpSamples.creation.replace("washer-fluid", task)

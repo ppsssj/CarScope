@@ -131,9 +131,10 @@ class ChargeSyncReceiverTest {
             owner.create("https://mobile.example/", task)
             val result = ChargeSamples.result()
             t.reply = SyncReply.Success(TireSamples.decode(TireSamples.wire(result))); owner.poll()
-            t.reply = SyncReply.Success(SyncReceiverView(HttpSamples.ID, SyncSessionState.ACCEPTED, 2000001000000, resultDigest = result.digest(), taskId = task))
+            t.reply = SyncReply.Success(TireSamples.decode(TireSamples.wire(result, "ACCEPTED")).copy(result = null))
             owner.accept(); assertEquals(ReceiverPhase.ACCEPTED, owner.state.phase)
             assertEquals(result, owner.state.result); assertFalse(owner.state.canAccept); assertEquals(1, t.accepts)
+            assertEquals(1L, owner.state.receivedAt); assertEquals(2L, owner.state.acceptedAt); assertTrue(owner.state.explicitlyAccepted)
         }
     }
     @Test fun `charge never accepts mismatched final digest or submitted state as accepted proof`() {

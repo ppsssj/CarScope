@@ -14,6 +14,17 @@ internal object HttpSamples {
 }
 
 class SyncHttpDecoderTest {
+    @Test fun `server receive and accept epochs survive decoding and invalid types are rejected`() {
+        val accepted = SyncHttpDecoder.view(HttpSamples.view("ACCEPTED").toByteArray(), "application/json")
+        assertEquals(1L, accepted.receivedAt); assertEquals(2L, accepted.acceptedAt)
+        assertEquals(1L, SyncHttpDecoder.view(HttpSamples.view().toByteArray(), "application/json").receivedAt)
+        assertNull(SyncHttpDecoder.view(HttpSamples.view().toByteArray(), "application/json").acceptedAt)
+        for (value in listOf("\"1\"", "true", "-1", "1.5", "2000001000001"))
+            invalid { view(HttpSamples.view().replace("\"receivedAt\":1", "\"receivedAt\":$value")) }
+        assertNull(created(HttpSamples.creation).serverNow)
+        assertEquals(100L, created(HttpSamples.creation.dropLast(1) + ",\"serverNow\":100}").serverNow)
+        invalid { created(HttpSamples.creation.dropLast(1) + ",\"serverNow\":null}") }
+    }
     private fun created(s: String, type: String? = "application/json") = SyncHttpDecoder.created(s.toByteArray(), type)
     private fun view(s: String) = SyncHttpDecoder.view(s.toByteArray(), "application/json; charset=utf-8")
     private fun invalid(block: () -> Any?) {

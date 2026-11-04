@@ -16,7 +16,7 @@ import org.robolectric.annotation.Config
 class InspectionNavigationTest {
     private fun web(a: InspectionActivity): WebView {
         val root = a.findViewById<ViewGroup>(android.R.id.content).getChildAt(0) as ViewGroup
-        return root.getChildAt(1) as WebView
+        return root.getChildAt(0) as WebView
     }
 
     @Test fun `hardware Back sends fixed shared navigation and consumes handled response`() {

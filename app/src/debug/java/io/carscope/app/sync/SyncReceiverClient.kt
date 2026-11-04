@@ -8,6 +8,7 @@ internal class SyncReceiverClient(private val transport: SyncReceiverTransport, 
     private var taskId = "washer-fluid"
     private var expiresAt = 0L
     private var submittedDigest: String? = null
+    private var submittedReceivedAt: Long? = null
     private var lastState: SyncSessionState? = null
 
     @Synchronized fun create(mobileRoot: String, taskId: String = "washer-fluid", callback: (SyncReply<ReceiverSession>) -> Unit): SyncCancellation {
@@ -26,7 +27,7 @@ internal class SyncReceiverClient(private val transport: SyncReceiverTransport, 
                         x.inviteExpiresAt <= now() || x.expiresAt < x.inviteExpiresAt) callback(SyncReply.Failure(SyncFailure.INVALID))
                     else {
                         id = x.sessionId; receiver = x.receiver; expiresAt = x.expiresAt
-                        callback(SyncReply.Success(ReceiverSession(expiresAt, SyncQrPayload(root + x.invite.fragment(taskId)), x.inviteExpiresAt)))
+                        callback(SyncReply.Success(ReceiverSession(expiresAt, SyncQrPayload(root + x.invite.fragment(taskId)), x.inviteExpiresAt, x.sessionId, x.clock)))
                     }
                 }
             }
@@ -55,10 +56,11 @@ internal class SyncReceiverClient(private val transport: SyncReceiverTransport, 
                 val immutable = submittedDigest == null || view.sessionState in listOf(SyncSessionState.CANCELLED, SyncSessionState.EXPIRED) || submittedDigest == view.resultDigest
                 val acceptedProof = view.sessionState != SyncSessionState.ACCEPTED ||
                     (view.result != null || submittedDigest != null) && Regex("sha256:[0-9a-f]{64}").matches(view.resultDigest ?: "")
-                if (view.sessionId != sessionId || view.taskId != taskId || view.expiresAt != expiresAt || !resultValid || !requiredResult || !terminalEmpty || !monotonic || !immutable || !acceptedProof) {
+                val immutableReceipt = submittedReceivedAt == null || view.sessionState in listOf(SyncSessionState.CANCELLED, SyncSessionState.EXPIRED) || view.receivedAt == submittedReceivedAt
+                if (!immutableReceipt || view.sessionId != sessionId || view.taskId != taskId || view.expiresAt != expiresAt || !resultValid || !requiredResult || !terminalEmpty || !monotonic || !immutable || !acceptedProof) {
                     callback(SyncReply.Failure(SyncFailure.INVALID)); return@synchronized
                 }
-                if (view.sessionState in listOf(SyncSessionState.RESULT_SUBMITTED, SyncSessionState.ACCEPTED)) submittedDigest = view.resultDigest
+                if (view.sessionState in listOf(SyncSessionState.RESULT_SUBMITTED, SyncSessionState.ACCEPTED)) { submittedDigest = view.resultDigest; submittedReceivedAt = view.receivedAt }
                 lastState = view.sessionState
             }
             callback(reply)
@@ -72,5 +74,5 @@ internal class SyncReceiverClient(private val transport: SyncReceiverTransport, 
         return call({ id, token, cb -> transport.accept(id, token, digest, cb) }, callback)
     }
     fun cancel(callback: (SyncReply<SyncReceiverView>) -> Unit): SyncCancellation = call(transport::cancel, callback)
-    @Synchronized fun forget() { generation++; id = null; receiver = null; expiresAt = 0; submittedDigest = null; lastState = null }
+    @Synchronized fun forget() { generation++; id = null; receiver = null; expiresAt = 0; submittedDigest = null; submittedReceivedAt = null; lastState = null }
 }

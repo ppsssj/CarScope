@@ -65,13 +65,13 @@ internal object SyncHttpDecoder {
 
     fun created(bytes: ByteArray, type: String?): CreatedSyncSession = checked {
         val x = objectBody(bytes, type)
-        exact(x, "sessionId", "taskId", "receiverToken", "inviteToken", "inviteExpiresAt", "expiresAt")
+        exact(x, *(listOf("sessionId", "taskId", "receiverToken", "inviteToken", "inviteExpiresAt", "expiresAt") + if (x.containsKey("serverNow")) listOf("serverNow") else emptyList()).toTypedArray())
         val taskId = task(x["taskId"])
         val receiver = string(x["receiverToken"]); val invite = string(x["inviteToken"])
         if (!token.matches(receiver) || !token.matches(invite) || receiver == invite) invalid()
         val inviteExpiry = number(x["inviteExpiresAt"]); val expiry = number(x["expiresAt"])
         if (inviteExpiry == 0L || expiry < inviteExpiry) invalid()
-        CreatedSyncSession(id(x["sessionId"]), ReceiverCredential(receiver), InviteCredential(invite), inviteExpiry, expiry, taskId)
+        CreatedSyncSession(id(x["sessionId"]), ReceiverCredential(receiver), InviteCredential(invite), inviteExpiry, expiry, taskId, if (x.containsKey("serverNow")) number(x["serverNow"]).also { if (it >= inviteExpiry) invalid() } else null)
     }
     fun view(bytes: ByteArray, type: String?): SyncReceiverView = checked {
         val x = objectBody(bytes, type)
@@ -88,7 +88,9 @@ internal object SyncHttpDecoder {
             SyncSessionState.CANCELLED -> if (result != null || hash != null || accepted != null) invalid()
             SyncSessionState.EXPIRED -> if (result != null || accepted != null || (hash == null) != (received == null)) invalid()
         }
-        SyncReceiverView(id(x["sessionId"]), state, number(x["expiresAt"]), result, hash, taskId)
+        val expiry = number(x["expiresAt"])
+        if (received != null && received > expiry || accepted != null && accepted > expiry) invalid()
+        SyncReceiverView(id(x["sessionId"]), state, expiry, result, hash, taskId, received, accepted)
     }
     private fun result(x: Map<String, Any?>): SyncInspection {
         when (task(x["taskId"])) {
