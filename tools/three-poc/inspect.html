@@ -120,6 +120,14 @@
     #home{bottom:40px}
     .disclaimer{display:none}
   }
+  .result-list .item{display:flex;flex-wrap:wrap;gap:8px;align-items:center;white-space:normal}
+  .result-list small{display:block;width:100%;overflow-wrap:anywhere}
+  .part-results{margin-top:16px;border-top:1px solid #414751;padding-top:12px;overflow-wrap:anywhere}
+  .record-picker{display:grid;gap:8px;margin:12px 0;border:1px solid #414751;border-radius:10px;padding:10px}
+  .record-picker button{text-align:left;white-space:normal;overflow-wrap:anywhere;min-height:44px}
+  .record-picker [aria-pressed="true"]{border:2px solid #82b7dd;background:#192c3e}
+  .part-results pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px}
+  .result-error{border-left:3px solid #d9bd72;padding-left:10px}
   @media (prefers-reduced-motion:reduce){#panel,#home,#toast{transition:none}}
 </style>
 <script type="importmap">
