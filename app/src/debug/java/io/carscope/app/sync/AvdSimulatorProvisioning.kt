@@ -1,13 +1,17 @@
 package io.carscope.app.sync
 
+import android.util.Log
 import com.google.gson.JsonObject
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.net.URI
+import java.net.SocketTimeoutException
+import java.net.UnknownHostException
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.net.ssl.HttpsURLConnection
+import javax.net.ssl.SSLException
 
 /** P6-D4: AVD-only operator approval. Never proves user identity, VIN or real-vehicle ownership. */
 internal object AvdSimulatorPolicy {
@@ -92,6 +96,8 @@ internal class HttpsAvdSimulatorGrantExchange(
     private val timeoutMs: Int = 5000,
     private val connections: (URI) -> HttpsURLConnection = { it.toURL().openConnection() as HttpsURLConnection }
 ) : AvdSimulatorGrantExchange {
+    // Log only fixed diagnostic categories. Never log a proof, grant, URL with credentials or exception message.
+    private val logTag = "CarScopeAvdAuth"
     private val uri = URI(AvdSimulatorPolicy.API_ORIGIN + "/simulator/provision")
     private val worker = Executors.newSingleThreadExecutor()
     private val deadlines = Executors.newSingleThreadScheduledExecutor()
@@ -140,9 +146,16 @@ internal class HttpsAvdSimulatorGrantExchange(
                         }.toString().toByteArray(Charsets.UTF_8)
                         c.doOutput = true; c.setFixedLengthStreamingMode(body.size)
                         c.outputStream.use { it.write(body) }
-                        if (c.responseCode != 200 || c.contentLengthLong > SyncHttpDecoder.MAX_BYTES ||
-                            c.getHeaderField("Content-Encoding")?.let { it != "identity" } == true)
+                        val status = c.responseCode
+                        if (status != 200) {
+                            Log.w(logTag, "PROVISION_HTTP_STATUS_${status}")
                             error("INVALID_SIMULATOR_PROVISION")
+                        }
+                        if (c.contentLengthLong > SyncHttpDecoder.MAX_BYTES ||
+                            c.getHeaderField("Content-Encoding")?.let { it != "identity" } == true) {
+                            Log.w(logTag, "PROVISION_RESPONSE_HEADERS_REJECTED")
+                            error("INVALID_SIMULATOR_PROVISION")
+                        }
                         val bytes = ByteArrayOutputStream()
                         c.inputStream.use { input ->
                             val buffer = ByteArray(2048)
@@ -156,8 +169,23 @@ internal class HttpsAvdSimulatorGrantExchange(
                         }
                         grant = AvdSimulatorPolicy.grant(bytes.toByteArray(), c.contentType, endpoint,
                             enrollment.registrationId, now())
+                        Log.i(logTag, "PROVISION_GRANT_VERIFIED")
+                    } else {
+                        Log.w(logTag, "PROVISION_ENROLLMENT_EXPIRED_OR_CANCELLED")
                     }
-                } catch (_: Exception) { grant = null }
+                } catch (e: Exception) {
+                    grant = null
+                    // Deliberately omit exception messages, stack traces, request/response bodies and token values.
+                    val category = when (e) {
+                        is SocketTimeoutException -> "PROVISION_TIMEOUT"
+                        is SSLException -> "PROVISION_TLS_REJECTED"
+                        is UnknownHostException -> "PROVISION_DNS_FAILURE"
+                        is SyncHttpDecoder.Invalid -> "PROVISION_RESPONSE_INVALID_JSON"
+                        is IllegalArgumentException -> "PROVISION_RESPONSE_CONTRACT_REJECTED"
+                        else -> "PROVISION_REQUEST_FAILED"
+                    }
+                    Log.w(logTag, category)
+                }
                 finally {
                     timer.cancel(false); call.connection?.disconnect(); calls.remove(call)
                     finish(grant)
