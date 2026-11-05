@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="robots" content="noindex">
+  <title>CarScope · 워셔액 AR 위치 표시 (실험)</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="./webxr.css">
+  <script type="module" src="./webxr-entry.mjs"></script>
+</head>
+<body data-phase="CHECKING">
+<div id="page">
+  <header class="bar"><div class="bar-row"><p class="brand">CarScope <span>워셔액 AR 위치 표시 · 실험</span></p></div></header>
+  <main>
+    <h1>워셔액 주입구에 3D 표시 남기기</h1>
+    <p>주입구를 직접 찾아 3D 화살표를 남겨 두면, 휴대폰을 움직여도 표시가 실제 공간의 그 자리에 머물도록 시도합니다.</p>
+    <p class="notice"><strong>부품을 인식하지 않습니다.</strong> 위치는 직접 지정하며 표시 위치의 오차를 측정하지 않았습니다. 이 화면은 점검 결과를 기록하거나 전송하지 않습니다.</p>
+
+    <button id="start-ar" type="button" class="primary xr-start" hidden>AR 시작</button>
+    <p id="checking" role="status">AR 지원 여부를 확인하는 중…</p>
+
+    <section id="fallback" class="card warn" hidden aria-labelledby="fallback-title">
+      <h2 id="fallback-title">AR을 사용할 수 없습니다</h2>
+      <p id="fallback-reason" role="alert"></p>
+      <p>기존 화면에서 2D 카메라 안내나 수동 안내로 점검을 계속할 수 있습니다.</p>
+      <a class="xr-link-button" href="/#v=1&amp;task=washer-fluid">2D 안내로 점검하기</a>
+    </section>
+
+    <section id="ended" class="card" hidden aria-labelledby="ended-title">
+      <h2 id="ended-title">AR을 종료했습니다</h2>
+      <p>세션이 끝나면 3D 표시는 사라집니다. 저장되지 않으므로 다시 시작하면 위치를 새로 지정해야 합니다.</p>
+      <a class="xr-link-button" href="/#v=1&amp;task=washer-fluid">체크리스트로 돌아가기</a>
+    </section>
+
+    <dl class="xr-support" aria-label="이 기기의 지원 상태">
+      <div><dt>카메라 AR</dt><dd id="support-ar">확인 중</dd></div>
+      <div><dt>표면 찾기 (Hit Test)</dt><dd id="support-hit">확인 중</dd></div>
+      <div><dt>공간 앵커 (Anchor)</dt><dd id="support-anchor">확인 중</dd></div>
+    </dl>
+    <p class="fine">브라우저가 제공하는 기능 기준입니다. 세션을 시작할 때 기기가 거부할 수 있습니다.</p>
+
+    <h2>시작 전에</h2>
+    <ul class="tight">
+      <li>안전한 곳에 정차하고 차량 전원을 끈 뒤, 차량 설명서에 따라 보닛을 여세요.</li>
+      <li>움직이는 부품, 뜨거운 부품, 주황색 고전압 케이블에 손대지 마세요.</li>
+      <li>휴대폰을 펼친 상태로 사용하세요. 카메라 영상은 AR 추적에만 쓰이며 이 화면이 저장·업로드하지 않습니다.</li>
+    </ul>
+    <h2>워셔액 주입구 찾기</h2>
+    <p id="washer-position"></p>
+    <details>
+      <summary>표시한 뒤 직접 확인할 항목</summary>
+      <ol id="check-items" class="tight"></ol>
+      <p class="fine">3D 표시를 남겨도 이 항목이 확인된 것으로 기록되지 않습니다. 체크리스트 화면에서 “카메라 없이 점검하기”를 누르면 항목을 표시할 수 있습니다.</p>
+    </details>
+    <a class="xr-link-quiet" href="/#v=1&amp;task=washer-fluid">기존 점검 화면으로 이동</a>
+  </main>
+</div>
+
+<div id="xr-overlay" hidden>
+  <div class="xr-top">
+    <p id="xr-status" role="status" aria-live="polite" data-tone="muted"></p>
+  </div>
+  <div id="xr-controls" class="xr-panel">
+    <p id="xr-hint"></p>
+    <p id="xr-notice" role="alert" hidden></p>
+    <div class="xr-actions">
+      <button id="xr-place" type="button" class="primary" disabled>여기에 표시</button>
+      <button id="xr-reposition" type="button" hidden>위치 다시 지정</button>
+      <button id="xr-cancel-reposition" type="button" hidden>다시 지정 취소</button>
+      <button id="xr-remove" type="button" hidden>표시 제거</button>
+    </div>
+    <div class="xr-actions">
+      <button id="xr-return" type="button">체크리스트로</button>
+      <button id="xr-exit" type="button">AR 종료</button>
+    </div>
+  </div>
+</div>
+</body>
+</html>

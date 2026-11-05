@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 import QRCode from 'qrcode';
 import { handoffURL } from './public/handoff.mjs';
 import {MOBILE_MODULES} from './public-modules.mjs';
+import {WEBXR_POC_FILES, webxrPocEnabled} from './webxr-modules.mjs';
 
 const publicRoot = new URL('./public/', import.meta.url);
 const files = new Map([
@@ -14,12 +15,18 @@ const files = new Map([
   ['/favicon.svg', ['favicon.svg', 'image/svg+xml']]
 ]);
 
-export function createHandler(baseURL) {
+const packageRoot = new URL('./', import.meta.url);
+const webxrFiles = new Map([
+  ['/webxr/', WEBXR_POC_FILES[0]],
+  ...WEBXR_POC_FILES.map(file => [`/${file[0]}`, file]),
+]);
+
+export function createHandler(baseURL, { webxrPoc = false } = {}) {
   const target = baseURL ? handoffURL(baseURL) : null;
   return async (req, res) => {
     const headers = {
       'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff',
-      'Referrer-Policy': 'no-referrer', 'Permissions-Policy': 'camera=(self), microphone=(), geolocation=()',
+      'Referrer-Policy': 'no-referrer', 'Permissions-Policy': `camera=(self), microphone=(), geolocation=()${webxrPoc ? ', xr-spatial-tracking=(self)' : ''}`,
       'Content-Security-Policy': "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' blob:; media-src 'self' blob:; connect-src 'self'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'"
     };
     try {
@@ -33,6 +40,9 @@ export function createHandler(baseURL) {
       } else if (files.has(path)) {
         const [name, mime] = files.get(path);
         body = await readFile(new URL(name, publicRoot)); type = mime;
+      } else if (webxrPoc && webxrFiles.has(path)) {
+        const [, source, mime] = webxrFiles.get(path);
+        body = await readFile(new URL(source, packageRoot)); type = mime;
       } else { res.writeHead(404, headers); res.end('Not found'); return; }
       res.writeHead(200, { ...headers, 'Content-Type': type });
       res.end(req.method === 'HEAD' ? undefined : body);
@@ -43,7 +53,7 @@ export function createHandler(baseURL) {
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const { POC_BASE_URL, POC_TLS_CERT, POC_TLS_KEY } = process.env;
   if (Boolean(POC_TLS_CERT) !== Boolean(POC_TLS_KEY)) throw new Error('Set both POC_TLS_CERT and POC_TLS_KEY');
-  const handler = createHandler(POC_BASE_URL);
+  const handler = createHandler(POC_BASE_URL, { webxrPoc: webxrPocEnabled(process.env, process.argv) });
   const server = POC_TLS_CERT ? https.createServer({ cert: await readFile(POC_TLS_CERT), key: await readFile(POC_TLS_KEY) }, handler) : http.createServer(handler);
   const host = process.env.POC_HOST || '127.0.0.1';
   const port = Number(process.env.POC_PORT || 4174);
