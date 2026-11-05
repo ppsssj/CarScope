@@ -1,5 +1,9 @@
 # 로드맵 및 진입 조건
 
+## P9-A2 — AVD 실제 환경 검증
+
+`NEW_DECODER` Debug APK, endpoint, GLB를 기존 AVD에 배치하고 3D·타이어·보닛·부품·요약·History·Native 기본 상태를 실제 터치로 확인했다. 그 과정에서 찾은 토스트 결함과 실행 절차 오류를 고쳤다. **토스트 수정의 AVD 확인, Render 배포, 운영 인증, 스마트폰 E2E는 NOT_RUN이다.** [증거 인덱스](evidence/p9-a2/README.md).
+
 ## P9-A1 — 기기 E2E 실행 절차 정정
 
 `sync-endpoint.json`과 GLB 배치 절차를 추가하고, DENY_DEFAULT 상태에서 세션 생성을 기대하던 단계를 바로잡아 기본 상태·시뮬레이터·enrollment·세션·`serverNow`·Native→3D를 분리했다. 문서 수정만 있으며 **기기 E2E와 Render 배포는 NOT_RUN이다.** [실행 절차](p9-e2e-checklist.md), [증거 인덱스](evidence/p9-a1/README.md).

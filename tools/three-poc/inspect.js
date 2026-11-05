@@ -21,6 +21,7 @@ import {targetForPart,targetForTask} from './mobile-result-contract.mjs';
 import {createNativeInspectionResults} from './native-inspection-results.mjs';
 import {projectInspectionResults} from './inspection-results.mjs';
 import {partResultHtml,resultSummaryHtml} from './inspection-results-view.mjs';
+import {createToast,mobileRequestToast} from './inspection-toast.mjs';
 import {createInspectionHistoryStore} from './inspection-history-store.mjs';
 import {EMPTY_HISTORY_FILTERS} from './inspection-history-contract.mjs';
 import {historyPanelHtml,historyListResultsHtml,historyDetailResultsHtml,historyFilterHtml,historyFilterSummaryText,historyEntryZoneHtml} from './inspection-history-view.mjs';
@@ -455,7 +456,7 @@ function panelHtml() {
   return panelContents() + result + past + resultSdk + status + sessionActions(state);
 }
 
-let toastTimer = null;
+const showToast = createToast($('toast'));
 function render() {
   $("panel").innerHTML = panelHtml();
   $('home').inert = state.name !== STATES.IDLE;
@@ -466,11 +467,7 @@ function render() {
   if (state.name === STATES.EV_BATTERY_PREVIEW) $('crumb').textContent = '차량 점검 › EV 배터리';
   if (state.name === STATES.CHARGE_PORT_PREVIEW) $('crumb').textContent = '차량 점검 › EV 충전구';
   if(state.name===STATES.VISIBILITY_PREVIEW)$('crumb').textContent='차량 점검 › '+(state.area==='wipers'?'전면 와이퍼':'전조등');
-  const hint = hints[state.name];
-  clearTimeout(toastTimer);
-  $("toast").textContent = hint ?? "";
-  $("toast").classList.toggle("on", Boolean(hint));
-  if (hint) toastTimer = setTimeout(() => $("toast").classList.remove("on"), 4000);
+  showToast(hints[state.name]);
 }
 tireStatus.subscribe(() => {
   refreshResultSdk();
@@ -506,7 +503,7 @@ $("panel").addEventListener("click", (e) => {
     if(filters){filters.outerHTML=historyFilterHtml(inspectionHistory.snapshot);$('panel').querySelector('.history-filters summary').focus({preventScroll:true});}
   }
   else if(a==='select-result'&&b.dataset.session===userInspection.sessionId)mobileResults.select(b.dataset.task,b.dataset.record);
-  else if(a==='request-mobile'){const started=mobileResults.request(b.dataset.task);$('toast').textContent=started?'Native에 점검 생성을 요청했습니다. 검증된 연결 응답을 기다리세요.':'Native 전달 경로 미완료 · 요청을 시작할 수 없습니다.';$('toast').classList.add('on');}
+  else if(a==='request-mobile')showToast(mobileRequestToast(mobileResults.request(b.dataset.task)));
   else if (a === 'confirm-tire' && state.name === STATES.TIRE_PREVIEW && b.dataset.id === state.component) {
     const next = updateTireInspection(userInspection, { type: 'CONFIRM', tireId: state.component, sessionId: b.dataset.session, at: Date.now() });
     if (next !== userInspection) { userInspection = next; renderGuide('confirm'); }
