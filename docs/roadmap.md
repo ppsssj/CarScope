@@ -1,5 +1,9 @@
 # 로드맵 및 진입 조건
 
+## P9-S1 — Native 브리지 신뢰성 조사
+
+P9-UX-A에서 약 4~5회 실행 중 1회 관측한 `Native 전달 불가`를 조사했다. 첫 요청 전에 채널이 닫혔음을 확인해 큐 대기, 늦은 콜백, 요청 거부, 요청 충돌을 원인에서 제외했다. 나머지 후보(open·poll 지연, 요청 가로채기 지연, 생명주기, 렌더링 부하)를 구분할 Debug 진단과 합성 테스트, 재시작 안내를 추가했다. **원인은 미확정이며 고치지 않았다. AVD 실행은 NOT_RUN이고, G5~G8 전에 진행한다.** [증거 인덱스](evidence/p9-s1/README.md).
+
 ## P9-XR-C — WebXR 모바일 점검 통합
 
 P9-XR-B의 공간 고정 마커를 워셔액 점검 화면 안의 선택 기능으로 통합했다. 같은 문서에서 실행하므로 체크리스트와 QR v2 인증 컨텍스트가 유지된다. 플래그로만 켜지고 기본은 꺼져 있으며 **Render에는 연결하지 않았다.** AI 인식은 없다. 검증은 가짜 XR 런타임까지이며 **Z Flip8과 실제 QR E2E는 사용자 결정으로 `NOT_RUN_DEFERRED_TO_E2E`다.** [통합 설계](p9-xr-c-webxr-inspection-integration.md), [마커 규칙](p9-xr-b-webxr-spatial-poc.md), [증거 인덱스](evidence/p9-xr-c/README.md).
