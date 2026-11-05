@@ -1,0 +1,40 @@
+name: WebXR spatial PoC CI
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'tools/mobile-ar-poc/**'
+      - '.github/workflows/webxr-poc-ci.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'tools/mobile-ar-poc/**'
+      - '.github/workflows/webxr-poc-ci.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  webxr:
+    name: WebXR PoC lifecycle and browser (synthetic XR runtime)
+    runs-on: windows-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: tools/mobile-ar-poc
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '22.16.0'
+      - run: npm ci --ignore-scripts
+      - run: npm run check
+      - run: npm test
+      - name: Chrome, WebGL and Three.js with a fake XR runtime (no device, no real tracking)
+        run: npm run test:browser:webxr
+        env:
+          POC_EVIDENCE_DIR: C:/CarScope-External/p9-xr-b/ci
