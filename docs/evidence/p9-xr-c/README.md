@@ -83,3 +83,15 @@
 ## CI
 
 `.github/workflows/webxr-poc-ci.yml`을 확장했다. 이 job은 문법, Node, 가짜 XR 런타임 브라우저 검사, 로컬 동기화 HTTP만 포함하며 실기기, 실제 추적, Native, Render를 포함하지 않는다.
+
+**PR #84 첫 CI의 간헐 실패 (`628cbad`, run 42053107868):** Windows Sync job의 `SQLite: four processes serialize 200 updates without lost writes`가 첫 실행에서 FAIL(10.4초), 실패 job 재실행에서 PASS였다. 이 PR은 SQLite store, 세션 서비스, 해당 테스트 파일을 바꾸지 않았고 로컬에서 5회 반복 통과했다. busy timeout 5초와 부하로 인한 `SQLITE_BUSY`로 추정하지만 worker 오류가 로그에 남지 않아 **원인은 미확정이다.** 임계값은 바꾸지 않았다.
+
+## P9-UX-A 병합 후 재검증 (2026-11-06)
+
+`main` `447b1fa`(PR #83)를 병합한 `1676d73`에서 다시 실행했다(`run5-after-main/`).
+
+- **충돌:** `docs/roadmap.md` 1건. 같은 자리에 추가된 P9-XR-C, P9-UX-A, P9-A2.1 절을 모두 유지했다. `docs/p9-e2e-checklist.md`는 서로 다른 줄이라 자동 병합됐고 양쪽 변경이 남아 있다.
+- **코드 대조:** `app/`은 main과 같고, `tools/`와 `.github/`는 병합 전 `628cbad`와 같다. 두 PR이 함께 수정한 코드 파일은 없다.
+- **Render·DB:** `render-stateful.mjs`, `render-preflight.mjs`, PostgreSQL store와 스키마, `vercel.json`이 main과 같다.
+- **로컬 PASS:** mobile-ar-poc Node 122, WebXR 브라우저 19개 그룹, 2D·17개 점검 회귀 5개 스위트, Sync legacy 48, Sync 전체 177(SKIP 9, `PG_TEST_URL` 없음), SQLite 21, AR-01 122, 디버그 브라우저 11, QR v2 Edge E2E.
+- **이 로컬 실행 범위 밖:** Kotlin·Native 오버레이는 CI의 해당 job만 실행했다. AVD와 실기기는 다시 실행하지 않았다. 오버레이의 시각 확인 3건과 간헐적 브리지 차단은 [P9-UX-A 증거](../p9-ux-a/README.md)의 상태 그대로다.
