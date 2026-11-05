@@ -1,5 +1,7 @@
 # P9-XR-B 증거 인덱스
 
+**이 기록은 제거된 독립 페이지 `/webxr/` 기준의 과거 실행이다.** 현재 코드의 결과는 [P9-XR-C 증거](../p9-xr-c/README.md)를 본다.
+
 원본 로그와 캡처는 `C:/CarScope-External/p9-xr-b/`에 두고 Git에는 요약만 남긴다. [설계·실행·제약](../../p9-xr-b-webxr-spatial-poc.md).
 
 ## 판정 범위

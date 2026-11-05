@@ -1,6 +1,6 @@
 # CarScope 모바일 · 워셔액·타이어·EV 충전구 카메라 보조 점검
 
-P9-XR-B: 워셔액 대상 WebXR 공간 고정 마커 PoC를 `/webxr/`에 격리해 추가했다. `npm run serve:webxr`로만 제공되며 기본 서버와 staging, 기존 점검 화면은 변하지 않는다. 이 코드의 실기기 실행은 NOT_RUN이다. [설계·실행·제약](../../docs/p9-xr-b-webxr-spatial-poc.md).
+P9-XR-C: 워셔액 점검에 실험 기능 `3D AR로 위치 찾기`를 통합했다. `npm run serve:webxr` 또는 `CARSCOPE_WEBXR_GUIDE=EXPERIMENT`로만 켜지며 기본 서버, staging, Render에서는 나타나지 않는다. 실기기 실행은 `NOT_RUN_DEFERRED_TO_E2E`다. [통합 설계](../../docs/p9-xr-c-webxr-inspection-integration.md).
 
 P7-B는 기존 7개에 냉각수·LCW·12V·퓨즈박스·좌우 전면 와이퍼·좌우 상향/하향등 10개를 추가해 **17개 카메라/수동 점검 task**를 제공한다. 공통 Checklist·CameraSession·2D Overlay·schema v1/v2·SyncClient를 재사용한다. [조사·구현·검증](../../docs/p7-b-mobile-ar-coverage.md) · [Codex A Native 인계 계약](../../docs/contracts/p7-b-mobile-tasks-v2.md) · [스마트폰 HTTPS 절차](P7_B_DEVICE_TEST.md). 실제 폰·Native 수락·객체 인식 정확도는 NOT_RUN이며 Node 수락과 구분한다. 새 객체 인식 모델/PoC는 추가하지 않았다.
 
