@@ -1,6 +1,6 @@
 # P9 기기 E2E 실행 절차
 
-**전체 NOT_RUN.** 이 문서는 절차이며 실행 결과가 아니다. 작성 중 AVD 실행, APK 설치, Render 변경, 운영 DB 접근은 하지 않았다. 명령은 코드와 대조했지만([P9-A1 증거](evidence/p9-a1/README.md)) 기기에서 실행하지 않았으므로, 기기 동작 차이는 실행할 때 기록한다.
+이 문서는 절차이며 실행 결과가 아니다. **A·B와 C1b·C1c, D1, E2, G는 [P9-A2](evidence/p9-a2/README.md)에서 AVD로 실행했고, 서버 단계(C1a·C1d·C1e, C2~C6)와 스마트폰 E2E를 포함한 나머지는 NOT_RUN이다.** 그 외 명령은 코드와 대조했을 뿐([P9-A1 증거](evidence/p9-a1/README.md)) 기기에서 실행하지 않았으므로, 기기 동작 차이는 실행할 때 기록한다.
 
 기준 코드는 `main` `8a6f559`다. 서버의 `serverNow`는 main에 병합됐지만 **Render에는 아직 배포되지 않았다.** 사용자 확인에 따른 상태이며 정확한 배포 커밋은 NOT_VERIFIED다. 2026-11-05 운영 `/healthz`는 `STATEFUL_DENY_DEFAULT`, `sessionCreation: DENIED`였다.
 
@@ -60,8 +60,13 @@ P9-A0 빌드: `C:\carscope-external\p9-a0\apk\carscope-debug-8a6f559.apk`, SHA-2
 | B1d | 호스트 메모리 | `Get-CimInstance Win32_OperatingSystem \| Select-Object FreePhysicalMemory,TotalVisibleMemorySize` (KiB) |
 | B1e | WebView | `& $adb -s $serial shell dumpsys webviewupdate` |
 | B1f | 기존 ANR | `& $adb -s $serial shell dumpsys activity lastanr > $out\lastanr-before.txt` |
+| B1g | 남은 enrollment | `& $adb -s $serial shell "run-as io.carscope.app --user $user ls -l files/avd-simulator-enrollment.json"`. 내용은 읽지 않는다. 있으면 **Activity를 시작하기 전에 확인한다.** `InspectionActivity`도 `SyncReceiverActivity`를 상속하므로, 유효한 파일이 있으면 3D 화면을 여는 것만으로 grant를 요청한다(G7) |
 
 readiness PASS는 identity 범위다. 안정성 판정이 아니다. 저장소에 수치 기준이 없어 아래 값을 **이번 P9의 제안 기준**으로 둔다. 과거 관측에서 정한 보수적 값이며 측정으로 조정한 값이 아니다. 기준을 넘기면 중단하고 사용자 프로세스를 종료하거나 AVD를 reset하지 않는다.
+
+**P9-A2 예외(사용자 결정):** P9-A2에서는 사용자가 CPU·메모리·Load Average를 자동 중단 조건으로 쓰지 않도록 승인했다. 해당 수치는 참고용으로만 기록했고, 부하만을 이유로 BLOCKED를 판정하지 않았다. ANR은 증거를 수집한 뒤 복구 가능 여부를 판단하고, 데이터 손상·비정상 종료·시스템 불안정은 안전을 우선한다. 이 결정은 G2~G9 승인을 대신하지 않으며, 다음 단계에 적용하려면 다시 결정한다.
+
+**성능 수치 해석:** load, 메모리, `gfxinfo`, 프레임 통계는 보존하되 성능 PASS의 근거로 쓰지 않는다. 화면이 동작했다는 사실이 성능 합격을 뜻하지 않으며, 수치 기준을 넘지 않았다는 것도 마찬가지다.
 
 | 항목 | 중단 기준 | 근거 |
 |---|---|---|
@@ -83,11 +88,16 @@ readiness PASS는 identity 범위다. 안정성 판정이 아니다. 저장소�
 
 ```powershell
 $endpoint = '{"apiOrigin":"https://carscope-lluo.onrender.com","mobileRoot":"https://carscope-lluo.onrender.com/"}'
-$endpoint | & $adb -s $serial shell "run-as io.carscope.app --user $user sh -c 'umask 077; mkdir -p files; cat > files/sync-endpoint.json'"
+$endpoint | & $adb -s $serial shell "run-as io.carscope.app --user $user sh -c 'umask 077; mkdir -p files; cat > files/sync-endpoint.json && chmod 600 files/sync-endpoint.json'"
 & $adb -s $serial shell "run-as io.carscope.app --user $user cat files/sync-endpoint.json"
+& $adb -s $serial shell "run-as io.carscope.app --user $user ls -l files/sync-endpoint.json"
 ```
 
-PowerShell 5.1 파이프는 ASCII에 CRLF를 붙이며, 이 형식은 실제 파서에서 통과함을 확인했다. 내용이 틀리면 같은 명령으로 덮어쓴다.
+**권한 확인:** 마지막 명령의 결과가 `-rw-------`여야 한다. `umask`는 새 파일에만 적용되므로 기존 파일의 권한을 바꾸지 못한다. P9-A2의 기존 파일은 `0666`이었고 `chmod 600`을 실행한 뒤에야 `0600`이 됐다. 그 파일에는 UTF-8 BOM이 있었고 `mobileRoot` 끝에 `/`가 없어 새 값으로 교체했다. 이전 파일을 앱이 수락했는지는 확인하지 않았다.
+
+**파싱 확인:** 파일 검사만으로 끝내지 않는다. 화면이 `HTTPS 주소 설정됨 · …`이면 앱의 파서가 수락한 것이고, `연결 설정 미완료`면 거부한 것이다.
+
+PowerShell 5.1 파이프는 ASCII에 CRLF를 붙이며, 이 형식은 JVM의 실제 파서에서 통과함을 확인했다. P9-A2의 기기 배치는 Git Bash의 `printf '%s'`(101 bytes, CRLF 없음)로 실행했으므로 위 PowerShell 명령 자체는 기기에서 실행하지 않았다. 내용이 틀리면 같은 명령으로 덮어쓴다.
 
 ### B3. GLB
 
@@ -248,7 +258,7 @@ $appPid = (& $adb -s $serial shell pidof io.carscope.app).Trim()
 | F1 | QR 표시 중 취소 | 폰 제출 거부, 후보 없음, 기록 없음 |
 | F2 | 초대 10분 만료 | 스캔 거부, QR 숨김. 정책을 줄이지 말고 실제로 기다린다 |
 | F3 | 제출 후 Accept 전 30분 만료 | 기록 없음, 늦은 Accept 거부 |
-| F4 | Home 후 복귀 | 세션 상태 복구 또는 명확한 실패. 늦은 callback 미전달 |
+| F4 | [Settings 전환](#포커스-전환-절차) 후 복귀 | 세션 상태 복구 또는 명확한 실패. 늦은 callback 미전달 |
 | F5 | 회전, renderer 종료 | 권한 폐기, 늦은 결과 미전달. renderer 강제 종료는 별도 승인 |
 | F6 | 재생성 | 새 session/binding. 이전 결과가 새 화면에 나오지 않음 |
 | F7 | grant 만료 | 120초 경과 후 `점검 요청 생성` 비활성. 진행 중 세션은 자체 TTL 유지. `서비스 연결 확인` 후 다시 활성. enrollment 재발급 없음 |
@@ -273,7 +283,27 @@ ANR 원본은 `/data/anr`를 직접 읽을 수 없어 P7-A에서 `adb bugreport`
 |---|---|---|
 | G1 | ANR | B1f 이후 새 ANR 없음. 있으면 해당 단계 FAIL, 조작 중단 |
 | G2 | RenderThread | 스레드 존재, 프로세스 유지. 성능 결론으로 쓰지 않는다 |
-| G3 | focus 전환 | Home/복귀 뒤 입력 응답. P7-A 재현 시나리오 포함 |
+| G3 | focus 전환 | 아래 절차로 복귀한 뒤 입력 응답. P7-A 재현 시나리오 포함 |
+
+### 포커스 전환 절차
+
+**`input keyevent 3`(HOME)은 pause·복귀 검증으로 인정하지 않는다.** P9-A2에서 이 패널의 앱은 HOME을 받아도 `topResumedActivity`로 남았고 lifecycle 로그가 바뀌지 않았다. 대신 같은 패널에 Settings를 띄운다.
+
+```powershell
+& $adb -s $serial shell am start --user $user -a android.settings.SETTINGS
+# 몇 초 뒤 확인
+& $adb -s $serial shell dumpsys activity activities | Select-String topResumedActivity
+& $adb -s $serial shell am start --user $user -n io.carscope.app/.lab.InspectionActivity
+& $adb -s $serial logcat -d -s CarScopeInspection:I | Select-String 'lifecycle|"event":"visibility"'
+```
+
+| 순서 | 합격 기준 |
+|---|---|
+| Settings 실행 뒤 | `topResumedActivity`가 `com.android.car.settings`, 로그에 `lifecycle pause finishing=false`, `"hidden":true` |
+| 복귀 뒤 | `am start`가 `its current task has been brought to the front`, 로그에 `lifecycle resume`, `"hidden":false`, 새 `lifecycle create` 없음 |
+| 입력 | 복귀 후 터치와 Back으로 상태가 전이되고, 메모리 기록이 유지된다 |
+
+이 절차는 Settings 전환 1회의 관측이다. P7-A focus-event ANR의 재현이나 해결을 뜻하지 않는다.
 
 ## H. 실행 후 복원 (G9)
 
@@ -292,4 +322,4 @@ ANR 원본은 `/data/anr`를 직접 읽을 수 없어 P7-A에서 `adb bugreport`
 
 ## 결과 기록
 
-각 행을 PASS / FAIL / NOT_RUN / BLOCKED로 적고 APK SHA-256, 서버 커밋, `/healthz` 모드, AVD 이미지, WebView 버전, 폰 기종을 함께 남긴다. 브라우저·AVD·실차 결과와 성능 수치를 섞지 않는다. AVD 통과는 실차나 실제 소유권의 증거가 아니다.
+각 행을 PASS / FAIL / NOT_RUN / BLOCKED로 적고 APK SHA-256, 서버 커밋, `/healthz` 모드, AVD 이미지, WebView 버전, 폰 기종을 함께 남긴다. 브라우저·AVD·실차 결과와 성능 수치를 섞지 않는다. 성능 수치는 관측값으로만 남기고 성능 PASS로 해석하지 않는다. AVD 통과는 실차나 실제 소유권의 증거가 아니다.
