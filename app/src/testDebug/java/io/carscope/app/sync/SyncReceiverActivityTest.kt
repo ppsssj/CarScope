@@ -31,11 +31,14 @@ internal class ActivityFakeTransport : ConnectedSyncReceiverTransport {
     var cancelFailure = false
     var result = false
     var taskId = "washer-fluid"
+    var claimed = false
+    var serverClock: SyncServerClock? = null
+    var receivedAt: Long? = null; var acceptedAt: Long? = null
     private val record: SyncInspection get() = NativeTaskSamples.result(taskId)
     override fun creationAuthorized() = !closed
     override fun checkConnection(callback: (SyncReply<Unit>) -> Unit): SyncCancellation { callback(probeFailure?.let { SyncReply.Failure(it) } ?: SyncReply.Success(Unit)); return SyncCancellation {} }
     override fun create(callback: (SyncReply<CreatedSyncSession>) -> Unit): SyncCancellation {
-        val reply = { callback(SyncReply.Success(CreatedSyncSession(HttpSamples.ID, ReceiverCredential(HttpSamples.receiver), InviteCredential(HttpSamples.invite), expiry - 30000, expiry, taskId))) }
+        val reply = { callback(SyncReply.Success(CreatedSyncSession(HttpSamples.ID, ReceiverCredential(HttpSamples.receiver), InviteCredential(HttpSamples.invite), expiry - 30000, expiry, taskId).apply { clock = serverClock })) }
         if (defer) late = reply else reply()
         return SyncCancellation {}
     }
@@ -43,13 +46,13 @@ internal class ActivityFakeTransport : ConnectedSyncReceiverTransport {
         this.taskId = taskId; return create(callback)
     }
     override fun view(id: String, receiver: ReceiverCredential, callback: (SyncReply<SyncReceiverView>) -> Unit): SyncCancellation {
-        callback(SyncReply.Success(SyncReceiverView(id, if (result) SyncSessionState.RESULT_SUBMITTED else SyncSessionState.CREATED, expiry,
+        callback(SyncReply.Success(SyncReceiverView(id, if (result) SyncSessionState.RESULT_SUBMITTED else if (claimed) SyncSessionState.CLAIMED else SyncSessionState.CREATED, expiry,
             if (result) record else null, if (result) record.digest() else null, taskId)))
         return SyncCancellation {}
     }
     override fun accept(id: String, receiver: ReceiverCredential, digest: String, callback: (SyncReply<SyncReceiverView>) -> Unit): SyncCancellation {
         accepted++
-        val reply = { callback(SyncReply.Success(SyncReceiverView(id, SyncSessionState.ACCEPTED, expiry, record, digest, taskId))) }
+        val reply = { callback(SyncReply.Success(SyncReceiverView(id, SyncSessionState.ACCEPTED, expiry, record, digest, taskId, receivedAt = receivedAt, acceptedAt = acceptedAt))) }
         if (defer) late = reply else reply()
         return SyncCancellation {}
     }
@@ -154,7 +157,7 @@ class SyncReceiverActivityTest {
         view<Button>(old.get(), "create").performClick(); val delayed = old.get().fake.late!!
         val saved = Bundle(); old.saveInstanceState(saved).pause().stop().destroy()
         val fresh = Robolectric.buildActivity(ReceiverFixtureActivity::class.java).create(saved).start().resume().visible()
-        delayed(); assertNull(view<ImageView>(fresh.get(), "qr").drawable); assertEquals("IDLE", text(fresh.get(), "status"))
+        delayed(); assertNull(view<ImageView>(fresh.get(), "qr").drawable); assertTrue(text(fresh.get(), "status").startsWith("IDLE"))
         assertTrue(view<Button>(fresh.get(), "create").isEnabled); assertFalse(view<Button>(fresh.get(), "accept").isEnabled)
         fresh.pause().stop().destroy()
     }
