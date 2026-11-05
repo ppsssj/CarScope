@@ -219,7 +219,7 @@ Activity가 시작되면 grant를 한 번 요청한다. **grant 수명은 120초
 | C6a | 실제 스마트폰 광학 스캔 → 제출 | 폰 receipt의 digest 표시 |
 | C6b | Native 결과 확인 | 자동 수락 없음. digest가 폰과 일치 |
 | C6c | `이 결과 수락` | 폰 상태 ACCEPTED |
-| C6d | `3D로 돌아가기` → 3D 후보 | `receivedAt`/`acceptedAt`이 서버 값 그대로. 관측 시각을 화면 시각으로 덮어쓰지 않음 |
+| C6d | `패널 닫기 · 점검 요청 유지` → 3D 후보 (P9-UX-A 전 APK는 `3D로 돌아가기`) | `receivedAt`/`acceptedAt`이 서버 값 그대로. 관측 시각을 화면 시각으로 덮어쓰지 않음 |
 | C6e | 사용자 선택 | 선택 전 자동 적용 없음. SDK 관측값과 합치지 않음 |
 
 ## D. WebView Referer와 첫 RPC
