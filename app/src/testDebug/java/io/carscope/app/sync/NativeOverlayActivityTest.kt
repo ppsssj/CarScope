@@ -110,6 +110,26 @@ class NativeOverlayActivityTest {
         h.b.stop().destroy()
     }
 
+    // Found on the AVD: the clickable layer auto-resolved to focusable, so the first DPAD key stopped on an invisible view.
+    @Test fun `key focus enters the panel at the close button and never stops on the overlay layer`() {
+        val h = host(); h.open()
+        assertTrue("still consumes touches", h.overlay.isClickable); assertFalse(h.overlay.isFocusable)
+        assertSame(h.tag<Button>("close-panel"), h.overlay.getFocusables(View.FOCUS_DOWN).first())
+        assertFalse(h.overlay.getFocusables(View.FOCUS_DOWN).contains(h.overlay))
+        h.b.stop().destroy()
+    }
+
+    // Found on the AVD: with no request at all the panel promised to keep one and pointed at a disabled Cancel button.
+    @Test fun `close label promises to keep a request only while one exists`() {
+        val h = host(); h.open()
+        assertEquals("패널 닫기", h.text("close-panel")); assertTrue(h.text("close-note").contains("없습니다")); assertFalse(h.text("close-note").contains("취소되지 않습니다"))
+        h.click("create")
+        assertEquals("패널 닫기 · 점검 요청 유지", h.text("close-panel")); assertTrue(h.text("close-note").contains("취소되지 않습니다"))
+        h.click("cancel")
+        assertEquals("패널 닫기", h.text("close-panel")); assertFalse(h.text("close-note").contains("취소되지 않습니다"))
+        h.b.stop().destroy()
+    }
+
     @Test fun `QR shows connection and expiry states and is removed on claim and expiry`() {
         val h = host(); h.open()
         assertEquals(View.GONE, h.tag<ImageView>("qr").visibility); assertTrue(h.text("status").contains("'점검 요청 생성'"))

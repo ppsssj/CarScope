@@ -12,6 +12,7 @@ import android.widget.Button
 import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.TextView
+import io.carscope.app.sync.ReceiverPhase
 import io.carscope.app.sync.SyncReceiverActivity
 import io.carscope.app.sync.SyncReceiverState
 import io.carscope.app.sync.NativeInspectionBridge
@@ -35,6 +36,7 @@ open class InspectionActivity : SyncReceiverActivity() {
     private lateinit var bridge: NativeInspectionBridge
     private lateinit var receiverOverlay: FrameLayout
     private lateinit var closePanel: Button
+    private lateinit var closeNote: TextView
     private lateinit var inspectionPanel: WebView
     private var webFocusability = ViewGroup.FOCUS_BEFORE_DESCENDANTS
     private val bridgeHandler = Handler(Looper.getMainLooper())
@@ -50,17 +52,15 @@ open class InspectionActivity : SyncReceiverActivity() {
         val nativeView = findViewById<ViewGroup>(android.R.id.content).getChildAt(0)
         (nativeView.parent as ViewGroup).removeView(nativeView)
         closePanel = Button(this).apply {
-            text = "패널 닫기 · 점검 요청 유지"; tag = "close-panel"
+            text = "패널 닫기"; tag = "close-panel"
             setOnClickListener { showReceiver(false) }
         }
+        closeNote = TextView(this).apply { text = NO_REQUEST_NOTE; tag = "close-note"; setPadding(24, 8, 24, 0) }
         val panel = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL; tag = "receiver-panel"
             setBackgroundColor(Color.WHITE); elevation = dp(16).toFloat()
             addView(closePanel)
-            addView(TextView(this@InspectionActivity).apply {
-                text = "패널을 닫아도 서버의 점검 요청은 취소되지 않습니다. 취소하려면 아래 '점검 요청 취소'를 누르세요."
-                tag = "close-note"; setPadding(24, 8, 24, 0)
-            })
+            addView(closeNote)
             bridgeStatus = TextView(this@InspectionActivity).apply {
                 text = "Native에서 수락한 뒤 3D에서 기록을 직접 선택하세요."
                 tag = "native-3d-status"; setPadding(24, 8, 24, 8)
@@ -72,7 +72,8 @@ open class InspectionActivity : SyncReceiverActivity() {
         // There is no tap-outside close: only the explicit button or Back closes the panel.
         val place = receiverOverlayPlacement(resources.configuration.screenWidthDp, resources.configuration.screenHeightDp)
         receiverOverlay = FrameLayout(this).apply {
-            tag = "receiver-overlay"; isClickable = true; setBackgroundColor(OVERLAY_DIM); visibility = View.GONE
+            // Not focusable: a clickable View resolves to focusable by default and would catch DPAD focus while invisible.
+            tag = "receiver-overlay"; isClickable = true; isFocusable = false; setBackgroundColor(OVERLAY_DIM); visibility = View.GONE
             addView(panel, FrameLayout.LayoutParams(dp(place.widthDp), place.heightDp?.let(::dp) ?: FrameLayout.LayoutParams.MATCH_PARENT,
                 if (place.side) Gravity.END else Gravity.TOP or Gravity.CENTER_HORIZONTAL).apply { topMargin = dp(place.topDp) })
         }
@@ -128,6 +129,9 @@ open class InspectionActivity : SyncReceiverActivity() {
     internal override fun onReceiverState(state: SyncReceiverState) {
         if (::bridge.isInitialized && !bridgeStopped) {
             bridge.state(state)
+            val noRequest = state.phase == ReceiverPhase.IDLE || state.phase == ReceiverPhase.CANCELLED || state.phase == ReceiverPhase.EXPIRED
+            closePanel.text = if (noRequest) "패널 닫기" else "패널 닫기 · 점검 요청 유지"
+            closeNote.text = if (noRequest) NO_REQUEST_NOTE else "패널을 닫아도 서버의 점검 요청은 취소되지 않습니다. 취소하려면 아래 '점검 요청 취소'를 누르세요."
             bridgeStatus.text = when (bridge.blockingReason) {
                 "SERVER_CLOCK_UNAVAILABLE", "ACCEPTED_NOT_BOUND" -> "3D 연결 차단: 서버 기준 시각 계약이 없습니다. Native 수락 결과를 3D에 적용할 수 없습니다."
                 null -> "Native에서 수락한 뒤 3D에서 기록을 직접 선택하세요."
@@ -171,5 +175,6 @@ open class InspectionActivity : SyncReceiverActivity() {
         const val HOST = "carscope-inspection.invalid"
         const val ROOT = "inspection"
         const val OVERLAY_DIM = 0x33000000
+        const val NO_REQUEST_NOTE = "현재 진행 중인 점검 요청이 없습니다."
     }
 }
