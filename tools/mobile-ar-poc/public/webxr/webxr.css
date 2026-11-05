@@ -1,7 +1,17 @@
-/* P9-XR-B: extends style.css. In AR the page behind is hidden and the camera shows through the overlay. */
+/* P9-XR-C: extends style.css, loaded only with the guide. The inspection page stays in the document, hidden, while
+   the guide is open. In AR the guide's own page is hidden too and the camera shows through the overlay. */
+body.xr-guide-open > :not(#xr-guide) { display: none !important; }
+#xr-guide[hidden], #xr-guide-page[hidden] { display: none; }
+#xr-guide-title:focus { outline: none; }
+#xr-entry { margin: 12px 0; }
+#xr-entry[hidden] { display: none; }
+#xr-entry-open { display: block; width: 100%; min-height: 48px; font-weight: 700; }
+#xr-entry .fine { margin: 6px 0 0; }
 .xr-start { display: block; width: 100%; margin: 14px 0; }
-.xr-link-button { display: flex; align-items: center; justify-content: center; min-height: 48px; padding: 10px 14px; border-radius: 10px; border: 1px solid #8796a7; background: var(--card); color: var(--ink); font-weight: 600; text-decoration: none; }
-.xr-link-quiet { display: inline-flex; align-items: center; min-height: 48px; margin-top: 4px; }
+.xr-choices { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 12px 0 4px; }
+.xr-choices[hidden] { display: none; }
+.xr-choices button { min-height: 48px; font-weight: 600; }
+#xr-leave { min-height: 48px; }
 
 .xr-support { margin: 12px 0 4px; border: 1px solid var(--line); border-radius: 10px; background: var(--card); }
 .xr-support div { display: flex; justify-content: space-between; gap: 12px; padding: 10px 14px; }

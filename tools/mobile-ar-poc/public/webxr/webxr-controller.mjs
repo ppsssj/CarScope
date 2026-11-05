@@ -1,4 +1,4 @@
-// P9-XR-B: owns the XRSession, hit-test source and anchor lifetimes. Rendering stays behind the injected view.
+// P9-XR-B/C: owns the XRSession, hit-test source and anchor lifetimes. Rendering stays behind the injected view.
 // createAnchor needs an active frame and select events arrive outside one, so a tap only sets a request
 // that the next animation frame fulfils from that frame's own hit-test result.
 import { reduce, initialState, canPlace, inSession } from './webxr-state.mjs';
@@ -29,7 +29,11 @@ export function createWebXrController({ xr, createView, overlayRoot = null, onSt
     if (!state.overlay && state.phase === 'PLACED') { dispatch({ type: 'REPOSITION' }); return; } // No buttons exist without the overlay.
     requestPlace();
   };
-  const onVisibility = () => dispatch({ type: 'VISIBILITY', value: session?.visibilityState ?? 'hidden' });
+  const onVisibility = () => {
+    const value = session?.visibilityState ?? 'hidden';
+    dispatch({ type: 'VISIBILITY', value });
+    if (value === 'hidden') void stop(); // Nobody is looking: release the camera and anchors. visible-blurred only pauses.
+  };
   const onEnd = () => teardown(null);
 
   function teardown(reason, { silent = false } = {}) {

@@ -1,6 +1,9 @@
 // Shared allow-list for the loopback dev server and the HTTPS same-origin service.
 import { readFile } from 'node:fs/promises';
 import {MOBILE_MODULES as mobileFiles} from '../../mobile-ar-poc/public-modules.mjs';
+import {WEBXR_GUIDE_FILES, WEBXR_PERMISSION, markWebXrGuidePage} from '../../mobile-ar-poc/webxr-modules.mjs';
+// Experimental guide, off unless a development entry passes webxrGuide. Render never does: see mobile-ui.test.mjs.
+const guideFiles = new Map(WEBXR_GUIDE_FILES.map(([name, source, type]) => [`/mobile-ar-poc/public/webxr/${name}`, [new URL(`../../mobile-ar-poc/${source}`, import.meta.url), type]]));
 const syncFiles = ['mobile-dev-entry.mjs', 'mobile-handoff.mjs', 'mobile-sync.mjs', 'sync-client.mjs'];
 const files = new Map([
   ...mobileFiles.map((s) => [`/mobile-ar-poc/public/${s}`, new URL(`../../mobile-ar-poc/public/${s}`, import.meta.url)]),
@@ -14,16 +17,22 @@ export const MOBILE_HEADERS = Object.freeze({
   'Permissions-Policy': 'camera=(self), microphone=(), geolocation=()',
   'Content-Security-Policy': "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' blob:; media-src 'self' blob:; connect-src 'self'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'",
 });
-export async function serveMobilePage(req, res, { tls = false } = {}) {
-  const headers = { ...MOBILE_HEADERS, ...(tls ? { 'Strict-Transport-Security': 'max-age=31536000' } : {}) };
+export async function serveMobilePage(req, res, { tls = false, webxrGuide = false } = {}) {
+  const headers = { ...MOBILE_HEADERS, ...(tls ? { 'Strict-Transport-Security': 'max-age=31536000' } : {}),
+    ...(webxrGuide ? { 'Permissions-Policy': MOBILE_HEADERS['Permissions-Policy'] + WEBXR_PERMISSION } : {}) };
   const url = new URL(req.url, 'http://localhost');
   if (!['GET', 'HEAD'].includes(req.method)) { res.writeHead(405, headers); res.end(); return; }
   if (url.search) { res.writeHead(400, headers); res.end(); return; }
   let body, type = 'text/javascript; charset=utf-8';
   if (url.pathname === '/') {
     body = (await readFile(new URL('../../mobile-ar-poc/public/index.html', import.meta.url), 'utf8')).replace('src="/app-entry.mjs"', 'src="/public/mobile-dev-entry.mjs"');
+    if (webxrGuide) body = markWebXrGuidePage(body);
     type = 'text/html; charset=utf-8';
   } else if (url.pathname === '/handoff.json') { body = '{"configured":false,"url":null}'; type = 'application/json'; }
+  else if (webxrGuide && guideFiles.has(url.pathname)) {
+    const [source, mime] = guideFiles.get(url.pathname);
+    body = await readFile(source); type = mime;
+  }
   else if (files.has(url.pathname)) {
     body = await readFile(files.get(url.pathname));
     if (url.pathname.endsWith('.css')) type = 'text/css; charset=utf-8';

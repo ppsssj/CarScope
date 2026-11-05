@@ -33,6 +33,9 @@ export function reduce(state, event, ctx = {}) {
     case 'TO_CHECK': // from the camera step, with or without a marker; also the "continue without camera" path
       if (state.step !== 'locate') return state;
       return to({ step: 'check', mode: event.manual ? 'manual' : state.mode });
+    case 'USE_CAMERA': // the user picked the 2D camera after the 3D guide; the answers so far stay as they are
+      if (state.step !== 'check' || state.mode === 'camera') return state;
+      return to({ mode: 'camera' });
     case 'TOGGLE': {
       if (state.step !== 'check' || !(event.id in state.checks)) return state;
       return to({ checks: Object.freeze({ ...state.checks, [event.id]: event.value ?? !state.checks[event.id] }) });

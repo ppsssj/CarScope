@@ -26,7 +26,8 @@ let state = initialState();
 let lastStatus = '', misses = 0, candidates = [], camera;
 const DONE_GUARD_MS = 1000;
 let doneGuardUntil = 0;
-const canCamera = () => handoff.valid && state.mode === 'camera' && ['locate', 'check'].includes(state.step);
+let guideOpen = false, guide = null; // Experimental 3D guide; the 2D camera may never run while it is open.
+const canCamera = () => !guideOpen && handoff.valid && state.mode === 'camera' && ['locate', 'check'].includes(state.step);
 function status(message) {
   if (message !== lastStatus) { $('status').textContent = message; lastStatus = message; }
   if (camera) updateChip();
@@ -132,6 +133,7 @@ function render() {
     $('result-json').textContent = JSON.stringify(r, null, 2);
   }
   updateChip();
+  guide?.refresh();
 }
 
 // Checklist and choices are built once; state decides what is checked.
@@ -171,6 +173,33 @@ $('start').disabled = !handoff.valid;
 render();
 // Test hook (read-only view of the flow; the page itself never sends this anywhere).
 window.__selfInspection = { get state() { return state; }, get mark() { return camera.mark; } };
+
+// P9-XR-C: only a host that enabled the experiment marks the page, and only that host serves these files.
+// The guide sends nothing and never changes the record: each choice below is the same event the page's own buttons use.
+if (handoff.valid && document.body.dataset.webxrGuide === 'enabled') {
+  const GUIDE_STEPS = { intro: 'manual-start', locate: 'locate-manual', check: 'unsure-check' };
+  const focusChecklist = () => { scrollTo(0, 0); $('step-check').querySelector('h2').focus({ preventScroll: true }); };
+  import('./webxr/webxr-guide.mjs').then(({ mountWebXrGuide }) => {
+    const mounting = mountWebXrGuide({
+      task: { position: WASHER_TASK.position, items: CHECK_ITEMS },
+      canOffer: () => state.step in GUIDE_STEPS,
+      anchorFor: () => $(GUIDE_STEPS[state.step]),
+      onOpen: () => { guideOpen = true; stop('3D AR 안내를 위해 2D 카메라를 중지했습니다.'); },
+      onClose: () => { guideOpen = false; stop('3D AR 안내를 마쳤습니다. 2D 카메라는 직접 시작하세요.'); },
+      onChecklist: () => {
+        if (state.step === 'intro') dispatch({ type: 'START', camera: false });
+        else if (state.step === 'locate') dispatch({ type: 'TO_CHECK', manual: true });
+        else focusChecklist();
+      },
+      onCamera: () => {
+        if (state.step === 'intro') dispatch({ type: 'START', camera: true });
+        else if (state.step === 'check') dispatch({ type: 'USE_CAMERA' });
+        startCamera();
+      },
+    });
+    return mounting.then(mounted => { guide = mounted; });
+  }).catch(() => { /* The experiment failed to load: the 2D and manual methods are untouched. */ });
+}
 
 try {
   const response = await fetch('/handoff.json');
