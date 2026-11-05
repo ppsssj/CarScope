@@ -1,5 +1,9 @@
 # 로드맵 및 진입 조건
 
+## P9-XR-B — WebXR 공간 고정 마커 PoC
+
+워셔액 점검을 대상으로 사용자가 지정한 실제 공간 위치에 3D 화살표를 남기는 화면을 `tools/mobile-ar-poc`의 `/webxr/`에 격리해 추가했다. 기존 점검 화면과 기본 호스팅은 바꾸지 않았고 AI 인식은 없다. 검증은 가짜 XR 런타임까지이며 **이 코드의 Z Flip8 실행과 실제 추적 품질은 NOT_RUN이다.** [설계·실행·제약](p9-xr-b-webxr-spatial-poc.md), [증거 인덱스](evidence/p9-xr-b/README.md).
+
 ## P9-A2 — AVD 실제 환경 검증
 
 `NEW_DECODER` Debug APK, endpoint, GLB를 기존 AVD에 배치하고 3D·타이어·보닛·부품·요약·History·Native 기본 상태를 실제 터치로 확인했다. 그 과정에서 찾은 토스트 결함과 실행 절차 오류를 고쳤다. **토스트 수정의 AVD 확인, Render 배포, 운영 인증, 스마트폰 E2E는 NOT_RUN이다.** [증거 인덱스](evidence/p9-a2/README.md).
