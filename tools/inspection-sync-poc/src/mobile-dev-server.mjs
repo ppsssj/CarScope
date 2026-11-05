@@ -4,8 +4,9 @@ import { MOBILE_HEADERS as headers, serveMobilePage } from './mobile-page.mjs';
 import { fileURLToPath } from 'node:url';
 import { startSyncServer } from './server.mjs';
 import { ProductionSessionCreationAuthorizer, LocalTestSessionCreationAuthorizer } from './creation-authorizer.mjs';
+import { webxrGuideEnabled } from '../../mobile-ar-poc/webxr-flag.mjs';
 
-export async function startMobileDevServer({ port = 0, store, now, limits, rates, authorizer = new ProductionSessionCreationAuthorizer(), log = () => {} } = {}) {
+export async function startMobileDevServer({ port = 0, store, now, limits, rates, authorizer = new ProductionSessionCreationAuthorizer(), log = () => {}, webxrGuide = false } = {}) {
   let limiter;
   if (store?.rateCheck) { const { SQLiteRateLimiter } = await import('./sqlite-store.mjs'); limiter = new SQLiteRateLimiter({ store, now, rates }); }
   const api = await startSyncServer({ host: '127.0.0.1', port: 0, store, now, limits, rates, limiter, authorizer, log });
@@ -24,7 +25,7 @@ export async function startMobileDevServer({ port = 0, store, now, limits, rates
         upstream.on('error', () => { if (!res.headersSent) res.writeHead(502, headers); res.end(); });
         req.on('aborted', () => upstream.destroy()); req.pipe(upstream); return;
       }
-      await serveMobilePage(req, res);
+      await serveMobilePage(req, res, { webxrGuide });
     } catch { if (!res.headersSent) res.writeHead(500, headers); res.end(); }
   });
   try { await new Promise((resolve, reject) => { server.once('error', reject); server.listen(port, '127.0.0.1', resolve); }); }
@@ -39,7 +40,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     const { SQLiteSessionStore } = await import('./sqlite-store.mjs');
     store = new SQLiteSessionStore({ filename: process.env.SYNC_DB_PATH });
   }
-  const s = await startMobileDevServer({ port: Number(process.env.SYNC_MOBILE_PORT || 4182), store,
+  const s = await startMobileDevServer({ port: Number(process.env.SYNC_MOBILE_PORT || 4182), store, webxrGuide: webxrGuideEnabled(process.env, process.argv),
     authorizer: process.env.SYNC_LOCAL_TEST_AUTH === '1' ? new LocalTestSessionCreationAuthorizer() : undefined });
   console.log(`Local synthetic mobile sync on ${s.url}; session creation ${process.env.SYNC_LOCAL_TEST_AUTH === '1' ? 'LOCAL TEST ONLY' : 'DENIED'}`);
 }

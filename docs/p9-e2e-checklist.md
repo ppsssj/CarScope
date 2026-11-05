@@ -1,6 +1,6 @@
 # P9 기기 E2E 실행 절차
 
-이 문서는 절차이며 실행 결과가 아니다. **A·B와 C1b·C1c, D1, E2, G는 [P9-A2](evidence/p9-a2/README.md)에서 AVD로 실행했고, 서버 단계(C1a·C1d·C1e, C2~C6)와 스마트폰 E2E를 포함한 나머지는 NOT_RUN이다.** 그 외 명령은 코드와 대조했을 뿐([P9-A1 증거](evidence/p9-a1/README.md)) 기기에서 실행하지 않았으므로, 기기 동작 차이는 실행할 때 기록한다.
+이 문서는 절차이며 실행 결과가 아니다. **I장(WebXR)은 사용자 결정으로 전부 `NOT_RUN_DEFERRED_TO_E2E`다.** **A·B와 C1b·C1c, D1, E2, G는 [P9-A2](evidence/p9-a2/README.md)에서 AVD로 실행했고, 서버 단계(C1a·C1d·C1e, C2~C6)와 스마트폰 E2E를 포함한 나머지는 NOT_RUN이다.** 그 외 명령은 코드와 대조했을 뿐([P9-A1 증거](evidence/p9-a1/README.md)) 기기에서 실행하지 않았으므로, 기기 동작 차이는 실행할 때 기록한다.
 
 기준 코드는 `main` `8a6f559`다. 서버의 `serverNow`는 main에 병합됐지만 **Render에는 아직 배포되지 않았다.** 사용자 확인에 따른 상태이며 정확한 배포 커밋은 NOT_VERIFIED다. 2026-11-05 운영 `/healthz`는 `STATEFUL_DENY_DEFAULT`, `sessionCreation: DENIED`였다.
 
@@ -23,6 +23,7 @@
 | G7 | 등록 후 Activity 시작 | 시작 즉시 운영으로 grant 요청 |
 | G8 | 실제 제출·Accept | 운영 세션과 `AVD_SIMULATOR` 기록 생성. 기록 삭제 도구 없음 |
 | G9 | 복원: 폐기, proof 삭제, 모드 제거와 재배포 | 운영 설정 복원 |
+| G10 | Render에 WebXR 안내 활성화 (코드 연결, `three` 빌드 추가, 플래그, 재배포). 현재 미구현 | 운영 QR을 여는 지원 기기에 실험 버튼 노출 |
 
 공통 변수(저장소 루트, Windows PowerShell 5.1). 자동 선택을 쓰지 않는다.
 
@@ -319,6 +320,80 @@ ANR 원본은 `/data/anr`를 직접 읽을 수 없어 P7-A에서 `adb bugreport`
 | H6 | 포트 전달 제거 | `& $adb -s $serial forward --remove tcp:9223` |
 
 남는 것: `cs_avd_*` 테이블과 폐기된 등록 메타데이터, `AVD_SIMULATOR` 기록(삭제 도구 없음), 이미 만든 세션(자체 TTL로 만료), AVD의 endpoint와 GLB(비밀 아님). 테이블을 DROP하지 않는다. 서버 코드는 되돌리지 않는다. 신규 코드도 DENY_DEFAULT이기 때문이다.
+
+## I. WebXR 3D AR 안내 (P9-XR-C)
+
+**전부 `NOT_RUN_DEFERRED_TO_E2E`다.** 합성 검증([증거](evidence/p9-xr-c/README.md))으로 대체하지 않으며 PASS로 옮겨 적지 않는다. 설계와 제약은 [P9-XR-C](p9-xr-c-webxr-inspection-integration.md)다.
+
+### I0. 경로
+
+| 경로 | 범위 | 준비 |
+|---|---|---|
+| 개발 QR (먼저 실행) | 실제 QR v2 프로토콜, 로컬 시험 세션. Native·Render 없음. 차량 측은 `receiver.mjs` | 아래 명령. 공개 배포 없음 |
+| Native QR → Render | 전체 경로 | **현재 불가.** G10 필요. 그 전에는 버튼이 나오지 않는 것이 정상이다 |
+
+```powershell
+Set-Location tools\inspection-sync-poc
+$env:SYNC_LOCAL_TEST_AUTH='1'; $env:CARSCOPE_WEBXR_GUIDE='EXPERIMENT'; $env:SYNC_MOBILE_PORT='4182'
+npm run serve:mobile-dev
+# 다른 터미널. 휴대폰 USB 디버깅을 켠 뒤:
+& $adb -s <휴대폰 serial> reverse tcp:4182 tcp:4182
+node bin/receiver.mjs --server=http://127.0.0.1:4182 --mobile-base=http://127.0.0.1:4182/ --wait=600
+```
+
+`receiver.mjs`가 한 번 출력하는 주소를 휴대폰 Chrome에서 연다. 로컬 시험 토큰이지만 로그와 캡처에 남기지 않는다. 주소는 `localhost`가 아니라 `127.0.0.1`이어야 한다. 이 서버는 정확한 Host만 받는다. 서버와 receiver 실행은 데스크톱에서 확인했고 `adb reverse`와 휴대폰 접속은 실행하지 않았다.
+
+기록: 기기, Android·Chrome 버전, 커밋, 플래그 값, 경로.
+
+### I1. 진입과 지원
+
+| # | 확인 | 합격 기준 |
+|---|---|---|
+| I1a | 플래그 끈 서버의 워셔액 QR | `3D AR로 위치 찾기` 없음. 기존 흐름 완료 |
+| I1b | 플래그 켠 서버의 워셔액 QR | 버튼 표시. 주소창에 fragment 없음 |
+| I1c | 다른 부품 QR | 버튼 없음 |
+| I1d | 안내 → `AR 시작` | 지원 표 세 항목 표시. 권한 프롬프트 후 카메라 AR 시작 |
+| I1e | 카메라 권한 거부 | 이유 표시, 2D 카메라와 체크리스트로 복귀 가능 |
+
+### I2. 공간 고정과 추적
+
+| # | 확인 | 합격 기준 |
+|---|---|---|
+| I2a | 표면 조준 후 탭 | 조준 원이 표면에 나타나고 그 자리에 화살표 생성 |
+| I2b | 패널 버튼 탭 | 화살표가 함께 배치되지 않음 (DOM overlay, `beforexrselect`) |
+| I2c | 좌우 이동, 접근, 화면 밖으로 나갔다 복귀 | 화살표가 실제 공간의 같은 지점에 머묾. 어긋남은 관측값으로 기록 |
+| I2d | 렌즈 가리기, 빠른 흔들기 | 경고, 표시 숨김. 복구되면 다시 나타남 |
+| I2e | 위치 다시 지정, 표시 제거 | 동작. 실패 시 기존 표시 유지 |
+| I2f | 실제 엔진룸 | 표면 검출 여부와 화살표·캡 어긋남 기록. 정확도 PASS로 해석하지 않음 |
+
+### I3. 점검 상태와 QR 컨텍스트
+
+| # | 확인 | 합격 기준 |
+|---|---|---|
+| I3a | 연결 후 AR → 체크리스트로 | 같은 화면으로 복귀, 재로드 없음, `연결됨` 유지 |
+| I3b | 체크 항목 일부 표시 → AR → 복귀 | 표시 유지 |
+| I3c | AR 진입과 복귀만 수행 | `receiver.mjs`에 결과 없음. 체크 항목 자동 표시 없음 |
+| I3d | 복귀 후 결과 확정·전송 → 수락 | 전송 성공, 수락 표시. 새 QR 불필요 |
+| I3e | 연결 전 AR → Back → 연결 | 연결 성공 1회 |
+| I3f | AR 중 차량 측 취소 | 복귀 후 취소 표시 |
+
+### I4. 카메라와 수명주기
+
+| # | 확인 | 합격 기준 |
+|---|---|---|
+| I4a | 2D 카메라 사용 중 안내 열기 → AR 시작 | 카메라 충돌 오류 없음 |
+| I4b | AR 종료 → 2D 카메라로 | 2D 영상 재개. 지연이나 오류 기록 |
+| I4c | AR 중 시스템 Back | 세션 종료, 점검 화면 유지. QR 연결 유지 |
+| I4d | AR 중 앱 전환, 화면 잠금 후 복귀 | 카메라 표시등 꺼짐, 복귀 후 안내 화면에서 선택 가능 |
+| I4e | 회전, 접기·펼치기 | 컨트롤 접근 가능, 오류 시 복귀 가능 |
+| I4f | 안내 3회 반복 | 세션 재시작 가능. 발열·배터리·프레임률은 관측값으로만 기록 |
+
+### I5. 미지원 환경
+
+| # | 확인 | 합격 기준 |
+|---|---|---|
+| I5a | iOS Safari 또는 ARCore 미지원 기기 | 버튼 없음, 이유 표시, 2D와 수동 점검 가능 |
+| I5b | 플래그 켠 정적 서버(`POC_HOST` 지정)를 HTTP LAN 주소로 접속. QR 개발 서버는 loopback 전용이라 대상이 아니다 | 버튼 없음, HTTPS 또는 localhost가 필요하다는 이유 표시 |
 
 ## 결과 기록
 

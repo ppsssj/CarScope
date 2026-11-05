@@ -1,5 +1,9 @@
 # 로드맵 및 진입 조건
 
+## P9-XR-C — WebXR 모바일 점검 통합
+
+P9-XR-B의 공간 고정 마커를 워셔액 점검 화면 안의 선택 기능으로 통합했다. 같은 문서에서 실행하므로 체크리스트와 QR v2 인증 컨텍스트가 유지된다. 플래그로만 켜지고 기본은 꺼져 있으며 **Render에는 연결하지 않았다.** AI 인식은 없다. 검증은 가짜 XR 런타임까지이며 **Z Flip8과 실제 QR E2E는 사용자 결정으로 `NOT_RUN_DEFERRED_TO_E2E`다.** [통합 설계](p9-xr-c-webxr-inspection-integration.md), [마커 규칙](p9-xr-b-webxr-spatial-poc.md), [증거 인덱스](evidence/p9-xr-c/README.md).
+
 ## P9-UX-A — 3D 위 Native QR 오버레이
 
 Native 수신 패널을 WebView를 숨기지 않는 오버레이로 바꿨다. 넓은 화면은 우측 패널, 좁은 화면은 중앙 패널이고, 열려 있는 동안 3D로 가는 입력을 막는다. 패널 닫기와 서버 세션 취소를 구분하고 스마트폰 연결 상태를 표시한다. 인증·토큰·검증 경계와 서버는 바꾸지 않았다. AVD에서 찾은 포커스와 문구 결함 2건을 수정했고, Fix1 APK `4c0dda6d…`에서 두 결함, 터치·포커스·접근성 차단, 닫은 뒤 3D와 기록 유지, Back, 생명주기, ANR·Crash를 확인했다. **시각 확인 3건(패널 뒤 3D 가시성, 패널 가독성, 토스트 겹침)은 `NOT_RUN_DEFERRED_TO_E2E`이며 PASS가 아니다. 간헐적 브리지 차단(약 4~5회 중 1회, 원인 미확정, `main` 재현 미검증)은 G5~G8 이전에 조사한다. 실제 QR 생성, Render, 스마트폰 E2E는 남아 있다.** [증거 인덱스](evidence/p9-ux-a/README.md).
