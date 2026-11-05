@@ -7,7 +7,8 @@ internal data class SyncReceiverState(
     val busy: Boolean = false, val failure: SyncFailure? = null, val retryAvailable: Boolean = false,
     val inviteExpiresAt: Long? = null, val expiresAt: Long? = null,
     val syncSessionId: String? = null, val clock: SyncServerClock? = null,
-    val receivedAt: Long? = null, val acceptedAt: Long? = null, val explicitlyAccepted: Boolean = false
+    val receivedAt: Long? = null, val acceptedAt: Long? = null, val explicitlyAccepted: Boolean = false,
+    val phoneClaimed: Boolean = false // Display only: the server saw the invite claimed. Grants nothing.
 ) {
     val canAccept: Boolean get() = phase == ReceiverPhase.RESULT_SUBMITTED && !busy && result != null && digest != null
     val canCancel: Boolean get() = phase in listOf(ReceiverPhase.WAITING, ReceiverPhase.RESULT_SUBMITTED) && !busy
@@ -91,7 +92,8 @@ internal class SyncReceiverController(
                             }
                             publish(SyncReceiverState(phase = phase, qr = if (v.sessionState == SyncSessionState.CREATED) state.qr else null,
                                 result = v.result ?: state.result.takeIf { phase == ReceiverPhase.ACCEPTED }, digest = v.resultDigest, expiresAt = v.expiresAt, inviteExpiresAt = state.inviteExpiresAt, syncSessionId = v.sessionId, clock = state.clock,
-                                receivedAt = v.receivedAt, acceptedAt = v.acceptedAt, explicitlyAccepted = decision == true && phase == ReceiverPhase.ACCEPTED))
+                                receivedAt = v.receivedAt, acceptedAt = v.acceptedAt, explicitlyAccepted = decision == true && phase == ReceiverPhase.ACCEPTED,
+                                phoneClaimed = v.sessionState == SyncSessionState.CLAIMED))
                             if (phase in listOf(ReceiverPhase.ACCEPTED, ReceiverPhase.CANCELLED, ReceiverPhase.EXPIRED)) client.forget() else schedule()
                         }
                     }

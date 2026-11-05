@@ -10,7 +10,7 @@
 | Activity result에 JSON ACCEPTED를 싣고 일반 JS 함수로 주입 | 생성 binding/원본 수락 소유권과 WebView 검증이 불충분하므로 제외 |
 | 동일 InspectionActivity에서 기존 Native 수신 UI/controller와 현재 WebView를 소유 | 채택. Native QR/수락 UI를 패널로 표시하고 WebView 인스턴스는 유지 |
 
-`InspectionActivity`는 기존 `SyncReceiverActivity`의 endpoint/AVD 등록/provisioning/HTTPS/controller/QR/수락 UI를 재사용한다. 3D의 요청은 부품을 고정한 Native UI를 연다. 세션 생성 및 수락은 Native 버튼으로만 실행한다. Native 패널의 Back/‘3D로 돌아가기’는 패널을 숨기며 원격 취소를 주장하지 않는다. 같은 대기 task를 다시 요청하면 같은 패널을 다시 연다. 다른 대기 task로 덮어쓰지 않는다. 단독 SyncReceiverActivity는 계속 사용할 수 있다.
+`InspectionActivity`는 기존 `SyncReceiverActivity`의 endpoint/AVD 등록/provisioning/HTTPS/controller/QR/수락 UI를 재사용한다. 3D의 요청은 부품을 고정한 Native UI를 연다. 세션 생성 및 수락은 Native 버튼으로만 실행한다. Native 패널의 Back/‘패널 닫기 · 점검 요청 유지’는 패널을 숨기며 원격 취소를 주장하지 않는다. P9-UX-A부터 패널은 WebView를 숨기지 않는 오버레이다([P9-UX-A](evidence/p9-ux-a/README.md)). 같은 대기 task를 다시 요청하면 같은 패널을 다시 연다. 다른 대기 task로 덮어쓰지 않는다. 단독 SyncReceiverActivity는 계속 사용할 수 있다.
 
 ## 실제 코드 경로
 

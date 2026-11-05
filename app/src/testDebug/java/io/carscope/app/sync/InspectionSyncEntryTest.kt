@@ -39,7 +39,7 @@ class InspectionSyncEntryTest {
         assertEquals(2, root.childCount)
         assertTrue(root.getChildAt(0) is android.webkit.WebView)
         assertEquals(View.GONE, root.getChildAt(1).visibility)
-        assertNotNull(root.findViewWithTag<Button>("return-to-3d"))
+        assertNotNull(root.findViewWithTag<Button>("close-panel"))
         b.destroy()
     }
     @Test fun `entry sends one explicit credential-free Intent and Back leaves parent content intact`() {

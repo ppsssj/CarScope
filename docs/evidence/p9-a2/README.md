@@ -62,7 +62,7 @@
 | `npm run test:history-browser` (3D 포함) | Chrome 156, 실제 GLB 페이지 | PASS (DOM 2개, 실제 페이지 3개). 데모 provider는 테스트 안에서만 사용 |
 | `npm run test:results-browser` (3D 포함) | Chrome 156, 실제 GLB 페이지 | PASS (DOM 2개, 실제 페이지 2개). 합성 authority이며 실제 Native 수락이 아니다 |
 
-**수정 후 AVD 확인은 NOT_RUN이다.** AVD에는 수정 전 APK가 설치돼 있다. 새 APK 빌드와 설치는 이 작업에서 하지 않았다.
+**수정 후 AVD 확인:** 이 PR 범위에서는 NOT_RUN이었고, 병합 후 [P9-A2.1](../p9-a2-1/README.md)에서 실제 AVD로 확인했다.
 
 ## 부하 수치와 한계
 
@@ -87,7 +87,7 @@
 | 스마트폰 E2E | QR, 광학 스캔, 제출, Native→3D(C6), 취소·만료(F) |
 | WebView | Referer, 첫 RPC(D2·D3) |
 | AVD UI 일부 | 나머지 타이어 3개 입력, 이전/다음 타이어, 드래그 회전, 확대·축소, 보닛 애니메이션 중 취소, 12V, 퓨즈박스, 저전도 냉각수, History 필터, 화면 회전, renderer 종료, `avd-android-inspection.mjs` |
-| 수정 후 | 토스트 수정의 AVD 확인 |
+| 수정 후 | 토스트 수정의 AVD 확인은 이후 [P9-A2.1](../p9-a2-1/README.md)에서 실행 |
 
 ## Enrollment 정리
 

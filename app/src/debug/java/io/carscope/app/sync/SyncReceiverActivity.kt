@@ -2,6 +2,7 @@ package io.carscope.app.sync
 
 import android.app.Activity
 import android.graphics.Bitmap
+import android.graphics.Rect
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -159,9 +160,13 @@ open class SyncReceiverActivity : Activity() {
         if (stopped) return
         if (!suppressBridgeState) onReceiverState(state)
         status.text = when (state.phase) {
-            ReceiverPhase.WAITING -> if (state.qr == null && state.inviteExpiresAt?.let { now() > it } == true)
+            ReceiverPhase.IDLE -> if (transport?.creationAuthorized() == true) "IDLE · '점검 요청 생성'을 눌러 QR을 만드세요."
+                else "IDLE · 생성 권한 없음 또는 확인 중 · QR을 만들 수 없습니다."
+            ReceiverPhase.CREATING -> "CREATING · 서버에 점검 요청을 만드는 중"
+            ReceiverPhase.WAITING -> if (state.phoneClaimed) "WAITING · 스마트폰 연결됨 · 사용자 점검 제출 대기"
+                else if (state.qr == null && state.inviteExpiresAt?.let { now() > it } == true)
                 "WAITING · QR 초대 만료 · 새 스캔 불가. 이미 연결된 점검은 계속 기다립니다. 새 QR이 필요하면 취소 후 다시 요청하세요."
-                else "WAITING · 스마트폰 사용자 점검 대기"
+                else "WAITING · 스마트폰 연결 전 · QR 스캔 대기"
             ReceiverPhase.RESULT_SUBMITTED -> "RESULT_SUBMITTED · 서버 수신 확인 · 사용자 수락 전"
             ReceiverPhase.ACCEPTED -> "ACCEPTED · 사용자 보고 결과 수락 완료"
             ReceiverPhase.CANCELLED -> "CANCELLED · 서버 취소 확인"
@@ -204,12 +209,16 @@ open class SyncReceiverActivity : Activity() {
             clearQr(); val payload = state.qr
             if (payload != null) try {
                 qrBitmap = SyncQrRenderer.bitmap(payload); image.setImageBitmap(qrBitmap); image.visibility = View.VISIBLE; shownQr = payload
+                reveal(image)
             } catch (_: Exception) { image.visibility = View.GONE; status.text = "FAILED · QR 표시 실패. 요청을 취소하고 다시 시작하세요." }
         }
         create.isEnabled = transport?.creationAuthorized() == true && !state.busy && state.phase in listOf(ReceiverPhase.IDLE, ReceiverPhase.FAILED, ReceiverPhase.CANCELLED, ReceiverPhase.EXPIRED)
         task.isEnabled = create.isEnabled && lockedTask == null
+        if (state.canAccept && !accept.isEnabled) reveal(accept)
         accept.isEnabled = state.canAccept; cancel.isEnabled = state.canCancel; retry.isEnabled = state.retryAvailable && !state.busy
     }
+    /** A narrower panel scrolls: bring a new QR or Accept button into view without moving focus or acting on it. */
+    private fun reveal(view: View) { view.post { view.requestRectangleOnScreen(Rect(0, 0, view.width, view.height)) } }
     private fun clearQr() { image.setImageDrawable(null); image.visibility = View.GONE; qrBitmap?.recycle(); qrBitmap = null; shownQr = null }
     private fun failureMessage(failure: SyncFailure): String = when (failure) {
         SyncFailure.NETWORK -> "NETWORK · 네트워크 또는 인증서 연결을 확인하세요."
