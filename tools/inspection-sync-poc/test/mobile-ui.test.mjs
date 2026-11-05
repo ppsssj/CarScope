@@ -10,6 +10,9 @@ import { LocalTestSessionCreationAuthorizer } from '../src/creation-authorizer.m
 import { newToken } from '../src/sessions.mjs';
 import { buildInviteFragment, PROTOCOL, PROTOCOL_VERSION, receiptMatches, resultDigest } from '../src/protocol.mjs';
 import { completeInspection, startInspection } from '../../mobile-ar-poc/public/inspection-result.mjs';
+import { MOBILE_HEADERS } from '../src/mobile-page.mjs';
+import { webxrGuideEnabled } from '../../mobile-ar-poc/webxr-flag.mjs';
+import { ALLOWED_ENV, environmentGate, importGraph } from '../preflight/static-gates.mjs';
 
 const done = () => completeInspection(startInspection(), 'NEEDS_REFILL');
 const env = (result) => ({ protocol: PROTOCOL, protocolVersion: PROTOCOL_VERSION, result });
@@ -142,6 +145,36 @@ test('mobile dev boundary: default creation denied, strict same-origin CSP, stat
   assert.ok(!files.some((f) => /sync|dev/.test(f)));
   assert.ok(!(await readFile(new URL('../../mobile-ar-poc/public/app-entry.mjs', import.meta.url), 'utf8')).includes('SyncClient'));
   assert.match(await readFile(new URL('../../mobile-ar-poc/public/index.html', import.meta.url), 'utf8'), /src="\/app-entry.mjs"/);
+});
+
+test('WebXR guide: QR v2 host serves it only when told to, and the Render path cannot be told', async (t) => {
+  const off = await startMobileDevServer(); t.after(() => off.stop());
+  const on = await startMobileDevServer({ webxrGuide: true }); t.after(() => on.stop());
+  const guide = '/mobile-ar-poc/public/webxr/webxr-guide.mjs';
+  const offPage = await fetch(off.url);
+  assert.equal(offPage.headers.get('permissions-policy'), 'camera=(self), microphone=(), geolocation=()');
+  assert.ok(!(await offPage.text()).includes('data-webxr-guide'));
+  assert.equal((await fetch(off.url + guide)).status, 404);
+  const onPage = await fetch(on.url);
+  assert.match(onPage.headers.get('permissions-policy'), /, xr-spatial-tracking=\(self\)$/);
+  assert.equal(onPage.headers.get('content-security-policy'), MOBILE_HEADERS['Content-Security-Policy']);
+  const html = await onPage.text();
+  assert.match(html, /data-webxr-guide="enabled"/); assert.match(html, /mobile-dev-entry/);
+  // three.module.min.js is left out: this gate stays dependency-free, and the browser suite loads the real file.
+  for (const name of ['webxr-guide.mjs', 'webxr-controller.mjs', 'webxr-state.mjs', 'webxr-capability.mjs', 'webxr-view.mjs', 'webxr.css']) {
+    assert.equal((await fetch(`${on.url}/mobile-ar-poc/public/webxr/${name}`)).status, 200, name);
+  }
+  assert.match((await fetch(`${on.url}/mobile-ar-poc/public/webxr/webxr.css`)).headers.get('content-type'), /text\/css/);
+  // The session API is the same in both modes: the flag touches page assets only.
+  assert.equal((await fetch(on.url + '/v1/sessions', { method: 'POST' })).status, 403);
+
+  for (const file of ['../src/render-stateful.mjs', '../src/render-preflight.mjs']) {
+    assert.doesNotMatch(await readFile(new URL(file, import.meta.url), 'utf8'), /webxr/i, file);
+  }
+  assert.ok(!ALLOWED_ENV.includes('CARSCOPE_WEBXR_GUIDE'));
+  assert.equal(environmentGate().status, 'PASS');
+  assert.ok(!importGraph().some((file) => file.endsWith('webxr-flag.mjs')), 'the switch is outside the Render import closure');
+  assert.throws(() => webxrGuideEnabled({ CARSCOPE_WEBXR_GUIDE: 'yes' }), /INVALID/);
 });
 
 test('mobile timers are called unbound and polling pauses, resumes, then stops on page close', async () => {

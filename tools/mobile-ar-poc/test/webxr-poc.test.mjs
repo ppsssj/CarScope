@@ -1,4 +1,4 @@
-// P9-XR-B: Node tests with the fake XR runtime. They cover API lifecycle and isolation, not real tracking.
+// P9-XR-B/C: Node tests with the fake XR runtime. They cover API lifecycle and host boundaries, not real tracking.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import http from 'node:http';
@@ -9,7 +9,9 @@ import * as THREE from 'three';
 import { createHandler } from '../server.mjs';
 import { buildStaging, PUBLIC_FILES } from '../staging/build.mjs';
 import { MOBILE_MODULES } from '../public-modules.mjs';
-import { WEBXR_POC_FILES, webxrPocEnabled } from '../webxr-modules.mjs';
+import { WEBXR_GUIDE_FILES, markWebXrGuidePage } from '../webxr-modules.mjs';
+import { webxrGuideEnabled } from '../webxr-flag.mjs';
+import { initialState as inspectionInitial, reduce as inspectionReduce } from '../public/self-inspection.mjs';
 import { probeWebXr, sessionInit, startErrorReason } from '../public/webxr/webxr-capability.mjs';
 import { canPlace, initialState, noticeText, PHASES, reasonText, reduce, statusCopy } from '../public/webxr/webxr-state.mjs';
 import { createWebXrController } from '../public/webxr/webxr-controller.mjs';
@@ -405,6 +407,22 @@ test('blurred session blocks placement and reports a pause', async () => {
   assert.equal(t.controller.requestPlace(), true);
 });
 
+test('a hidden session ends and releases everything; visible-blurred only pauses', async () => {
+  const t = await started();
+  await place(t);
+  const [anchor] = t.env.anchors;
+  t.env.setVisibility('visible-blurred');
+  assert.equal(t.controller.state.phase, 'PLACED');
+  assert.equal(t.env.currentSession.ended, false);
+  t.env.setVisibility('hidden');
+  await tick();
+  assert.equal(t.controller.state.phase, 'ENDED');
+  assert.equal(t.env.currentSession.ended, true);
+  assert.equal(anchor.deleted, true);
+  assert.equal(t.env.hitSources[0].cancelled, true);
+  assert.equal(t.view.disposed, 1);
+});
+
 test('system session end releases hit source, anchor and view exactly once, and allows a restart', async () => {
   const t = await started();
   await place(t);
@@ -527,70 +545,98 @@ test('3D arrow points at the chosen point along the surface normal', () => {
   assert.ok(Math.hypot(tip.x, tip.z) < 1e-6, 'tip is centered on the point');
 });
 
-// ---- isolation ------------------------------------------------------------------------------------------
+// ---- host boundary --------------------------------------------------------------------------------------
 const serve = async options => {
   const server = http.createServer(createHandler(undefined, options));
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
   return { root: `http://127.0.0.1:${server.address().port}`, close: () => new Promise(resolve => server.close(resolve)) };
 };
+const MARK = 'data-webxr-guide';
 
-test('default server has no WebXR route and unchanged policy headers', async () => {
+test('default server has no guide route, no page mark and unchanged policy headers', async () => {
   const s = await serve();
   try {
-    for (const [served] of WEBXR_POC_FILES) assert.equal((await fetch(`${s.root}/${served}`)).status, 404, served);
-    assert.equal((await fetch(`${s.root}/webxr/`)).status, 404);
+    for (const [served] of WEBXR_GUIDE_FILES) assert.equal((await fetch(`${s.root}/webxr/${served}`)).status, 404, served);
     const home = await fetch(`${s.root}/`);
     assert.equal(home.status, 200);
     assert.equal(home.headers.get('permissions-policy'), 'camera=(self), microphone=(), geolocation=()');
+    assert.ok(!(await home.text()).includes(MARK));
   } finally { await s.close(); }
 });
 
-test('flagged server serves exactly the PoC files with the same CSP', async () => {
-  const s = await serve({ webxrPoc: true });
+test('flagged server marks the page and serves exactly the guide files with the same CSP', async () => {
+  const s = await serve({ webxrGuide: true }), plain = await serve();
   try {
-    const page = await fetch(`${s.root}/webxr/`);
-    assert.equal(page.status, 200);
-    assert.match(page.headers.get('content-type'), /text\/html/);
-    assert.match(page.headers.get('permissions-policy'), /xr-spatial-tracking=\(self\)/);
-    assert.match(page.headers.get('permissions-policy'), /microphone=\(\)/);
-    assert.equal(page.headers.get('content-security-policy'), (await fetch(`${s.root}/`)).headers.get('content-security-policy'));
-    for (const [served] of WEBXR_POC_FILES) assert.equal((await fetch(`${s.root}/${served}`)).status, 200, served);
+    const home = await fetch(`${s.root}/`);
+    assert.match(home.headers.get('permissions-policy'), /^camera=\(self\), microphone=\(\), geolocation=\(\), xr-spatial-tracking=\(self\)$/);
+    assert.equal(home.headers.get('content-security-policy'), (await fetch(`${plain.root}/`)).headers.get('content-security-policy'));
+    assert.match(await home.text(), /<body data-step="intro" data-webxr-guide="enabled">/);
+    for (const [served] of WEBXR_GUIDE_FILES) assert.equal((await fetch(`${s.root}/webxr/${served}`)).status, 200, served);
+    assert.match((await fetch(`${s.root}/webxr/webxr.css`)).headers.get('content-type'), /text\/css/);
+    // The standalone page, which lost the checklist on return, must stay gone.
+    for (const route of ['/webxr/', '/webxr/index.html', '/webxr/webxr-entry.mjs']) assert.equal((await fetch(s.root + route)).status, 404, route);
     assert.equal((await fetch(`${s.root}/webxr/../package.json`)).status, 404);
     assert.equal((await fetch(`${s.root}/webxr/%2e%2e/%2e%2e/package.json`)).status, 404);
     assert.equal((await fetch(`${s.root}/node_modules/three/build/three.module.min.js`)).status, 404);
-  } finally { await s.close(); }
+  } finally { await s.close(); await plain.close(); }
 });
 
-test('PoC flag needs an explicit value', () => {
-  assert.equal(webxrPocEnabled({}), false);
-  assert.equal(webxrPocEnabled({ POC_WEBXR_POC: '0' }), false);
-  assert.equal(webxrPocEnabled({ POC_WEBXR_POC: '1' }), true);
-  assert.equal(webxrPocEnabled({}, ['--webxr-poc']), true);
+test('the experiment flag takes one exact value and refuses anything else', () => {
+  assert.equal(webxrGuideEnabled({}), false);
+  assert.equal(webxrGuideEnabled({ CARSCOPE_WEBXR_GUIDE: '' }), false);
+  assert.equal(webxrGuideEnabled({ CARSCOPE_WEBXR_GUIDE: 'EXPERIMENT' }), true);
+  assert.equal(webxrGuideEnabled({}, ['--webxr-guide']), true);
+  for (const value of ['0', '1', 'true', 'experiment', 'ON']) assert.throws(() => webxrGuideEnabled({ CARSCOPE_WEBXR_GUIDE: value }), /INVALID_CARSCOPE_WEBXR_GUIDE/, value);
+  assert.throws(() => markWebXrGuidePage('<body>'), /MARKER_MISSING/, 'a changed page cannot silently lose the experiment');
 });
 
-test('staging omits the PoC by default and includes it only when requested', async () => {
+test('staging omits the guide by default and includes it only when requested', async () => {
   const dir = await mkdtemp(path.join(os.tmpdir(), 'carscope-webxr-'));
   try {
     const plain = path.join(dir, 'plain'), flagged = path.join(dir, 'flagged');
     await buildStaging({ origin: 'https://carscope-test.vercel.app/', outputDirectory: plain });
     assert.deepEqual((await readdir(plain)).sort(), [...PUBLIC_FILES, 'handoff.json', 'qr.svg', 'build-info.json'].sort());
-    await buildStaging({ origin: 'https://carscope-test.vercel.app/', outputDirectory: flagged, webxrPoc: true });
-    assert.deepEqual((await readdir(path.join(flagged, 'webxr'))).sort(), WEBXR_POC_FILES.map(([served]) => served.slice('webxr/'.length)).sort());
+    assert.equal(await readFile(path.join(plain, 'index.html'), 'utf8'), await readFile(new URL('../public/index.html', import.meta.url), 'utf8'), 'default page is copied byte for byte');
+    await buildStaging({ origin: 'https://carscope-test.vercel.app/', outputDirectory: flagged, webxrGuide: true });
+    assert.deepEqual((await readdir(path.join(flagged, 'webxr'))).sort(), WEBXR_GUIDE_FILES.map(([served]) => served).sort());
+    assert.ok((await readFile(path.join(flagged, 'index.html'), 'utf8')).includes(MARK));
   } finally { await rm(dir, { recursive: true, force: true }); }
 });
 
-test('product hosting is untouched: no PoC module in its allow-list and no link from its page', async () => {
+test('the only link from product code to the guide is one dynamic import behind the host mark, in the washer flow', async () => {
   assert.ok(!MOBILE_MODULES.some(name => /webxr|three/.test(name)));
-  for (const name of ['index.html', 'app-entry.mjs', 'app.mjs', ...MOBILE_MODULES]) {
-    assert.doesNotMatch(await readFile(new URL(`../public/${name}`, import.meta.url), 'utf8'), /webxr|three\.module/i, name);
+  const hits = [];
+  for (const name of ['index.html', 'app-entry.mjs', ...MOBILE_MODULES]) {
+    if (/webxr|three\.module/i.test(await readFile(new URL(`../public/${name}`, import.meta.url), 'utf8'))) hits.push(name);
   }
+  assert.deepEqual(hits, ['app.mjs']);
+  const app = await readFile(new URL('../public/app.mjs', import.meta.url), 'utf8');
+  assert.equal([...app.matchAll(/import\('[^']*webxr[^']*'\)/g)].length, 1);
+  assert.doesNotMatch(app, /^import .*webxr/m, 'never a static import, which would break hosts that do not serve it');
+  const gate = app.indexOf("document.body.dataset.webxrGuide === 'enabled'"), load = app.indexOf("import('./webxr/webxr-guide.mjs')");
+  assert.ok(gate > 0 && gate < load, 'the import sits behind the host mark');
+  assert.ok(app.indexOf('async function startWasherInspectionPage') < gate, 'washer flow only');
 });
 
-test('PoC source has no storage, network, sync or result-record path', async () => {
-  for (const [, source] of WEBXR_POC_FILES.filter(([served]) => !served.includes('three'))) {
+test('guide source has no storage, network, sync, result-record or location-rewrite path', async () => {
+  for (const [, source] of WEBXR_GUIDE_FILES.filter(([served]) => !served.includes('three'))) {
     const text = await readFile(new URL(`../${source}`, import.meta.url), 'utf8');
-    assert.doesNotMatch(text, /localStorage|sessionStorage|indexedDB|fetch\(|XMLHttpRequest|WebSocket|sendBeacon|sync-client|SyncClient|completeInspection|startInspection|getUserMedia/, source);
+    assert.doesNotMatch(text, /localStorage|sessionStorage|indexedDB|cookie|fetch\(|XMLHttpRequest|WebSocket|sendBeacon|sync-client|SyncClient|MobileSync|completeInspection|startInspection|noteAids|getUserMedia|location\.(assign|replace|href|hash|search)|replaceState/, source);
   }
-  const entry = await readFile(new URL('../public/webxr/webxr-entry.mjs', import.meta.url), 'utf8');
-  assert.deepEqual([...entry.matchAll(/from '(\.\.\/[^']+)'/g)].map(match => match[1]).sort(), ['../inspection-tasks.mjs', '../self-inspection.mjs']);
+  const guide = await readFile(new URL('../public/webxr/webxr-guide.mjs', import.meta.url), 'utf8');
+  assert.deepEqual([...guide.matchAll(/from '([^']+)'/g)].map(match => match[1]).sort(), ['./webxr-capability.mjs', './webxr-controller.mjs', './webxr-state.mjs', './webxr-view.mjs']);
+  assert.match(guide, /history\.pushState\(\{ carscopeWebXrGuide: true \}, ''\)/, 'pushState takes no URL, so nothing can reach the address bar');
+});
+
+test('USE_CAMERA keeps the answers and the attempt, and only applies to a manual checklist', () => {
+  let state = inspectionReduce(inspectionInitial(), { type: 'START', camera: false });
+  state = inspectionReduce(state, { type: 'TOGGLE', id: 'parked', value: true });
+  const next = inspectionReduce(state, { type: 'USE_CAMERA' });
+  assert.equal(next.mode, 'camera');
+  assert.equal(next.step, 'check');
+  assert.equal(next.checks.parked, true);
+  assert.equal(next.record.inspectionId, state.record.inspectionId);
+  assert.equal(inspectionReduce(next, { type: 'USE_CAMERA' }), next);
+  const fresh = inspectionInitial();
+  assert.equal(inspectionReduce(fresh, { type: 'USE_CAMERA' }), fresh);
 });

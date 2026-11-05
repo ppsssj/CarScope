@@ -1,14 +1,16 @@
-name: WebXR spatial PoC CI
+name: WebXR guide CI
 on:
   pull_request:
     branches: [main]
     paths:
       - 'tools/mobile-ar-poc/**'
+      - 'tools/inspection-sync-poc/**'
       - '.github/workflows/webxr-poc-ci.yml'
   push:
     branches: [main]
     paths:
       - 'tools/mobile-ar-poc/**'
+      - 'tools/inspection-sync-poc/**'
       - '.github/workflows/webxr-poc-ci.yml'
   workflow_dispatch:
 permissions:
@@ -18,9 +20,9 @@ concurrency:
   cancel-in-progress: true
 jobs:
   webxr:
-    name: WebXR PoC lifecycle and browser (synthetic XR runtime)
+    name: WebXR guide lifecycle, inspection flow and QR v2 (synthetic XR runtime)
     runs-on: windows-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     defaults:
       run:
         working-directory: tools/mobile-ar-poc
@@ -34,7 +36,7 @@ jobs:
       - run: npm ci --ignore-scripts
       - run: npm run check
       - run: npm test
-      - name: Chrome, WebGL and Three.js with a fake XR runtime (no device, no real tracking)
+      - name: Chrome, WebGL, Three.js and real sync HTTP with a fake XR runtime (no device, no real tracking, no Render)
         run: npm run test:browser:webxr
         env:
-          POC_EVIDENCE_DIR: C:/CarScope-External/p9-xr-b/ci
+          POC_EVIDENCE_DIR: C:/CarScope-External/p9-xr-c/ci
