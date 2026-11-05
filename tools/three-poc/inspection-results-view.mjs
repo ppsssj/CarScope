@@ -4,21 +4,48 @@ const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'
 export const RESPONSE_LABELS={damage:'외관 손상',debris:'이물질',wear:'불균일 마모',flapDamage:'충전구 덮개 손상',visibleDamage:'충전구 외관 손상',levelMarking:'외부 액면·표시',leakTrace:'누출 의심 흔적',exteriorDamage:'저장통·캡 외관',caseDamage:'케이스 손상',visibleCorrosion:'보이는 부식',coverDamage:'덮개 손상',visibleContamination:'외부 젖음·오염',heatDamage:'변형·변색',bladeDamage:'고무 손상',visibleDebris:'이물질',armDamage:'암 외관',lensDamage:'렌즈 손상',obstruction:'가림',visibleMoisture:'보이는 물기'};
 export const RESPONSE_ANSWERS={FOUND:'이상 징후 발견',NOT_FOUND:'발견하지 못함',UNABLE:'확인 불가'};
 const connection={INCOMPLETE_NATIVE:'Native 전달 경로 미완료 · 실제 통합 미완료',ADAPTER_CONNECTED:'전달 어댑터 연결 · 실제 Native E2E 검증과 별개',UNAVAILABLE:'Native 전달 불가 · 새 결과 적용 중단',DISPOSED:'전달 종료'};
-const errors={SERVER_CLOCK_UNAVAILABLE:'서버 시각 계약이 없어 3D 연결을 차단했습니다. Native 수락만으로 적용되지 않습니다.',BINDING_DELIVERY_TIMEOUT:'연결 정보 전달이 지연되어 3D 연결을 종료했습니다.',INVALID_BINDING:'점검 연결 정보를 검증하지 못했습니다.',BINDING_CONFLICT:'다른 점검 연결과 충돌해 새 연결을 거부했습니다.',INVALID_RESULT:'결과의 부품·응답·시각을 확인하지 못했습니다.',INACTIVE_BINDING:'연결이 만료되거나 종료되어 새 결과를 적용할 수 없습니다.',DIGEST_MISMATCH:'원본 결과와 수락 근거가 일치하지 않습니다.',VERIFICATION_FAILED:'Native 수락 검증에 실패했습니다.',INVALID_ACCEPTED_PROOF:'검증된 수락 근거를 확인하지 못했습니다.',RESULT_CONFLICT:'같은 점검 ID의 내용이 달라 새 결과를 거부했습니다.',INVALID_TERMINAL:'점검 연결의 종료 정보를 확인하지 못했습니다.',CAPACITY:'이 화면의 기록 한도에 도달했습니다. 새 점검 세션이 필요합니다.',NATIVE_NOT_CONNECTED:'Native 전달 경로가 없어 모바일 요청을 시작할 수 없습니다.',REQUEST_FAILED:'Native 점검 생성 요청에 실패했습니다.'};
+const errors={SERVER_CLOCK_UNAVAILABLE:'서버 시각 계약이 없어 3D 연결을 차단했습니다. Native 수락만으로 적용되지 않습니다.',BINDING_DELIVERY_TIMEOUT:'연결 정보 전달이 지연되어 3D 연결을 종료했습니다.',INVALID_BINDING:'점검 연결 정보를 검증하지 못했습니다.',BINDING_CONFLICT:'다른 점검 연결과 충돌해 새 연결을 거부했습니다.',INVALID_RESULT:'결과의 부품·응답·시각을 확인하지 못했습니다.',INACTIVE_BINDING:'연결이 만료되거나 종료되어 새 결과를 적용할 수 없습니다.',DIGEST_MISMATCH:'원본 결과와 수락 근거가 일치하지 않습니다.',VERIFICATION_FAILED:'Native 수락 검증에 실패했습니다.',INVALID_ACCEPTED_PROOF:'검증된 수락 근거를 확인하지 못했습니다.',RESULT_CONFLICT:'같은 점검 ID의 내용이 달라 새 결과를 거부했습니다.',INVALID_TERMINAL:'점검 연결의 종료 정보를 확인하지 못했습니다.',CAPACITY:'이 화면의 기록 한도에 도달했습니다. 새 점검 세션이 필요합니다.',NATIVE_NOT_CONNECTED:'Native 전달 경로가 없어 모바일 요청을 시작할 수 없습니다.',REQUEST_REJECTED:'점검 요청을 시작할 수 없습니다.',REQUEST_FAILED:'Native 연결을 확인하지 못했습니다.'};
 const errorText=code=>errors[code]??'결과 전달 상태를 확인하지 못했습니다.';
+// About asking for a request, not about a result: the sentences on result handling would not apply.
+const REQUEST_NOTICES=new Set(['NATIVE_NOT_CONNECTED','REQUEST_REJECTED','REQUEST_FAILED']);
 export function resultSummaryHtml(local,mobile){
   const rows=projectInspectionResults(local,mobile),counts=resultCounts(rows),pending=rows.reduce((n,r)=>n+r.candidates.filter(c=>c.inspectionId!==r.inspectionId).length,0);
   return `<section class="all-results" aria-label="17개 부품 점검 결과"><h3>17개 부품 점검 결과</h3>
     <p role="status">선택된 확정 기록 ${17-counts.NOT_INSPECTED}/17 · 미점검 ${counts.NOT_INSPECTED} · 이상 징후 ${counts.FINDINGS_REPORTED} · 확인 불가 ${counts.UNABLE} · 발견 사항 없음 ${counts.NO_FINDINGS_REPORTED}</p>
     <p class="note">${esc(connection[mobile?.connection]??connection.INCOMPLETE_NATIVE)}</p><p class="note">모바일 후보 ${pending}건 · 수신만으로 자동 적용하지 않습니다. SDK 관측·QR 표시·미확정 응답은 점검 완료가 아닙니다.</p>
-    ${mobile?.notice?`<p class="result-error" role="status">${errorText(mobile.notice)} 기존 표시 기록은 유지합니다.</p>`:''}
+    ${mobile?.notice?`<p class="result-error" role="status">${errorText(mobile.notice)}${REQUEST_NOTICES.has(mobile.notice)?'':' 기존 표시 기록은 유지합니다.'}</p>`:''}
     <ul class="items result-list">${rows.map(r=>`<li><button type="button" class="item" data-action="result-detail" data-id="${r.partId}"><span>${esc(r.partLabel)}</span>${stateBadgeHtml(r)}<small>${r.origin==='MOBILE_RECEIVER'?'MOBILE / USER_REPORTED · Native 수락 기록':r.origin?'USER_REPORTED · 이 3D 화면 직접 입력':'확정 기록 없음'}${r.candidates.length?` · 모바일 ${r.candidates.length}건`:''}</small></button></li>`).join('')}</ul></section>`;
+}
+// Keeps a control's identity across a rewrite of the region that holds it.
+const focusSelector=el=>{const d=el?.dataset;if(!d?.action)return null;const attr=(name,value)=>value===undefined?'':`[data-${name}="${CSS.escape(value)}"]`;return `[data-action="${CSS.escape(d.action)}"]${attr('task',d.task)}${attr('record',d.record)}${attr('id',d.id)}`;};
+const written=new WeakMap();
+function writeRegion(region,html){
+  if(!region||written.get(region)===html)return;
+  const open=[...region.querySelectorAll('details')].map(d=>d.open);
+  region.innerHTML=html;written.set(region,html);
+  const now=region.querySelectorAll('details');if(now.length===open.length)now.forEach((d,i)=>{d.open=open[i];});
+}
+/** The only place the session's result surfaces are redrawn, for both local and mobile changes, from one projection.
+ * Touches these regions only: never the camera, the selection or the rest of the panel. */
+export function refreshResultRegions(root,{local,mobile,partId}){
+  const doc=root.ownerDocument,focused=doc.activeElement,scroll=root.scrollTop,part=root.querySelector('#mobilePartResults'),summary=root.querySelector('#allResults');
+  const key=[part,summary].some(region=>region?.contains(focused))?focusSelector(focused):null;
+  writeRegion(part,part?partResultHtml(local,mobile,partId):'');
+  writeRegion(summary,summary?resultSummaryHtml(local,mobile):'');
+  const rows=projectInspectionResults(local,mobile);
+  for(const button of root.querySelectorAll('button.item[data-id]')){
+    if(summary?.contains(button))continue;
+    const row=rows.find(r=>r.partId===button.dataset.id),badge=button.querySelector('.inspection-state');
+    if(row&&badge&&badge.dataset.inspectionState!==row.status)badge.outerHTML=stateBadgeHtml(row);
+  }
+  if(key&&!doc.contains(focused))root.querySelector(key)?.focus({preventScroll:true});
+  root.scrollTop=scroll;
 }
 export function partResultHtml(local,mobile,partId){
   const row=projectInspectionResults(local,mobile).find(r=>r.partId===partId);if(!row)return '';
   const current=row.inspectionId??'LOCAL';
   return `<section class="part-results" data-result-part="${partId}"><h3>이 부품의 사용자 점검 결과</h3>${stateBadgeHtml(row)}
-    ${mobile?.notice?`<p class="result-error" role="status">${errorText(mobile.notice)} 새 결과를 완료로 적용하지 않았습니다.</p>`:''}
+    ${mobile?.notice?`<p class="result-error" role="status">${errorText(mobile.notice)}${REQUEST_NOTICES.has(mobile.notice)?'':' 새 결과를 완료로 적용하지 않았습니다.'}</p>`:''}
     <dl class="tire-status"><dt>출처</dt><dd>${row.source??'확정 기록 없음'}${row.confirmation?' / '+row.confirmation:''}</dd><dt>기록 경로</dt><dd>${row.origin==='MOBILE_RECEIVER'?'검증된 Native 수락 → 사용자 선택':row.origin?'이 3D 화면 직접 입력':'선택된 결과 없음'}</dd><dt>사용자 확정 시각</dt><dd>${recordTimeHtml(row.completedAt)}</dd></dl>
     ${row.inspectionId?`<details><summary>원본 응답·수락 근거</summary><dl class="tire-status"><dt>inspectionId</dt><dd>${esc(row.inspectionId)}</dd><dt>taskId / partId</dt><dd>${esc(row.taskId)} / ${esc(row.partId)}</dd>${['proofId','bindingId','syncSessionId','localSessionId','generation','receivedAt','acceptedAt'].map(k=>`<dt>${k}</dt><dd>${esc(row.proof[k])}</dd>`).join('')}<dt>digest</dt><dd>${esc(row.resultDigest)}</dd></dl>
       ${row.schemaVersion===1?`<p>원본 사용자 선택: ${esc(row.original.status)} · 질문별 응답이 없는 schema v1입니다.</p>`:`<dl class="tire-status">${row.responseKeys.map(k=>`<dt>${esc(RESPONSE_LABELS[k])}</dt><dd>${RESPONSE_ANSWERS[row.responses[k]]}</dd>`).join('')}</dl>`}<pre>${esc(JSON.stringify(row.original,null,2))}</pre></details>`:''}

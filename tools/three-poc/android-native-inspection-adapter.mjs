@@ -13,7 +13,10 @@ export function createAndroidNativeInspectionAdapter(){
       const response=await fetch(`/native-inspection-v1?command=${encodeURIComponent(JSON.stringify(command))}`,{cache:'no-store',credentials:'omit',redirect:'error',referrerPolicy:'same-origin',signal:AbortSignal.timeout(2000)});
       if(!response.ok||!response.headers.get('content-type')?.startsWith('application/json'))throw Error('Native unavailable');
       const text=await response.text();if(text.length>262144)throw Error('Native reply too large');
-      const value=JSON.parse(text);if(value.error||performance.now()-started>2000)throw Error('Native rejected or delayed request');startedAt.set(value,started);return value;
+      const value=JSON.parse(text);
+      // Only an explicit REJECTED is a refusal. UNAVAILABLE, a delay or a broken reply says nothing about the request.
+      if(value.error==='REJECTED')throw Object.assign(Error('Native rejected request'),{nativeRejected:true});
+      if(value.error||performance.now()-started>2000)throw Error('Native unavailable or delayed');startedAt.set(value,started);return value;
     };
     const promise=queue.then(run);queue=promise.catch(()=>{});return promise;
   };
