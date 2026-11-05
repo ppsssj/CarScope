@@ -8,6 +8,8 @@ import java.io.File
 import java.util.UUID
 import java.util.concurrent.TimeUnit
 
+private const val SECRET_SESSION = "SECRET-LOCAL-SESSION"
+
 class NativeInspectionBridgeTest {
     private val gson = Gson()
     private class Fixture {
@@ -121,6 +123,60 @@ class NativeInspectionBridgeTest {
         val f = Fixture(); f.bridge.state(f.state(clockValue = null))
         val done = runNodeConsumer(f, "blocked")
         assertEquals(0, done["records"].asInt); assertEquals("SERVER_CLOCK_UNAVAILABLE", done["notice"].asString)
+    }
+    private class DiagFixture {
+        var elapsed = 1000L
+        val lines = mutableListOf<String>()
+        val requests = mutableListOf<NativeInspectionRequest>()
+        val gson = Gson()
+        val bridge = NativeInspectionBridge({ elapsed }, requests::add, {}, { elapsed += 600 }, lines::add)
+        fun rpc(op: String, generation: Int = 1, session: String = SECRET_SESSION, fields: Map<String, Any> = emptyMap()) = JsonParser.parseString(bridge.handle(gson.toJson(
+            mapOf("op" to op, "localSessionId" to session, "generation" to generation) + fields))).asJsonObject
+        fun request(task: String, generation: Int = 1) = rpc("request", generation, fields = mapOf("taskId" to task, "partId" to NativeInspectionBridge.partId(task)!!))
+        fun error(json: com.google.gson.JsonObject) = json["error"]?.asString
+    }
+    @Test fun `a transient suspend closes the session for good until the page opens a newer generation`() {
+        val f = DiagFixture(); assertTrue(f.rpc("open").has("ok")); assertTrue(f.request("washer-fluid").has("ok"))
+        f.bridge.suspend()
+        assertEquals("UNAVAILABLE", f.error(f.rpc("poll")))
+        assertTrue(f.lines.any { it == "suspend hadSession=true pending=true" })
+        assertTrue(f.lines.last(), f.lines.last().contains("stage=INACTIVE"))
+        f.bridge.resume()
+        assertEquals("resume restores nothing", "REJECTED", f.error(f.rpc("poll")))
+        assertTrue(f.lines.last(), f.lines.last().contains("op=poll stage=SESSION_CLEARED"))
+        assertEquals("the old generation cannot reopen", "REJECTED", f.error(f.rpc("open")))
+        assertTrue(f.lines.last(), f.lines.last().contains("op=open stage=GENERATION_NOT_NEWER"))
+        assertEquals("no pending request survives", 1, f.requests.size)
+        assertTrue(f.rpc("open", 2, "second-session").has("ok"))
+        assertTrue(f.rpc("poll", 2, "second-session").has("bindings"))
+        assertTrue(f.lines.any { it == "open generation=2" })
+    }
+    @Test fun `a reloaded page starting again at generation one is rejected and the rejection is named`() {
+        val f = DiagFixture(); assertTrue(f.rpc("open").has("ok"))
+        assertEquals("REJECTED", f.error(f.rpc("open", 1, "reloaded-page")))
+        assertTrue(f.lines.last(), f.lines.last().contains("stage=GENERATION_NOT_NEWER"))
+        assertTrue("the current owner keeps working", f.rpc("poll").has("bindings"))
+    }
+    @Test fun `each rejection names its stage and only a different part conflicts with a pending request`() {
+        val f = DiagFixture(); assertTrue(f.rpc("open").has("ok"))
+        assertEquals("REJECTED", f.error(f.rpc("poll", 1, "other-session"))); assertTrue(f.lines.last(), f.lines.last().contains("op=poll stage=SESSION_MISMATCH"))
+        assertEquals("REJECTED", f.error(f.rpc("poll", 2))); assertTrue(f.lines.last(), f.lines.last().contains("op=poll stage=SESSION_MISMATCH"))
+        assertEquals("REJECTED", f.error(f.rpc("nonsense"))); assertTrue(f.lines.last(), f.lines.last().contains("op=other stage=UNKNOWN_OP"))
+        assertTrue(f.request("washer-fluid").has("ok"))
+        assertTrue("same part reopens", f.request("washer-fluid").has("ok")); assertEquals(1, f.requests.size)
+        assertEquals("REJECTED", f.error(f.request("brake-fluid"))); assertTrue(f.lines.last(), f.lines.last().contains("op=request stage=PENDING_CONFLICT"))
+        assertEquals(1, f.requests.size)
+        assertEquals("UNAVAILABLE", f.error(f.rpc("poll", fields = mapOf("x" to "a".repeat(4096))))); assertTrue(f.lines.last(), f.lines.last().contains("stage=OVERSIZED"))
+        assertTrue("rejections do not close the session", f.rpc("poll").has("bindings"))
+    }
+    @Test fun `a slow handler is logged by operation and diagnostics hold no session task or body`() {
+        val f = DiagFixture(); assertTrue(f.rpc("open").has("ok")); assertTrue(f.request("washer-fluid").has("ok"))
+        assertTrue("the second request reopens and advances the clock", f.request("washer-fluid").has("ok"))
+        assertTrue(f.lines.toString(), f.lines.any { it == "slow op=request ms=600" })
+        f.rpc("poll", 1, "other-session"); f.rpc("verify", fields = mapOf("resultDigest" to "SECRET-DIGEST", "bindingId" to "SECRET-BINDING"))
+        f.rpc("poll", fields = mapOf("x" to "SECRET-BODY".repeat(500))); f.bridge.suspend(); f.bridge.destroy()
+        val text = f.lines.joinToString("\n")
+        for (secret in listOf(SECRET_SESSION, "other-session", "washer-fluid", "SECRET-DIGEST", "SECRET-BINDING", "SECRET-BODY")) assertFalse(text, text.contains(secret))
     }
     @Test fun `asset RPC rejects a second pending task oversized bodies and unknown trust keys`() {
         val f = Fixture(); f.request()

@@ -64,6 +64,6 @@ test('inspect.js has a single toast owner', () => {
   const source = readFileSync(new URL('../inspect.js', import.meta.url), 'utf8');
   assert.equal(source.match(/\$\(\s*['"]toast['"]\s*\)/g).length, 1);
   assert.match(source, /createToast\(\$\('toast'\)\)/);
-  assert.match(source, /showToast\(mobileRequestToast\(mobileResults\.request\(b\.dataset\.task\)\)\)/);
+  assert.match(source, /showToast\(mobileRequestToast\(mobileResults\.request\(b\.dataset\.task\),mobileResults\.snapshot\.connection\)\)/);
   assert.match(source, /showToast\(hints\[state\.name\]\)/);
 });

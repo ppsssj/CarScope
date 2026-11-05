@@ -503,7 +503,7 @@ $("panel").addEventListener("click", (e) => {
     if(filters){filters.outerHTML=historyFilterHtml(inspectionHistory.snapshot);$('panel').querySelector('.history-filters summary').focus({preventScroll:true});}
   }
   else if(a==='select-result'&&b.dataset.session===userInspection.sessionId)mobileResults.select(b.dataset.task,b.dataset.record);
-  else if(a==='request-mobile')showToast(mobileRequestToast(mobileResults.request(b.dataset.task)));
+  else if(a==='request-mobile')showToast(mobileRequestToast(mobileResults.request(b.dataset.task),mobileResults.snapshot.connection));
   else if (a === 'confirm-tire' && state.name === STATES.TIRE_PREVIEW && b.dataset.id === state.component) {
     const next = updateTireInspection(userInspection, { type: 'CONFIRM', tireId: state.component, sessionId: b.dataset.session, at: Date.now() });
     if (next !== userInspection) { userInspection = next; renderGuide('confirm'); }
