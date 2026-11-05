@@ -1,5 +1,9 @@
 # 로드맵 및 진입 조건
 
+## P9-S2 — 점검 화면 상태 일관성
+
+로컬 결과 확정 즉시 결과 카드·요약·배지·3D 색상이 같은 기록을 보여 주도록 갱신 경로를 하나로 합쳤다. 모바일 요청 토스트는 전달 중, 접수, 거부, 연결 불가를 구별하고 늦은 응답을 다른 화면에 표시하지 않는다. Android, 브리지 RPC, QR·결과 계약은 바꾸지 않았다. **합성 어댑터 검증이며 `AVD_NOT_RUN`이다.** [설계](p9-s2-inspection-ui-consistency.md), [증거 인덱스](evidence/p9-s2/README.md).
+
 ## P9-XR-C — WebXR 모바일 점검 통합
 
 P9-XR-B의 공간 고정 마커를 워셔액 점검 화면 안의 선택 기능으로 통합했다. 같은 문서에서 실행하므로 체크리스트와 QR v2 인증 컨텍스트가 유지된다. 플래그로만 켜지고 기본은 꺼져 있으며 **Render에는 연결하지 않았다.** AI 인식은 없다. 검증은 가짜 XR 런타임까지이며 **Z Flip8과 실제 QR E2E는 사용자 결정으로 `NOT_RUN_DEFERRED_TO_E2E`다.** [통합 설계](p9-xr-c-webxr-inspection-integration.md), [마커 규칙](p9-xr-b-webxr-spatial-poc.md), [증거 인덱스](evidence/p9-xr-c/README.md).
