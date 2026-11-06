@@ -121,9 +121,7 @@ class NativeOverlayActivityTest {
 
     // Found on the AVD: with no request at all the panel promised to keep one and pointed at a disabled Cancel button.
     @Test fun `close label promises to keep a request only while one exists`() {
-        val h = host(); h.open()
-        assertEquals("패널 닫기", h.text("close-panel")); assertTrue(h.text("close-note").contains("없습니다")); assertFalse(h.text("close-note").contains("취소되지 않습니다"))
-        h.click("create")
+        val h = host(); assertEquals("패널 닫기", h.text("close-panel")); h.open()
         assertEquals("패널 닫기 · 점검 요청 유지", h.text("close-panel")); assertTrue(h.text("close-note").contains("취소되지 않습니다"))
         h.click("cancel")
         assertEquals("패널 닫기", h.text("close-panel")); assertFalse(h.text("close-note").contains("취소되지 않습니다"))
@@ -131,10 +129,8 @@ class NativeOverlayActivityTest {
     }
 
     @Test fun `QR shows connection and expiry states and is removed on claim and expiry`() {
-        val h = host(); h.open()
-        assertEquals(View.GONE, h.tag<ImageView>("qr").visibility); assertTrue(h.text("status").contains("'점검 요청 생성'"))
-        h.click("create")
-        assertEquals(View.VISIBLE, h.tag<ImageView>("qr").visibility); assertTrue(h.text("expiry").contains("QR 초대 만료")); assertTrue(h.text("status").contains("스마트폰 연결 전"))
+        val h = host(); assertEquals(View.GONE, h.tag<ImageView>("qr").visibility); h.open()
+        assertEquals(View.VISIBLE, h.tag<ImageView>("qr").visibility); assertTrue(h.text("status").contains("QR 생성 완료")); assertTrue(h.text("expiry").contains("QR 초대 만료")); assertTrue(h.text("status").contains("스마트폰 연결 전"))
         h.a.fake.claimed = true; h.poll()
         assertTrue(h.text("status"), h.text("status").contains("스마트폰 연결됨")); assertNull(h.tag<ImageView>("qr").drawable); assertEquals(View.GONE, h.tag<ImageView>("qr").visibility)
         h.b.stop().destroy()
@@ -192,6 +188,8 @@ class NativeOverlayActivityTest {
         rpc("open"); rpc("request", """, "taskId":"washer-fluid","partId":"washer-fluid-cap""""); shadowOf(Looper.getMainLooper()).idle()
         assertEquals(View.VISIBLE, root.getChildAt(1).visibility)
         assertFalse(root.findViewWithTag<Button>("create").isEnabled); assertEquals(View.GONE, root.findViewWithTag<ImageView>("qr").visibility)
+        assertEquals("패널 닫기", root.findViewWithTag<Button>("close-panel").text.toString())
+        assertTrue(root.findViewWithTag<TextView>("close-note").text.contains("없습니다"))
         assertNull(root.findViewWithTag<ImageView>("qr").drawable)
         assertTrue(root.findViewWithTag<TextView>("status").text.contains("생성 권한 없음"))
         assertTrue(root.findViewWithTag<TextView>("authentication").text.contains("실제 차량 인증 미구현"))

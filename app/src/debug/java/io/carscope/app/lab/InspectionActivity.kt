@@ -82,7 +82,7 @@ open class InspectionActivity : SyncReceiverActivity() {
             bridgeHandler.post {
                 if (!bridgeStopped && bridge.isCurrent(request)) {
                     receiverTask(request.taskId)
-                    if (bridge.arm(request)) showReceiver(true)
+                    if (bridge.arm(request)) { showReceiver(true); createWhenAuthorized(request.taskId) }
                 }
             }
         }, { bridgeHandler.post { if (!bridgeStopped) { resetReceiver(); showReceiver(false) } } },
@@ -127,6 +127,9 @@ open class InspectionActivity : SyncReceiverActivity() {
         showReceiver(false)
         super.onStop() // closes receiver credentials, HTTP, polls and provisioning
     }
+
+    internal override fun provisionOnStart() = false
+    internal override fun creationPanelVisible() = showingReceiver
 
     internal override fun onReceiverState(state: SyncReceiverState) {
         if (::bridge.isInitialized && !bridgeStopped) {

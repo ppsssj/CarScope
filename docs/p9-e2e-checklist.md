@@ -61,7 +61,7 @@ P9-A0 빌드: `C:\carscope-external\p9-a0\apk\carscope-debug-8a6f559.apk`, SHA-2
 | B1d | 호스트 메모리 | `Get-CimInstance Win32_OperatingSystem \| Select-Object FreePhysicalMemory,TotalVisibleMemorySize` (KiB) |
 | B1e | WebView | `& $adb -s $serial shell dumpsys webviewupdate` |
 | B1f | 기존 ANR | `& $adb -s $serial shell dumpsys activity lastanr > $out\lastanr-before.txt` |
-| B1g | 남은 enrollment | `& $adb -s $serial shell "run-as io.carscope.app --user $user ls -l files/avd-simulator-enrollment.json"`. 내용은 읽지 않는다. 있으면 **Activity를 시작하기 전에 확인한다.** `InspectionActivity`도 `SyncReceiverActivity`를 상속하므로, 유효한 파일이 있으면 3D 화면을 여는 것만으로 grant를 요청한다(G7) |
+| B1g | 남은 enrollment | `& $adb -s $serial shell "run-as io.carscope.app --user $user ls -l files/avd-simulator-enrollment.json"`. 내용은 읽지 않는다. 있으면 **Activity를 시작하기 전에 확인한다.** 단독 `SyncReceiverActivity`는 시작할 때, `InspectionActivity`는 P9-I1부터 부품을 요청할 때 grant를 요청한다(G7) |
 
 readiness PASS는 identity 범위다. 안정성 판정이 아니다. 저장소에 수치 기준이 없어 아래 값을 **이번 P9의 제안 기준**으로 둔다. 과거 관측에서 정한 보수적 값이며 측정으로 조정한 값이 아니다. 기준을 넘기면 중단하고 사용자 프로세스를 종료하거나 AVD를 reset하지 않는다.
 
@@ -98,7 +98,7 @@ $endpoint | & $adb -s $serial shell "run-as io.carscope.app --user $user sh -c '
 
 **파싱 확인:** 파일 검사만으로 끝내지 않는다. 화면이 `HTTPS 주소 설정됨 · …`이면 앱의 파서가 수락한 것이고, `연결 설정 미완료`면 거부한 것이다.
 
-PowerShell 5.1 파이프는 ASCII에 CRLF를 붙이며, 이 형식은 JVM의 실제 파서에서 통과함을 확인했다. P9-A2의 기기 배치는 Git Bash의 `printf '%s'`(101 bytes, CRLF 없음)로 실행했으므로 위 PowerShell 명령 자체는 기기에서 실행하지 않았다. 내용이 틀리면 같은 명령으로 덮어쓴다.
+PowerShell 5.1 파이프는 ASCII에 CRLF를 붙이며, 이 형식은 JVM의 실제 파서에서 통과함을 확인했다. P9-A2의 기기 배치는 Git Bash의 `printf '%s'`(101 bytes, CRLF 없음)로 실행했으므로 위 PowerShell 명령 자체는 기기에서 실행하지 않았다. 내용이 틀리면 같은 명령으로 덮어쓴다. **P9-I1에서 콘솔 입력 인코딩이 UTF-8인 PC는 이 파이프에 BOM이 붙는 것을 확인했다.** 인코딩을 고정한 `tools/inspection-sync-poc/android/setup-avd-simulator.ps1 -Action Endpoint`를 쓴다.
 
 ### B3. GLB
 
@@ -209,7 +209,7 @@ Activity가 시작되면 grant를 한 번 요청한다. **grant 수명은 120초
 | # | 합격 기준 | 실패 시 의미 |
 |---|---|---|
 | C5a | 배포 커밋이 `returns serverNow` (C1) | 신규 서버 미배포 |
-| C5b | 부품 결과 화면의 `이 부품 모바일 점검 요청`으로 수신 패널 진입, 세션 생성 후 패널 문구가 `Native에서 수락한 뒤 3D에서 기록을 직접 선택하세요.` | `3D 연결 차단: 서버 기준 시각 계약이 없습니다...`는 **필드 부재, RTT 5000ms 초과, 전달 지연 예산 초과를 구분하지 못한다.** C5a를 먼저 본다. 시간 조건을 완화하지 않는다 |
+| C5b | 부품 결과 화면의 `모바일로 점검하기`로 수신 패널 진입(P9-I1부터 grant 후 세션 자동 생성), 세션 생성 후 패널 문구가 `Native에서 수락한 뒤 3D에서 기록을 직접 선택하세요.` | `3D 연결 차단: 서버 기준 시각 계약이 없습니다...`는 **필드 부재, RTT 5000ms 초과, 전달 지연 예산 초과를 구분하지 못한다.** C5a를 먼저 본다. 시간 조건을 완화하지 않는다 |
 
 ### C6. Native → 3D 전달 (G8)
 

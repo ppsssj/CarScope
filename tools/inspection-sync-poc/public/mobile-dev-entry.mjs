@@ -39,5 +39,7 @@ if (entry.version === 2) {
   addEventListener('pageshow', (e) => { if (e.persisted) sync.close(); });
   document.addEventListener('visibilitychange', () => document.hidden ? sync.pause() : sync.resume());
 }
-await startInspectionPage({ handoff: entry.handoff, onComplete: (record) => sync?.setResult(record), onRestart: () => sync?.close() });
+// A person who finished the inspection before connecting must not stop at a disabled send button.
+const completed = (record) => { sync?.setResult(record); if (sync?.snapshot.canClaim) void sync.claim(); };
+await startInspectionPage({ handoff: entry.handoff, onComplete: completed, onRestart: () => sync?.close() });
 if (entry.version === 2) document.getElementById('handoff-status').textContent = 'QR v2 점검 요청 · 사용자 보고 결과 전송';

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Debug-only WebGL experiment, read-only identity diagnostic and visual-profile screen. Exported for adb on the
-     test AVD; none of these activities has a launcher entry or exists in release builds. -->
+     test AVD; none of these activities exists in release builds. Only the inspection screen has a launcher entry. -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="pleos.car.permission.CAR_ENERGY" />
     <uses-permission android:name="pleos.car.permission.CAR_WINDOWS" />
@@ -37,6 +37,11 @@
         <activity
             android:name=".lab.InspectionActivity"
             android:exported="true"
-            android:label="CarScope inspection (debug)" />
+            android:label="CarScope 차량 점검 (debug)">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
     </application>
 </manifest>

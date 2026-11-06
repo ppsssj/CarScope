@@ -31,7 +31,8 @@ and does not change the Render deployment.
   this is a distinct `SessionCreationCredentialProvider` used only in Debug.
 - The "점검 요청 생성" button becomes available only while a locally validated
   short-lived grant exists. No network I/O in the provider getter or UI tick.
-  `onStart` and manual "서비스 연결 확인" explicitly refresh. Refresh clears old
+  `onStart` and manual "서비스 연결 확인" explicitly refresh. P9-I1 exception: `InspectionActivity`
+  refreshes on a 3D request instead of `onStart`, and retries every 30 seconds while its panel is open. Refresh clears old
   permission BEFORE async HTTPS I/O; expired/revoked/error responses never grant local access.
 - Activity `onStop` cancels in-flight requests and clears grants, receiver tokens
   and QR in memory; stale callbacks and recreation cannot reauthorize.

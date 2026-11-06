@@ -1,5 +1,9 @@
 # 로드맵 및 진입 조건
 
+## P9-I1 — 차량 앱 ↔ 모바일 웹 ↔ 서버 흐름 통합
+
+Launcher 진입, `모바일로 점검하기`의 세션 자동 생성, 요청 시점의 grant 갱신, 인증·QR 상태 표시, 모바일 자동 연결, 운영자 설치 스크립트를 연결했다. 서버 API, 인증, 스키마는 바꾸지 않았다. **AVD·실기기·운영 실행은 NOT_RUN이고 Render 모드 변경은 운영자 승인으로 남아 있다.** [흐름과 운영자 절차](p9-i1-vehicle-mobile-flow.md).
+
 ## P9-A4 — Supabase PostgreSQL 이전 사전 검증
 
 Render PostgreSQL을 독립된 Supabase 프로젝트로 옮기기 위한 호환성 분석, 런타임 수정(CA 고정 TLS, 전용 스키마 확인, 연결 끊김 처리), 절차와 롤백을 준비했다. Docker PostgreSQL 16·17과 합성 데이터로 검증했다. **Supabase 프로젝트 생성·연결, 운영 DB 접근, 데이터 이전, Render 배포는 NOT_RUN이고 각각 별도 승인이 필요하다.** [분석과 Runbook](p9-a4-supabase-migration.md), [증거 인덱스](evidence/p9-a4/README.md).
