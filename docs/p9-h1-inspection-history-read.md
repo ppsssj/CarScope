@@ -63,7 +63,7 @@ Query, 정렬, cursor, 오류 형식, DTO 키는 [P8 계약](contracts/p8-inspec
 
 처음에는 `CARSCOPE_AVD_HISTORY_READ` 환경변수로 구현했다가 이 게이트에 걸려 제거했다. 게이트와 테스트는 수정하지 않았다.
 
-**최소 해결 (정책 승인 필요):** 시뮬레이터 모드에서 이 경로를 켜도 된다고 결정하면, CLI의 `startRenderStateful` 호출에 `enableAvdHistoryRead: true`를 넣는 한 줄 변경으로 충분하다. 새 환경변수가 필요 없고 `CARSCOPE_AVD_SIMULATOR_MODE`에 묶인다. 대신 위 테스트의 CLI 검사와 이 문서를 함께 고치는 별도 PR이 되어야 하고, 운영자가 시뮬레이터 모드로 재배포해야 한다. 승인이 필요한 판단은 "enrollment proof를 읽기 credential로 인정할 것인가"이다.
+**활성화 방식:** [P9-H2](p9-h2-avd-history-activation.md)가 정했다. 기본 CLI에 옵션을 넣으면 시뮬레이터 모드 서버가 코드 배포만으로 열리므로, 별도 진입점과 Start Command 변경을 쓴다.
 
 **꺼져 있을 때 클라이언트 결과:** `/simulator/inspection-records`는 서버에서 404, query가 있으면 400이다. 패널에는 `NOT_FOUND` 또는 `INVALID_QUERY`로 보이며 `EMPTY`가 되지 않는다. 기록 없음으로 표시되지 않고 조회 실패로 처리된다.
 
