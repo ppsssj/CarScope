@@ -33,7 +33,7 @@ test('Android debug package follows the new inspection builder and every relativ
   for(const name of readdirSync(join(out,'ioniq5-asset'))) assert.equal(readFileSync(join(out,'ioniq5-asset',name),'utf8'),readFileSync(join(repo,'tools/ioniq5-asset',name),'utf8'),name);
   assert.equal(readFileSync(join(out,'inspect.js'),'utf8'),readFileSync(join(repo,'tools/three-poc/inspect.js'),'utf8'));
   assert.ok(!walk(out).some(f=>f.endsWith('.glb')));
-  for(const name of ['android-native-inspection-adapter.mjs','mobile-result-contract.mjs','native-inspection-results.mjs','inspection-results.mjs','inspection-results-view.mjs'])assert.equal(readFileSync(join(out,name),'utf8'),readFileSync(join(repo,'tools/three-poc',name),'utf8'));
+  for(const name of ['android-native-inspection-adapter.mjs','native-bridge-diagnostics.mjs','mobile-result-contract.mjs','native-inspection-results.mjs','inspection-results.mjs','inspection-results-view.mjs'])assert.equal(readFileSync(join(out,name),'utf8'),readFileSync(join(repo,'tools/three-poc',name),'utf8'));
   assert.ok(!walk(out).some(f=>/fixture|test[\\/]/.test(f.slice(out.length))),'synthetic receiver authorities never enter Android assets');
   assert.ok(readFileSync(join(out,'inspect.js'),'utf8').includes('createNativeInspectionResults({adapter:createAndroidNativeInspectionAdapter()})'),'production composition uses the fixed Android adapter only');
   assert.ok(!existsSync(join(fixture,'app/src/release/assets/inspection')),'builder remains debug-only');

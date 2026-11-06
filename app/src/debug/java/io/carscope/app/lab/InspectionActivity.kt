@@ -3,6 +3,7 @@ package io.carscope.app.lab
 import android.graphics.Color
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
@@ -85,7 +86,8 @@ open class InspectionActivity : SyncReceiverActivity() {
                 }
             }
         }, { bridgeHandler.post { if (!bridgeStopped) { resetReceiver(); showReceiver(false) } } },
-            { request -> bridgeHandler.post { if (!bridgeStopped && bridge.isCurrent(request)) showReceiver(true) } })
+            { request -> bridgeHandler.post { if (!bridgeStopped && bridge.isCurrent(request)) showReceiver(true) } },
+            { line -> Log.i(TAG, "CARSCOPE_NATIVE_BRIDGE $line") })
         tireStatus = TireUiChannel(TireProcessOwner.get(applicationContext))
         componentStatus = ComponentUiChannel(ComponentProcessOwner.get(applicationContext))
         screen = DebugWebScreen(this, TAG, HOST, ROOT, mapOf("external/ioniq5.glb" to File(filesDir, DebugWebScreen.MODEL_PATH)), tireStatus::readJson, componentStatus::readJson, componentStatus::readChargePortJson, componentStatus::readVisibilityJson, bridge::handle)
