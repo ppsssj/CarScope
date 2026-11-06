@@ -12,7 +12,8 @@
     "test:results-browser": "node test/browser-inspection-results.mjs",
     "test:history-browser": "node test/browser-inspection-history.mjs",
     "test:toast-browser": "node test/browser-inspection-toast.mjs",
-    "test:consistency-browser": "node test/browser-inspection-consistency.mjs"
+    "test:consistency-browser": "node test/browser-inspection-consistency.mjs",
+    "test:part-ux-baseline": "node test/browser-part-ux-baseline.mjs"
   },
   "dependencies": {
     "qrcode": "1.5.4",

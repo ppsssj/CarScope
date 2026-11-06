@@ -1,0 +1,8582 @@
+{
+ "viewports": {
+  "1600x1000": {
+   "home": {
+    "view": {
+     "azimuthDeg": 138.6,
+     "polarDeg": 69.7,
+     "distance": 7.4
+    },
+    "overview": {
+     "azimuthDeg": 116.6,
+     "polarDeg": 61,
+     "distance": 9.509
+    }
+   },
+   "overview": {
+    "washer-fluid-cap": {
+     "mineCells": 0,
+     "touchPx": [
+      0,
+      0
+     ],
+     "highlightedMeshes": 0
+    },
+    "coolant-reservoir": {
+     "mineCells": 0,
+     "touchPx": [
+      0,
+      0
+     ],
+     "highlightedMeshes": 0
+    },
+    "lcw-coolant-reservoir": {
+     "mineCells": 0,
+     "touchPx": [
+      0,
+      0
+     ],
+     "highlightedMeshes": 0
+    },
+    "brake-fluid-reservoir": {
+     "mineCells": 0,
+     "touchPx": [
+      0,
+      0
+     ],
+     "highlightedMeshes": 0
+    },
+    "battery-12v": {
+     "mineCells": 0,
+     "touchPx": [
+      0,
+      0
+     ],
+     "highlightedMeshes": 0
+    },
+    "fuse-box": {
+     "mineCells": 0,
+     "touchPx": [
+      0,
+      0
+     ],
+     "highlightedMeshes": 0
+    },
+    "tire.front-left": {
+     "mineCells": 25,
+     "touchPx": [
+      50,
+      113
+     ],
+     "highlightedMeshes": 0
+    },
+    "tire.front-right": {
+     "mineCells": 0,
+     "touchPx": [
+      0,
+      0
+     ],
+     "highlightedMeshes": 0
+    },
+    "tire.rear-left": {
+     "mineCells": 18,
+     "touchPx": [
+      22,
+      70
+     ],
+     "highlightedMeshes": 0
+    },
+    "tire.rear-right": {
+     "mineCells": 0,
+     "touchPx": [
+      0,
+      0
+     ],
+     "highlightedMeshes": 0
+    },
+    "ev-battery.pack": {
+     "mineCells": 0,
+     "touchPx": [
+      0,
+      0
+     ],
+     "highlightedMeshes": 0
+    },
+    "ev-charge.port": {
+     "mineCells": 0,
+     "touchPx": [
+      0,
+      0
+     ],
+     "highlightedMeshes": 0
+    },
+    "ev-charge.flap": {
+     "mineCells": 0,
+     "touchPx": [
+      0,
+      0
+     ],
+     "highlightedMeshes": 0
+    },
+    "wiper.front.left": {
+     "mineCells": 11,
+     "touchPx": [
+      19,
+      9
+     ],
+     "highlightedMeshes": 0
+    },
+    "wiper.front.right": {
+     "mineCells": 11,
+     "touchPx": [
+      24,
+      8
+     ],
+     "highlightedMeshes": 0
+    },
+    "light-low-beam-left-0": {
+     "mineCells": 4,
+     "touchPx": [
+      8,
+      3
+     ],
+     "highlightedMeshes": 1
+    },
+    "light-low-beam-right-0": {
+     "mineCells": 1,
+     "touchPx": [
+      3,
+      2
+     ],
+     "highlightedMeshes": 1
+    },
+    "light-high-beam-left-0": {
+     "mineCells": 0,
+     "touchPx": [
+      0,
+      0
+     ],
+     "highlightedMeshes": 1
+    },
+    "light-high-beam-right-0": {
+     "mineCells": 0,
+     "touchPx": [
+      0,
+      0
+     ],
+     "highlightedMeshes": 1
+    }
+   },
+   "preview": {
+    "washer-fluid-cap": {
+     "selectable": true,
+     "state": "WASHER_SELECTED",
+     "distance": 2.6,
+     "azimuth": 50.2,
+     "polar": 31.7,
+     "position": [
+      2.398,
+      3.053,
+      1.274
+     ],
+     "target": [
+      1.35,
+      0.84,
+      0.4
+     ],
+     "sizeCm": [
+      9.6,
+      18.1,
+      9.6
+     ],
+     "screenPx": [
+      85,
+      127
+     ],
+     "fillPercent": 0.9,
+     "centerOffsetPx": [
+      -58,
+      15
+     ],
+     "mineCells": 80,
+     "touchPx": [
+      62,
+      93
+     ],
+     "meshes": 2,
+     "highlightedMeshes": 2,
+     "color": [
+      153,
+      205,
+      219
+     ],
+     "selectionIntensity": null,
+     "label": true,
+     "badge": "위치·형상 추정",
+     "backButtons": [
+      "점검 항목으로"
+     ],
+     "focusOutline": true,
+     "hasMobile": true,
+     "noProcedureText": false,
+     "internalWords": [],
+     "backTo": "COMPONENT_SELECTION",
+     "backPoseMoved": 2.259
+    },
+    "coolant-reservoir": {
+     "selectable": true,
+     "state": "COMPONENT_PREVIEW",
+     "distance": 0.85,
+     "azimuth": 65.4,
+     "polar": 25.2,
+     "position": [
+      1.82,
+      1.541,
+      0.586
+     ],
+     "target": [
+      1.49,
+      0.772,
+      0.435
+     ],
+     "sizeCm": [
+      18,
+      16.4,
+      18
+     ],
+     "screenPx": [
+      488,
+      534
+     ],
+     "fillPercent": 21.7,
+     "centerOffsetPx": [
+      6,
+      -7
+     ],
+     "mineCells": 106,
+     "touchPx": [
+      390,
+      427
+     ],
+     "meshes": 2,
+     "highlightedMeshes": 2,
+     "color": [
+      202,
+      219,
+      221
+     ],
+     "selectionIntensity": null,
+     "label": false,
+     "badge": "추정 모델 · 점검 절차 미제공",
+     "backButtons": [
+      "점검 목록과 이전 시점으로"
+     ],
+     "focusOutline": true,
+     "hasMobile": true,
+     "noProcedureText": true,
+     "internalWords": [],
+     "backTo": "COMPONENT_SELECTION",
+     "backPoseMoved": 2.837
+    },
+    "lcw-coolant-reservoir": {
+     "selectable": false,
+     "state": "COMPONENT_SELECTION"
+    },
+    "brake-fluid-reservoir": {
+     "selectable": true,
+     "state": "COMPONENT_PREVIEW",
+     "distance": 0.85,
+     "azimuth": 114.6,
+     "polar": 25.2,
+     "position": [
+      1.64,
+      1.561,
+      -0.581
+     ],
+     "target": [
+      1.31,
+      0.792,
+      -0.43
+     ],
+     "sizeCm": [
+      12,
+      12.4,
+      14
+     ],
+     "screenPx": [
+      354,
+      381
+     ],
+     "fillPercent": 11.2,
+     "centerOffsetPx": [
+      -2,
+      -5
+     ],
+     "mineCells": 101,
+     "touchPx": [
+      307,
+      280
+     ],
+     "meshes": 2,
+     "highlightedMeshes": 2,
+     "color": [
+      195,
+      216,
+      219
+     ],
+     "selectionIntensity": null,
+     "label": false,
+     "badge": "추정 모델 · 점검 절차 미제공",
+     "backButtons": [
+      "점검 목록과 이전 시점으로"
+     ],
+     "focusOutline": true,
+     "hasMobile": true,
+     "noProcedureText": true,
+     "internalWords": [],
+     "backTo": "COMPONENT_SELECTION",
+     "backPoseMoved": 2.68
+    },
+    "battery-12v": {
+     "selectable": true,
+     "state": "COMPONENT_PREVIEW",
+     "distance": 0.85,
+     "azimuth": 114.6,
+     "polar": 25.2,
+     "position": [
+      2,
+      1.5,
+      -0.591
+     ],
+     "target": [
+      1.67,
+      0.731,
+      -0.44
+     ],
+     "sizeCm": [
+      24,
+      22.2,
+      18
+     ],
+     "screenPx": [
+      559,
+      673
+     ],
+     "fillPercent": 31.3,
+     "centerOffsetPx": [
+      -11,
+      -15
+     ],
+     "mineCells": 125,
+     "touchPx": [
+      447,
+      628
+     ],
+     "meshes": 4,
+     "highlightedMeshes": 4,
+     "color": [
+      142,
+      196,
+      208
+     ],
+     "selectionIntensity": null,
+     "label": false,
+     "badge": "추정 모델 · 점검 절차 미제공",
+     "backButtons": [
+      "점검 목록과 이전 시점으로"
+     ],
+     "focusOutline": true,
+     "hasMobile": true,
+     "noProcedureText": true,
+     "internalWords": [],
+     "backTo": "COMPONENT_SELECTION",
+     "backPoseMoved": 2.48
+    },
+    "fuse-box": {
+     "selectable": true,
+     "state": "COMPONENT_PREVIEW",
+     "distance": 0.85,
+     "azimuth": 114.6,
+     "polar": 25.2,
+     "position": [
+      1.79,
+      1.538,
+      -0.591
+     ],
+     "target": [
+      1.46,
+      0.769,
+      -0.44
+     ],
+     "sizeCm": [
+      12,
+      15.8,
+      18
+     ],
+     "screenPx": [
+      435,
+      437
+     ],
+     "fillPercent": 15.8,
+     "centerOffsetPx": [
+      -2,
+      -8
+     ],
+     "mineCells": 126,
+     "touchPx": [
+      406,
+      320
+     ],
+     "meshes": 2,
+     "highlightedMeshes": 2,
+     "color": [
+      137,
+      194,
+      206
+     ],
+     "selectionIntensity": null,
+     "label": false,
+     "badge": "추정 모델 · 점검 절차 미제공",
+     "backButtons": [
+      "점검 목록과 이전 시점으로"
+     ],
+     "focusOutline": true,
+     "hasMobile": true,
+     "noProcedureText": true,
+     "internalWords": [],
+     "backTo": "COMPONENT_SELECTION",
+     "backPoseMoved": 2.59
+    },
+    "tire.front-left": {
+     "selectable": true,
+     "state": "TIRE_PREVIEW",
+     "distance": 2.45,
+     "azimuth": 169.8,
+     "polar": 72.5,
+     "position": [
+      1.873,
+      1.112,
+      -3.072
+     ],
+     "target": [
+      1.459,
+      0.376,
+      -0.772
+     ],
+     "sizeCm": [
+      75.1,
+      75.1,
+      25.1
+     ],
+     "screenPx": [
+      532,
+      538
+     ],
+     "fillPercent": 23.8,
+     "centerOffsetPx": [
+      6,
+      7
+     ],
+     "mineCells": 157,
+     "touchPx": [
+      532,
+      502
+     ],
+     "meshes": 1,
+     "highlightedMeshes": 1,
+     "color": [
+      71,
+      109,
+      116
+     ],
+     "selectionIntensity": 0.6,
+     "label": false,
+     "badge": "상태만 표시 · 수치 및 진단 미제공",
+     "backButtons": [
+      "선택 해제 · 이전 시점으로"
+     ],
+     "focusOutline": true,
+     "hasMobile": true,
+     "noProcedureText": false,
+     "internalWords": [
+      "USER_REPORTED"
+     ],
+     "backTo": "TIRE_SELECTION",
+     "backPoseMoved": 3.7
+    },
+    "tire.front-right": {
+     "selectable": true,
+     "state": "TIRE_PREVIEW",
+     "distance": 2.45,
+     "azimuth": 10.2,
+     "polar": 72.5,
+     "position": [
+      1.873,
+      1.112,
+      3.073
+     ],
+     "target": [
+      1.459,
+      0.376,
+      0.772
+     ],
+     "sizeCm": [
+      75.1,
+      75.1,
+      25.1
+     ],
+     "screenPx": [
+      532,
+      538
+     ],
+     "fillPercent": 23.8,
+     "centerOffsetPx": [
+      -6,
+      7
+     ],
+     "mineCells": 157,
+     "touchPx": [
+      532,
+      502
+     ],
+     "meshes": 1,
+     "highlightedMeshes": 1,
+     "color": [
+      107,
+      132,
+      138
+     ],
+     "selectionIntensity": 0.6,
+     "label": false,
+     "badge": "상태만 표시 · 수치 및 진단 미제공",
+     "backButtons": [
+      "선택 해제 · 이전 시점으로"
+     ],
+     "focusOutline": true,
+     "hasMobile": true,
+     "noProcedureText": false,
+     "internalWords": [
+      "USER_REPORTED"
+     ],
+     "backTo": "TIRE_SELECTION",
+     "backPoseMoved": 9.753
+    },
+    "tire.rear-left": {
+     "selectable": true,
+     "state": "TIRE_PREVIEW",
+     "distance": 2.45,
+     "azimuth": -169.8,
+     "polar": 72.5,
+     "position": [
+      -1.978,
+      1.112,
+      -3.072
+     ],
+     "target": [
+      -1.564,
+      0.376,
+      -0.772
+     ],
+     "sizeCm": [
+      75.1,
+      75.1,
+      25.1
+     ],
+     "screenPx": [
+      532,
+      538
+     ],
+     "fillPercent": 23.8,
+     "centerOffsetPx": [
+      -6,
+      7
+     ],
+     "mineCells": 157,
+     "touchPx": [
+      532,
+      502
+     ],
+     "meshes": 1,
+     "highlightedMeshes": 1,
+     "color": [
+      69,
+      107,
+      114
+     ],
+     "selectionIntensity": 0.6,
+     "label": false,
+     "badge": "상태만 표시 · 수치 및 진단 미제공",
+     "backButtons": [
+      "선택 해제 · 이전 시점으로"
+     ],
+     "focusOutline": true,
+     "hasMobile": true,
+     "noProcedureText": false,
+     "internalWords": [
+      "USER_REPORTED"
+     ],
+     "backTo": "TIRE_SELECTION",
+     "backPoseMoved": 4.992
+    },
+    "tire.rear-right": {
+     "selectable": true,
+     "state": "TIRE_PREVIEW",
+     "distance": 2.45,
+     "azimuth": -10.2,
+     "polar": 72.5,
+     "position": [
+      -1.978,
+      1.112,
+      3.073
+     ],
+     "target": [
+      -1.564,
+      0.376,
+      0.772
+     ],
+     "sizeCm": [
+      75.1,
+      75.1,
+      25.1
+     ],
+     "screenPx": [
+      532,
+      538
+     ],
+     "fillPercent": 23.8,
+     "centerOffsetPx": [
+      6,
+      7
+     ],
+     "mineCells": 157,
+     "touchPx": [
+      532,
+      502
+     ],
+     "meshes": 1,
+     "highlightedMeshes": 1,
+     "color": [
+      109,
+      134,
+      141
+     ],
+     "selectionIntensity": 0.6,
+     "label": false,
+     "badge": "상태만 표시 · 수치 및 진단 미제공",
+     "backButtons": [
+      "선택 해제 · 이전 시점으로"
+     ],
+     "focusOutline": true,
+     "hasMobile": true,
+     "noProcedureText": false,
+     "internalWords": [
+      "USER_REPORTED"
+     ],
+     "backTo": "TIRE_SELECTION",
+     "backPoseMoved": 10.312
+    },
+    "ev-battery.pack": {
+     "selectable": true,
+     "state": "EV_BATTERY_PREVIEW",
+     "distance": 5.292,
+     "azimuth": 125.5,
+     "polar": 139.3,
+     "position": [
+      2.683,
+      -3.842,
+      -2.006
+     ],
+     "target": [
+      -0.125,
+      0.17,
+      0
+     ],
+     "sizeCm": [
+      205,
+      10,
+      116
+     ],
+     "screenPx": [
+      647,
+      562
+     ],
+     "fillPercent": 30.3,
+     "centerOffsetPx": [
+      -20,
+      -39
+     ],
+     "mineCells": 110,
+     "touchPx": [
+      474,
+      487
+     ],
+     "meshes": 1,
+     "highlightedMeshes": 1,
+     "color": [
+      64,
+      173,
+      189
+     ],
+     "selectionIntensity": null,
+     "label": false,
+     "badge": "ESTIMATED_GEOMETRY · 추정 외함",
+     "backButtons": [
+      "점검 부위로"
+     ],
+     "focusOutline": true,
+     "hasMobile": false,
+     "noProcedureText": false,
+     "internalWords": [
+      "DETACHED",
+      "ESTIMATED_GEOMETRY",
+      "UNVERIFIED",
+      "USER_REPORTED"
+     ],
+     "backTo": "INSPECTION_OVERVIEW",
+     "backPoseMoved": 10.556
+    },
+    "ev-charge.port": {
+     "selectable": true,
+     "state": "CHARGE_PORT_PREVIEW",
+     "distance": 0.85,
+     "azimuth": -31,
+     "polar": 72,
+     "position": [
+      -2.333,
+      1.243,
+      1.589
+     ],
+     "target": [
+      -1.917,
+      0.98,
+      0.896
+     ],
+     "sizeCm": [
+      31.1,
+      20,
+      8.1
+     ],
+     "screenPx": [
+      599,
+      492
+     ],
+     "fillPercent": 24.5,
+     "centerOffsetPx": [
+      -16,
+      23
+     ],
+     "mineCells": 34,
+     "touchPx": [
+      479,
+      98
+     ],
+     "meshes": 1,
+     "highlightedMeshes": 1,
+     "color": [
+      96,
+      181,
+      195
+     ],
+     "selectionIntensity": null,
+     "label": false,
+     "badge": "ESTIMATED_GEOMETRY · 정적 닫힌 형상",
+     "backButtons": [
+      "뒤로 · 차량 전체 보기"
+     ],
+     "focusOutline": true,
+     "hasMobile": true,
+     "noProcedureText": false,
+     "internalWords": [
+      "DETACHED",
+      "ESTIMATED_GEOMETRY",
+      "UNVERIFIED",
+      "USER_REPORTED"
+     ],
+     "backTo": "INSPECTION_OVERVIEW",
+     "backPoseMoved": 11.88
+    },
+    "ev-charge.flap": {
+     "selectable": true,
+     "state": "CHARGE_PORT_PREVIEW",
+     "distance": 0.85,
+     "azimuth": -31,
+     "polar": 72,
+     "position": [
+      -2.332,
+      1.243,
+      1.592
+     ],
+     "target": [
+      -1.916,
+      0.98,
+      0.899
+     ],
+     "sizeCm": [
+      26.2,
+      16.8,
+      6.9
+     ],
+     "screenPx": [
+      501,
+      413
+     ],
+     "fillPercent": 17.2,
+     "centerOffsetPx": [
+      -11,
+      16
+     ],
+     "mineCells": 122,
+     "touchPx": [
+      468,
+      330
+     ],
+     "meshes": 1,
+     "highlightedMeshes": 1,
+     "color": [
+      137,
+      194,
+      206
+     ],
+     "selectionIntensity": null,
+     "label": false,
+     "badge": "ESTIMATED_GEOMETRY · 정적 닫힌 형상",
+     "backButtons": [
+      "뒤로 · 차량 전체 보기"
+     ],
+     "focusOutline": true,
+     "hasMobile": false,
+     "noProcedureText": false,
+     "internalWords": [
+      "DETACHED",
+      "ESTIMATED_GEOMETRY",
+      "UNVERIFIED",
+      "USER_REPORTED"
+     ],
+     "backTo": "INSPECTION_OVERVIEW",
+     "backPoseMoved": 11.881
+    },
+    "wiper.front.left": {
+     "selectable": true,
+     "state": "VISIBILITY_PREVIEW",
+     "distance": 1.298,
+     "azimuth": 114.6,
+     "polar": 25.2,
+     "position": [
+      1.518,
+      2.3,
+      -0.541
+     ],
+     "target": [
+      1.015,
+      1.126,
+      -0.31
+     ],
+     "sizeCm": [
+      11.6,
+      8.4,
+      56
+     ],
+     "screenPx": [
+      702,
+      419
+     ],
+     "fillPercent": 24.5,
+     "centerOffsetPx": [
+      8,
+      6
+     ],
+     "mineCells": 15,
+     "touchPx": [
+      94,
+      56
+     ],
+     "meshes": 1,
+     "highlightedMeshes": 1,
+     "color": [
+      107,
+      184,
+      197
+     ],
+     "selectionIntensity": null,
+     "label": false,
+     "badge": "ESTIMATED_GEOMETRY · 정적 휴지 자세",
+     "backButtons": [
+      "뒤로 · 차량 전체 보기"
+     ],
+     "focusOutline": true,
+     "hasMobile": true,
+     "noProcedureText": false,
+     "internalWords": [
+      "DETACHED",
+      "ESTIMATED_GEOMETRY",
+      "UNVERIFIED",
+      "USER_REPORTED"
+     ],
+     "backTo": "INSPECTION_OVERVIEW",
+     "backPoseMoved": 7.411
+    },
+    "wiper.front.right": {
+     "selectable": true,
+     "state": "VISIBILITY_PREVIEW",
+     "distance": 1.144,
+     "azimuth": 65.4,
+     "polar": 25.2,
+     "position": [
+      1.458,
+      2.164,
+      0.478
+     ],
+     "target": [
+      1.015,
+      1.129,
+      0.275
+     ],
+     "sizeCm": [
+      11.6,
+      8,
+      49
+     ],
+     "screenPx": [
+      707,
+      435
+     ],
+     "fillPercent": 25.6,
+     "centerOffsetPx": [
+      -7,
+      6
+     ],
+     "mineCells": 16,
+     "touchPx": [
+      141,
+      87
+     ],
+     "meshes": 1,
+     "highlightedMeshes": 1,
+     "color": [
+      102,
+      182,
+      196
+     ],
+     "selectionIntensity": null,
+     "label": false,
+     "badge": "ESTIMATED_GEOMETRY · 정적 휴지 자세",
+     "backButtons": [
+      "뒤로 · 차량 전체 보기"
+     ],
+     "focusOutline": true,
+     "hasMobile": true,
+     "noProcedureText": false,
+     "internalWords": [
+      "DETACHED",
+      "ESTIMATED_GEOMETRY",
+      "UNVERIFIED",
+      "USER_REPORTED"
+     ],
+     "backTo": "INSPECTION_OVERVIEW",
+     "backPoseMoved": 8.001
+    },
+    "light-low-beam-left-0": {
+     "selectable": true,
+     "state": "VISIBILITY_PREVIEW",
+     "distance": 0.85,
+     "azimuth": 99.9,
+     "polar": 78.9,
+     "position": [
+      2.949,
+      0.953,
+      -0.675
+     ],
+     "target": [
+      2.128,
+      0.789,
+      -0.531
+     ],
+     "sizeCm": [
+      0,
+      5.6,
+      16.4
+     ],
+     "screenPx": [
+      303,
+      113
+     ],
+     "fillPercent": 2.8,
+     "centerOffsetPx": [
+      2,
+      1
+     ],
+     "mineCells": 167,
+     "touchPx": [
+      303,
+      90
+     ],
+     "meshes": 1,
+     "highlightedMeshes": 1,
+     "color": [
+      53,
+      130,
+      142
+     ],
+     "selectionIntensity": null,
+     "label": false,
+     "badge": "기존 커뮤니티 GLB 표식 · OEM 광학 구조 미검증",
+     "backButtons": [
+      "뒤로 · 차량 전체 보기"
+     ],
+     "focusOutline": true,
+     "hasMobile": true,
+     "noProcedureText": false,
+     "internalWords": [
+      "DETACHED",
+      "UNVERIFIED",
+      "USER_REPORTED"
+     ],
+     "backTo": "INSPECTION_OVERVIEW",
+     "backPoseMoved": 7.03
+    },
+    "light-low-beam-right-0": {
+     "selectable": true,
+     "state": "VISIBILITY_PREVIEW",
+     "distance": 0.85,
+     "azimuth": 80.1,
+     "polar": 78.9,
+     "position": [
+      2.949,
+      0.953,
+      0.675
+     ],
+     "target": [
+      2.128,
+      0.789,
+      0.531
+     ],
+     "sizeCm": [
+      0,
+      5.6,
+      16.4
+     ],
+     "screenPx": [
+      303,
+      113
+     ],
+     "fillPercent": 2.8,
+     "centerOffsetPx": [
+      -2,
+      1
+     ],
+     "mineCells": 167,
+     "touchPx": [
+      303,
+      90
+     ],
+     "meshes": 1,
+     "highlightedMeshes": 1,
+     "color": [
+      53,
+      130,
+      142
+     ],
+     "selectionIntensity": null,
+     "label": false,
+     "badge": "기존 커뮤니티 GLB 표식 · OEM 광학 구조 미검증",
+     "backButtons": [
+      "뒤로 · 차량 전체 보기"
+     ],
+     "focusOutline": true,
+     "hasMobile": true,
+     "noProcedureText": false,
+     "internalWords": [
+      "DETACHED",
+      "UNVERIFIED",
+      "USER_REPORTED"
+     ],
+     "backTo": "INSPECTION_OVERVIEW",
+     "backPoseMoved": 7.711
+    },
+    "light-high-beam-left-0": {
+     "selectable": true,
+     "state": "VISIBILITY_PREVIEW",
+     "distance": 0.85,
+     "azimuth": 95.7,
+     "polar": 90,
+     "position": [
+      2.743,
+      0.803,
+      -0.83
+     ],
+     "target": [
+      1.897,
+      0.803,
+      -0.745
+     ],
+     "sizeCm": [
+      0,
+      4.3,
+      16.3
+     ],
+     "screenPx": [
+      303,
+      81
+     ],
+     "fillPercent": 2,
+     "centerOffsetPx": [
+      1,
+      0
+     ],
+     "mineCells": 214,
+     "touchPx": [
+      303,
+      81
+     ],
+     "meshes": 1,
+     "highlightedMeshes": 1,
+     "color": [
+      52,
+      130,
+      142
+     ],
+     "selectionIntensity": null,
+     "label": false,
+     "badge": "기존 커뮤니티 GLB 표식 · OEM 광학 구조 미검증",
+     "backButtons": [
+      "뒤로 · 차량 전체 보기"
+     ],
+     "focusOutline": true,
+     "hasMobile": true,
+     "noProcedureText": false,
+     "internalWords": [
+      "DETACHED",
+      "UNVERIFIED",
+      "USER_REPORTED"
+     ],
+     "backTo": "INSPECTION_OVERVIEW",
+     "backPoseMoved": 7.194
+    },
+    "light-high-beam-right-0": {
+     "selectable": true,
+     "state": "VISIBILITY_PREVIEW",
+     "distance": 0.85,
+     "azimuth": 84.3,
+     "polar": 90,
+     "position": [
+      2.743,
+      0.803,
+      0.83
+     ],
+     "target": [
+      1.897,
+      0.803,
+      0.745
+     ],
+     "sizeCm": [
+      0,
+      4.3,
+      16.3
+     ],
+     "screenPx": [
+      303,
+      81
+     ],
+     "fillPercent": 2,
+     "centerOffsetPx": [
+      -1,
+      0
+     ],
+     "mineCells": 214,
+     "touchPx": [
+      303,
+      81
+     ],
+     "meshes": 1,
+     "highlightedMeshes": 1,
+     "color": [
+      53,
+      130,
+      142
+     ],
+     "selectionIntensity": null,
+     "label": false,
+     "badge": "기존 커뮤니티 GLB 표식 · OEM 광학 구조 미검증",
+     "backButtons": [
+      "뒤로 · 차량 전체 보기"
+     ],
+     "focusOutline": true,
+     "hasMobile": true,
+     "noProcedureText": false,
+     "internalWords": [
+      "DETACHED",
+      "UNVERIFIED",
+      "USER_REPORTED"
+     ],
+     "backTo": "INSPECTION_OVERVIEW",
+     "backPoseMoved": 8.007
+    }
+   },
+   "result": {
+    "washer-fluid-cap": {
+     "distance": 6,
+     "azimuth": 116.6,
+     "polar": 61,
+     "position": [
+      5.393,
+      3.66,
+      -2.347
+     ],
+     "target": [
+      0.7,
+      0.75,
+      0
+     ],
+     "sizeCm": [
+      9.6,
+      18.1,
+      9.6
+     ],
+     "screenPx": [
+      40,
+      62
+     ],
+     "fillPercent": 0.2,
+     "centerOffsetPx": [
+      -195,
+      29
+     ],
+     "mineCells": 76,
+     "touchPx": [
+      27,
+      45
+     ],
+     "meshes": 2,
+     "highlightedMeshes": 2,
+     "hood": 60,
+     "backTo": "INSPECTION_SUMMARY"
+    },
+    "coolant-reservoir": {
+     "distance": 0.85,
+     "azimuth": 65.4,
+     "polar": 25.2,
+     "position": [
+      1.82,
+      1.541,
+      0.586
+     ],
+     "target": [
+      1.49,
+      0.772,
+      0.435
+     ],
+     "sizeCm": [
+      18,
+      16.4,
+      18
+     ],
+     "screenPx": [
+      488,
+      534
+     ],
+     "fillPercent": 21.7,
+     "centerOffsetPx": [
+      6,
+      -7
+     ],
+     "mineCells": 106,
+     "touchPx": [
+      390,
+      427
+     ],
+     "meshes": 2,
+     "highlightedMeshes": 2,
+     "hood": 60,
+     "backTo": "INSPECTION_SUMMARY"
+    },
+    "lcw-coolant-reservoir": {
+     "distance": 3.536,
+     "polar": 37.7,
+     "azimuth": 106.7,
+     "position": [
+      3.572,
+      3.417,
+      -0.622
+     ],
+     "target": [
+      1.5,
+      0.62,
+      0
+     ],
+     "bounds": null,
+     "hood": 60,
+     "backTo": "INSPECTION_SUMMARY"
+    },
+    "brake-fluid-reservoir": {
+     "distance": 0.85,
+     "azimuth": 114.6,
+     "polar": 25.2,
+     "position": [
+      1.64,
+      1.561,
+      -0.581
+     ],
+     "target": [
+      1.31,
+      0.792,
+      -0.43
+     ],
+     "sizeCm": [
+      12,
+      12.4,
+      14
+     ],
+     "screenPx": [
+      354,
+      381
+     ],
+     "fillPercent": 11.2,
+     "centerOffsetPx": [
+      -2,
+      -5
+     ],
+     "mineCells": 101,
+     "touchPx": [
+      307,
+      280
+     ],
+     "meshes": 2,
+     "highlightedMeshes": 2,
+     "hood": 60,
+     "backTo": "INSPECTION_SUMMARY"
+    },
+    "battery-12v": {
+     "distance": 0.85,
+     "azimuth": 114.6,
+     "polar": 25.2,
+     "position": [
+      2,
+      1.5,
+      -0.591
+     ],
+     "target": [
+      1.67,
+      0.731,
+      -0.44
+     ],
+     "sizeCm": [
+      24,
+      22.2,
+      18
+     ],
+     "screenPx": [
+      559,
+      673
+     ],
+     "fillPercent": 31.3,
+     "centerOffsetPx": [
+      -11,
+      -15
+     ],
+     "mineCells": 125,
+     "touchPx": [
+      447,
+      628
+     ],
+     "meshes": 4,
+     "highlightedMeshes": 4,
+     "hood": 60,
+     "backTo": "INSPECTION_SUMMARY"
+    },
+    "fuse-box": {
+     "distance": 0.85,
+     "azimuth": 114.6,
+     "polar": 25.2,
+     "position": [
+      1.79,
+      1.538,
+      -0.591
+     ],
+     "target": [
+      1.46,
+      0.769,
+      -0.44
+     ],
+     "sizeCm": [
+      12,
+      15.8,
+      18
+     ],
+     "screenPx": [
+      435,
+      437
+     ],
+     "fillPercent": 15.8,
+     "centerOffsetPx": [
+      -2,
+      -8
+     ],
+     "mineCells": 126,
+     "touchPx": [
+      406,
+      320
+     ],
+     "meshes": 2,
+     "highlightedMeshes": 2,
+     "hood": 60,
+     "backTo": "INSPECTION_SUMMARY"
+    },
+    "tire.front-left": {
+     "distance": 2.45,
+     "azimuth": 169.8,
+     "polar": 72.5,
+     "position": [
+      1.873,
+      1.112,
+      -3.072
+     ],
+     "target": [
+      1.459,
+      0.376,
+      -0.772
+     ],
+     "sizeCm": [
+      75.1,
+      75.1,
+      25.1
+     ],
+     "screenPx": [
+      532,
+      538
+     ],
+     "fillPercent": 23.8,
+     "centerOffsetPx": [
+      6,
+      7
+     ],
+     "mineCells": 157,
+     "touchPx": [
+      532,
+      502
+     ],
+     "meshes": 1,
+     "highlightedMeshes": 1,
+     "hood": 0,
+     "backTo": "INSPECTION_SUMMARY"
+    },
+    "tire.front-right": {
+     "distance": 2.45,
+     "azimuth": 10.2,
+     "polar": 72.5,
+     "position": [
+      1.873,
+      1.112,
+      3.073
+     ],
+     "target": [
+      1.459,
+      0.376,
+      0.772
+     ],
+     "sizeCm": [
+      75.1,
+      75.1,
+      25.1
+     ],
+     "screenPx": [
+      532,
+      538
+     ],
+     "fillPercent": 23.8,
+     "centerOffsetPx": [
+      -6,
+      7
+     ],
+     "mineCells": 157,
+     "touchPx": [
+      532,
+      502
+     ],
+     "meshes": 1,
+     "highlightedMeshes": 1,
+     "hood": 0,
+     "backTo": "INSPECTION_SUMMARY"
+    },
+    "tire.rear-left": {
+     "distance": 2.45,
+     "azimuth": -169.8,
+     "polar": 72.5,
+     "position": [
+      -1.978,
+      1.112,
+      -3.072
+     ],
+     "target": [
+      -1.564,
+      0.376,
+      -0.772
+     ],
+     "sizeCm": [
+      75.1,
+      75.1,
+      25.1
+     ],
+     "screenPx": [
+      532,
+      538
+     ],
+     "fillPercent": 23.8,
+     "centerOffsetPx": [
+      -6,
+      7
+     ],
+     "mineCells": 157,
+     "touchPx": [
+      532,
+      502
+     ],
+     "meshes": 1,
+     "highlightedMeshes": 1,
+     "hood": 0,
+     "backTo": "INSPECTION_SUMMARY"
+    },
+    "tire.rear-right": {
+     "distance": 2.45,
+     "azimuth": -10.2,
+     "polar": 72.5,
+     "position": [
+      -1.978,
+      1.112,
+      3.073
+     ],
+     "target": [
+      -1.564,
+      0.376,
+      0.772
+     ],
+     "sizeCm": [
+      75.1,
+      75.1,
+      25.1
+     ],
+     "screenPx": [
+      532,
+      538
+     ],
+     "fillPercent": 23.8,
+     "centerOffsetPx": [
+      6,
+      7
+     ],
+     "mineCells": 157,
+     "touchPx": [
+      532,
+      502
+     ],
+     "meshes": 1,
+     "highlightedMeshes": 1,
+     "hood": 0,
+     "backTo": "INSPECTION_SUMMARY"
+    },
+    "ev-charge.port": {
+     "distance": 0.85,
+     "azimuth": -31,
+     "polar": 72,
+     "position": [
+      -2.333,
+      1.243,
+      1.589
+     ],
+     "target": [
+      -1.917,
+      0.98,
+      0.896
+     ],
+     "sizeCm": [
+      31.1,
+      20,
+      8.1
+     ],
+     "screenPx": [
+      599,
+      492
+     ],
+     "fillPercent": 24.5,
+     "centerOffsetPx": [
+      -16,
+      23
+     ],
+     "mineCells": 34,
+     "touchPx": [
+      479,
+      98
+     ],
+     "meshes": 1,
+     "highlightedMeshes": 1,
+     "hood": 0,
+     "backTo": "INSPECTION_SUMMARY"
+    },
+    "wiper.front.left": {
+     "distance": 1.298,
+     "azimuth": 114.6,
+     "polar": 25.2,
+     "position": [
+      1.518,
+      2.3,
+      -0.541
+     ],
+     "target": [
+      1.015,
+      1.126,
+      -0.31
+     ],
+     "sizeCm": [
+      11.6,
+      8.4,
+      56
+     ],
+     "screenPx": [
+      702,
+      419
+     ],
+     "fillPercent": 24.5,
+     "centerOffsetPx": [
+      8,
+      6
+     ],
+     "mineCells": 15,
+     "touchPx": [
+      94,
+      56
+     ],
+     "meshes": 1,
+     "highlightedMeshes": 1,
+     "hood": 0,
+     "backTo": "INSPECTION_SUMMARY"
+    },
+    "wiper.front.right": {
+     "distance": 1.144,
+     "azimuth": 65.4,
+     "polar": 25.2,
+     "position": [
+      1.458,
+      2.164,
+      0.478
+     ],
+     "target": [
+      1.015,
+      1.129,
+      0.275
+     ],
+     "sizeCm": [
+      11.6,
+      8,
+      49
+     ],
+     "screenPx": [
+      707,
+      435
+     ],
+     "fillPercent": 25.6,
+     "centerOffsetPx": [
+      -7,
+      6
+     ],
+     "mineCells": 16,
+     "touchPx": [
+      141,
+      87
+     ],
+     "meshes": 1,
+     "highlightedMeshes": 1,
+     "hood": 0,
+     "backTo": "INSPECTION_SUMMARY"
+    },
+    "light-low-beam-left-0": {
+     "distance": 0.85,
+     "azimuth": 99.9,
+     "polar": 78.9,
+     "position": [
+      2.949,
+      0.953,
+      -0.675
+     ],
+     "target": [
+      2.128,
+      0.789,
+      -0.531
+     ],
+     "sizeCm": [
+      0,
+      5.6,
+      16.4
+     ],
+     "screenPx": [
+      303,
+      113
+     ],
+     "fillPercent": 2.8,
+     "centerOffsetPx": [
+      2,
+      1
+     ],
+     "mineCells": 167,
+     "touchPx": [
+      303,
+      90
+     ],
+     "meshes": 1,
+     "highlightedMeshes": 1,
+     "hood": 0,
+     "backTo": "INSPECTION_SUMMARY"
+    },
+    "light-low-beam-right-0": {
+     "distance": 0.85,
+     "azimuth": 80.1,
+     "polar": 78.9,
+     "position": [
+      2.949,
+      0.953,
+      0.675
+     ],
+     "target": [
+      2.128,
+      0.789,
+      0.531
+     ],
+     "sizeCm": [
+      0,
+      5.6,
+      16.4
+     ],
+     "screenPx": [
+      303,
+      113
+     ],
+     "fillPercent": 2.8,
+     "centerOffsetPx": [
+      -2,
+      1
+     ],
+     "mineCells": 167,
+     "touchPx": [
+      303,
+      90
+     ],
+     "meshes": 1,
+     "highlightedMeshes": 1,
+     "hood": 0,
+     "backTo": "INSPECTION_SUMMARY"
+    },
+    "light-high-beam-left-0": {
+     "distance": 0.85,
+     "azimuth": 95.7,
+     "polar": 86.4,
+     "position": [
+      2.741,
+      0.857,
+      -0.83
+     ],
+     "target": [
+      1.897,
+      0.803,
+      -0.745
+     ],
+     "sizeCm": [
+      0,
+      4.3,
+      16.3
+     ],
+     "screenPx": [
+      303,
+      82
+     ],
+     "fillPercent": 2.1,
+     "centerOffsetPx": [
+      1,
+      0
+     ],
+     "mineCells": 175,
+     "touchPx": [
+      303,
+      77
+     ],
+     "meshes": 1,
+     "highlightedMeshes": 1,
+     "hood": 0,
+     "backTo": "INSPECTION_SUMMARY"
+    },
+    "light-high-beam-right-0": {
+     "distance": 0.85,
+     "azimuth": 84.3,
+     "polar": 86.4,
+     "position": [
+      2.741,
+      0.857,
+      0.83
+     ],
+     "target": [
+      1.897,
+      0.803,
+      0.745
+     ],
+     "sizeCm": [
+      0,
+      4.3,
+      16.3
+     ],
+     "screenPx": [
+      303,
+      82
+     ],
+     "fillPercent": 2.1,
+     "centerOffsetPx": [
+      -1,
+      0
+     ],
+     "mineCells": 175,
+     "touchPx": [
+      303,
+      77
+     ],
+     "meshes": 1,
+     "highlightedMeshes": 1,
+     "hood": 0,
+     "backTo": "INSPECTION_SUMMARY"
+    }
+   },
+   "flows": {
+    "bayLabel": true,
+    "resultBackFromList": "INSPECTION_SUMMARY",
+    "tireList": {
+     "directDistance": 6.983,
+     "viaTireDistance": 9.509,
+     "viaTireAtOverviewPose": true
+    },
+    "crossArea": {
+     "kind": "hood",
+     "changed": false
+    },
+    "emptyTouch": {
+     "COMPONENT_PREVIEW:coolant-reservoir": {
+      "none": "NO_SUCH_AREA",
+      "other": "KEPT",
+      "drag": "KEPT",
+      "dragRotated": true
+     },
+     "WASHER_SELECTED:washer-fluid-cap": {
+      "none": "NO_SUCH_AREA",
+      "other": "KEPT",
+      "drag": "KEPT",
+      "dragRotated": true
+     },
+     "TIRE_PREVIEW:tire.front-left": {
+      "none": "KEPT",
+      "other": "KEPT",
+      "drag": "KEPT",
+      "dragRotated": true
+     },
+     "CHARGE_PORT_PREVIEW:ev-charge.flap": {
+      "none": "NO_SUCH_AREA",
+      "other": "KEPT",
+      "drag": "KEPT",
+      "dragRotated": true
+     },
+     "VISIBILITY_PREVIEW:wiper.front.left": {
+      "none": "NO_SUCH_AREA",
+      "other": "KEPT",
+      "drag": "KEPT",
+      "dragRotated": true
+     },
+     "VISIBILITY_PREVIEW:light-low-beam-left-0": {
+      "none": "KEPT",
+      "other": "KEPT",
+      "drag": "KEPT",
+      "dragRotated": true
+     },
+     "EV_BATTERY_PREVIEW:ev-battery.pack": {
+      "none": "KEPT",
+      "other": "KEPT",
+      "drag": "KEPT",
+      "dragRotated": true
+     }
+    },
+    "backLabels": [
+     "뒤로 · 차량 전체 보기",
+     "선택 해제 · 이전 시점으로",
+     "점검 목록과 이전 시점으로",
+     "점검 부위로",
+     "점검 항목으로"
+    ],
+    "pinch": "NOT_RUN: desktop pointer input only",
+    "realTouch": "NOT_RUN: desktop pointer input only"
+   },
+   "geometry": {
+    "idle": {
+     "charge": false,
+     "wiperHits": 0
+    },
+    "overview": {
+     "charge": true,
+     "wiperHits": 11
+    },
+    "tires": {
+     "charge": false
+    }
+   },
+   "overviewFacts": {
+    "text": true,
+    "legendTires": true,
+    "toastCenter": 800,
+    "usableCenter": 601,
+    "batteryTag": "점검 가능"
+   },
+   "select3d": {
+    "washer-fluid-cap": {
+     "clickable": true,
+     "selected": true,
+     "state": "WASHER_SELECTED",
+     "touchPx": [
+      45,
+      77
+     ],
+     "fromState": "COMPONENT_SELECTION"
+    },
+    "coolant-reservoir": {
+     "clickable": true,
+     "selected": true,
+     "state": "COMPONENT_PREVIEW",
+     "touchPx": [
+      92,
+      91
+     ],
+     "fromState": "COMPONENT_SELECTION"
+    },
+    "lcw-coolant-reservoir": {
+     "clickable": false,
+     "selected": false,
+     "touchPx": [
+      0,
+      0
+     ],
+     "fromState": "COMPONENT_SELECTION"
+    },
+    "brake-fluid-reservoir": {
+     "clickable": true,
+     "selected": true,
+     "state": "COMPONENT_PREVIEW",
+     "touchPx": [
+      66,
+      50
+     ],
+     "fromState": "COMPONENT_SELECTION"
+    },
+    "battery-12v": {
+     "clickable": true,
+     "selected": true,
+     "state": "COMPONENT_PREVIEW",
+     "touchPx": [
+      99,
+      126
+     ],
+     "fromState": "COMPONENT_SELECTION"
+    },
+    "fuse-box": {
+     "clickable": true,
+     "selected": true,
+     "state": "COMPONENT_PREVIEW",
+     "touchPx": [
+      93,
+      69
+     ],
+     "fromState": "COMPONENT_SELECTION"
+    },
+    "tire.front-left": {
+     "clickable": true,
+     "selected": true,
+     "state": "TIRE_PREVIEW",
+     "touchPx": [
+      220,
+      223
+     ],
+     "fromState": "TIRE_SELECTION"
+    },
+    "tire.front-right": {
+     "clickable": false,
+     "selected": false,
+     "touchPx": [
+      0,
+      0
+     ],
+     "fromState": "TIRE_SELECTION"
+    },
+    "tire.rear-left": {
+     "clickable": true,
+     "selected": true,
+     "state": "TIRE_PREVIEW",
+     "touchPx": [
+      187,
+      200
+     ],
+     "fromState": "TIRE_SELECTION"
+    },
+    "tire.rear-right": {
+     "clickable": false,
+     "selected": false,
+     "touchPx": [
+      0,
+      0
+     ],
+     "fromState": "TIRE_SELECTION"
+    },
+    "ev-battery.pack": {
+     "clickable": false,
+     "selected": false,
+     "touchPx": [
+      0,
+      0
+     ],
+     "fromState": "INSPECTION_OVERVIEW"
+    },
+    "ev-charge.port": {
+     "clickable": false,
+     "selected": false,
+     "touchPx": [
+      0,
+      0
+     ],
+     "fromState": "INSPECTION_OVERVIEW"
+    },
+    "ev-charge.flap": {
+     "clickable": false,
+     "selected": false,
+     "touchPx": [
+      0,
+      0
+     ],
+     "fromState": "INSPECTION_OVERVIEW"
+    },
+    "wiper.front.left": {
+     "clickable": true,
+     "selected": true,
+     "state": "VISIBILITY_PREVIEW",
+     "touchPx": [
+      19,
+      9
+     ],
+     "fromState": "INSPECTION_OVERVIEW"
+    },
+    "wiper.front.right": {
+     "clickable": true,
+     "selected": true,
+     "state": "VISIBILITY_PREVIEW",
+     "touchPx": [
+      24,
+      8
+     ],
+     "fromState": "INSPECTION_OVERVIEW"
+    },
+    "light-low-beam-left-0": {
+     "clickable": true,
+     "selected": true,
+     "state": "VISIBILITY_PREVIEW",
+     "touchPx": [
+      8,
+      3
+     ],
+     "fromState": "INSPECTION_OVERVIEW"
+    },
+    "light-low-beam-right-0": {
+     "clickable": true,
+     "selected": false,
+     "state": "INSPECTION_OVERVIEW",
+     "touchPx": [
+      3,
+      2
+     ],
+     "fromState": "INSPECTION_OVERVIEW"
+    },
+    "light-high-beam-left-0": {
+     "clickable": false,
+     "selected": false,
+     "touchPx": [
+      0,
+      0
+     ],
+     "fromState": "INSPECTION_OVERVIEW"
+    },
+    "light-high-beam-right-0": {
+     "clickable": false,
+     "selected": false,
+     "touchPx": [
+      0,
+      0
+     ],
+     "fromState": "INSPECTION_OVERVIEW"
+    }
+   },
+   "paint": {
+    "tiresTinted": true,
+    "othersKeepMaterial": true,
+    "legendCounts": 4
+   },
+   "lcwListClass": {
+    "preview": false,
+    "available": true
+   }
+  },
+  "1224x880": {
+   "home": {
+    "view": {
+     "azimuthDeg": 138.6,
+     "polarDeg": 69.7,
+     "distance": 7.4
+    },
+    "overview": {
+     "azimuthDeg": 116.6,
+     "polarDeg": 61,
+     "distance": 10.137
+    }
+   },
+   "overview": {
+    "washer-fluid-cap": {
+     "mineCells": 0,
+     "touchPx": [
+      0,
+      0
+     ],
+     "highlightedMeshes": 0
+    },
+    "coolant-reservoir": {
+     "mineCells": 0,
+     "touchPx": [
+      0,
+      0
+     ],
+     "highlightedMeshes": 0
+    },
+    "lcw-coolant-reservoir": {
+     "mineCells": 0,
+     "touchPx": [
+      0,
+      0
+     ],
+     "highlightedMeshes": 0
+    },
+    "brake-fluid-reservoir": {
+     "mineCells": 0,
+     "touchPx": [
+      0,
+      0
+     ],
+     "highlightedMeshes": 0
+    },
+    "battery-12v": {
+     "mineCells": 0,
+     "touchPx": [
+      0,
+      0
+     ],
+     "highlightedMeshes": 0
+    },
+    "fuse-box": {
+     "mineCells": 0,
+     "touchPx": [
+      0,
+      0
+     ],
+     "highlightedMeshes": 0
+    },
+    "tire.front-left": {
+     "mineCells": 26,
+     "touchPx": [
+      41,
+      92
+     ],
+     "highlightedMeshes": 0
+    },
+    "tire.front-right": {
+     "mineCells": 0,
+     "touchPx": [
+      0,
+      0
+     ],
+     "highlightedMeshes": 0
+    },
+    "tire.rear-left": {
+     "mineCells": 21,
+     "touchPx": [
+      25,
+      70
+     ],
+     "highlightedMeshes": 0
+    },
+    "tire.rear-right": {
+     "mineCells": 0,
+     "touchPx": [
+      0,
+      0
+     ],
+     "highlightedMeshes": 0
+    },
+    "ev-battery.pack": {
+     "mineCells": 0,
+     "touchPx": [
+      0,
+      0
+     ],
+     "highlightedMeshes": 0
+    },
+    "ev-charge.port": {
+     "mineCells": 0,
+     "touchPx": [
+      0,
+      0
+     ],
+     "highlightedMeshes": 0
+    },
+    "ev-charge.flap": {
+     "mineCells": 0,
+     "touchPx": [
+      0,
+      0
+     ],
+     "highlightedMeshes": 0
+    },
+    "wiper.front.left": {
+     "mineCells": 11,
+     "touchPx": [
+      15,
+      7
+     ],
+     "highlightedMeshes": 0
+    },
+    "wiper.front.right": {
+     "mineCells": 11,
+     "touchPx": [
+      20,
+      6
+     ],
+     "highlightedMeshes": 0
+    },
+    "light-low-beam-left-0": {
+     "mineCells": 5,
+     "touchPx": [
+      7,
+      3
+     ],
+     "highlightedMeshes": 1
+    },
+    "light-low-beam-right-0": {
+     "mineCells": 1,
+     "touchPx": [
+      2,
+      1
+     ],
+     "highlightedMeshes": 1
+    },
+    "light-high-beam-left-0": {
+     "mineCells": 0,
+     "touchPx": [
+      0,
+      0
+     ],
+     "highlightedMeshes": 1
+    },
+    "light-high-beam-right-0": {
+     "mineCells": 0,
+     "touchPx": [
+      0,
+      0
+     ],
+     "highlightedMeshes": 1
+    }
+   },
+   "preview": {
+    "washer-fluid-cap": {
+     "selectable": true,
+     "state": "WASHER_SELECTED",
+     "distance": 3.329,
+     "azimuth": 50.2,
+     "polar": 31.7,
+     "position": [
+      2.692,
+      3.674,
+      1.519
+     ],
+     "target": [
+      1.35,
+      0.84,
+      0.4
+     ],
+     "sizeCm": [
+      9.6,
+      18.1,
+      9.6
+     ],
+     "screenPx": [
+      58,
+      87
+     ],
+     "fillPercent": 0.7,
+     "centerOffsetPx": [
+      -40,
+      10
+     ],
+     "mineCells": 81,
+     "touchPx": [
+      43,
+      64
+     ],
+     "meshes": 2,
+     "highlightedMeshes": 2,
+     "color": [
+      149,
+      202,
+      217
+     ],
+     "selectionIntensity": null,
+     "label": true,
+     "badge": "위치·형상 추정",
+     "backButtons": [
+      "점검 항목으로"
+     ],
+     "focusOutline": true,
+     "hasMobile": true,
+     "noProcedureText": false,
+     "internalWords": [],
+     "backTo": "COMPONENT_SELECTION",
+     "backPoseMoved": 2.787
+    },
+    "coolant-reservoir": {
+     "selectable": true,
+     "state": "COMPONENT_PREVIEW",
+     "distance": 0.85,
+     "azimuth": 65.4,
+     "polar": 25.2,
+     "position": [
+      1.82,
+      1.541,
+      0.586
+     ],
+     "target": [
+      1.49,
+      0.772,
+      0.435
+     ],
+     "sizeCm": [
+      18,
+      16.4,
+      18
+     ],
+     "screenPx": [
+      429,
+      470
+     ],
+     "fillPercent": 27.7,
+     "centerOffsetPx": [
+      5,
+      -6
+     ],
+     "mineCells": 106,
+     "touchPx": [
+      344,
+      376
+     ],
+     "meshes": 2,
+     "highlightedMeshes": 2,
+     "color": [
+      203,
+      219,
+      221
+     ],
+     "selectionIntensity": null,
+     "label": false,
+     "badge": "추정 모델 · 점검 절차 미제공",
+     "backButtons": [
+      "점검 목록과 이전 시점으로"
+     ],
+     "focusOutline": true,
+     "hasMobile": true,
+     "noProcedureText": true,
+     "internalWords": [],
+     "backTo": "COMPONENT_SELECTION",
+     "backPoseMoved": 3.799
+    },
+    "lcw-coolant-reservoir": {
+     "selectable": false,
+     "state": "COMPONENT_SELECTION"
+    },
+    "brake-fluid-reservoir": {
+     "selectable": true,
+     "state": "COMPONENT_PREVIEW",
+     "distance": 0.85,
+     "azimuth": 114.6,
+     "polar": 25.2,
+     "position": [
+      1.64,
+      1.561,
+      -0.581
+     ],
+     "target": [
+      1.31,
+      0.792,
+      -0.43
+     ],
+     "sizeCm": [
+      12,
+      12.4,
+      14
+     ],
+     "screenPx": [
+      312,
+      336
+     ],
+     "fillPercent": 14.4,
+     "centerOffsetPx": [
+      -2,
+      -4
+     ],
+     "mineCells": 101,
+     "touchPx": [
+      270,
+      246
+     ],
+     "meshes": 2,
+     "highlightedMeshes": 2,
+     "color": [
+      194,
+      216,
+      218
+     ],
+     "selectionIntensity": null,
+     "label": false,
+     "badge": "추정 모델 · 점검 절차 미제공",
+     "backButtons": [
+      "점검 목록과 이전 시점으로"
+     ],
+     "focusOutline": true,
+     "hasMobile": true,
+     "noProcedureText": true,
+     "internalWords": [],
+     "backTo": "COMPONENT_SELECTION",
+     "backPoseMoved": 3.652
+    },
+    "battery-12v": {
+     "selectable": true,
+     "state": "COMPONENT_PREVIEW",
+     "distance": 0.888,
+     "azimuth": 114.6,
+     "polar": 25.2,
+     "position": [
+      2.014,
+      1.534,
+      -0.598
+     ],
+     "target": [
+      1.67,
+      0.731,
+      -0.44
+     ],
+     "sizeCm": [
+      24,
+      22.2,
+      18
+     ],
+     "screenPx": [
+      468,
+      567
+     ],
+     "fillPercent": 36.5,
+     "centerOffsetPx": [
+      -9,
+      -12
+     ],
+     "mineCells": 125,
+     "touchPx": [
+      374,
+      529
+     ],
+     "meshes": 4,
+     "highlightedMeshes": 4,
+     "color": [
+      142,
+      196,
+      208
+     ],
+     "selectionIntensity": null,
+     "label": false,
+     "badge": "추정 모델 · 점검 절차 미제공",
+     "backButtons": [
+      "점검 목록과 이전 시점으로"
+     ],
+     "focusOutline": true,
+     "hasMobile": true,
+     "noProcedureText": true,
+     "internalWords": [],
+     "backTo": "COMPONENT_SELECTION",
+     "backPoseMoved": 3.425
+    },
+    "fuse-box": {
+     "selectable": true,
+     "state": "COMPONENT_PREVIEW",
+     "distance": 0.85,
+     "azimuth": 114.6,
+     "polar": 25.2,
+     "position": [
+      1.79,
+      1.538,
+      -0.591
+     ],
+     "target": [
+      1.46,
+      0.769,
+      -0.44
+     ],
+     "sizeCm": [
+      12,
+      15.8,
+      18
+     ],
+     "screenPx": [
+      383,
+      385
+     ],
+     "fillPercent": 20.3,
+     "centerOffsetPx": [
+      -2,
+      -7
+     ],
+     "mineCells": 126,
+     "touchPx": [
+      357,
+      282
+     ],
+     "meshes": 2,
+     "highlightedMeshes": 2,
+     "color": [
+      137,
+      194,
+      207
+     ],
+     "selectionIntensity": null,
+     "label": false,
+     "badge": "추정 모델 · 점검 절차 미제공",
+     "backButtons": [
+      "점검 목록과 이전 시점으로"
+     ],
+     "focusOutline": true,
+     "hasMobile": true,
+     "noProcedureText": true,
+     "internalWords": [],
+     "backTo": "COMPONENT_SELECTION",
+     "backPoseMoved": 3.567
+    },
+    "tire.front-left": {
+     "selectable": true,
+     "state": "TIRE_PREVIEW",
+     "distance": 2.597,
+     "azimuth": 169.8,
+     "polar": 72.5,
+     "position": [
+      1.897,
+      1.156,
+      -3.21
+     ],
+     "target": [
+      1.459,
+      0.376,
+      -0.772
+     ],
+     "sizeCm": [
+      75.1,
+      75.1,
+      25.1
+     ],
+     "screenPx": [
+      441,
+      447
+     ],
+     "fillPercent": 27.1,
+     "centerOffsetPx": [
+      5,
+      6
+     ],
+     "mineCells": 158,
+     "touchPx": [
+      441,
+      417
+     ],
+     "meshes": 1,
+     "highlightedMeshes": 1,
+     "color": [
+      72,
+      109,
+      116
+     ],
+     "selectionIntensity": 0.6,
+     "label": false,
+     "badge": "상태만 표시 · 수치 및 진단 미제공",
+     "backButtons": [
+      "선택 해제 · 이전 시점으로"
+     ],
+     "focusOutline": true,
+     "hasMobile": true,
+     "noProcedureText": false,
+     "internalWords": [
+      "USER_REPORTED"
+     ],
+     "backTo": "TIRE_SELECTION",
+     "backPoseMoved": 5.267
+    },
+    "tire.front-right": {
+     "selectable": true,
+     "state": "TIRE_PREVIEW",
+     "distance": 2.597,
+     "azimuth": 10.2,
+     "polar": 72.5,
+     "position": [
+      1.897,
+      1.156,
+      3.21
+     ],
+     "target": [
+      1.459,
+      0.376,
+      0.772
+     ],
+     "sizeCm": [
+      75.1,
+      75.1,
+      25.1
+     ],
+     "screenPx": [
+      441,
+      447
+     ],
+     "fillPercent": 27.1,
+     "centerOffsetPx": [
+      -5,
+      6
+     ],
+     "mineCells": 158,
+     "touchPx": [
+      441,
+      417
+     ],
+     "meshes": 1,
+     "highlightedMeshes": 1,
+     "color": [
+      107,
+      132,
+      139
+     ],
+     "selectionIntensity": 0.6,
+     "label": false,
+     "badge": "상태만 표시 · 수치 및 진단 미제공",
+     "backButtons": [
+      "선택 해제 · 이전 시점으로"
+     ],
+     "focusOutline": true,
+     "hasMobile": true,
+     "noProcedureText": false,
+     "internalWords": [
+      "USER_REPORTED"
+     ],
+     "backTo": "TIRE_SELECTION",
+     "backPoseMoved": 11.596
+    },
+    "tire.rear-left": {
+     "selectable": true,
+     "state": "TIRE_PREVIEW",
+     "distance": 2.597,
+     "azimuth": -169.8,
+     "polar": 72.5,
+     "position": [
+      -2.003,
+      1.156,
+      -3.21
+     ],
+     "target": [
+      -1.564,
+      0.376,
+      -0.772
+     ],
+     "sizeCm": [
+      75.1,
+      75.1,
+      25.1
+     ],
+     "screenPx": [
+      441,
+      447
+     ],
+     "fillPercent": 27.1,
+     "centerOffsetPx": [
+      -5,
+      6
+     ],
+     "mineCells": 158,
+     "touchPx": [
+      441,
+      417
+     ],
+     "meshes": 1,
+     "highlightedMeshes": 1,
+     "color": [
+      69,
+      107,
+      114
+     ],
+     "selectionIntensity": 0.6,
+     "label": false,
+     "badge": "상태만 표시 · 수치 및 진단 미제공",
+     "backButtons": [
+      "선택 해제 · 이전 시점으로"
+     ],
+     "focusOutline": true,
+     "hasMobile": true,
+     "noProcedureText": false,
+     "internalWords": [
+      "USER_REPORTED"
+     ],
+     "backTo": "TIRE_SELECTION",
+     "backPoseMoved": 6.481
+    },
+    "tire.rear-right": {
+     "selectable": true,
+     "state": "TIRE_PREVIEW",
+     "distance": 2.597,
+     "azimuth": -10.2,
+     "polar": 72.5,
+     "position": [
+      -2.003,
+      1.156,
+      3.21
+     ],
+     "target": [
+      -1.564,
+      0.376,
+      0.772
+     ],
+     "sizeCm": [
+      75.1,
+      75.1,
+      25.1
+     ],
+     "screenPx": [
+      441,
+      447
+     ],
+     "fillPercent": 27.1,
+     "centerOffsetPx": [
+      5,
+      6
+     ],
+     "mineCells": 158,
+     "touchPx": [
+      441,
+      417
+     ],
+     "meshes": 1,
+     "highlightedMeshes": 1,
+     "color": [
+      108,
+      134,
+      141
+     ],
+     "selectionIntensity": 0.6,
+     "label": false,
+     "badge": "상태만 표시 · 수치 및 진단 미제공",
+     "backButtons": [
+      "선택 해제 · 이전 시점으로"
+     ],
+     "focusOutline": true,
+     "hasMobile": true,
+     "noProcedureText": false,
+     "internalWords": [
+      "USER_REPORTED"
+     ],
+     "backTo": "TIRE_SELECTION",
+     "backPoseMoved": 12.196
+    },
+    "ev-battery.pack": {
+     "selectable": true,
+     "state": "EV_BATTERY_PREVIEW",
+     "distance": 5.608,
+     "azimuth": 125.5,
+     "polar": 139.3,
+     "position": [
+      2.851,
+      -4.081,
+      -2.126
+     ],
+     "target": [
+      -0.125,
+      0.17,
+      0
+     ],
+     "sizeCm": [
+      205,
+      10,
+      116
+     ],
+     "screenPx": [
+      537,
+      466
+     ],
+     "fillPercent": 34.4,
+     "centerOffsetPx": [
+      -16,
+      -30
+     ],
+     "mineCells": 110,
+     "touchPx": [
+      394,
+      404
+     ],
+     "meshes": 1,
+     "highlightedMeshes": 1,
+     "color": [
+      64,
+      173,
+      189
+     ],
+     "selectionIntensity": null,
+     "label": false,
+     "badge": "ESTIMATED_GEOMETRY · 추정 외함",
+     "backButtons": [
+      "점검 부위로"
+     ],
+     "focusOutline": true,
+     "hasMobile": false,
+     "noProcedureText": false,
+     "internalWords": [
+      "DETACHED",
+      "ESTIMATED_GEOMETRY",
+      "UNVERIFIED",
+      "USER_REPORTED"
+     ],
+     "backTo": "INSPECTION_OVERVIEW",
+     "backPoseMoved": 11.199
+    },
+    "ev-charge.port": {
+     "selectable": true,
+     "state": "CHARGE_PORT_PREVIEW",
+     "distance": 0.901,
+     "azimuth": -31,
+     "polar": 72,
+     "position": [
+      -2.358,
+      1.259,
+      1.63
+     ],
+     "target": [
+      -1.917,
+      0.98,
+      0.896
+     ],
+     "sizeCm": [
+      31.1,
+      20,
+      8.1
+     ],
+     "screenPx": [
+      496,
+      408
+     ],
+     "fillPercent": 27.8,
+     "centerOffsetPx": [
+      -12,
+      18
+     ],
+     "mineCells": 33,
+     "touchPx": [
+      364,
+      82
+     ],
+     "meshes": 1,
+     "highlightedMeshes": 1,
+     "color": [
+      92,
+      180,
+      194
+     ],
+     "selectionIntensity": null,
+     "label": false,
+     "badge": "ESTIMATED_GEOMETRY · 정적 닫힌 형상",
+     "backButtons": [
+      "뒤로 · 차량 전체 보기"
+     ],
+     "focusOutline": true,
+     "hasMobile": true,
+     "noProcedureText": false,
+     "internalWords": [
+      "DETACHED",
+      "ESTIMATED_GEOMETRY",
+      "UNVERIFIED",
+      "USER_REPORTED"
+     ],
+     "backTo": "INSPECTION_OVERVIEW",
+     "backPoseMoved": 12.534
+    },
+    "ev-charge.flap": {
+     "selectable": true,
+     "state": "CHARGE_PORT_PREVIEW",
+     "distance": 0.85,
+     "azimuth": -31,
+     "polar": 72,
+     "position": [
+      -2.332,
+      1.243,
+      1.592
+     ],
+     "target": [
+      -1.916,
+      0.98,
+      0.899
+     ],
+     "sizeCm": [
+      26.2,
+      16.8,
+      6.9
+     ],
+     "screenPx": [
+      441,
+      363
+     ],
+     "fillPercent": 22,
+     "centerOffsetPx": [
+      -10,
+      14
+     ],
+     "mineCells": 122,
+     "touchPx": [
+      412,
+      290
+     ],
+     "meshes": 1,
+     "highlightedMeshes": 1,
+     "color": [
+      137,
+      194,
+      206
+     ],
+     "selectionIntensity": null,
+     "label": false,
+     "badge": "ESTIMATED_GEOMETRY · 정적 닫힌 형상",
+     "backButtons": [
+      "뒤로 · 차량 전체 보기"
+     ],
+     "focusOutline": true,
+     "hasMobile": false,
+     "noProcedureText": false,
+     "internalWords": [
+      "DETACHED",
+      "ESTIMATED_GEOMETRY",
+      "UNVERIFIED",
+      "USER_REPORTED"
+     ],
+     "backTo": "INSPECTION_OVERVIEW",
+     "backPoseMoved": 12.502
+    },
+    "wiper.front.left": {
+     "selectable": true,
+     "state": "VISIBILITY_PREVIEW",
+     "distance": 1.375,
+     "azimuth": 114.6,
+     "polar": 25.2,
+     "position": [
+      1.548,
+      2.37,
+      -0.554
+     ],
+     "target": [
+      1.015,
+      1.126,
+      -0.31
+     ],
+     "sizeCm": [
+      11.6,
+      8.4,
+      56
+     ],
+     "screenPx": [
+      582,
+      348
+     ],
+     "fillPercent": 27.8,
+     "centerOffsetPx": [
+      6,
+      4
+     ],
+     "mineCells": 16,
+     "touchPx": [
+      78,
+      46
+     ],
+     "meshes": 1,
+     "highlightedMeshes": 1,
+     "color": [
+      105,
+      177,
+      190
+     ],
+     "selectionIntensity": null,
+     "label": false,
+     "badge": "ESTIMATED_GEOMETRY · 정적 휴지 자세",
+     "backButtons": [
+      "뒤로 · 차량 전체 보기"
+     ],
+     "focusOutline": true,
+     "hasMobile": true,
+     "noProcedureText": false,
+     "internalWords": [
+      "DETACHED",
+      "ESTIMATED_GEOMETRY",
+      "UNVERIFIED",
+      "USER_REPORTED"
+     ],
+     "backTo": "INSPECTION_OVERVIEW",
+     "backPoseMoved": 7.977
+    },
+    "wiper.front.right": {
+     "selectable": true,
+     "state": "VISIBILITY_PREVIEW",
+     "distance": 1.213,
+     "azimuth": 65.4,
+     "polar": 25.2,
+     "position": [
+      1.485,
+      2.226,
+      0.49
+     ],
+     "target": [
+      1.015,
+      1.129,
+      0.275
+     ],
+     "sizeCm": [
+      11.6,
+      8,
+      49
+     ],
+     "screenPx": [
+      586,
+      362
+     ],
+     "fillPercent": 29.1,
+     "centerOffsetPx": [
+      -5,
+      4
+     ],
+     "mineCells": 16,
+     "touchPx": [
+      117,
+      72
+     ],
+     "meshes": 1,
+     "highlightedMeshes": 1,
+     "color": [
+      102,
+      179,
+      193
+     ],
+     "selectionIntensity": null,
+     "label": false,
+     "badge": "ESTIMATED_GEOMETRY · 정적 휴지 자세",
+     "backButtons": [
+      "뒤로 · 차량 전체 보기"
+     ],
+     "focusOutline": true,
+     "hasMobile": true,
+     "noProcedureText": false,
+     "internalWords": [
+      "DETACHED",
+      "ESTIMATED_GEOMETRY",
+      "UNVERIFIED",
+      "USER_REPORTED"
+     ],
+     "backTo": "INSPECTION_OVERVIEW",
+     "backPoseMoved": 8.582
+    },
+    "light-low-beam-left-0": {
+     "selectable": true,
+     "state": "VISIBILITY_PREVIEW",
+     "distance": 0.85,
+     "azimuth": 99.9,
+     "polar": 78.9,
+     "position": [
+      2.949,
+      0.953,
+      -0.675
+     ],
+     "target": [
+      2.128,
+      0.789,
+      -0.531
+     ],
+     "sizeCm": [
+      0,
+      5.6,
+      16.4
+     ],
+     "screenPx": [
+      267,
+      99
+     ],
+     "fillPercent": 3.6,
+     "centerOffsetPx": [
+      2,
+      0
+     ],
+     "mineCells": 167,
+     "touchPx": [
+      267,
+      79
+     ],
+     "meshes": 1,
+     "highlightedMeshes": 1,
+     "color": [
+      53,
+      130,
+      142
+     ],
+     "selectionIntensity": null,
+     "label": false,
+     "badge": "기존 커뮤니티 GLB 표식 · OEM 광학 구조 미검증",
+     "backButtons": [
+      "뒤로 · 차량 전체 보기"
+     ],
+     "focusOutline": true,
+     "hasMobile": true,
+     "noProcedureText": false,
+     "internalWords": [
+      "DETACHED",
+      "UNVERIFIED",
+      "USER_REPORTED"
+     ],
+     "backTo": "INSPECTION_OVERVIEW",
+     "backPoseMoved": 7.644
+    },
+    "light-low-beam-right-0": {
+     "selectable": true,
+     "state": "VISIBILITY_PREVIEW",
+     "distance": 0.85,
+     "azimuth": 80.1,
+     "polar": 78.9,
+     "position": [
+      2.949,
+      0.953,
+      0.675
+     ],
+     "target": [
+      2.128,
+      0.789,
+      0.531
+     ],
+     "sizeCm": [
+      0,
+      5.6,
+      16.4
+     ],
+     "screenPx": [
+      267,
+      99
+     ],
+     "fillPercent": 3.6,
+     "centerOffsetPx": [
+      -2,
+      0
+     ],
+     "mineCells": 167,
+     "touchPx": [
+      267,
+      79
+     ],
+     "meshes": 1,
+     "highlightedMeshes": 1,
+     "color": [
+      53,
+      130,
+      142
+     ],
+     "selectionIntensity": null,
+     "label": false,
+     "badge": "기존 커뮤니티 GLB 표식 · OEM 광학 구조 미검증",
+     "backButtons": [
+      "뒤로 · 차량 전체 보기"
+     ],
+     "focusOutline": true,
+     "hasMobile": true,
+     "noProcedureText": false,
+     "internalWords": [
+      "DETACHED",
+      "UNVERIFIED",
+      "USER_REPORTED"
+     ],
+     "backTo": "INSPECTION_OVERVIEW",
+     "backPoseMoved": 8.315
+    },
+    "light-high-beam-left-0": {
+     "selectable": true,
+     "state": "VISIBILITY_PREVIEW",
+     "distance": 0.85,
+     "azimuth": 95.7,
+     "polar": 90,
+     "position": [
+      2.743,
+      0.803,
+      -0.83
+     ],
+     "target": [
+      1.897,
+      0.803,
+      -0.745
+     ],
+     "sizeCm": [
+      0,
+      4.3,
+      16.3
+     ],
+     "screenPx": [
+      266,
+      71
+     ],
+     "fillPercent": 2.6,
+     "centerOffsetPx": [
+      1,
+      0
+     ],
+     "mineCells": 214,
+     "touchPx": [
+      266,
+      71
+     ],
+     "meshes": 1,
+     "highlightedMeshes": 1,
+     "color": [
+      52,
+      130,
+      142
+     ],
+     "selectionIntensity": null,
+     "label": false,
+     "badge": "기존 커뮤니티 GLB 표식 · OEM 광학 구조 미검증",
+     "backButtons": [
+      "뒤로 · 차량 전체 보기"
+     ],
+     "focusOutline": true,
+     "hasMobile": true,
+     "noProcedureText": false,
+     "internalWords": [
+      "DETACHED",
+      "UNVERIFIED",
+      "USER_REPORTED"
+     ],
+     "backTo": "INSPECTION_OVERVIEW",
+     "backPoseMoved": 7.81
+    },
+    "light-high-beam-right-0": {
+     "selectable": true,
+     "state": "VISIBILITY_PREVIEW",
+     "distance": 0.85,
+     "azimuth": 84.3,
+     "polar": 90,
+     "position": [
+      2.743,
+      0.803,
+      0.83
+     ],
+     "target": [
+      1.897,
+      0.803,
+      0.745
+     ],
+     "sizeCm": [
+      0,
+      4.3,
+      16.3
+     ],
+     "screenPx": [
+      266,
+      71
+     ],
+     "fillPercent": 2.6,
+     "centerOffsetPx": [
+      -1,
+      0
+     ],
+     "mineCells": 214,
+     "touchPx": [
+      266,
+      71
+     ],
+     "meshes": 1,
+     "highlightedMeshes": 1,
+     "color": [
+      53,
+      130,
+      142
+     ],
+     "selectionIntensity": null,
+     "label": false,
+     "badge": "기존 커뮤니티 GLB 표식 · OEM 광학 구조 미검증",
+     "backButtons": [
+      "뒤로 · 차량 전체 보기"
+     ],
+     "focusOutline": true,
+     "hasMobile": true,
+     "noProcedureText": false,
+     "internalWords": [
+      "DETACHED",
+      "UNVERIFIED",
+      "USER_REPORTED"
+     ],
+     "backTo": "INSPECTION_OVERVIEW",
+     "backPoseMoved": 8.611
+    }
+   },
+   "result": {
+    "washer-fluid-cap": {
+     "distance": 6,
+     "azimuth": 116.6,
+     "polar": 61,
+     "position": [
+      5.393,
+      3.66,
+      -2.347
+     ],
+     "target": [
+      0.7,
+      0.75,
+      0
+     ],
+     "sizeCm": [
+      9.6,
+      18.1,
+      9.6
+     ],
+     "screenPx": [
+      35,
+      54
+     ],
+     "fillPercent": 0.3,
+     "centerOffsetPx": [
+      -171,
+      25
+     ],
+     "mineCells": 76,
+     "touchPx": [
+      24,
+      40
+     ],
+     "meshes": 2,
+     "highlightedMeshes": 2,
+     "hood": 60,
+     "backTo": "INSPECTION_SUMMARY"
+    },
+    "coolant-reservoir": {
+     "distance": 0.85,
+     "azimuth": 65.4,
+     "polar": 25.2,
+     "position": [
+      1.82,
+      1.541,
+      0.586
+     ],
+     "target": [
+      1.49,
+      0.772,
+      0.435
+     ],
+     "sizeCm": [
+      18,
+      16.4,
+      18
+     ],
+     "screenPx": [
+      429,
+      470
+     ],
+     "fillPercent": 27.7,
+     "centerOffsetPx": [
+      5,
+      -6
+     ],
+     "mineCells": 106,
+     "touchPx": [
+      344,
+      376
+     ],
+     "meshes": 2,
+     "highlightedMeshes": 2,
+     "hood": 60,
+     "backTo": "INSPECTION_SUMMARY"
+    },
+    "lcw-coolant-reservoir": {
+     "distance": 4.528,
+     "polar": 37.7,
+     "azimuth": 106.7,
+     "position": [
+      4.153,
+      4.202,
+      -0.796
+     ],
+     "target": [
+      1.5,
+      0.62,
+      0
+     ],
+     "bounds": null,
+     "hood": 60,
+     "backTo": "INSPECTION_SUMMARY"
+    },
+    "brake-fluid-reservoir": {
+     "distance": 0.85,
+     "azimuth": 114.6,
+     "polar": 25.2,
+     "position": [
+      1.64,
+      1.561,
+      -0.581
+     ],
+     "target": [
+      1.31,
+      0.792,
+      -0.43
+     ],
+     "sizeCm": [
+      12,
+      12.4,
+      14
+     ],
+     "screenPx": [
+      312,
+      336
+     ],
+     "fillPercent": 14.4,
+     "centerOffsetPx": [
+      -2,
+      -4
+     ],
+     "mineCells": 101,
+     "touchPx": [
+      270,
+      246
+     ],
+     "meshes": 2,
+     "highlightedMeshes": 2,
+     "hood": 60,
+     "backTo": "INSPECTION_SUMMARY"
+    },
+    "battery-12v": {
+     "distance": 0.888,
+     "azimuth": 114.6,
+     "polar": 25.2,
+     "position": [
+      2.014,
+      1.534,
+      -0.598
+     ],
+     "target": [
+      1.67,
+      0.731,
+      -0.44
+     ],
+     "sizeCm": [
+      24,
+      22.2,
+      18
+     ],
+     "screenPx": [
+      468,
+      567
+     ],
+     "fillPercent": 36.5,
+     "centerOffsetPx": [
+      -9,
+      -12
+     ],
+     "mineCells": 125,
+     "touchPx": [
+      374,
+      529
+     ],
+     "meshes": 4,
+     "highlightedMeshes": 4,
+     "hood": 60,
+     "backTo": "INSPECTION_SUMMARY"
+    },
+    "fuse-box": {
+     "distance": 0.85,
+     "azimuth": 114.6,
+     "polar": 25.2,
+     "position": [
+      1.79,
+      1.538,
+      -0.591
+     ],
+     "target": [
+      1.46,
+      0.769,
+      -0.44
+     ],
+     "sizeCm": [
+      12,
+      15.8,
+      18
+     ],
+     "screenPx": [
+      383,
+      385
+     ],
+     "fillPercent": 20.3,
+     "centerOffsetPx": [
+      -2,
+      -7
+     ],
+     "mineCells": 126,
+     "touchPx": [
+      357,
+      282
+     ],
+     "meshes": 2,
+     "highlightedMeshes": 2,
+     "hood": 60,
+     "backTo": "INSPECTION_SUMMARY"
+    },
+    "tire.front-left": {
+     "distance": 2.597,
+     "azimuth": 169.8,
+     "polar": 72.5,
+     "position": [
+      1.897,
+      1.156,
+      -3.21
+     ],
+     "target": [
+      1.459,
+      0.376,
+      -0.772
+     ],
+     "sizeCm": [
+      75.1,
+      75.1,
+      25.1
+     ],
+     "screenPx": [
+      441,
+      447
+     ],
+     "fillPercent": 27.1,
+     "centerOffsetPx": [
+      5,
+      6
+     ],
+     "mineCells": 158,
+     "touchPx": [
+      441,
+      417
+     ],
+     "meshes": 1,
+     "highlightedMeshes": 1,
+     "hood": 0,
+     "backTo": "INSPECTION_SUMMARY"
+    },
+    "tire.front-right": {
+     "distance": 2.597,
+     "azimuth": 10.2,
+     "polar": 72.5,
+     "position": [
+      1.897,
+      1.156,
+      3.21
+     ],
+     "target": [
+      1.459,
+      0.376,
+      0.772
+     ],
+     "sizeCm": [
+      75.1,
+      75.1,
+      25.1
+     ],
+     "screenPx": [
+      441,
+      447
+     ],
+     "fillPercent": 27.1,
+     "centerOffsetPx": [
+      -5,
+      6
+     ],
+     "mineCells": 158,
+     "touchPx": [
+      441,
+      417
+     ],
+     "meshes": 1,
+     "highlightedMeshes": 1,
+     "hood": 0,
+     "backTo": "INSPECTION_SUMMARY"
+    },
+    "tire.rear-left": {
+     "distance": 2.597,
+     "azimuth": -169.8,
+     "polar": 72.5,
+     "position": [
+      -2.003,
+      1.156,
+      -3.21
+     ],
+     "target": [
+      -1.564,
+      0.376,
+      -0.772
+     ],
+     "sizeCm": [
+      75.1,
+      75.1,
+      25.1
+     ],
+     "screenPx": [
+      441,
+      447
+     ],
+     "fillPercent": 27.1,
+     "centerOffsetPx": [
+      -5,
+      6
+     ],
+     "mineCells": 158,
+     "touchPx": [
+      441,
+      417
+     ],
+     "meshes": 1,
+     "highlightedMeshes": 1,
+     "hood": 0,
+     "backTo": "INSPECTION_SUMMARY"
+    },
+    "tire.rear-right": {
+     "distance": 2.597,
+     "azimuth": -10.2,
+     "polar": 72.5,
+     "position": [
+      -2.003,
+      1.156,
+      3.21
+     ],
+     "target": [
+      -1.564,
+      0.376,
+      0.772
+     ],
+     "sizeCm": [
+      75.1,
+      75.1,
+      25.1
+     ],
+     "screenPx": [
+      441,
+      447
+     ],
+     "fillPercent": 27.1,
+     "centerOffsetPx": [
+      5,
+      6
+     ],
+     "mineCells": 158,
+     "touchPx": [
+      441,
+      417
+     ],
+     "meshes": 1,
+     "highlightedMeshes": 1,
+     "hood": 0,
+     "backTo": "INSPECTION_SUMMARY"
+    },
+    "ev-charge.port": {
+     "distance": 0.901,
+     "azimuth": -31,
+     "polar": 72,
+     "position": [
+      -2.358,
+      1.259,
+      1.63
+     ],
+     "target": [
+      -1.917,
+      0.98,
+      0.896
+     ],
+     "sizeCm": [
+      31.1,
+      20,
+      8.1
+     ],
+     "screenPx": [
+      496,
+      408
+     ],
+     "fillPercent": 27.8,
+     "centerOffsetPx": [
+      -12,
+      18
+     ],
+     "mineCells": 33,
+     "touchPx": [
+      364,
+      82
+     ],
+     "meshes": 1,
+     "highlightedMeshes": 1,
+     "hood": 0,
+     "backTo": "INSPECTION_SUMMARY"
+    },
+    "wiper.front.left": {
+     "distance": 1.375,
+     "azimuth": 114.6,
+     "polar": 25.2,
+     "position": [
+      1.548,
+      2.37,
+      -0.554
+     ],
+     "target": [
+      1.015,
+      1.126,
+      -0.31
+     ],
+     "sizeCm": [
+      11.6,
+      8.4,
+      56
+     ],
+     "screenPx": [
+      582,
+      348
+     ],
+     "fillPercent": 27.8,
+     "centerOffsetPx": [
+      6,
+      4
+     ],
+     "mineCells": 16,
+     "touchPx": [
+      78,
+      46
+     ],
+     "meshes": 1,
+     "highlightedMeshes": 1,
+     "hood": 0,
+     "backTo": "INSPECTION_SUMMARY"
+    },
+    "wiper.front.right": {
+     "distance": 1.213,
+     "azimuth": 65.4,
+     "polar": 25.2,
+     "position": [
+      1.485,
+      2.226,
+      0.49
+     ],
+     "target": [
+      1.015,
+      1.129,
+      0.275
+     ],
+     "sizeCm": [
+      11.6,
+      8,
+      49
+     ],
+     "screenPx": [
+      586,
+      362
+     ],
+     "fillPercent": 29.1,
+     "centerOffsetPx": [
+      -5,
+      4
+     ],
+     "mineCells": 16,
+     "touchPx": [
+      117,
+      72
+     ],
+     "meshes": 1,
+     "highlightedMeshes": 1,
+     "hood": 0,
+     "backTo": "INSPECTION_SUMMARY"
+    },
+    "light-low-beam-left-0": {
+     "distance": 0.85,
+     "azimuth": 99.9,
+     "polar": 78.9,
+     "position": [
+      2.949,
+      0.953,
+      -0.675
+     ],
+     "target": [
+      2.128,
+      0.789,
+      -0.531
+     ],
+     "sizeCm": [
+      0,
+      5.6,
+      16.4
+     ],
+     "screenPx": [
+      267,
+      99
+     ],
+     "fillPercent": 3.6,
+     "centerOffsetPx": [
+      2,
+      0
+     ],
+     "mineCells": 167,
+     "touchPx": [
+      267,
+      79
+     ],
+     "meshes": 1,
+     "highlightedMeshes": 1,
+     "hood": 0,
+     "backTo": "INSPECTION_SUMMARY"
+    },
+    "light-low-beam-right-0": {
+     "distance": 0.85,
+     "azimuth": 80.1,
+     "polar": 78.9,
+     "position": [
+      2.949,
+      0.953,
+      0.675
+     ],
+     "target": [
+      2.128,
+      0.789,
+      0.531
+     ],
+     "sizeCm": [
+      0,
+      5.6,
+      16.4
+     ],
+     "screenPx": [
+      267,
+      99
+     ],
+     "fillPercent": 3.6,
+     "centerOffsetPx": [
+      -2,
+      0
+     ],
+     "mineCells": 167,
+     "touchPx": [
+      267,
+      79
+     ],
+     "meshes": 1,
+     "highlightedMeshes": 1,
+     "hood": 0,
+     "backTo": "INSPECTION_SUMMARY"
+    },
+    "light-high-beam-left-0": {
+     "distance": 0.85,
+     "azimuth": 95.7,
+     "polar": 86.4,
+     "position": [
+      2.741,
+      0.857,
+      -0.83
+     ],
+     "target": [
+      1.897,
+      0.803,
+      -0.745
+     ],
+     "sizeCm": [
+      0,
+      4.3,
+      16.3
+     ],
+     "screenPx": [
+      267,
+      72
+     ],
+     "fillPercent": 2.6,
+     "centerOffsetPx": [
+      1,
+      0
+     ],
+     "mineCells": 175,
+     "touchPx": [
+      267,
+      67
+     ],
+     "meshes": 1,
+     "highlightedMeshes": 1,
+     "hood": 0,
+     "backTo": "INSPECTION_SUMMARY"
+    },
+    "light-high-beam-right-0": {
+     "distance": 0.85,
+     "azimuth": 84.3,
+     "polar": 86.4,
+     "position": [
+      2.741,
+      0.857,
+      0.83
+     ],
+     "target": [
+      1.897,
+      0.803,
+      0.745
+     ],
+     "sizeCm": [
+      0,
+      4.3,
+      16.3
+     ],
+     "screenPx": [
+      267,
+      72
+     ],
+     "fillPercent": 2.6,
+     "centerOffsetPx": [
+      -1,
+      0
+     ],
+     "mineCells": 175,
+     "touchPx": [
+      267,
+      67
+     ],
+     "meshes": 1,
+     "highlightedMeshes": 1,
+     "hood": 0,
+     "backTo": "INSPECTION_SUMMARY"
+    }
+   },
+   "flows": {
+    "bayLabel": true,
+    "resultBackFromList": "INSPECTION_SUMMARY",
+    "tireList": {
+     "directDistance": 8.762,
+     "viaTireDistance": 10.137,
+     "viaTireAtOverviewPose": true
+    },
+    "crossArea": {
+     "kind": "hood",
+     "changed": false
+    },
+    "emptyTouch": {
+     "COMPONENT_PREVIEW:coolant-reservoir": {
+      "none": "NO_SUCH_AREA",
+      "other": "KEPT",
+      "drag": "KEPT",
+      "dragRotated": true
+     },
+     "WASHER_SELECTED:washer-fluid-cap": {
+      "none": "NO_SUCH_AREA",
+      "other": "KEPT",
+      "drag": "KEPT",
+      "dragRotated": true
+     },
+     "TIRE_PREVIEW:tire.front-left": {
+      "none": "KEPT",
+      "other": "KEPT",
+      "drag": "KEPT",
+      "dragRotated": true
+     },
+     "CHARGE_PORT_PREVIEW:ev-charge.flap": {
+      "none": "NO_SUCH_AREA",
+      "other": "KEPT",
+      "drag": "KEPT",
+      "dragRotated": true
+     },
+     "VISIBILITY_PREVIEW:wiper.front.left": {
+      "none": "NO_SUCH_AREA",
+      "other": "KEPT",
+      "drag": "KEPT",
+      "dragRotated": true
+     },
+     "VISIBILITY_PREVIEW:light-low-beam-left-0": {
+      "none": "KEPT",
+      "other": "KEPT",
+      "drag": "KEPT",
+      "dragRotated": true
+     },
+     "EV_BATTERY_PREVIEW:ev-battery.pack": {
+      "none": "KEPT",
+      "other": "KEPT",
+      "drag": "KEPT",
+      "dragRotated": true
+     }
+    },
+    "backLabels": [
+     "뒤로 · 차량 전체 보기",
+     "선택 해제 · 이전 시점으로",
+     "점검 목록과 이전 시점으로",
+     "점검 부위로",
+     "점검 항목으로"
+    ],
+    "pinch": "NOT_RUN: desktop pointer input only",
+    "realTouch": "NOT_RUN: desktop pointer input only"
+   },
+   "geometry": {
+    "idle": {
+     "charge": false,
+     "wiperHits": 0
+    },
+    "overview": {
+     "charge": true,
+     "wiperHits": 11
+    },
+    "tires": {
+     "charge": false
+    }
+   },
+   "overviewFacts": {
+    "text": true,
+    "legendTires": true,
+    "toastCenter": 612,
+    "usableCenter": 413,
+    "batteryTag": "점검 가능"
+   },
+   "select3d": {
+    "washer-fluid-cap": {
+     "clickable": true,
+     "selected": true,
+     "state": "WASHER_SELECTED",
+     "touchPx": [
+      30,
+      53
+     ],
+     "fromState": "COMPONENT_SELECTION"
+    },
+    "coolant-reservoir": {
+     "clickable": true,
+     "selected": true,
+     "state": "COMPONENT_PREVIEW",
+     "touchPx": [
+      62,
+      63
+     ],
+     "fromState": "COMPONENT_SELECTION"
+    },
+    "lcw-coolant-reservoir": {
+     "clickable": false,
+     "selected": false,
+     "touchPx": [
+      0,
+      0
+     ],
+     "fromState": "COMPONENT_SELECTION"
+    },
+    "brake-fluid-reservoir": {
+     "clickable": true,
+     "selected": true,
+     "state": "COMPONENT_PREVIEW",
+     "touchPx": [
+      45,
+      34
+     ],
+     "fromState": "COMPONENT_SELECTION"
+    },
+    "battery-12v": {
+     "clickable": true,
+     "selected": true,
+     "state": "COMPONENT_PREVIEW",
+     "touchPx": [
+      74,
+      85
+     ],
+     "fromState": "COMPONENT_SELECTION"
+    },
+    "fuse-box": {
+     "clickable": true,
+     "selected": true,
+     "state": "COMPONENT_PREVIEW",
+     "touchPx": [
+      63,
+      47
+     ],
+     "fromState": "COMPONENT_SELECTION"
+    },
+    "tire.front-left": {
+     "clickable": true,
+     "selected": true,
+     "state": "TIRE_PREVIEW",
+     "touchPx": [
+      145,
+      151
+     ],
+     "fromState": "TIRE_SELECTION"
+    },
+    "tire.front-right": {
+     "clickable": false,
+     "selected": false,
+     "touchPx": [
+      0,
+      0
+     ],
+     "fromState": "TIRE_SELECTION"
+    },
+    "tire.rear-left": {
+     "clickable": true,
+     "selected": true,
+     "state": "TIRE_PREVIEW",
+     "touchPx": [
+      128,
+      139
+     ],
+     "fromState": "TIRE_SELECTION"
+    },
+    "tire.rear-right": {
+     "clickable": false,
+     "selected": false,
+     "touchPx": [
+      0,
+      0
+     ],
+     "fromState": "TIRE_SELECTION"
+    },
+    "ev-battery.pack": {
+     "clickable": false,
+     "selected": false,
+     "touchPx": [
+      0,
+      0
+     ],
+     "fromState": "INSPECTION_OVERVIEW"
+    },
+    "ev-charge.port": {
+     "clickable": false,
+     "selected": false,
+     "touchPx": [
+      0,
+      0
+     ],
+     "fromState": "INSPECTION_OVERVIEW"
+    },
+    "ev-charge.flap": {
+     "clickable": false,
+     "selected": false,
+     "touchPx": [
+      0,
+      0
+     ],
+     "fromState": "INSPECTION_OVERVIEW"
+    },
+    "wiper.front.left": {
+     "clickable": true,
+     "selected": true,
+     "state": "VISIBILITY_PREVIEW",
+     "touchPx": [
+      15,
+      7
+     ],
+     "fromState": "INSPECTION_OVERVIEW"
+    },
+    "wiper.front.right": {
+     "clickable": true,
+     "selected": true,
+     "state": "VISIBILITY_PREVIEW",
+     "touchPx": [
+      20,
+      6
+     ],
+     "fromState": "INSPECTION_OVERVIEW"
+    },
+    "light-low-beam-left-0": {
+     "clickable": true,
+     "selected": true,
+     "state": "VISIBILITY_PREVIEW",
+     "touchPx": [
+      7,
+      3
+     ],
+     "fromState": "INSPECTION_OVERVIEW"
+    },
+    "light-low-beam-right-0": {
+     "clickable": true,
+     "selected": false,
+     "state": "INSPECTION_OVERVIEW",
+     "touchPx": [
+      2,
+      1
+     ],
+     "fromState": "INSPECTION_OVERVIEW"
+    },
+    "light-high-beam-left-0": {
+     "clickable": false,
+     "selected": false,
+     "touchPx": [
+      0,
+      0
+     ],
+     "fromState": "INSPECTION_OVERVIEW"
+    },
+    "light-high-beam-right-0": {
+     "clickable": false,
+     "selected": false,
+     "touchPx": [
+      0,
+      0
+     ],
+     "fromState": "INSPECTION_OVERVIEW"
+    }
+   },
+   "paint": {
+    "tiresTinted": true,
+    "othersKeepMaterial": true,
+    "legendCounts": 4
+   },
+   "lcwListClass": {
+    "preview": false,
+    "available": true
+   }
+  },
+  "1024x600": {
+   "home": {
+    "view": {
+     "azimuthDeg": 138.6,
+     "polarDeg": 69.7,
+     "distance": 7.4
+    },
+    "overview": {
+     "azimuthDeg": 116.6,
+     "polarDeg": 61,
+     "distance": 9.509
+    }
+   },
+   "overview": {
+    "washer-fluid-cap": {
+     "mineCells": 0,
+     "touchPx": [
+      0,
+      0
+     ],
+     "highlightedMeshes": 0
+    },
+    "coolant-reservoir": {
+     "mineCells": 0,
+     "touchPx": [
+      0,
+      0
+     ],
+     "highlightedMeshes": 0
+    },
+    "lcw-coolant-reservoir": {
+     "mineCells": 0,
+     "touchPx": [
+      0,
+      0
+     ],
+     "highlightedMeshes": 0
+    },
+    "brake-fluid-reservoir": {
+     "mineCells": 0,
+     "touchPx": [
+      0,
+      0
+     ],
+     "highlightedMeshes": 0
+    },
+    "battery-12v": {
+     "mineCells": 0,
+     "touchPx": [
+      0,
+      0
+     ],
+     "highlightedMeshes": 0
+    },
+    "fuse-box": {
+     "mineCells": 0,
+     "touchPx": [
+      0,
+      0
+     ],
+     "highlightedMeshes": 0
+    },
+    "tire.front-left": {
+     "mineCells": 25,
+     "touchPx": [
+      30,
+      68
+     ],
+     "highlightedMeshes": 0
+    },
+    "tire.front-right": {
+     "mineCells": 0,
+     "touchPx": [
+      0,
+      0
+     ],
+     "highlightedMeshes": 0
+    },
+    "tire.rear-left": {
+     "mineCells": 18,
+     "touchPx": [
+      13,
+      42
+     ],
+     "highlightedMeshes": 0
+    },
+    "tire.rear-right": {
+     "mineCells": 0,
+     "touchPx": [
+      0,
+      0
+     ],
+     "highlightedMeshes": 0
+    },
+    "ev-battery.pack": {
+     "mineCells": 0,
+     "touchPx": [
+      0,
+      0
+     ],
+     "highlightedMeshes": 0
+    },
+    "ev-charge.port": {
+     "mineCells": 0,
+     "touchPx": [
+      0,
+      0
+     ],
+     "highlightedMeshes": 0
+    },
+    "ev-charge.flap": {
+     "mineCells": 0,
+     "touchPx": [
+      0,
+      0
+     ],
+     "highlightedMeshes": 0
+    },
+    "wiper.front.left": {
+     "mineCells": 11,
+     "touchPx": [
+      11,
+      5
+     ],
+     "highlightedMeshes": 0
+    },
+    "wiper.front.right": {
+     "mineCells": 11,
+     "touchPx": [
+      15,
+      5
+     ],
+     "highlightedMeshes": 0
+    },
+    "light-low-beam-left-0": {
+     "mineCells": 4,
+     "touchPx": [
+      5,
+      2
+     ],
+     "highlightedMeshes": 1
+    },
+    "light-low-beam-right-0": {
+     "mineCells": 1,
+     "touchPx": [
+      2,
+      1
+     ],
+     "highlightedMeshes": 1
+    },
+    "light-high-beam-left-0": {
+     "mineCells": 0,
+     "touchPx": [
+      0,
+      0
+     ],
+     "highlightedMeshes": 1
+    },
+    "light-high-beam-right-0": {
+     "mineCells": 0,
+     "touchPx": [
+      0,
+      0
+     ],
+     "highlightedMeshes": 1
+    }
+   },
+   "preview": {
+    "washer-fluid-cap": {
+     "selectable": true,
+     "state": "WASHER_SELECTED",
+     "distance": 2.995,
+     "azimuth": 50.2,
+     "polar": 31.7,
+     "position": [
+      2.558,
+      3.39,
+      1.406
+     ],
+     "target": [
+      1.35,
+      0.84,
+      0.4
+     ],
+     "sizeCm": [
+      9.6,
+      18.1,
+      9.6
+     ],
+     "screenPx": [
+      44,
+      66
+     ],
+     "fillPercent": 0.8,
+     "centerOffsetPx": [
+      -30,
+      8
+     ],
+     "mineCells": 81,
+     "touchPx": [
+      32,
+      48
+     ],
+     "meshes": 2,
+     "highlightedMeshes": 2,
+     "color": [
+      146,
+      197,
+      211
+     ],
+     "selectionIntensity": null,
+     "label": true,
+     "badge": "위치·형상 추정",
+     "backButtons": [
+      "점검 항목으로"
+     ],
+     "focusOutline": true,
+     "hasMobile": true,
+     "noProcedureText": false,
+     "internalWords": [],
+     "backTo": "COMPONENT_SELECTION",
+     "backPoseMoved": 2.545
+    },
+    "coolant-reservoir": {
+     "selectable": true,
+     "state": "COMPONENT_PREVIEW",
+     "distance": 0.85,
+     "azimuth": 65.4,
+     "polar": 25.2,
+     "position": [
+      1.82,
+      1.541,
+      0.586
+     ],
+     "target": [
+      1.49,
+      0.772,
+      0.435
+     ],
+     "sizeCm": [
+      18,
+      16.4,
+      18
+     ],
+     "screenPx": [
+      293,
+      320
+     ],
+     "fillPercent": 25,
+     "centerOffsetPx": [
+      4,
+      -4
+     ],
+     "mineCells": 106,
+     "touchPx": [
+      234,
+      256
+     ],
+     "meshes": 2,
+     "highlightedMeshes": 2,
+     "color": [
+      202,
+      219,
+      221
+     ],
+     "selectionIntensity": null,
+     "label": false,
+     "badge": "추정 모델 · 점검 절차 미제공",
+     "backButtons": [
+      "점검 목록과 이전 시점으로"
+     ],
+     "focusOutline": true,
+     "hasMobile": true,
+     "noProcedureText": true,
+     "internalWords": [],
+     "backTo": "COMPONENT_SELECTION",
+     "backPoseMoved": 3.357
+    },
+    "lcw-coolant-reservoir": {
+     "selectable": false,
+     "state": "COMPONENT_SELECTION"
+    },
+    "brake-fluid-reservoir": {
+     "selectable": true,
+     "state": "COMPONENT_PREVIEW",
+     "distance": 0.85,
+     "azimuth": 114.6,
+     "polar": 25.2,
+     "position": [
+      1.64,
+      1.561,
+      -0.581
+     ],
+     "target": [
+      1.31,
+      0.792,
+      -0.43
+     ],
+     "sizeCm": [
+      12,
+      12.4,
+      14
+     ],
+     "screenPx": [
+      212,
+      229
+     ],
+     "fillPercent": 12.9,
+     "centerOffsetPx": [
+      -1,
+      -3
+     ],
+     "mineCells": 101,
+     "touchPx": [
+      184,
+      168
+     ],
+     "meshes": 2,
+     "highlightedMeshes": 2,
+     "color": [
+      194,
+      215,
+      218
+     ],
+     "selectionIntensity": null,
+     "label": false,
+     "badge": "추정 모델 · 점검 절차 미제공",
+     "backButtons": [
+      "점검 목록과 이전 시점으로"
+     ],
+     "focusOutline": true,
+     "hasMobile": true,
+     "noProcedureText": true,
+     "internalWords": [],
+     "backTo": "COMPONENT_SELECTION",
+     "backPoseMoved": 3.205
+    },
+    "battery-12v": {
+     "selectable": true,
+     "state": "COMPONENT_PREVIEW",
+     "distance": 0.85,
+     "azimuth": 114.6,
+     "polar": 25.2,
+     "position": [
+      2,
+      1.5,
+      -0.591
+     ],
+     "target": [
+      1.67,
+      0.731,
+      -0.44
+     ],
+     "sizeCm": [
+      24,
+      22.2,
+      18
+     ],
+     "screenPx": [
+      335,
+      404
+     ],
+     "fillPercent": 36,
+     "centerOffsetPx": [
+      -7,
+      -9
+     ],
+     "mineCells": 125,
+     "touchPx": [
+      268,
+      377
+     ],
+     "meshes": 4,
+     "highlightedMeshes": 4,
+     "color": [
+      142,
+      196,
+      208
+     ],
+     "selectionIntensity": null,
+     "label": false,
+     "badge": "추정 모델 · 점검 절차 미제공",
+     "backButtons": [
+      "점검 목록과 이전 시점으로"
+     ],
+     "focusOutline": true,
+     "hasMobile": true,
+     "noProcedureText": true,
+     "internalWords": [],
+     "backTo": "COMPONENT_SELECTION",
+     "backPoseMoved": 3.011
+    },
+    "fuse-box": {
+     "selectable": true,
+     "state": "COMPONENT_PREVIEW",
+     "distance": 0.85,
+     "azimuth": 114.6,
+     "polar": 25.2,
+     "position": [
+      1.79,
+      1.538,
+      -0.591
+     ],
+     "target": [
+      1.46,
+      0.769,
+      -0.44
+     ],
+     "sizeCm": [
+      12,
+      15.8,
+      18
+     ],
+     "screenPx": [
+      261,
+      262
+     ],
+     "fillPercent": 18.2,
+     "centerOffsetPx": [
+      -1,
+      -5
+     ],
+     "mineCells": 126,
+     "touchPx": [
+      244,
+      192
+     ],
+     "meshes": 2,
+     "highlightedMeshes": 2,
+     "color": [
+      137,
+      193,
+      205
+     ],
+     "selectionIntensity": null,
+     "label": false,
+     "badge": "추정 모델 · 점검 절차 미제공",
+     "backButtons": [
+      "점검 목록과 이전 시점으로"
+     ],
+     "focusOutline": true,
+     "hasMobile": true,
+     "noProcedureText": true,
+     "internalWords": [],
+     "backTo": "COMPONENT_SELECTION",
+     "backPoseMoved": 3.119
+    },
+    "tire.front-left": {
+     "selectable": true,
+     "state": "TIRE_PREVIEW",
+     "distance": 2.45,
+     "azimuth": 169.8,
+     "polar": 72.5,
+     "position": [
+      1.873,
+      1.112,
+      -3.072
+     ],
+     "target": [
+      1.459,
+      0.376,
+      -0.772
+     ],
+     "sizeCm": [
+      75.1,
+      75.1,
+      25.1
+     ],
+     "screenPx": [
+      319,
+      323
+     ],
+     "fillPercent": 27.4,
+     "centerOffsetPx": [
+      4,
+      4
+     ],
+     "mineCells": 157,
+     "touchPx": [
+      319,
+      301
+     ],
+     "meshes": 1,
+     "highlightedMeshes": 1,
+     "color": [
+      74,
+      111,
+      118
+     ],
+     "selectionIntensity": 0.6,
+     "label": false,
+     "badge": "상태만 표시 · 수치 및 진단 미제공",
+     "backButtons": [
+      "선택 해제 · 이전 시점으로"
+     ],
+     "focusOutline": true,
+     "hasMobile": true,
+     "noProcedureText": false,
+     "internalWords": [
+      "USER_REPORTED"
+     ],
+     "backTo": "TIRE_SELECTION",
+     "backPoseMoved": 4.621
+    },
+    "tire.front-right": {
+     "selectable": true,
+     "state": "TIRE_PREVIEW",
+     "distance": 2.45,
+     "azimuth": 10.2,
+     "polar": 72.5,
+     "position": [
+      1.873,
+      1.112,
+      3.073
+     ],
+     "target": [
+      1.459,
+      0.376,
+      0.772
+     ],
+     "sizeCm": [
+      75.1,
+      75.1,
+      25.1
+     ],
+     "screenPx": [
+      319,
+      323
+     ],
+     "fillPercent": 27.4,
+     "centerOffsetPx": [
+      -4,
+      4
+     ],
+     "mineCells": 157,
+     "touchPx": [
+      319,
+      301
+     ],
+     "meshes": 1,
+     "highlightedMeshes": 1,
+     "color": [
+      107,
+      132,
+      139
+     ],
+     "selectionIntensity": 0.6,
+     "label": false,
+     "badge": "상태만 표시 · 수치 및 진단 미제공",
+     "backButtons": [
+      "선택 해제 · 이전 시점으로"
+     ],
+     "focusOutline": true,
+     "hasMobile": true,
+     "noProcedureText": false,
+     "internalWords": [
+      "USER_REPORTED"
+     ],
+     "backTo": "TIRE_SELECTION",
+     "backPoseMoved": 10.678
+    },
+    "tire.rear-left": {
+     "selectable": true,
+     "state": "TIRE_PREVIEW",
+     "distance": 2.45,
+     "azimuth": -169.8,
+     "polar": 72.5,
+     "position": [
+      -1.978,
+      1.112,
+      -3.072
+     ],
+     "target": [
+      -1.564,
+      0.376,
+      -0.772
+     ],
+     "sizeCm": [
+      75.1,
+      75.1,
+      25.1
+     ],
+     "screenPx": [
+      319,
+      323
+     ],
+     "fillPercent": 27.4,
+     "centerOffsetPx": [
+      -4,
+      4
+     ],
+     "mineCells": 157,
+     "touchPx": [
+      319,
+      301
+     ],
+     "meshes": 1,
+     "highlightedMeshes": 1,
+     "color": [
+      70,
+      108,
+      115
+     ],
+     "selectionIntensity": 0.6,
+     "label": false,
+     "badge": "상태만 표시 · 수치 및 진단 미제공",
+     "backButtons": [
+      "선택 해제 · 이전 시점으로"
+     ],
+     "focusOutline": true,
+     "hasMobile": true,
+     "noProcedureText": false,
+     "internalWords": [
+      "USER_REPORTED"
+     ],
+     "backTo": "TIRE_SELECTION",
+     "backPoseMoved": 5.842
+    },
+    "tire.rear-right": {
+     "selectable": true,
+     "state": "TIRE_PREVIEW",
+     "distance": 2.45,
+     "azimuth": -10.2,
+     "polar": 72.5,
+     "position": [
+      -1.978,
+      1.112,
+      3.073
+     ],
+     "target": [
+      -1.564,
+      0.376,
+      0.772
+     ],
+     "sizeCm": [
+      75.1,
+      75.1,
+      25.1
+     ],
+     "screenPx": [
+      319,
+      323
+     ],
+     "fillPercent": 27.4,
+     "centerOffsetPx": [
+      4,
+      4
+     ],
+     "mineCells": 157,
+     "touchPx": [
+      319,
+      301
+     ],
+     "meshes": 1,
+     "highlightedMeshes": 1,
+     "color": [
+      109,
+      134,
+      141
+     ],
+     "selectionIntensity": 0.6,
+     "label": false,
+     "badge": "상태만 표시 · 수치 및 진단 미제공",
+     "backButtons": [
+      "선택 해제 · 이전 시점으로"
+     ],
+     "focusOutline": true,
+     "hasMobile": true,
+     "noProcedureText": false,
+     "internalWords": [
+      "USER_REPORTED"
+     ],
+     "backTo": "TIRE_SELECTION",
+     "backPoseMoved": 11.26
+    },
+    "ev-battery.pack": {
+     "selectable": true,
+     "state": "EV_BATTERY_PREVIEW",
+     "distance": 5.292,
+     "azimuth": 125.5,
+     "polar": 139.3,
+     "position": [
+      2.683,
+      -3.842,
+      -2.006
+     ],
+     "target": [
+      -0.125,
+      0.17,
+      0
+     ],
+     "sizeCm": [
+      205,
+      10,
+      116
+     ],
+     "screenPx": [
+      388,
+      337
+     ],
+     "fillPercent": 34.9,
+     "centerOffsetPx": [
+      -12,
+      -23
+     ],
+     "mineCells": 110,
+     "touchPx": [
+      285,
+      292
+     ],
+     "meshes": 1,
+     "highlightedMeshes": 1,
+     "color": [
+      64,
+      171,
+      187
+     ],
+     "selectionIntensity": null,
+     "label": false,
+     "badge": "ESTIMATED_GEOMETRY · 추정 외함",
+     "backButtons": [
+      "점검 부위로"
+     ],
+     "focusOutline": true,
+     "hasMobile": false,
+     "noProcedureText": false,
+     "internalWords": [
+      "DETACHED",
+      "ESTIMATED_GEOMETRY",
+      "UNVERIFIED",
+      "USER_REPORTED"
+     ],
+     "backTo": "INSPECTION_OVERVIEW",
+     "backPoseMoved": 10.556
+    },
+    "ev-charge.port": {
+     "selectable": true,
+     "state": "CHARGE_PORT_PREVIEW",
+     "distance": 0.85,
+     "azimuth": -31,
+     "polar": 72,
+     "position": [
+      -2.333,
+      1.243,
+      1.589
+     ],
+     "target": [
+      -1.917,
+      0.98,
+      0.896
+     ],
+     "sizeCm": [
+      31.1,
+      20,
+      8.1
+     ],
+     "screenPx": [
+      359,
+      295
+     ],
+     "fillPercent": 28.2,
+     "centerOffsetPx": [
+      -9,
+      14
+     ],
+     "mineCells": 34,
+     "touchPx": [
+      288,
+      59
+     ],
+     "meshes": 1,
+     "highlightedMeshes": 1,
+     "color": [
+      96,
+      181,
+      195
+     ],
+     "selectionIntensity": null,
+     "label": false,
+     "badge": "ESTIMATED_GEOMETRY · 정적 닫힌 형상",
+     "backButtons": [
+      "뒤로 · 차량 전체 보기"
+     ],
+     "focusOutline": true,
+     "hasMobile": true,
+     "noProcedureText": false,
+     "internalWords": [
+      "DETACHED",
+      "ESTIMATED_GEOMETRY",
+      "UNVERIFIED",
+      "USER_REPORTED"
+     ],
+     "backTo": "INSPECTION_OVERVIEW",
+     "backPoseMoved": 11.88
+    },
+    "ev-charge.flap": {
+     "selectable": true,
+     "state": "CHARGE_PORT_PREVIEW",
+     "distance": 0.85,
+     "azimuth": -31,
+     "polar": 72,
+     "position": [
+      -2.332,
+      1.243,
+      1.592
+     ],
+     "target": [
+      -1.916,
+      0.98,
+      0.899
+     ],
+     "sizeCm": [
+      26.2,
+      16.8,
+      6.9
+     ],
+     "screenPx": [
+      301,
+      248
+     ],
+     "fillPercent": 19.8,
+     "centerOffsetPx": [
+      -7,
+      10
+     ],
+     "mineCells": 122,
+     "touchPx": [
+      281,
+      198
+     ],
+     "meshes": 1,
+     "highlightedMeshes": 1,
+     "color": [
+      137,
+      194,
+      206
+     ],
+     "selectionIntensity": null,
+     "label": false,
+     "badge": "ESTIMATED_GEOMETRY · 정적 닫힌 형상",
+     "backButtons": [
+      "뒤로 · 차량 전체 보기"
+     ],
+     "focusOutline": true,
+     "hasMobile": false,
+     "noProcedureText": false,
+     "internalWords": [
+      "DETACHED",
+      "ESTIMATED_GEOMETRY",
+      "UNVERIFIED",
+      "USER_REPORTED"
+     ],
+     "backTo": "INSPECTION_OVERVIEW",
+     "backPoseMoved": 11.881
+    },
+    "wiper.front.left": {
+     "selectable": true,
+     "state": "VISIBILITY_PREVIEW",
+     "distance": 1.298,
+     "azimuth": 114.6,
+     "polar": 25.2,
+     "position": [
+      1.518,
+      2.3,
+      -0.541
+     ],
+     "target": [
+      1.015,
+      1.126,
+      -0.31
+     ],
+     "sizeCm": [
+      11.6,
+      8.4,
+      56
+     ],
+     "screenPx": [
+      421,
+      251
+     ],
+     "fillPercent": 28.2,
+     "centerOffsetPx": [
+      5,
+      3
+     ],
+     "mineCells": 15,
+     "touchPx": [
+      56,
+      33
+     ],
+     "meshes": 1,
+     "highlightedMeshes": 1,
+     "color": [
+      107,
+      184,
+      197
+     ],
+     "selectionIntensity": null,
+     "label": false,
+     "badge": "ESTIMATED_GEOMETRY · 정적 휴지 자세",
+     "backButtons": [
+      "뒤로 · 차량 전체 보기"
+     ],
+     "focusOutline": true,
+     "hasMobile": true,
+     "noProcedureText": false,
+     "internalWords": [
+      "DETACHED",
+      "ESTIMATED_GEOMETRY",
+      "UNVERIFIED",
+      "USER_REPORTED"
+     ],
+     "backTo": "INSPECTION_OVERVIEW",
+     "backPoseMoved": 7.411
+    },
+    "wiper.front.right": {
+     "selectable": true,
+     "state": "VISIBILITY_PREVIEW",
+     "distance": 1.144,
+     "azimuth": 65.4,
+     "polar": 25.2,
+     "position": [
+      1.458,
+      2.164,
+      0.478
+     ],
+     "target": [
+      1.015,
+      1.129,
+      0.275
+     ],
+     "sizeCm": [
+      11.6,
+      8,
+      49
+     ],
+     "screenPx": [
+      424,
+      261
+     ],
+     "fillPercent": 29.5,
+     "centerOffsetPx": [
+      -4,
+      3
+     ],
+     "mineCells": 16,
+     "touchPx": [
+      85,
+      52
+     ],
+     "meshes": 1,
+     "highlightedMeshes": 1,
+     "color": [
+      101,
+      178,
+      191
+     ],
+     "selectionIntensity": null,
+     "label": false,
+     "badge": "ESTIMATED_GEOMETRY · 정적 휴지 자세",
+     "backButtons": [
+      "뒤로 · 차량 전체 보기"
+     ],
+     "focusOutline": true,
+     "hasMobile": true,
+     "noProcedureText": false,
+     "internalWords": [
+      "DETACHED",
+      "ESTIMATED_GEOMETRY",
+      "UNVERIFIED",
+      "USER_REPORTED"
+     ],
+     "backTo": "INSPECTION_OVERVIEW",
+     "backPoseMoved": 8.001
+    },
+    "light-low-beam-left-0": {
+     "selectable": true,
+     "state": "VISIBILITY_PREVIEW",
+     "distance": 0.85,
+     "azimuth": 99.9,
+     "polar": 78.9,
+     "position": [
+      2.949,
+      0.953,
+      -0.675
+     ],
+     "target": [
+      2.128,
+      0.789,
+      -0.531
+     ],
+     "sizeCm": [
+      0,
+      5.6,
+      16.4
+     ],
+     "screenPx": [
+      182,
+      68
+     ],
+     "fillPercent": 3.3,
+     "centerOffsetPx": [
+      1,
+      0
+     ],
+     "mineCells": 167,
+     "touchPx": [
+      182,
+      54
+     ],
+     "meshes": 1,
+     "highlightedMeshes": 1,
+     "color": [
+      53,
+      130,
+      142
+     ],
+     "selectionIntensity": null,
+     "label": false,
+     "badge": "기존 커뮤니티 GLB 표식 · OEM 광학 구조 미검증",
+     "backButtons": [
+      "뒤로 · 차량 전체 보기"
+     ],
+     "focusOutline": true,
+     "hasMobile": true,
+     "noProcedureText": false,
+     "internalWords": [
+      "DETACHED",
+      "UNVERIFIED",
+      "USER_REPORTED"
+     ],
+     "backTo": "INSPECTION_OVERVIEW",
+     "backPoseMoved": 7.03
+    },
+    "light-low-beam-right-0": {
+     "selectable": true,
+     "state": "VISIBILITY_PREVIEW",
+     "distance": 0.85,
+     "azimuth": 80.1,
+     "polar": 78.9,
+     "position": [
+      2.949,
+      0.953,
+      0.675
+     ],
+     "target": [
+      2.128,
+      0.789,
+      0.531
+     ],
+     "sizeCm": [
+      0,
+      5.6,
+      16.4
+     ],
+     "screenPx": [
+      182,
+      68
+     ],
+     "fillPercent": 3.3,
+     "centerOffsetPx": [
+      -1,
+      0
+     ],
+     "mineCells": 167,
+     "touchPx": [
+      182,
+      54
+     ],
+     "meshes": 1,
+     "highlightedMeshes": 1,
+     "color": [
+      53,
+      130,
+      142
+     ],
+     "selectionIntensity": null,
+     "label": false,
+     "badge": "기존 커뮤니티 GLB 표식 · OEM 광학 구조 미검증",
+     "backButtons": [
+      "뒤로 · 차량 전체 보기"
+     ],
+     "focusOutline": true,
+     "hasMobile": true,
+     "noProcedureText": false,
+     "internalWords": [
+      "DETACHED",
+      "UNVERIFIED",
+      "USER_REPORTED"
+     ],
+     "backTo": "INSPECTION_OVERVIEW",
+     "backPoseMoved": 7.711
+    },
+    "light-high-beam-left-0": {
+     "selectable": true,
+     "state": "VISIBILITY_PREVIEW",
+     "distance": 0.85,
+     "azimuth": 95.7,
+     "polar": 90,
+     "position": [
+      2.743,
+      0.803,
+      -0.83
+     ],
+     "target": [
+      1.897,
+      0.803,
+      -0.745
+     ],
+     "sizeCm": [
+      0,
+      4.3,
+      16.3
+     ],
+     "screenPx": [
+      182,
+      49
+     ],
+     "fillPercent": 2.3,
+     "centerOffsetPx": [
+      1,
+      0
+     ],
+     "mineCells": 214,
+     "touchPx": [
+      182,
+      49
+     ],
+     "meshes": 1,
+     "highlightedMeshes": 1,
+     "color": [
+      53,
+      130,
+      142
+     ],
+     "selectionIntensity": null,
+     "label": false,
+     "badge": "기존 커뮤니티 GLB 표식 · OEM 광학 구조 미검증",
+     "backButtons": [
+      "뒤로 · 차량 전체 보기"
+     ],
+     "focusOutline": true,
+     "hasMobile": true,
+     "noProcedureText": false,
+     "internalWords": [
+      "DETACHED",
+      "UNVERIFIED",
+      "USER_REPORTED"
+     ],
+     "backTo": "INSPECTION_OVERVIEW",
+     "backPoseMoved": 7.194
+    },
+    "light-high-beam-right-0": {
+     "selectable": true,
+     "state": "VISIBILITY_PREVIEW",
+     "distance": 0.85,
+     "azimuth": 84.3,
+     "polar": 90,
+     "position": [
+      2.743,
+      0.803,
+      0.83
+     ],
+     "target": [
+      1.897,
+      0.803,
+      0.745
+     ],
+     "sizeCm": [
+      0,
+      4.3,
+      16.3
+     ],
+     "screenPx": [
+      182,
+      49
+     ],
+     "fillPercent": 2.3,
+     "centerOffsetPx": [
+      -1,
+      0
+     ],
+     "mineCells": 214,
+     "touchPx": [
+      182,
+      49
+     ],
+     "meshes": 1,
+     "highlightedMeshes": 1,
+     "color": [
+      54,
+      130,
+      142
+     ],
+     "selectionIntensity": null,
+     "label": false,
+     "badge": "기존 커뮤니티 GLB 표식 · OEM 광학 구조 미검증",
+     "backButtons": [
+      "뒤로 · 차량 전체 보기"
+     ],
+     "focusOutline": true,
+     "hasMobile": true,
+     "noProcedureText": false,
+     "internalWords": [
+      "DETACHED",
+      "UNVERIFIED",
+      "USER_REPORTED"
+     ],
+     "backTo": "INSPECTION_OVERVIEW",
+     "backPoseMoved": 8.007
+    }
+   },
+   "result": {
+    "washer-fluid-cap": {
+     "distance": 6,
+     "azimuth": 116.6,
+     "polar": 61,
+     "position": [
+      5.393,
+      3.66,
+      -2.347
+     ],
+     "target": [
+      0.7,
+      0.75,
+      0
+     ],
+     "sizeCm": [
+      9.6,
+      18.1,
+      9.6
+     ],
+     "screenPx": [
+      24,
+      37
+     ],
+     "fillPercent": 0.2,
+     "centerOffsetPx": [
+      -117,
+      17
+     ],
+     "mineCells": 76,
+     "touchPx": [
+      16,
+      27
+     ],
+     "meshes": 2,
+     "highlightedMeshes": 2,
+     "hood": 60,
+     "backTo": "INSPECTION_SUMMARY"
+    },
+    "coolant-reservoir": {
+     "distance": 0.85,
+     "azimuth": 65.4,
+     "polar": 25.2,
+     "position": [
+      1.82,
+      1.541,
+      0.586
+     ],
+     "target": [
+      1.49,
+      0.772,
+      0.435
+     ],
+     "sizeCm": [
+      18,
+      16.4,
+      18
+     ],
+     "screenPx": [
+      293,
+      320
+     ],
+     "fillPercent": 25,
+     "centerOffsetPx": [
+      4,
+      -4
+     ],
+     "mineCells": 106,
+     "touchPx": [
+      234,
+      256
+     ],
+     "meshes": 2,
+     "highlightedMeshes": 2,
+     "hood": 60,
+     "backTo": "INSPECTION_SUMMARY"
+    },
+    "lcw-coolant-reservoir": {
+     "distance": 4.073,
+     "polar": 37.7,
+     "azimuth": 106.7,
+     "position": [
+      3.887,
+      3.842,
+      -0.716
+     ],
+     "target": [
+      1.5,
+      0.62,
+      0
+     ],
+     "bounds": null,
+     "hood": 60,
+     "backTo": "INSPECTION_SUMMARY"
+    },
+    "brake-fluid-reservoir": {
+     "distance": 0.85,
+     "azimuth": 114.6,
+     "polar": 25.2,
+     "position": [
+      1.64,
+      1.561,
+      -0.581
+     ],
+     "target": [
+      1.31,
+      0.792,
+      -0.43
+     ],
+     "sizeCm": [
+      12,
+      12.4,
+      14
+     ],
+     "screenPx": [
+      212,
+      229
+     ],
+     "fillPercent": 12.9,
+     "centerOffsetPx": [
+      -1,
+      -3
+     ],
+     "mineCells": 101,
+     "touchPx": [
+      184,
+      168
+     ],
+     "meshes": 2,
+     "highlightedMeshes": 2,
+     "hood": 60,
+     "backTo": "INSPECTION_SUMMARY"
+    },
+    "battery-12v": {
+     "distance": 0.85,
+     "azimuth": 114.6,
+     "polar": 25.2,
+     "position": [
+      2,
+      1.5,
+      -0.591
+     ],
+     "target": [
+      1.67,
+      0.731,
+      -0.44
+     ],
+     "sizeCm": [
+      24,
+      22.2,
+      18
+     ],
+     "screenPx": [
+      335,
+      404
+     ],
+     "fillPercent": 36,
+     "centerOffsetPx": [
+      -7,
+      -9
+     ],
+     "mineCells": 125,
+     "touchPx": [
+      268,
+      377
+     ],
+     "meshes": 4,
+     "highlightedMeshes": 4,
+     "hood": 60,
+     "backTo": "INSPECTION_SUMMARY"
+    },
+    "fuse-box": {
+     "distance": 0.85,
+     "azimuth": 114.6,
+     "polar": 25.2,
+     "position": [
+      1.79,
+      1.538,
+      -0.591
+     ],
+     "target": [
+      1.46,
+      0.769,
+      -0.44
+     ],
+     "sizeCm": [
+      12,
+      15.8,
+      18
+     ],
+     "screenPx": [
+      261,
+      262
+     ],
+     "fillPercent": 18.2,
+     "centerOffsetPx": [
+      -1,
+      -5
+     ],
+     "mineCells": 126,
+     "touchPx": [
+      244,
+      192
+     ],
+     "meshes": 2,
+     "highlightedMeshes": 2,
+     "hood": 60,
+     "backTo": "INSPECTION_SUMMARY"
+    },
+    "tire.front-left": {
+     "distance": 2.45,
+     "azimuth": 169.8,
+     "polar": 72.5,
+     "position": [
+      1.873,
+      1.112,
+      -3.072
+     ],
+     "target": [
+      1.459,
+      0.376,
+      -0.772
+     ],
+     "sizeCm": [
+      75.1,
+      75.1,
+      25.1
+     ],
+     "screenPx": [
+      319,
+      323
+     ],
+     "fillPercent": 27.4,
+     "centerOffsetPx": [
+      4,
+      4
+     ],
+     "mineCells": 157,
+     "touchPx": [
+      319,
+      301
+     ],
+     "meshes": 1,
+     "highlightedMeshes": 1,
+     "hood": 0,
+     "backTo": "INSPECTION_SUMMARY"
+    },
+    "tire.front-right": {
+     "distance": 2.45,
+     "azimuth": 10.2,
+     "polar": 72.5,
+     "position": [
+      1.873,
+      1.112,
+      3.073
+     ],
+     "target": [
+      1.459,
+      0.376,
+      0.772
+     ],
+     "sizeCm": [
+      75.1,
+      75.1,
+      25.1
+     ],
+     "screenPx": [
+      319,
+      323
+     ],
+     "fillPercent": 27.4,
+     "centerOffsetPx": [
+      -4,
+      4
+     ],
+     "mineCells": 157,
+     "touchPx": [
+      319,
+      301
+     ],
+     "meshes": 1,
+     "highlightedMeshes": 1,
+     "hood": 0,
+     "backTo": "INSPECTION_SUMMARY"
+    },
+    "tire.rear-left": {
+     "distance": 2.45,
+     "azimuth": -169.8,
+     "polar": 72.5,
+     "position": [
+      -1.978,
+      1.112,
+      -3.072
+     ],
+     "target": [
+      -1.564,
+      0.376,
+      -0.772
+     ],
+     "sizeCm": [
+      75.1,
+      75.1,
+      25.1
+     ],
+     "screenPx": [
+      319,
+      323
+     ],
+     "fillPercent": 27.4,
+     "centerOffsetPx": [
+      -4,
+      4
+     ],
+     "mineCells": 157,
+     "touchPx": [
+      319,
+      301
+     ],
+     "meshes": 1,
+     "highlightedMeshes": 1,
+     "hood": 0,
+     "backTo": "INSPECTION_SUMMARY"
+    },
+    "tire.rear-right": {
+     "distance": 2.45,
+     "azimuth": -10.2,
+     "polar": 72.5,
+     "position": [
+      -1.978,
+      1.112,
+      3.073
+     ],
+     "target": [
+      -1.564,
+      0.376,
+      0.772
+     ],
+     "sizeCm": [
+      75.1,
+      75.1,
+      25.1
+     ],
+     "screenPx": [
+      319,
+      323
+     ],
+     "fillPercent": 27.4,
+     "centerOffsetPx": [
+      4,
+      4
+     ],
+     "mineCells": 157,
+     "touchPx": [
+      319,
+      301
+     ],
+     "meshes": 1,
+     "highlightedMeshes": 1,
+     "hood": 0,
+     "backTo": "INSPECTION_SUMMARY"
+    },
+    "ev-charge.port": {
+     "distance": 0.85,
+     "azimuth": -31,
+     "polar": 72,
+     "position": [
+      -2.333,
+      1.243,
+      1.589
+     ],
+     "target": [
+      -1.917,
+      0.98,
+      0.896
+     ],
+     "sizeCm": [
+      31.1,
+      20,
+      8.1
+     ],
+     "screenPx": [
+      359,
+      295
+     ],
+     "fillPercent": 28.2,
+     "centerOffsetPx": [
+      -9,
+      14
+     ],
+     "mineCells": 34,
+     "touchPx": [
+      288,
+      59
+     ],
+     "meshes": 1,
+     "highlightedMeshes": 1,
+     "hood": 0,
+     "backTo": "INSPECTION_SUMMARY"
+    },
+    "wiper.front.left": {
+     "distance": 1.298,
+     "azimuth": 114.6,
+     "polar": 25.2,
+     "position": [
+      1.518,
+      2.3,
+      -0.541
+     ],
+     "target": [
+      1.015,
+      1.126,
+      -0.31
+     ],
+     "sizeCm": [
+      11.6,
+      8.4,
+      56
+     ],
+     "screenPx": [
+      421,
+      251
+     ],
+     "fillPercent": 28.2,
+     "centerOffsetPx": [
+      5,
+      3
+     ],
+     "mineCells": 15,
+     "touchPx": [
+      56,
+      33
+     ],
+     "meshes": 1,
+     "highlightedMeshes": 1,
+     "hood": 0,
+     "backTo": "INSPECTION_SUMMARY"
+    },
+    "wiper.front.right": {
+     "distance": 1.144,
+     "azimuth": 65.4,
+     "polar": 25.2,
+     "position": [
+      1.458,
+      2.164,
+      0.478
+     ],
+     "target": [
+      1.015,
+      1.129,
+      0.275
+     ],
+     "sizeCm": [
+      11.6,
+      8,
+      49
+     ],
+     "screenPx": [
+      424,
+      261
+     ],
+     "fillPercent": 29.5,
+     "centerOffsetPx": [
+      -4,
+      3
+     ],
+     "mineCells": 16,
+     "touchPx": [
+      85,
+      52
+     ],
+     "meshes": 1,
+     "highlightedMeshes": 1,
+     "hood": 0,
+     "backTo": "INSPECTION_SUMMARY"
+    },
+    "light-low-beam-left-0": {
+     "distance": 0.85,
+     "azimuth": 99.9,
+     "polar": 78.9,
+     "position": [
+      2.949,
+      0.953,
+      -0.675
+     ],
+     "target": [
+      2.128,
+      0.789,
+      -0.531
+     ],
+     "sizeCm": [
+      0,
+      5.6,
+      16.4
+     ],
+     "screenPx": [
+      182,
+      68
+     ],
+     "fillPercent": 3.3,
+     "centerOffsetPx": [
+      1,
+      0
+     ],
+     "mineCells": 167,
+     "touchPx": [
+      182,
+      54
+     ],
+     "meshes": 1,
+     "highlightedMeshes": 1,
+     "hood": 0,
+     "backTo": "INSPECTION_SUMMARY"
+    },
+    "light-low-beam-right-0": {
+     "distance": 0.85,
+     "azimuth": 80.1,
+     "polar": 78.9,
+     "position": [
+      2.949,
+      0.953,
+      0.675
+     ],
+     "target": [
+      2.128,
+      0.789,
+      0.531
+     ],
+     "sizeCm": [
+      0,
+      5.6,
+      16.4
+     ],
+     "screenPx": [
+      182,
+      68
+     ],
+     "fillPercent": 3.3,
+     "centerOffsetPx": [
+      -1,
+      0
+     ],
+     "mineCells": 167,
+     "touchPx": [
+      182,
+      54
+     ],
+     "meshes": 1,
+     "highlightedMeshes": 1,
+     "hood": 0,
+     "backTo": "INSPECTION_SUMMARY"
+    },
+    "light-high-beam-left-0": {
+     "distance": 0.85,
+     "azimuth": 95.7,
+     "polar": 86.4,
+     "position": [
+      2.741,
+      0.857,
+      -0.83
+     ],
+     "target": [
+      1.897,
+      0.803,
+      -0.745
+     ],
+     "sizeCm": [
+      0,
+      4.3,
+      16.3
+     ],
+     "screenPx": [
+      182,
+      49
+     ],
+     "fillPercent": 2.4,
+     "centerOffsetPx": [
+      1,
+      0
+     ],
+     "mineCells": 175,
+     "touchPx": [
+      182,
+      46
+     ],
+     "meshes": 1,
+     "highlightedMeshes": 1,
+     "hood": 0,
+     "backTo": "INSPECTION_SUMMARY"
+    },
+    "light-high-beam-right-0": {
+     "distance": 0.85,
+     "azimuth": 84.3,
+     "polar": 86.4,
+     "position": [
+      2.741,
+      0.857,
+      0.83
+     ],
+     "target": [
+      1.897,
+      0.803,
+      0.745
+     ],
+     "sizeCm": [
+      0,
+      4.3,
+      16.3
+     ],
+     "screenPx": [
+      182,
+      49
+     ],
+     "fillPercent": 2.4,
+     "centerOffsetPx": [
+      -1,
+      0
+     ],
+     "mineCells": 175,
+     "touchPx": [
+      182,
+      46
+     ],
+     "meshes": 1,
+     "highlightedMeshes": 1,
+     "hood": 0,
+     "backTo": "INSPECTION_SUMMARY"
+    }
+   },
+   "flows": {
+    "bayLabel": true,
+    "resultBackFromList": "INSPECTION_SUMMARY",
+    "tireList": {
+     "directDistance": 7.947,
+     "viaTireDistance": 9.509,
+     "viaTireAtOverviewPose": true
+    },
+    "crossArea": {
+     "kind": "hood",
+     "changed": false
+    },
+    "emptyTouch": {
+     "COMPONENT_PREVIEW:coolant-reservoir": {
+      "none": "NO_SUCH_AREA",
+      "other": "KEPT",
+      "drag": "KEPT",
+      "dragRotated": true
+     },
+     "WASHER_SELECTED:washer-fluid-cap": {
+      "none": "NO_SUCH_AREA",
+      "other": "KEPT",
+      "drag": "KEPT",
+      "dragRotated": true
+     },
+     "TIRE_PREVIEW:tire.front-left": {
+      "none": "KEPT",
+      "other": "KEPT",
+      "drag": "KEPT",
+      "dragRotated": true
+     },
+     "CHARGE_PORT_PREVIEW:ev-charge.flap": {
+      "none": "NO_SUCH_AREA",
+      "other": "KEPT",
+      "drag": "KEPT",
+      "dragRotated": true
+     },
+     "VISIBILITY_PREVIEW:wiper.front.left": {
+      "none": "NO_SUCH_AREA",
+      "other": "KEPT",
+      "drag": "KEPT",
+      "dragRotated": true
+     },
+     "VISIBILITY_PREVIEW:light-low-beam-left-0": {
+      "none": "KEPT",
+      "other": "KEPT",
+      "drag": "KEPT",
+      "dragRotated": true
+     },
+     "EV_BATTERY_PREVIEW:ev-battery.pack": {
+      "none": "KEPT",
+      "other": "KEPT",
+      "drag": "KEPT",
+      "dragRotated": true
+     }
+    },
+    "backLabels": [
+     "뒤로 · 차량 전체 보기",
+     "선택 해제 · 이전 시점으로",
+     "점검 목록과 이전 시점으로",
+     "점검 부위로",
+     "점검 항목으로"
+    ],
+    "pinch": "NOT_RUN: desktop pointer input only",
+    "realTouch": "NOT_RUN: desktop pointer input only"
+   },
+   "geometry": {
+    "idle": {
+     "charge": false,
+     "wiperHits": 0
+    },
+    "overview": {
+     "charge": true,
+     "wiperHits": 11
+    },
+    "tires": {
+     "charge": false
+    }
+   },
+   "overviewFacts": {
+    "text": true,
+    "legendTires": true,
+    "toastCenter": 512,
+    "usableCenter": 313,
+    "batteryTag": "점검 가능"
+   },
+   "select3d": {
+    "washer-fluid-cap": {
+     "clickable": true,
+     "selected": true,
+     "state": "WASHER_SELECTED",
+     "touchPx": [
+      23,
+      40
+     ],
+     "fromState": "COMPONENT_SELECTION"
+    },
+    "coolant-reservoir": {
+     "clickable": true,
+     "selected": true,
+     "state": "COMPONENT_PREVIEW",
+     "touchPx": [
+      47,
+      48
+     ],
+     "fromState": "COMPONENT_SELECTION"
+    },
+    "lcw-coolant-reservoir": {
+     "clickable": false,
+     "selected": false,
+     "touchPx": [
+      0,
+      0
+     ],
+     "fromState": "COMPONENT_SELECTION"
+    },
+    "brake-fluid-reservoir": {
+     "clickable": true,
+     "selected": true,
+     "state": "COMPONENT_PREVIEW",
+     "touchPx": [
+      34,
+      26
+     ],
+     "fromState": "COMPONENT_SELECTION"
+    },
+    "battery-12v": {
+     "clickable": true,
+     "selected": true,
+     "state": "COMPONENT_PREVIEW",
+     "touchPx": [
+      51,
+      65
+     ],
+     "fromState": "COMPONENT_SELECTION"
+    },
+    "fuse-box": {
+     "clickable": true,
+     "selected": true,
+     "state": "COMPONENT_PREVIEW",
+     "touchPx": [
+      48,
+      35
+     ],
+     "fromState": "COMPONENT_SELECTION"
+    },
+    "tire.front-left": {
+     "clickable": true,
+     "selected": true,
+     "state": "TIRE_PREVIEW",
+     "touchPx": [
+      112,
+      115
+     ],
+     "fromState": "TIRE_SELECTION"
+    },
+    "tire.front-right": {
+     "clickable": false,
+     "selected": false,
+     "touchPx": [
+      0,
+      0
+     ],
+     "fromState": "TIRE_SELECTION"
+    },
+    "tire.rear-left": {
+     "clickable": true,
+     "selected": true,
+     "state": "TIRE_PREVIEW",
+     "touchPx": [
+      97,
+      105
+     ],
+     "fromState": "TIRE_SELECTION"
+    },
+    "tire.rear-right": {
+     "clickable": false,
+     "selected": false,
+     "touchPx": [
+      0,
+      0
+     ],
+     "fromState": "TIRE_SELECTION"
+    },
+    "ev-battery.pack": {
+     "clickable": false,
+     "selected": false,
+     "touchPx": [
+      0,
+      0
+     ],
+     "fromState": "INSPECTION_OVERVIEW"
+    },
+    "ev-charge.port": {
+     "clickable": false,
+     "selected": false,
+     "touchPx": [
+      0,
+      0
+     ],
+     "fromState": "INSPECTION_OVERVIEW"
+    },
+    "ev-charge.flap": {
+     "clickable": false,
+     "selected": false,
+     "touchPx": [
+      0,
+      0
+     ],
+     "fromState": "INSPECTION_OVERVIEW"
+    },
+    "wiper.front.left": {
+     "clickable": true,
+     "selected": false,
+     "state": "INSPECTION_OVERVIEW",
+     "touchPx": [
+      11,
+      5
+     ],
+     "fromState": "INSPECTION_OVERVIEW"
+    },
+    "wiper.front.right": {
+     "clickable": true,
+     "selected": true,
+     "state": "VISIBILITY_PREVIEW",
+     "touchPx": [
+      15,
+      5
+     ],
+     "fromState": "INSPECTION_OVERVIEW"
+    },
+    "light-low-beam-left-0": {
+     "clickable": true,
+     "selected": true,
+     "state": "VISIBILITY_PREVIEW",
+     "touchPx": [
+      5,
+      2
+     ],
+     "fromState": "INSPECTION_OVERVIEW"
+    },
+    "light-low-beam-right-0": {
+     "clickable": true,
+     "selected": false,
+     "state": "INSPECTION_OVERVIEW",
+     "touchPx": [
+      2,
+      1
+     ],
+     "fromState": "INSPECTION_OVERVIEW"
+    },
+    "light-high-beam-left-0": {
+     "clickable": false,
+     "selected": false,
+     "touchPx": [
+      0,
+      0
+     ],
+     "fromState": "INSPECTION_OVERVIEW"
+    },
+    "light-high-beam-right-0": {
+     "clickable": false,
+     "selected": false,
+     "touchPx": [
+      0,
+      0
+     ],
+     "fromState": "INSPECTION_OVERVIEW"
+    }
+   },
+   "paint": {
+    "tiresTinted": true,
+    "othersKeepMaterial": true,
+    "legendCounts": 4
+   },
+   "lcwListClass": {
+    "preview": false,
+    "available": true
+   }
+  },
+  "420x860": {
+   "home": {
+    "view": {
+     "azimuthDeg": 138.6,
+     "polarDeg": 69.7,
+     "distance": 11
+    },
+    "overview": {
+     "azimuthDeg": 116.6,
+     "polarDeg": 61,
+     "distance": 17.533
+    }
+   },
+   "overview": {
+    "washer-fluid-cap": {
+     "mineCells": 0,
+     "touchPx": [
+      0,
+      0
+     ],
+     "highlightedMeshes": 0
+    },
+    "coolant-reservoir": {
+     "mineCells": 0,
+     "touchPx": [
+      0,
+      0
+     ],
+     "highlightedMeshes": 0
+    },
+    "lcw-coolant-reservoir": {
+     "mineCells": 0,
+     "touchPx": [
+      0,
+      0
+     ],
+     "highlightedMeshes": 0
+    },
+    "brake-fluid-reservoir": {
+     "mineCells": 0,
+     "touchPx": [
+      0,
+      0
+     ],
+     "highlightedMeshes": 0
+    },
+    "battery-12v": {
+     "mineCells": 0,
+     "touchPx": [
+      0,
+      0
+     ],
+     "highlightedMeshes": 0
+    },
+    "fuse-box": {
+     "mineCells": 0,
+     "touchPx": [
+      0,
+      0
+     ],
+     "highlightedMeshes": 0
+    },
+    "tire.front-left": {
+     "mineCells": 28,
+     "touchPx": [
+      21,
+      48
+     ],
+     "highlightedMeshes": 0
+    },
+    "tire.front-right": {
+     "mineCells": 0,
+     "touchPx": [
+      0,
+      0
+     ],
+     "highlightedMeshes": 0
+    },
+    "tire.rear-left": {
+     "mineCells": 25,
+     "touchPx": [
+      15,
+      41
+     ],
+     "highlightedMeshes": 0
+    },
+    "tire.rear-right": {
+     "mineCells": 0,
+     "touchPx": [
+      0,
+      0
+     ],
+     "highlightedMeshes": 0
+    },
+    "ev-battery.pack": {
+     "mineCells": 0,
+     "touchPx": [
+      0,
+      0
+     ],
+     "highlightedMeshes": 0
+    },
+    "ev-charge.port": {
+     "mineCells": 0,
+     "touchPx": [
+      0,
+      0
+     ],
+     "highlightedMeshes": 0
+    },
+    "ev-charge.flap": {
+     "mineCells": 0,
+     "touchPx": [
+      0,
+      0
+     ],
+     "highlightedMeshes": 0
+    },
+    "wiper.front.left": {
+     "mineCells": 11,
+     "touchPx": [
+      8,
+      4
+     ],
+     "highlightedMeshes": 0
+    },
+    "wiper.front.right": {
+     "mineCells": 11,
+     "touchPx": [
+      11,
+      3
+     ],
+     "highlightedMeshes": 0
+    },
+    "light-low-beam-left-0": {
+     "mineCells": 12,
+     "touchPx": [
+      6,
+      2
+     ],
+     "highlightedMeshes": 1
+    },
+    "light-low-beam-right-0": {
+     "mineCells": 4,
+     "touchPx": [
+      2,
+      1
+     ],
+     "highlightedMeshes": 1
+    },
+    "light-high-beam-left-0": {
+     "mineCells": 1,
+     "touchPx": [
+      1,
+      1
+     ],
+     "highlightedMeshes": 1
+    },
+    "light-high-beam-right-0": {
+     "mineCells": 0,
+     "touchPx": [
+      0,
+      0
+     ],
+     "highlightedMeshes": 1
+    }
+   },
+   "preview": {
+    "washer-fluid-cap": {
+     "selectable": true,
+     "state": "WASHER_SELECTED",
+     "distance": 3.455,
+     "azimuth": 50.2,
+     "polar": 31.7,
+     "position": [
+      2.743,
+      3.781,
+      1.561
+     ],
+     "target": [
+      1.35,
+      0.84,
+      0.4
+     ],
+     "sizeCm": [
+      9.6,
+      18.1,
+      9.6
+     ],
+     "screenPx": [
+      55,
+      82
+     ],
+     "fillPercent": 2.3,
+     "centerOffsetPx": [
+      -37,
+      10
+     ],
+     "mineCells": 81,
+     "touchPx": [
+      40,
+      60
+     ],
+     "meshes": 2,
+     "highlightedMeshes": 2,
+     "color": [
+      149,
+      202,
+      217
+     ],
+     "selectionIntensity": null,
+     "label": true,
+     "badge": "위치·형상 추정",
+     "backButtons": [
+      "점검 항목으로"
+     ],
+     "focusOutline": true,
+     "hasMobile": true,
+     "noProcedureText": false,
+     "internalWords": [],
+     "backTo": "COMPONENT_SELECTION",
+     "backPoseMoved": 3.18
+    },
+    "coolant-reservoir": {
+     "selectable": true,
+     "state": "COMPONENT_PREVIEW",
+     "distance": 1.343,
+     "azimuth": 65.4,
+     "polar": 25.2,
+     "position": [
+      2.011,
+      1.987,
+      0.674
+     ],
+     "target": [
+      1.49,
+      0.772,
+      0.435
+     ],
+     "sizeCm": [
+      18,
+      16.4,
+      18
+     ],
+     "screenPx": [
+      257,
+      290
+     ],
+     "fillPercent": 38.2,
+     "centerOffsetPx": [
+      2,
+      -3
+     ],
+     "mineCells": 109,
+     "touchPx": [
+      222,
+      232
+     ],
+     "meshes": 2,
+     "highlightedMeshes": 2,
+     "color": [
+      203,
+      220,
+      222
+     ],
+     "selectionIntensity": null,
+     "label": false,
+     "badge": "추정 모델 · 점검 절차 미제공",
+     "backButtons": [
+      "점검 목록과 이전 시점으로"
+     ],
+     "focusOutline": true,
+     "hasMobile": true,
+     "noProcedureText": true,
+     "internalWords": [],
+     "backTo": "COMPONENT_SELECTION",
+     "backPoseMoved": 4.024
+    },
+    "lcw-coolant-reservoir": {
+     "selectable": false,
+     "state": "COMPONENT_SELECTION"
+    },
+    "brake-fluid-reservoir": {
+     "selectable": true,
+     "state": "COMPONENT_PREVIEW",
+     "distance": 0.986,
+     "azimuth": 114.6,
+     "polar": 25.2,
+     "position": [
+      1.692,
+      1.683,
+      -0.605
+     ],
+     "target": [
+      1.31,
+      0.792,
+      -0.43
+     ],
+     "sizeCm": [
+      12,
+      12.4,
+      14
+     ],
+     "screenPx": [
+      260,
+      283
+     ],
+     "fillPercent": 37.7,
+     "centerOffsetPx": [
+      -2,
+      -3
+     ],
+     "mineCells": 102,
+     "touchPx": [
+      225,
+      207
+     ],
+     "meshes": 2,
+     "highlightedMeshes": 2,
+     "color": [
+      193,
+      215,
+      218
+     ],
+     "selectionIntensity": null,
+     "label": false,
+     "badge": "추정 모델 · 점검 절차 미제공",
+     "backButtons": [
+      "점검 목록과 이전 시점으로"
+     ],
+     "focusOutline": true,
+     "hasMobile": true,
+     "noProcedureText": true,
+     "internalWords": [],
+     "backTo": "COMPONENT_SELECTION",
+     "backPoseMoved": 4.15
+    },
+    "battery-12v": {
+     "selectable": true,
+     "state": "COMPONENT_PREVIEW",
+     "distance": 1.655,
+     "azimuth": 114.6,
+     "polar": 25.2,
+     "position": [
+      2.312,
+      2.228,
+      -0.734
+     ],
+     "target": [
+      1.67,
+      0.731,
+      -0.44
+     ],
+     "sizeCm": [
+      24,
+      22.2,
+      18
+     ],
+     "screenPx": [
+      231,
+      297
+     ],
+     "fillPercent": 35.2,
+     "centerOffsetPx": [
+      -2,
+      -3
+     ],
+     "mineCells": 133,
+     "touchPx": [
+      200,
+      257
+     ],
+     "meshes": 4,
+     "highlightedMeshes": 4,
+     "color": [
+      137,
+      193,
+      205
+     ],
+     "selectionIntensity": null,
+     "label": false,
+     "badge": "추정 모델 · 점검 절차 미제공",
+     "backButtons": [
+      "점검 목록과 이전 시점으로"
+     ],
+     "focusOutline": true,
+     "hasMobile": true,
+     "noProcedureText": true,
+     "internalWords": [],
+     "backTo": "COMPONENT_SELECTION",
+     "backPoseMoved": 3.323
+    },
+    "fuse-box": {
+     "selectable": true,
+     "state": "COMPONENT_PREVIEW",
+     "distance": 1.188,
+     "azimuth": 114.6,
+     "polar": 25.2,
+     "position": [
+      1.921,
+      1.844,
+      -0.651
+     ],
+     "target": [
+      1.46,
+      0.769,
+      -0.44
+     ],
+     "sizeCm": [
+      12,
+      15.8,
+      18
+     ],
+     "screenPx": [
+      261,
+      269
+     ],
+     "fillPercent": 35.9,
+     "centerOffsetPx": [
+      -1,
+      -4
+     ],
+     "mineCells": 124,
+     "touchPx": [
+      244,
+      197
+     ],
+     "meshes": 2,
+     "highlightedMeshes": 2,
+     "color": [
+      136,
+      194,
+      206
+     ],
+     "selectionIntensity": null,
+     "label": false,
+     "badge": "추정 모델 · 점검 절차 미제공",
+     "backButtons": [
+      "점검 목록과 이전 시점으로"
+     ],
+     "focusOutline": true,
+     "hasMobile": true,
+     "noProcedureText": true,
+     "internalWords": [],
+     "backTo": "COMPONENT_SELECTION",
+     "backPoseMoved": 3.875
+    },
+    "tire.front-left": {
+     "selectable": true,
+     "state": "TIRE_PREVIEW",
+     "distance": 4.842,
+     "azimuth": 169.8,
+     "polar": 72.5,
+     "position": [
+      2.277,
+      1.83,
+      -5.317
+     ],
+     "target": [
+      1.459,
+      0.376,
+      -0.772
+     ],
+     "sizeCm": [
+      75.1,
+      75.1,
+      25.1
+     ],
+     "screenPx": [
+      226,
+      234
+     ],
+     "fillPercent": 27.1,
+     "centerOffsetPx": [
+      1,
+      2
+     ],
+     "mineCells": 154,
+     "touchPx": [
+      226,
+      218
+     ],
+     "meshes": 1,
+     "highlightedMeshes": 1,
+     "color": [
+      73,
+      110,
+      117
+     ],
+     "selectionIntensity": 0.6,
+     "label": false,
+     "badge": "상태만 표시 · 수치 및 진단 미제공",
+     "backButtons": [
+      "선택 해제 · 이전 시점으로"
+     ],
+     "focusOutline": true,
+     "hasMobile": true,
+     "noProcedureText": false,
+     "internalWords": [
+      "USER_REPORTED"
+     ],
+     "backTo": "TIRE_SELECTION",
+     "backPoseMoved": 10.431
+    },
+    "tire.front-right": {
+     "selectable": true,
+     "state": "TIRE_PREVIEW",
+     "distance": 4.842,
+     "azimuth": 10.2,
+     "polar": 72.5,
+     "position": [
+      2.277,
+      1.83,
+      5.318
+     ],
+     "target": [
+      1.459,
+      0.376,
+      0.772
+     ],
+     "sizeCm": [
+      75.1,
+      75.1,
+      25.1
+     ],
+     "screenPx": [
+      226,
+      234
+     ],
+     "fillPercent": 27.1,
+     "centerOffsetPx": [
+      -1,
+      2
+     ],
+     "mineCells": 154,
+     "touchPx": [
+      226,
+      218
+     ],
+     "meshes": 1,
+     "highlightedMeshes": 1,
+     "color": [
+      107,
+      132,
+      139
+     ],
+     "selectionIntensity": 0.6,
+     "label": false,
+     "badge": "상태만 표시 · 수치 및 진단 미제공",
+     "backButtons": [
+      "선택 해제 · 이전 시점으로"
+     ],
+     "focusOutline": true,
+     "hasMobile": true,
+     "noProcedureText": false,
+     "internalWords": [
+      "USER_REPORTED"
+     ],
+     "backTo": "TIRE_SELECTION",
+     "backPoseMoved": 20.895
+    },
+    "tire.rear-left": {
+     "selectable": true,
+     "state": "TIRE_PREVIEW",
+     "distance": 4.842,
+     "azimuth": -169.8,
+     "polar": 72.5,
+     "position": [
+      -2.382,
+      1.83,
+      -5.317
+     ],
+     "target": [
+      -1.564,
+      0.376,
+      -0.772
+     ],
+     "sizeCm": [
+      75.1,
+      75.1,
+      25.1
+     ],
+     "screenPx": [
+      226,
+      234
+     ],
+     "fillPercent": 27.1,
+     "centerOffsetPx": [
+      -1,
+      2
+     ],
+     "mineCells": 155,
+     "touchPx": [
+      226,
+      218
+     ],
+     "meshes": 1,
+     "highlightedMeshes": 1,
+     "color": [
+      68,
+      106,
+      114
+     ],
+     "selectionIntensity": 0.6,
+     "label": false,
+     "badge": "상태만 표시 · 수치 및 진단 미제공",
+     "backButtons": [
+      "선택 해제 · 이전 시점으로"
+     ],
+     "focusOutline": true,
+     "hasMobile": true,
+     "noProcedureText": false,
+     "internalWords": [
+      "USER_REPORTED"
+     ],
+     "backTo": "TIRE_SELECTION",
+     "backPoseMoved": 11.849
+    },
+    "tire.rear-right": {
+     "selectable": true,
+     "state": "TIRE_PREVIEW",
+     "distance": 4.842,
+     "azimuth": -10.2,
+     "polar": 72.5,
+     "position": [
+      -2.382,
+      1.83,
+      5.318
+     ],
+     "target": [
+      -1.564,
+      0.376,
+      0.772
+     ],
+     "sizeCm": [
+      75.1,
+      75.1,
+      25.1
+     ],
+     "screenPx": [
+      226,
+      234
+     ],
+     "fillPercent": 27.1,
+     "centerOffsetPx": [
+      1,
+      2
+     ],
+     "mineCells": 155,
+     "touchPx": [
+      226,
+      218
+     ],
+     "meshes": 1,
+     "highlightedMeshes": 1,
+     "color": [
+      109,
+      135,
+      142
+     ],
+     "selectionIntensity": 0.6,
+     "label": false,
+     "badge": "상태만 표시 · 수치 및 진단 미제공",
+     "backButtons": [
+      "선택 해제 · 이전 시점으로"
+     ],
+     "focusOutline": true,
+     "hasMobile": true,
+     "noProcedureText": false,
+     "internalWords": [
+      "USER_REPORTED"
+     ],
+     "backTo": "TIRE_SELECTION",
+     "backPoseMoved": 21.638
+    },
+    "ev-battery.pack": {
+     "selectable": true,
+     "state": "EV_BATTERY_PREVIEW",
+     "distance": 10.456,
+     "azimuth": 125.5,
+     "polar": 139.3,
+     "position": [
+      5.424,
+      -7.757,
+      -3.963
+     ],
+     "target": [
+      -0.125,
+      0.17,
+      0
+     ],
+     "sizeCm": [
+      205,
+      10,
+      116
+     ],
+     "screenPx": [
+      280,
+      241
+     ],
+     "fillPercent": 34.6,
+     "centerOffsetPx": [
+      -4,
+      -8
+     ],
+     "mineCells": 111,
+     "touchPx": [
+      205,
+      209
+     ],
+     "meshes": 1,
+     "highlightedMeshes": 1,
+     "color": [
+      65,
+      172,
+      188
+     ],
+     "selectionIntensity": null,
+     "label": false,
+     "badge": "ESTIMATED_GEOMETRY · 추정 외함",
+     "backButtons": [
+      "점검 부위로"
+     ],
+     "focusOutline": true,
+     "hasMobile": false,
+     "noProcedureText": false,
+     "internalWords": [
+      "DETACHED",
+      "ESTIMATED_GEOMETRY",
+      "UNVERIFIED",
+      "USER_REPORTED"
+     ],
+     "backTo": "INSPECTION_OVERVIEW",
+     "backPoseMoved": 19.2
+    },
+    "ev-charge.port": {
+     "selectable": true,
+     "state": "CHARGE_PORT_PREVIEW",
+     "distance": 1.68,
+     "azimuth": -31,
+     "polar": 72,
+     "position": [
+      -2.739,
+      1.5,
+      2.266
+     ],
+     "target": [
+      -1.917,
+      0.98,
+      0.896
+     ],
+     "sizeCm": [
+      31.1,
+      20,
+      8.1
+     ],
+     "screenPx": [
+      255,
+      213
+     ],
+     "fillPercent": 27.8,
+     "centerOffsetPx": [
+      -3,
+      5
+     ],
+     "mineCells": 29,
+     "touchPx": [
+      102,
+      57
+     ],
+     "meshes": 1,
+     "highlightedMeshes": 1,
+     "color": [
+      100,
+      183,
+      196
+     ],
+     "selectionIntensity": null,
+     "label": false,
+     "badge": "ESTIMATED_GEOMETRY · 정적 닫힌 형상",
+     "backButtons": [
+      "뒤로 · 차량 전체 보기"
+     ],
+     "focusOutline": true,
+     "hasMobile": true,
+     "noProcedureText": false,
+     "internalWords": [
+      "DETACHED",
+      "ESTIMATED_GEOMETRY",
+      "UNVERIFIED",
+      "USER_REPORTED"
+     ],
+     "backTo": "INSPECTION_OVERVIEW",
+     "backPoseMoved": 20.372
+    },
+    "ev-charge.flap": {
+     "selectable": true,
+     "state": "CHARGE_PORT_PREVIEW",
+     "distance": 1.413,
+     "azimuth": -31,
+     "polar": 72,
+     "position": [
+      -2.607,
+      1.418,
+      2.051
+     ],
+     "target": [
+      -1.916,
+      0.98,
+      0.899
+     ],
+     "sizeCm": [
+      26.2,
+      16.8,
+      6.9
+     ],
+     "screenPx": [
+      256,
+      213
+     ],
+     "fillPercent": 27.9,
+     "centerOffsetPx": [
+      -3,
+      5
+     ],
+     "mineCells": 124,
+     "touchPx": [
+      239,
+      156
+     ],
+     "meshes": 1,
+     "highlightedMeshes": 1,
+     "color": [
+      138,
+      194,
+      206
+     ],
+     "selectionIntensity": null,
+     "label": false,
+     "badge": "ESTIMATED_GEOMETRY · 정적 닫힌 형상",
+     "backButtons": [
+      "뒤로 · 차량 전체 보기"
+     ],
+     "focusOutline": true,
+     "hasMobile": false,
+     "noProcedureText": false,
+     "internalWords": [
+      "DETACHED",
+      "ESTIMATED_GEOMETRY",
+      "UNVERIFIED",
+      "USER_REPORTED"
+     ],
+     "backTo": "INSPECTION_OVERVIEW",
+     "backPoseMoved": 20.203
+    },
+    "wiper.front.left": {
+     "selectable": true,
+     "state": "VISIBILITY_PREVIEW",
+     "distance": 2.564,
+     "azimuth": 114.6,
+     "polar": 25.2,
+     "position": [
+      2.009,
+      3.445,
+      -0.766
+     ],
+     "target": [
+      1.015,
+      1.126,
+      -0.31
+     ],
+     "sizeCm": [
+      11.6,
+      8.4,
+      56
+     ],
+     "screenPx": [
+      301,
+      182
+     ],
+     "fillPercent": 28.1,
+     "centerOffsetPx": [
+      2,
+      1
+     ],
+     "mineCells": 16,
+     "touchPx": [
+      40,
+      24
+     ],
+     "meshes": 1,
+     "highlightedMeshes": 1,
+     "color": [
+      104,
+      182,
+      195
+     ],
+     "selectionIntensity": null,
+     "label": false,
+     "badge": "ESTIMATED_GEOMETRY · 정적 휴지 자세",
+     "backButtons": [
+      "뒤로 · 차량 전체 보기"
+     ],
+     "focusOutline": true,
+     "hasMobile": true,
+     "noProcedureText": false,
+     "internalWords": [
+      "DETACHED",
+      "ESTIMATED_GEOMETRY",
+      "UNVERIFIED",
+      "USER_REPORTED"
+     ],
+     "backTo": "INSPECTION_OVERVIEW",
+     "backPoseMoved": 14.443
+    },
+    "wiper.front.right": {
+     "selectable": true,
+     "state": "VISIBILITY_PREVIEW",
+     "distance": 2.261,
+     "azimuth": 65.4,
+     "polar": 25.2,
+     "position": [
+      1.891,
+      3.174,
+      0.677
+     ],
+     "target": [
+      1.015,
+      1.129,
+      0.275
+     ],
+     "sizeCm": [
+      11.6,
+      8,
+      49
+     ],
+     "screenPx": [
+      303,
+      189
+     ],
+     "fillPercent": 29.4,
+     "centerOffsetPx": [
+      -1,
+      1
+     ],
+     "mineCells": 16,
+     "touchPx": [
+      61,
+      25
+     ],
+     "meshes": 1,
+     "highlightedMeshes": 1,
+     "color": [
+      104,
+      177,
+      189
+     ],
+     "selectionIntensity": null,
+     "label": false,
+     "badge": "ESTIMATED_GEOMETRY · 정적 휴지 자세",
+     "backButtons": [
+      "뒤로 · 차량 전체 보기"
+     ],
+     "focusOutline": true,
+     "hasMobile": true,
+     "noProcedureText": false,
+     "internalWords": [
+      "DETACHED",
+      "ESTIMATED_GEOMETRY",
+      "UNVERIFIED",
+      "USER_REPORTED"
+     ],
+     "backTo": "INSPECTION_OVERVIEW",
+     "backPoseMoved": 15.306
+    },
+    "light-low-beam-left-0": {
+     "selectable": true,
+     "state": "VISIBILITY_PREVIEW",
+     "distance": 0.85,
+     "azimuth": 99.9,
+     "polar": 78.9,
+     "position": [
+      2.949,
+      0.953,
+      -0.675
+     ],
+     "target": [
+      2.128,
+      0.789,
+      -0.531
+     ],
+     "sizeCm": [
+      0,
+      5.6,
+      16.4
+     ],
+     "screenPx": [
+      261,
+      97
+     ],
+     "fillPercent": 13,
+     "centerOffsetPx": [
+      2,
+      0
+     ],
+     "mineCells": 167,
+     "touchPx": [
+      261,
+      78
+     ],
+     "meshes": 1,
+     "highlightedMeshes": 1,
+     "color": [
+      53,
+      130,
+      142
+     ],
+     "selectionIntensity": null,
+     "label": false,
+     "badge": "기존 커뮤니티 GLB 표식 · OEM 광학 구조 미검증",
+     "backButtons": [
+      "뒤로 · 차량 전체 보기"
+     ],
+     "focusOutline": true,
+     "hasMobile": true,
+     "noProcedureText": false,
+     "internalWords": [
+      "DETACHED",
+      "UNVERIFIED",
+      "USER_REPORTED"
+     ],
+     "backTo": "INSPECTION_OVERVIEW",
+     "backPoseMoved": 14.969
+    },
+    "light-low-beam-right-0": {
+     "selectable": true,
+     "state": "VISIBILITY_PREVIEW",
+     "distance": 0.85,
+     "azimuth": 80.1,
+     "polar": 78.9,
+     "position": [
+      2.949,
+      0.953,
+      0.675
+     ],
+     "target": [
+      2.128,
+      0.789,
+      0.531
+     ],
+     "sizeCm": [
+      0,
+      5.6,
+      16.4
+     ],
+     "screenPx": [
+      261,
+      97
+     ],
+     "fillPercent": 13,
+     "centerOffsetPx": [
+      -2,
+      0
+     ],
+     "mineCells": 167,
+     "touchPx": [
+      261,
+      78
+     ],
+     "meshes": 1,
+     "highlightedMeshes": 1,
+     "color": [
+      53,
+      130,
+      142
+     ],
+     "selectionIntensity": null,
+     "label": false,
+     "badge": "기존 커뮤니티 GLB 표식 · OEM 광학 구조 미검증",
+     "backButtons": [
+      "뒤로 · 차량 전체 보기"
+     ],
+     "focusOutline": true,
+     "hasMobile": true,
+     "noProcedureText": false,
+     "internalWords": [
+      "DETACHED",
+      "UNVERIFIED",
+      "USER_REPORTED"
+     ],
+     "backTo": "INSPECTION_OVERVIEW",
+     "backPoseMoved": 15.575
+    },
+    "light-high-beam-left-0": {
+     "selectable": true,
+     "state": "VISIBILITY_PREVIEW",
+     "distance": 0.85,
+     "azimuth": 95.7,
+     "polar": 90,
+     "position": [
+      2.743,
+      0.803,
+      -0.83
+     ],
+     "target": [
+      1.897,
+      0.803,
+      -0.745
+     ],
+     "sizeCm": [
+      0,
+      4.3,
+      16.3
+     ],
+     "screenPx": [
+      260,
+      70
+     ],
+     "fillPercent": 9.3,
+     "centerOffsetPx": [
+      1,
+      0
+     ],
+     "mineCells": 214,
+     "touchPx": [
+      260,
+      70
+     ],
+     "meshes": 1,
+     "highlightedMeshes": 1,
+     "color": [
+      52,
+      130,
+      142
+     ],
+     "selectionIntensity": null,
+     "label": false,
+     "badge": "기존 커뮤니티 GLB 표식 · OEM 광학 구조 미검증",
+     "backButtons": [
+      "뒤로 · 차량 전체 보기"
+     ],
+     "focusOutline": true,
+     "hasMobile": true,
+     "noProcedureText": false,
+     "internalWords": [
+      "DETACHED",
+      "UNVERIFIED",
+      "USER_REPORTED"
+     ],
+     "backTo": "INSPECTION_OVERVIEW",
+     "backPoseMoved": 15.139
+    },
+    "light-high-beam-right-0": {
+     "selectable": true,
+     "state": "VISIBILITY_PREVIEW",
+     "distance": 0.85,
+     "azimuth": 84.3,
+     "polar": 90,
+     "position": [
+      2.743,
+      0.803,
+      0.83
+     ],
+     "target": [
+      1.897,
+      0.803,
+      0.745
+     ],
+     "sizeCm": [
+      0,
+      4.3,
+      16.3
+     ],
+     "screenPx": [
+      260,
+      70
+     ],
+     "fillPercent": 9.3,
+     "centerOffsetPx": [
+      -1,
+      0
+     ],
+     "mineCells": 214,
+     "touchPx": [
+      260,
+      70
+     ],
+     "meshes": 1,
+     "highlightedMeshes": 1,
+     "color": [
+      53,
+      130,
+      142
+     ],
+     "selectionIntensity": null,
+     "label": false,
+     "badge": "기존 커뮤니티 GLB 표식 · OEM 광학 구조 미검증",
+     "backButtons": [
+      "뒤로 · 차량 전체 보기"
+     ],
+     "focusOutline": true,
+     "hasMobile": true,
+     "noProcedureText": false,
+     "internalWords": [
+      "DETACHED",
+      "UNVERIFIED",
+      "USER_REPORTED"
+     ],
+     "backTo": "INSPECTION_OVERVIEW",
+     "backPoseMoved": 15.873
+    }
+   },
+   "result": {
+    "washer-fluid-cap": {
+     "distance": 6,
+     "azimuth": 116.6,
+     "polar": 61,
+     "position": [
+      5.393,
+      3.66,
+      -2.347
+     ],
+     "target": [
+      0.7,
+      0.75,
+      0
+     ],
+     "sizeCm": [
+      9.6,
+      18.1,
+      9.6
+     ],
+     "screenPx": [
+      35,
+      53
+     ],
+     "fillPercent": 0.9,
+     "centerOffsetPx": [
+      -167,
+      25
+     ],
+     "mineCells": 76,
+     "touchPx": [
+      23,
+      39
+     ],
+     "meshes": 2,
+     "highlightedMeshes": 2,
+     "hood": 60,
+     "backTo": "INSPECTION_SUMMARY"
+    },
+    "coolant-reservoir": {
+     "distance": 1.343,
+     "azimuth": 65.4,
+     "polar": 25.2,
+     "position": [
+      2.011,
+      1.987,
+      0.674
+     ],
+     "target": [
+      1.49,
+      0.772,
+      0.435
+     ],
+     "sizeCm": [
+      18,
+      16.4,
+      18
+     ],
+     "screenPx": [
+      257,
+      290
+     ],
+     "fillPercent": 38.2,
+     "centerOffsetPx": [
+      2,
+      -3
+     ],
+     "mineCells": 109,
+     "touchPx": [
+      222,
+      232
+     ],
+     "meshes": 2,
+     "highlightedMeshes": 2,
+     "hood": 60,
+     "backTo": "INSPECTION_SUMMARY"
+    },
+    "lcw-coolant-reservoir": {
+     "distance": 4.699,
+     "polar": 37.7,
+     "azimuth": 106.7,
+     "position": [
+      4.254,
+      4.337,
+      -0.826
+     ],
+     "target": [
+      1.5,
+      0.62,
+      0
+     ],
+     "bounds": null,
+     "hood": 60,
+     "backTo": "INSPECTION_SUMMARY"
+    },
+    "brake-fluid-reservoir": {
+     "distance": 0.986,
+     "azimuth": 114.6,
+     "polar": 25.2,
+     "position": [
+      1.692,
+      1.683,
+      -0.605
+     ],
+     "target": [
+      1.31,
+      0.792,
+      -0.43
+     ],
+     "sizeCm": [
+      12,
+      12.4,
+      14
+     ],
+     "screenPx": [
+      260,
+      283
+     ],
+     "fillPercent": 37.7,
+     "centerOffsetPx": [
+      -2,
+      -3
+     ],
+     "mineCells": 102,
+     "touchPx": [
+      225,
+      207
+     ],
+     "meshes": 2,
+     "highlightedMeshes": 2,
+     "hood": 60,
+     "backTo": "INSPECTION_SUMMARY"
+    },
+    "battery-12v": {
+     "distance": 1.655,
+     "azimuth": 114.6,
+     "polar": 25.2,
+     "position": [
+      2.312,
+      2.228,
+      -0.734
+     ],
+     "target": [
+      1.67,
+      0.731,
+      -0.44
+     ],
+     "sizeCm": [
+      24,
+      22.2,
+      18
+     ],
+     "screenPx": [
+      231,
+      297
+     ],
+     "fillPercent": 35.2,
+     "centerOffsetPx": [
+      -2,
+      -3
+     ],
+     "mineCells": 133,
+     "touchPx": [
+      200,
+      257
+     ],
+     "meshes": 4,
+     "highlightedMeshes": 4,
+     "hood": 60,
+     "backTo": "INSPECTION_SUMMARY"
+    },
+    "fuse-box": {
+     "distance": 1.188,
+     "azimuth": 114.6,
+     "polar": 25.2,
+     "position": [
+      1.921,
+      1.844,
+      -0.651
+     ],
+     "target": [
+      1.46,
+      0.769,
+      -0.44
+     ],
+     "sizeCm": [
+      12,
+      15.8,
+      18
+     ],
+     "screenPx": [
+      261,
+      269
+     ],
+     "fillPercent": 35.9,
+     "centerOffsetPx": [
+      -1,
+      -4
+     ],
+     "mineCells": 124,
+     "touchPx": [
+      244,
+      197
+     ],
+     "meshes": 2,
+     "highlightedMeshes": 2,
+     "hood": 60,
+     "backTo": "INSPECTION_SUMMARY"
+    },
+    "tire.front-left": {
+     "distance": 4.842,
+     "azimuth": 169.8,
+     "polar": 72.5,
+     "position": [
+      2.277,
+      1.83,
+      -5.317
+     ],
+     "target": [
+      1.459,
+      0.376,
+      -0.772
+     ],
+     "sizeCm": [
+      75.1,
+      75.1,
+      25.1
+     ],
+     "screenPx": [
+      226,
+      234
+     ],
+     "fillPercent": 27.1,
+     "centerOffsetPx": [
+      1,
+      2
+     ],
+     "mineCells": 154,
+     "touchPx": [
+      226,
+      218
+     ],
+     "meshes": 1,
+     "highlightedMeshes": 1,
+     "hood": 0,
+     "backTo": "INSPECTION_SUMMARY"
+    },
+    "tire.front-right": {
+     "distance": 4.842,
+     "azimuth": 10.2,
+     "polar": 72.5,
+     "position": [
+      2.277,
+      1.83,
+      5.318
+     ],
+     "target": [
+      1.459,
+      0.376,
+      0.772
+     ],
+     "sizeCm": [
+      75.1,
+      75.1,
+      25.1
+     ],
+     "screenPx": [
+      226,
+      234
+     ],
+     "fillPercent": 27.1,
+     "centerOffsetPx": [
+      -1,
+      2
+     ],
+     "mineCells": 154,
+     "touchPx": [
+      226,
+      218
+     ],
+     "meshes": 1,
+     "highlightedMeshes": 1,
+     "hood": 0,
+     "backTo": "INSPECTION_SUMMARY"
+    },
+    "tire.rear-left": {
+     "distance": 4.842,
+     "azimuth": -169.8,
+     "polar": 72.5,
+     "position": [
+      -2.382,
+      1.83,
+      -5.317
+     ],
+     "target": [
+      -1.564,
+      0.376,
+      -0.772
+     ],
+     "sizeCm": [
+      75.1,
+      75.1,
+      25.1
+     ],
+     "screenPx": [
+      226,
+      234
+     ],
+     "fillPercent": 27.1,
+     "centerOffsetPx": [
+      -1,
+      2
+     ],
+     "mineCells": 155,
+     "touchPx": [
+      226,
+      218
+     ],
+     "meshes": 1,
+     "highlightedMeshes": 1,
+     "hood": 0,
+     "backTo": "INSPECTION_SUMMARY"
+    },
+    "tire.rear-right": {
+     "distance": 4.842,
+     "azimuth": -10.2,
+     "polar": 72.5,
+     "position": [
+      -2.382,
+      1.83,
+      5.318
+     ],
+     "target": [
+      -1.564,
+      0.376,
+      0.772
+     ],
+     "sizeCm": [
+      75.1,
+      75.1,
+      25.1
+     ],
+     "screenPx": [
+      226,
+      234
+     ],
+     "fillPercent": 27.1,
+     "centerOffsetPx": [
+      1,
+      2
+     ],
+     "mineCells": 155,
+     "touchPx": [
+      226,
+      218
+     ],
+     "meshes": 1,
+     "highlightedMeshes": 1,
+     "hood": 0,
+     "backTo": "INSPECTION_SUMMARY"
+    },
+    "ev-charge.port": {
+     "distance": 1.68,
+     "azimuth": -31,
+     "polar": 72,
+     "position": [
+      -2.739,
+      1.5,
+      2.266
+     ],
+     "target": [
+      -1.917,
+      0.98,
+      0.896
+     ],
+     "sizeCm": [
+      31.1,
+      20,
+      8.1
+     ],
+     "screenPx": [
+      255,
+      213
+     ],
+     "fillPercent": 27.8,
+     "centerOffsetPx": [
+      -3,
+      5
+     ],
+     "mineCells": 29,
+     "touchPx": [
+      102,
+      57
+     ],
+     "meshes": 1,
+     "highlightedMeshes": 1,
+     "hood": 0,
+     "backTo": "INSPECTION_SUMMARY"
+    },
+    "wiper.front.left": {
+     "distance": 2.564,
+     "azimuth": 114.6,
+     "polar": 25.2,
+     "position": [
+      2.009,
+      3.445,
+      -0.766
+     ],
+     "target": [
+      1.015,
+      1.126,
+      -0.31
+     ],
+     "sizeCm": [
+      11.6,
+      8.4,
+      56
+     ],
+     "screenPx": [
+      301,
+      182
+     ],
+     "fillPercent": 28.1,
+     "centerOffsetPx": [
+      2,
+      1
+     ],
+     "mineCells": 16,
+     "touchPx": [
+      40,
+      24
+     ],
+     "meshes": 1,
+     "highlightedMeshes": 1,
+     "hood": 0,
+     "backTo": "INSPECTION_SUMMARY"
+    },
+    "wiper.front.right": {
+     "distance": 2.261,
+     "azimuth": 65.4,
+     "polar": 25.2,
+     "position": [
+      1.891,
+      3.174,
+      0.677
+     ],
+     "target": [
+      1.015,
+      1.129,
+      0.275
+     ],
+     "sizeCm": [
+      11.6,
+      8,
+      49
+     ],
+     "screenPx": [
+      303,
+      189
+     ],
+     "fillPercent": 29.4,
+     "centerOffsetPx": [
+      -1,
+      1
+     ],
+     "mineCells": 16,
+     "touchPx": [
+      61,
+      25
+     ],
+     "meshes": 1,
+     "highlightedMeshes": 1,
+     "hood": 0,
+     "backTo": "INSPECTION_SUMMARY"
+    },
+    "light-low-beam-left-0": {
+     "distance": 0.85,
+     "azimuth": 99.9,
+     "polar": 78.9,
+     "position": [
+      2.949,
+      0.953,
+      -0.675
+     ],
+     "target": [
+      2.128,
+      0.789,
+      -0.531
+     ],
+     "sizeCm": [
+      0,
+      5.6,
+      16.4
+     ],
+     "screenPx": [
+      261,
+      97
+     ],
+     "fillPercent": 13,
+     "centerOffsetPx": [
+      2,
+      0
+     ],
+     "mineCells": 167,
+     "touchPx": [
+      261,
+      78
+     ],
+     "meshes": 1,
+     "highlightedMeshes": 1,
+     "hood": 0,
+     "backTo": "INSPECTION_SUMMARY"
+    },
+    "light-low-beam-right-0": {
+     "distance": 0.85,
+     "azimuth": 80.1,
+     "polar": 78.9,
+     "position": [
+      2.949,
+      0.953,
+      0.675
+     ],
+     "target": [
+      2.128,
+      0.789,
+      0.531
+     ],
+     "sizeCm": [
+      0,
+      5.6,
+      16.4
+     ],
+     "screenPx": [
+      261,
+      97
+     ],
+     "fillPercent": 13,
+     "centerOffsetPx": [
+      -2,
+      0
+     ],
+     "mineCells": 167,
+     "touchPx": [
+      261,
+      78
+     ],
+     "meshes": 1,
+     "highlightedMeshes": 1,
+     "hood": 0,
+     "backTo": "INSPECTION_SUMMARY"
+    },
+    "light-high-beam-left-0": {
+     "distance": 0.85,
+     "azimuth": 95.7,
+     "polar": 86.4,
+     "position": [
+      2.741,
+      0.857,
+      -0.83
+     ],
+     "target": [
+      1.897,
+      0.803,
+      -0.745
+     ],
+     "sizeCm": [
+      0,
+      4.3,
+      16.3
+     ],
+     "screenPx": [
+      261,
+      70
+     ],
+     "fillPercent": 9.4,
+     "centerOffsetPx": [
+      1,
+      0
+     ],
+     "mineCells": 175,
+     "touchPx": [
+      261,
+      66
+     ],
+     "meshes": 1,
+     "highlightedMeshes": 1,
+     "hood": 0,
+     "backTo": "INSPECTION_SUMMARY"
+    },
+    "light-high-beam-right-0": {
+     "distance": 0.85,
+     "azimuth": 84.3,
+     "polar": 86.4,
+     "position": [
+      2.741,
+      0.857,
+      0.83
+     ],
+     "target": [
+      1.897,
+      0.803,
+      0.745
+     ],
+     "sizeCm": [
+      0,
+      4.3,
+      16.3
+     ],
+     "screenPx": [
+      261,
+      70
+     ],
+     "fillPercent": 9.4,
+     "centerOffsetPx": [
+      -1,
+      0
+     ],
+     "mineCells": 175,
+     "touchPx": [
+      261,
+      66
+     ],
+     "meshes": 1,
+     "highlightedMeshes": 1,
+     "hood": 0,
+     "backTo": "INSPECTION_SUMMARY"
+    }
+   },
+   "flows": {
+    "bayLabel": true,
+    "resultBackFromList": "INSPECTION_SUMMARY",
+    "tireList": {
+     "directDistance": 16.245,
+     "viaTireDistance": 17.533,
+     "viaTireAtOverviewPose": true
+    },
+    "crossArea": {
+     "kind": "hood",
+     "changed": false
+    },
+    "emptyTouch": {
+     "COMPONENT_PREVIEW:coolant-reservoir": {
+      "none": "NO_SUCH_AREA",
+      "other": "KEPT",
+      "drag": "KEPT",
+      "dragRotated": true
+     },
+     "WASHER_SELECTED:washer-fluid-cap": {
+      "none": "NO_SUCH_AREA",
+      "other": "KEPT",
+      "drag": "KEPT",
+      "dragRotated": true
+     },
+     "TIRE_PREVIEW:tire.front-left": {
+      "none": "NO_SUCH_AREA",
+      "other": "KEPT",
+      "drag": "KEPT",
+      "dragRotated": true
+     },
+     "CHARGE_PORT_PREVIEW:ev-charge.flap": {
+      "none": "NO_SUCH_AREA",
+      "other": "KEPT",
+      "drag": "KEPT",
+      "dragRotated": true
+     },
+     "VISIBILITY_PREVIEW:wiper.front.left": {
+      "none": "NO_SUCH_AREA",
+      "other": "KEPT",
+      "drag": "KEPT",
+      "dragRotated": true
+     },
+     "VISIBILITY_PREVIEW:light-low-beam-left-0": {
+      "none": "NO_SUCH_AREA",
+      "other": "KEPT",
+      "drag": "KEPT",
+      "dragRotated": true
+     },
+     "EV_BATTERY_PREVIEW:ev-battery.pack": {
+      "none": "KEPT",
+      "other": "KEPT",
+      "drag": "KEPT",
+      "dragRotated": true
+     }
+    },
+    "backLabels": [
+     "뒤로 · 차량 전체 보기",
+     "선택 해제 · 이전 시점으로",
+     "점검 목록과 이전 시점으로",
+     "점검 부위로",
+     "점검 항목으로"
+    ],
+    "pinch": "NOT_RUN: desktop pointer input only",
+    "realTouch": "NOT_RUN: desktop pointer input only"
+   },
+   "geometry": {
+    "idle": {
+     "charge": false,
+     "wiperHits": 0
+    },
+    "overview": {
+     "charge": true,
+     "wiperHits": 11
+    },
+    "tires": {
+     "charge": false
+    }
+   },
+   "overviewFacts": {
+    "text": true,
+    "legendTires": true,
+    "toastCenter": 210,
+    "usableCenter": 210,
+    "batteryTag": "점검 가능"
+   },
+   "select3d": {
+    "washer-fluid-cap": {
+     "clickable": true,
+     "selected": true,
+     "state": "WASHER_SELECTED",
+     "touchPx": [
+      25,
+      45
+     ],
+     "fromState": "COMPONENT_SELECTION"
+    },
+    "coolant-reservoir": {
+     "clickable": true,
+     "selected": true,
+     "state": "COMPONENT_PREVIEW",
+     "touchPx": [
+      52,
+      54
+     ],
+     "fromState": "COMPONENT_SELECTION"
+    },
+    "lcw-coolant-reservoir": {
+     "clickable": false,
+     "selected": false,
+     "touchPx": [
+      0,
+      0
+     ],
+     "fromState": "COMPONENT_SELECTION"
+    },
+    "brake-fluid-reservoir": {
+     "clickable": true,
+     "selected": true,
+     "state": "COMPONENT_PREVIEW",
+     "touchPx": [
+      38,
+      29
+     ],
+     "fromState": "COMPONENT_SELECTION"
+    },
+    "battery-12v": {
+     "clickable": true,
+     "selected": true,
+     "state": "COMPONENT_PREVIEW",
+     "touchPx": [
+      62,
+      73
+     ],
+     "fromState": "COMPONENT_SELECTION"
+    },
+    "fuse-box": {
+     "clickable": true,
+     "selected": true,
+     "state": "COMPONENT_PREVIEW",
+     "touchPx": [
+      53,
+      40
+     ],
+     "fromState": "COMPONENT_SELECTION"
+    },
+    "tire.front-left": {
+     "clickable": true,
+     "selected": true,
+     "state": "TIRE_PREVIEW",
+     "touchPx": [
+      71,
+      74
+     ],
+     "fromState": "TIRE_SELECTION"
+    },
+    "tire.front-right": {
+     "clickable": false,
+     "selected": false,
+     "touchPx": [
+      0,
+      0
+     ],
+     "fromState": "TIRE_SELECTION"
+    },
+    "tire.rear-left": {
+     "clickable": true,
+     "selected": true,
+     "state": "TIRE_PREVIEW",
+     "touchPx": [
+      70,
+      71
+     ],
+     "fromState": "TIRE_SELECTION"
+    },
+    "tire.rear-right": {
+     "clickable": false,
+     "selected": false,
+     "touchPx": [
+      0,
+      0
+     ],
+     "fromState": "TIRE_SELECTION"
+    },
+    "ev-battery.pack": {
+     "clickable": false,
+     "selected": false,
+     "touchPx": [
+      0,
+      0
+     ],
+     "fromState": "INSPECTION_OVERVIEW"
+    },
+    "ev-charge.port": {
+     "clickable": false,
+     "selected": false,
+     "touchPx": [
+      0,
+      0
+     ],
+     "fromState": "INSPECTION_OVERVIEW"
+    },
+    "ev-charge.flap": {
+     "clickable": false,
+     "selected": false,
+     "touchPx": [
+      0,
+      0
+     ],
+     "fromState": "INSPECTION_OVERVIEW"
+    },
+    "wiper.front.left": {
+     "clickable": true,
+     "selected": true,
+     "state": "VISIBILITY_PREVIEW",
+     "touchPx": [
+      8,
+      4
+     ],
+     "fromState": "INSPECTION_OVERVIEW"
+    },
+    "wiper.front.right": {
+     "clickable": true,
+     "selected": true,
+     "state": "VISIBILITY_PREVIEW",
+     "touchPx": [
+      11,
+      3
+     ],
+     "fromState": "INSPECTION_OVERVIEW"
+    },
+    "light-low-beam-left-0": {
+     "clickable": true,
+     "selected": true,
+     "state": "VISIBILITY_PREVIEW",
+     "touchPx": [
+      6,
+      2
+     ],
+     "fromState": "INSPECTION_OVERVIEW"
+    },
+    "light-low-beam-right-0": {
+     "clickable": true,
+     "selected": true,
+     "state": "VISIBILITY_PREVIEW",
+     "touchPx": [
+      2,
+      1
+     ],
+     "fromState": "INSPECTION_OVERVIEW"
+    },
+    "light-high-beam-left-0": {
+     "clickable": true,
+     "selected": false,
+     "state": "INSPECTION_OVERVIEW",
+     "touchPx": [
+      1,
+      1
+     ],
+     "fromState": "INSPECTION_OVERVIEW"
+    },
+    "light-high-beam-right-0": {
+     "clickable": false,
+     "selected": false,
+     "touchPx": [
+      0,
+      0
+     ],
+     "fromState": "INSPECTION_OVERVIEW"
+    }
+   },
+   "paint": {
+    "tiresTinted": true,
+    "othersKeepMaterial": true,
+    "legendCounts": 4
+   },
+   "lcwListClass": {
+    "preview": false,
+    "available": true
+   }
+  }
+ },
+ "mobile": {
+  "phases": {
+   "AUTH_WAITING": "KEPT",
+   "AUTH_FAILED": "KEPT",
+   "CREATING": "KEPT",
+   "QR_READY": "KEPT",
+   "QR_EXPIRED": "KEPT",
+   "CONNECTED": "KEPT",
+   "RESULT_RECEIVED": "KEPT"
+  },
+  "exit": {
+   "askedFirst": false,
+   "state": "IDLE"
+  }
+ },
+ "crossesBody": {
+  "1600x1000": {
+   "tire.front-left>tire.front-right": true,
+   "tire.front-left>tire.rear-left": false,
+   "tire.front-left>tire.rear-right": true,
+   "tire.front-right>tire.front-left": true,
+   "tire.front-right>tire.rear-left": true,
+   "tire.front-right>tire.rear-right": false,
+   "tire.rear-left>tire.front-left": false,
+   "tire.rear-left>tire.front-right": true,
+   "tire.rear-left>tire.rear-right": true,
+   "tire.rear-right>tire.front-left": true,
+   "tire.rear-right>tire.front-right": false,
+   "tire.rear-right>tire.rear-left": true,
+   "overview>ev-charge": false,
+   "overview>ev-battery": false,
+   "overview>light": false,
+   "bay>coolant": false,
+   "coolant>battery-12v": false,
+   "battery-12v>washer": false
+  },
+  "1224x880": {
+   "tire.front-left>tire.front-right": true,
+   "tire.front-left>tire.rear-left": false,
+   "tire.front-left>tire.rear-right": true,
+   "tire.front-right>tire.front-left": true,
+   "tire.front-right>tire.rear-left": true,
+   "tire.front-right>tire.rear-right": false,
+   "tire.rear-left>tire.front-left": false,
+   "tire.rear-left>tire.front-right": true,
+   "tire.rear-left>tire.rear-right": true,
+   "tire.rear-right>tire.front-left": true,
+   "tire.rear-right>tire.front-right": false,
+   "tire.rear-right>tire.rear-left": true,
+   "overview>ev-charge": false,
+   "overview>ev-battery": false,
+   "overview>light": false,
+   "bay>coolant": false,
+   "coolant>battery-12v": false,
+   "battery-12v>washer": false
+  },
+  "1024x600": {
+   "tire.front-left>tire.front-right": true,
+   "tire.front-left>tire.rear-left": false,
+   "tire.front-left>tire.rear-right": true,
+   "tire.front-right>tire.front-left": true,
+   "tire.front-right>tire.rear-left": true,
+   "tire.front-right>tire.rear-right": false,
+   "tire.rear-left>tire.front-left": false,
+   "tire.rear-left>tire.front-right": true,
+   "tire.rear-left>tire.rear-right": true,
+   "tire.rear-right>tire.front-left": true,
+   "tire.rear-right>tire.front-right": false,
+   "tire.rear-right>tire.rear-left": true,
+   "overview>ev-charge": false,
+   "overview>ev-battery": false,
+   "overview>light": false,
+   "bay>coolant": false,
+   "coolant>battery-12v": false,
+   "battery-12v>washer": false
+  },
+  "420x860": {
+   "tire.front-left>tire.front-right": false,
+   "tire.front-left>tire.rear-left": false,
+   "tire.front-left>tire.rear-right": false,
+   "tire.front-right>tire.front-left": false,
+   "tire.front-right>tire.rear-left": false,
+   "tire.front-right>tire.rear-right": false,
+   "tire.rear-left>tire.front-left": false,
+   "tire.rear-left>tire.front-right": false,
+   "tire.rear-left>tire.rear-right": false,
+   "tire.rear-right>tire.front-left": false,
+   "tire.rear-right>tire.front-right": false,
+   "tire.rear-right>tire.rear-left": false,
+   "overview>ev-charge": false,
+   "overview>ev-battery": false,
+   "overview>light": false,
+   "bay>coolant": false,
+   "coolant>battery-12v": false,
+   "battery-12v>washer": false
+  }
+ }
+}
