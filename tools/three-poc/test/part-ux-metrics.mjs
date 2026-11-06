@@ -40,8 +40,6 @@ export function compareBaseline(baseline,current,{tolerance=0.02}={},path=''){
   return out;
 }
 
-/** Which pixel-independent rule a part's share of the screen must meet after P10-2. Reported now, enforced later. */
-export const FRAMING_BANDS=Object.freeze({part:Object.freeze([15,30])});
 export const withinBand=(value,[low,high])=>value>=low&&value<=high;
 export const spread=values=>values.length?Math.max(...values)-Math.min(...values):0;
 const UNIT_WORDS=/\b(?:ESTIMATED_GEOMETRY|USER_REPORTED|UNVERIFIED|DETACHED|SOURCE_OCCLUDED|COMMUNITY_MARKER[A-Z_]*)\b/g;

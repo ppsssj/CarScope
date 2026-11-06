@@ -14,11 +14,11 @@ import { buildFrunk } from "./ioniq5-asset/frunk.mjs";
 import { buildServiceComponents, SERVICE_MANUAL } from "./ioniq5-asset/service-components.mjs";
 import { buildInspectionComponents } from "./ioniq5-asset/inspection-components.mjs";
 import { buildEvBatteryPack, EV_BATTERY_ID } from "./ioniq5-asset/ev-battery.mjs";
-import { componentDistance, boxDistance } from "./inspection-camera.mjs";
+import { CAMERA_MOVE_MS, boxDistance, cameraPath, framingDistance, inflateBox } from "./inspection-camera.mjs";
 import { createTireInspection, updateTireInspection, inspectionProgress } from "./tire-inspection.mjs";
 import { inspectionStateMap } from './inspection-state-map.mjs';
 import {targetForPart,targetForTask} from './mobile-result-contract.mjs';
-import {partLabel} from './inspection-parts.mjs';
+import {partById,partLabel} from './inspection-parts.mjs';
 import {createNativeInspectionResults} from './native-inspection-results.mjs';
 import {projectInspectionResults} from './inspection-results.mjs';
 import {partResultHtml,refreshResultRegions,resultSummaryHtml} from './inspection-results-view.mjs';
@@ -83,7 +83,6 @@ const VIEWS = {
   home: [new THREE.Vector3(0, 0.7, 0), [0.75, 0.42, -0.85], 7.4],
   overview: [new THREE.Vector3(0.7, 0.75, 0), [1, 0.62, -0.5], 6.0],
   bay: [toGltf([150, 0, 62]), [1.0, 1.35, -0.3], 3.4],
-  washer: [toGltf([135, -40, 84]), [0.9, 1.9, 0.75], 2.5],
   tires: [toGltf([0, 0, 52]), [0.22, 0.25, -1], 6.5],
 };
 
@@ -203,28 +202,48 @@ function fitScale() {
   const b = panelBox();
   return Math.max(1, 1.25 / ((innerWidth - b.side) / Math.max(1, innerHeight - b.bottom)));
 }
-function driveCamera(name, dur = 1100) {
-  log('camera-target', { name, state: state.name });
-  const meshes = targetMeshes(name);
-  let target, dir, dist;
+// A bottom sheet's height follows its text, so framing reserves its full height: one part keeps one view on every screen.
+function framingPanel() {
+  const b = panelBox();
+  return { side: b.side, bottom: b.bottom ? innerHeight * 0.46 : 0 };
+}
+const frameDistance = (size, direction, cameraClass) => framingDistance({ size, direction, cameraClass, fovDeg: camera.fov, width: innerWidth, height: innerHeight, panel: framingPanel() });
+const partDirection = (name, target) => M.lights.has(name) ? M.lights.get(name).sightline.direction : Object.values(EV_CHARGE_IDS).includes(name) ? [-0.6, 0.38, 1] : name === EV_BATTERY_ID ? [0.7, -1, -0.5] : M.tires.has(name) ? tireCameraDirection(name) : [1.2, 2.8, Math.sign(target.z) * 0.55];
+const groupBounds = (ids) => { scene.updateMatrixWorld(true); const b = new THREE.Box3(); for (const id of ids) b.union(componentBounds(id)); return b; };
+const HOOD_MODELED = INSPECTION_AREAS.find(a => a.id === 'hood').components.filter(c => partById(c.id).cameraClass !== 'NONE').map(c => c.id);
+function cameraGoalPose(name) {
+  const part = partById(name);
+  if (part && part.cameraClass !== 'NONE' && targetMeshes(name)?.length) {
+    const bounds = componentBounds(name), target = bounds.getCenter(new THREE.Vector3()), dir = partDirection(name, target);
+    return { target, dir, dist: frameDistance(bounds.getSize(new THREE.Vector3()).toArray(), dir, part.cameraClass) };
+  }
   if (name === 'overview' && M.vehicleBounds) {
-    target = M.vehicleBounds.getCenter(new THREE.Vector3()); dir = VIEWS.overview[1];
-    dist = boxDistance(M.vehicleBounds.getSize(new THREE.Vector3()).toArray(), dir, camera.fov, innerWidth, innerHeight, panelBox());
-  } else if (name === 'tires') {
-    const bounds = new THREE.Box3();
+    const dir = VIEWS.overview[1];
+    return { target: M.vehicleBounds.getCenter(new THREE.Vector3()), dir, dist: boxDistance(M.vehicleBounds.getSize(new THREE.Vector3()).toArray(), dir, camera.fov, innerWidth, innerHeight, panelBox()) };
+  }
+  if (name === 'tires' && M.tires.size) {
+    const bounds = new THREE.Box3(), dir = VIEWS.tires[1];
     for (const t of M.tires.values()) bounds.union(t.bounds);
-    target = bounds.getCenter(new THREE.Vector3()); dir = VIEWS.tires[1];
-    dist = boxDistance(bounds.getSize(new THREE.Vector3()).toArray(), dir, camera.fov, innerWidth, innerHeight, panelBox());
-  } else if (meshes && name !== 'washer-fluid-cap') {
-    const bounds = componentBounds(name), size = bounds.getSize(new THREE.Vector3());
-    target = bounds.getCenter(new THREE.Vector3());
-    dir = M.lights.has(name)?M.lights.get(name).sightline.direction:Object.values(EV_CHARGE_IDS).includes(name) ? [-0.6, 0.38, 1] : name === EV_BATTERY_ID ? [0.7, -1, -0.5] : M.tires.has(name) ? tireCameraDirection(name) : [1.2, 2.8, Math.sign(target.z) * 0.55];
-    dist = componentDistance(size.toArray(), camera.fov, innerWidth, innerHeight, panelBox());
-  } else [target, dir, dist] = VIEWS[name] ?? VIEWS.overview;
-  controls.minDistance = meshes ? 0.55 : 1.3;
-  controls.maxDistance = ['tires', 'overview'].includes(name) ? Math.max(11, dist) : 11;
-  camTween = { name, fromPos: camera.position.clone(), fromTarget: controls.target.clone(), toTarget: target.clone(), toPos: target.clone().add(new THREE.Vector3(...dir).normalize().multiplyScalar(dist * (meshes || ['tires', 'overview'].includes(name) ? 1 : fitScale()))), t0: performance.now(), dur: ms(dur) };
+    return { target: bounds.getCenter(new THREE.Vector3()), dir, dist: frameDistance(bounds.getSize(new THREE.Vector3()).toArray(), dir, 'AREA') };
+  }
+  if (name === 'bay' && M.components.size) {
+    const bounds = groupBounds(HOOD_MODELED), dir = VIEWS.bay[1];
+    return { target: bounds.getCenter(new THREE.Vector3()), dir, dist: frameDistance(bounds.getSize(new THREE.Vector3()).toArray(), dir, 'AREA') };
+  }
+  const [target, dir, dist] = VIEWS[name] ?? VIEWS.overview;
+  return { target, dir, dist: dist * fitScale() };
+}
+function moveCamera(name, toPos, toTarget, dur) {
+  const obstacle = M.vehicleBounds ? inflateBox({ min: M.vehicleBounds.min.toArray(), max: M.vehicleBounds.max.toArray() }, 0.1) : undefined;
+  camTween = { name, path: cameraPath(camera.position.toArray(), toPos.toArray(), { obstacle }), fromTarget: controls.target.clone(), toTarget: toTarget.clone(), t0: performance.now(), dur: ms(dur) };
   controls.enabled = false;
+}
+function driveCamera(name, dur = CAMERA_MOVE_MS) {
+  log('camera-target', { name, state: state.name });
+  const { target, dir, dist } = cameraGoalPose(name);
+  controls.minDistance = Math.min(targetMeshes(name) ? 0.55 : 1.3, dist);
+  controls.maxDistance = Math.max(11, dist);
+  moveCamera(name, target.clone().add(new THREE.Vector3(...dir).normalize().multiplyScalar(dist)), target, dur);
 }
 const ease = (t) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2);
 
@@ -264,8 +283,9 @@ function enter(prev) {
   const position = camera.position.clone(), target = controls.target.clone(), damping = controls.enableDamping;
   controls.enableDamping = false; controls.update();
   camera.position.copy(position); controls.target.copy(target); controls.update(); controls.enableDamping = damping;
+  // Only a list view is worth returning to. A part reached from the overview goes back to the list's own framing.
   if ((prev.name === STATES.COMPONENT_SELECTION && [STATES.COMPONENT_PREVIEW, STATES.WASHER_SELECTED].includes(state.name))
-    || ([STATES.TIRE_SELECTION, STATES.TIRE_SUMMARY, STATES.INSPECTION_OVERVIEW].includes(prev.name) && state.name === STATES.TIRE_PREVIEW)) {
+    || ([STATES.TIRE_SELECTION, STATES.TIRE_SUMMARY].includes(prev.name) && state.name === STATES.TIRE_PREVIEW)) {
     selectionView = { position: camera.position.clone(), target: controls.target.clone(), scroll: $('panel').scrollTop, component: state.component, width: innerWidth, height: innerHeight, maxDistance: controls.maxDistance, goal: state.area === 'tires' ? 'tires' : 'bay' };
   }
   if (selectionView && state.component) selectionView.component = state.component;
@@ -275,7 +295,7 @@ function enter(prev) {
   const underbody = state.name === STATES.EV_BATTERY_PREVIEW;
   floor.visible = ring.visible = !underbody;
   for (const mesh of M.components.get(EV_BATTERY_ID) ?? []) mesh.visible = underbody;
-  controls.maxPolarAngle = Math.PI * (underbody ? 0.92 : state.name===STATES.VISIBILITY_PREVIEW&&state.area==='lights'?0.7:0.48);
+  controls.maxPolarAngle = Math.PI * (underbody ? 0.92 : state.area==='lights'&&state.component?0.7:0.48);
   hovered = false;
   driveHood(hoodTarget(state));
   render();
@@ -292,12 +312,12 @@ function enter(prev) {
   syncInspectionMap();
   layout();
   if ([STATES.COMPONENT_SELECTION, STATES.TIRE_SELECTION, STATES.TIRE_SUMMARY].includes(state.name) && selectionView) {
-    controls.minDistance = 1.3;
     const saved = selectionView;
+    controls.minDistance = Math.min(1.3, saved.position.distanceTo(saved.target));
     controls.maxDistance = saved.maxDistance;
     log('camera-restore', { position: saved.position.toArray(), width: innerWidth, height: innerHeight, savedWidth: saved.width, savedHeight: saved.height });
     if (saved.width === innerWidth && saved.height === innerHeight) {
-      camTween = { name: saved.goal, fromPos: camera.position.clone(), fromTarget: controls.target.clone(), toPos: saved.position.clone(), toTarget: saved.target.clone(), t0: performance.now(), dur: ms(700) }; controls.enabled = false;
+      moveCamera(saved.goal, saved.position, saved.target, CAMERA_MOVE_MS);
     } else driveCamera(saved.goal);
     $('panel').scrollTop = saved.scroll;
     $('panel').querySelector(`[data-id="${saved.component}"]`)?.focus({ preventScroll: true });
@@ -698,7 +718,7 @@ renderer.setAnimationLoop((now) => {
   }
   if (camTween) {
     const t = Math.min(1, (now - camTween.t0) / camTween.dur), e = ease(t);
-    camera.position.lerpVectors(camTween.fromPos, camTween.toPos, e);
+    camera.position.fromArray(camTween.path(e));
     controls.target.lerpVectors(camTween.fromTarget, camTween.toTarget, e);
     if (t >= 1) { camTween = null; controls.enabled = true; }
   }

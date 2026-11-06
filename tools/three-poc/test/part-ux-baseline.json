@@ -174,18 +174,18 @@
      "crumb": "차량 점검 › 보닛 › 워셔액",
      "listName": null,
      "state": "WASHER_SELECTED",
-     "distance": 2.6,
-     "azimuth": 50.2,
-     "polar": 31.7,
+     "distance": 0.551,
+     "azimuth": 65.4,
+     "polar": 25.2,
      "position": [
-      2.398,
-      3.053,
-      1.274
+      1.514,
+      1.309,
+      0.578
      ],
      "target": [
-      1.35,
-      0.84,
-      0.4
+      1.3,
+      0.811,
+      0.48
      ],
      "sizeCm": [
       9.6,
@@ -193,25 +193,26 @@
       9.6
      ],
      "screenPx": [
-      85,
-      127
+      430,
+      559
      ],
-     "fillPercent": 0.9,
+     "fillPercent": 20,
+     "widthPercent": 35.8,
      "centerOffsetPx": [
-      -58,
-      15
+      5,
+      -28
      ],
-     "mineCells": 80,
+     "mineCells": 85,
      "touchPx": [
-      62,
-      93
+      316,
+      447
      ],
      "meshes": 2,
      "highlightedMeshes": 2,
      "color": [
-      153,
-      205,
-      219
+      152,
+      211,
+      227
      ],
      "selectionIntensity": null,
      "label": true,
@@ -224,7 +225,7 @@
      "noProcedureText": false,
      "internalWords": [],
      "backTo": "COMPONENT_SELECTION",
-     "backPoseMoved": 2.259
+     "backPoseMoved": 2.116
     },
     "coolant-reservoir": {
      "selectable": true,
@@ -232,13 +233,13 @@
      "crumb": "차량 점검 › 보닛 › 냉각수 리저버",
      "listName": "냉각수 리저버",
      "state": "COMPONENT_PREVIEW",
-     "distance": 0.85,
+     "distance": 0.883,
      "azimuth": 65.4,
      "polar": 25.2,
      "position": [
-      1.82,
-      1.541,
-      0.586
+      1.832,
+      1.571,
+      0.592
      ],
      "target": [
       1.49,
@@ -251,25 +252,26 @@
       18
      ],
      "screenPx": [
-      488,
-      534
+      468,
+      514
      ],
-     "fillPercent": 21.7,
+     "fillPercent": 20,
+     "widthPercent": 38.9,
      "centerOffsetPx": [
-      6,
+      5,
       -7
      ],
      "mineCells": 106,
      "touchPx": [
-      390,
-      427
+      374,
+      411
      ],
      "meshes": 2,
      "highlightedMeshes": 2,
      "color": [
-      202,
-      219,
-      221
+      203,
+      220,
+      222
      ],
      "selectionIntensity": null,
      "label": false,
@@ -282,7 +284,7 @@
      "noProcedureText": true,
      "internalWords": [],
      "backTo": "COMPONENT_SELECTION",
-     "backPoseMoved": 2.837
+     "backPoseMoved": 1.77
     },
     "lcw-coolant-reservoir": {
      "selectable": false,
@@ -294,13 +296,13 @@
      "crumb": "차량 점검 › 보닛 › 브레이크액",
      "listName": "브레이크액",
      "state": "COMPONENT_PREVIEW",
-     "distance": 0.85,
+     "distance": 0.645,
      "azimuth": 114.6,
      "polar": 25.2,
      "position": [
-      1.64,
-      1.561,
-      -0.581
+      1.56,
+      1.375,
+      -0.545
      ],
      "target": [
       1.31,
@@ -313,18 +315,19 @@
       14
      ],
      "screenPx": [
-      354,
-      381
+      478,
+      503
      ],
-     "fillPercent": 11.2,
+     "fillPercent": 20,
+     "widthPercent": 39.8,
      "centerOffsetPx": [
-      -2,
-      -5
+      -4,
+      -8
      ],
-     "mineCells": 101,
+     "mineCells": 98,
      "touchPx": [
-      307,
-      280
+      382,
+      335
      ],
      "meshes": 2,
      "highlightedMeshes": 2,
@@ -344,7 +347,7 @@
      "noProcedureText": true,
      "internalWords": [],
      "backTo": "COMPONENT_SELECTION",
-     "backPoseMoved": 2.68
+     "backPoseMoved": 1.798
     },
     "battery-12v": {
      "selectable": true,
@@ -352,13 +355,13 @@
      "crumb": "차량 점검 › 보닛 › 12V 보조 배터리",
      "listName": "12V 보조 배터리",
      "state": "COMPONENT_PREVIEW",
-     "distance": 0.85,
+     "distance": 1.049,
      "azimuth": 114.6,
      "polar": 25.2,
      "position": [
-      2,
-      1.5,
-      -0.591
+      2.077,
+      1.68,
+      -0.626
      ],
      "target": [
       1.67,
@@ -371,25 +374,26 @@
       18
      ],
      "screenPx": [
-      559,
-      673
+      441,
+      545
      ],
-     "fillPercent": 31.3,
+     "fillPercent": 20,
+     "widthPercent": 36.7,
      "centerOffsetPx": [
-      -11,
-      -15
+      -7,
+      -10
      ],
-     "mineCells": 125,
+     "mineCells": 130,
      "touchPx": [
-      447,
-      628
+      382,
+      508
      ],
      "meshes": 4,
      "highlightedMeshes": 4,
      "color": [
-      142,
-      196,
-      208
+      139,
+      195,
+      207
      ],
      "selectionIntensity": null,
      "label": false,
@@ -402,7 +406,7 @@
      "noProcedureText": true,
      "internalWords": [],
      "backTo": "COMPONENT_SELECTION",
-     "backPoseMoved": 2.48
+     "backPoseMoved": 1.233
     },
     "fuse-box": {
      "selectable": true,
@@ -410,13 +414,13 @@
      "crumb": "차량 점검 › 보닛 › 모터룸 퓨즈박스",
      "listName": "모터룸 퓨즈박스",
      "state": "COMPONENT_PREVIEW",
-     "distance": 0.85,
+     "distance": 0.76,
      "azimuth": 114.6,
      "polar": 25.2,
      "position": [
-      1.79,
-      1.538,
-      -0.591
+      1.755,
+      1.457,
+      -0.575
      ],
      "target": [
       1.46,
@@ -429,25 +433,26 @@
       18
      ],
      "screenPx": [
-      435,
-      437
+      492,
+      489
      ],
-     "fillPercent": 15.8,
+     "fillPercent": 20,
+     "widthPercent": 40.9,
      "centerOffsetPx": [
-      -2,
-      -8
+      -3,
+      -10
      ],
-     "mineCells": 126,
+     "mineCells": 124,
      "touchPx": [
-      406,
-      320
+      459,
+      391
      ],
      "meshes": 2,
      "highlightedMeshes": 2,
      "color": [
-      137,
-      194,
-      206
+      138,
+      195,
+      207
      ],
      "selectionIntensity": null,
      "label": false,
@@ -460,7 +465,7 @@
      "noProcedureText": true,
      "internalWords": [],
      "backTo": "COMPONENT_SELECTION",
-     "backPoseMoved": 2.59
+     "backPoseMoved": 1.605
     },
     "tire.front-left": {
      "selectable": true,
@@ -468,13 +473,13 @@
      "crumb": "차량 점검 › 타이어 › 앞 왼쪽 타이어",
      "listName": "앞 왼쪽 타이어",
      "state": "TIRE_PREVIEW",
-     "distance": 2.45,
+     "distance": 2.668,
      "azimuth": 169.8,
      "polar": 72.5,
      "position": [
-      1.873,
-      1.112,
-      -3.072
+      1.909,
+      1.177,
+      -3.277
      ],
      "target": [
       1.459,
@@ -487,23 +492,24 @@
       25.1
      ],
      "screenPx": [
-      532,
-      538
+      487,
+      494
      ],
-     "fillPercent": 23.8,
+     "fillPercent": 20,
+     "widthPercent": 40.5,
      "centerOffsetPx": [
-      6,
-      7
+      5,
+      6
      ],
-     "mineCells": 157,
+     "mineCells": 159,
      "touchPx": [
-      532,
-      502
+      487,
+      461
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
      "color": [
-      71,
+      72,
       109,
       116
      ],
@@ -520,7 +526,7 @@
       "USER_REPORTED"
      ],
      "backTo": "TIRE_SELECTION",
-     "backPoseMoved": 3.7
+     "backPoseMoved": 4.333
     },
     "tire.front-right": {
      "selectable": true,
@@ -528,13 +534,13 @@
      "crumb": "차량 점검 › 타이어 › 앞 오른쪽 타이어",
      "listName": "앞 오른쪽 타이어",
      "state": "TIRE_PREVIEW",
-     "distance": 2.45,
+     "distance": 2.668,
      "azimuth": 10.2,
      "polar": 72.5,
      "position": [
-      1.873,
-      1.112,
-      3.073
+      1.909,
+      1.177,
+      3.277
      ],
      "target": [
       1.459,
@@ -547,25 +553,26 @@
       25.1
      ],
      "screenPx": [
-      532,
-      538
+      487,
+      494
      ],
-     "fillPercent": 23.8,
+     "fillPercent": 20,
+     "widthPercent": 40.5,
      "centerOffsetPx": [
-      -6,
-      7
+      -5,
+      6
      ],
-     "mineCells": 157,
+     "mineCells": 159,
      "touchPx": [
-      532,
-      502
+      487,
+      461
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
      "color": [
       107,
       132,
-      138
+      139
      ],
      "selectionIntensity": 0.6,
      "label": false,
@@ -580,7 +587,7 @@
       "USER_REPORTED"
      ],
      "backTo": "TIRE_SELECTION",
-     "backPoseMoved": 9.753
+     "backPoseMoved": 10.799
     },
     "tire.rear-left": {
      "selectable": true,
@@ -588,13 +595,13 @@
      "crumb": "차량 점검 › 타이어 › 뒤 왼쪽 타이어",
      "listName": "뒤 왼쪽 타이어",
      "state": "TIRE_PREVIEW",
-     "distance": 2.45,
+     "distance": 2.668,
      "azimuth": -169.8,
      "polar": 72.5,
      "position": [
-      -1.978,
-      1.112,
-      -3.072
+      -2.015,
+      1.177,
+      -3.277
      ],
      "target": [
       -1.564,
@@ -607,24 +614,25 @@
       25.1
      ],
      "screenPx": [
-      532,
-      538
+      487,
+      494
      ],
-     "fillPercent": 23.8,
+     "fillPercent": 20,
+     "widthPercent": 40.5,
      "centerOffsetPx": [
-      -6,
-      7
+      -5,
+      6
      ],
-     "mineCells": 157,
+     "mineCells": 159,
      "touchPx": [
-      532,
-      502
+      487,
+      461
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
      "color": [
-      69,
-      107,
+      68,
+      106,
       114
      ],
      "selectionIntensity": 0.6,
@@ -640,7 +648,7 @@
       "USER_REPORTED"
      ],
      "backTo": "TIRE_SELECTION",
-     "backPoseMoved": 4.992
+     "backPoseMoved": 5.627
     },
     "tire.rear-right": {
      "selectable": true,
@@ -648,13 +656,13 @@
      "crumb": "차량 점검 › 타이어 › 뒤 오른쪽 타이어",
      "listName": "뒤 오른쪽 타이어",
      "state": "TIRE_PREVIEW",
-     "distance": 2.45,
+     "distance": 2.668,
      "azimuth": -10.2,
      "polar": 72.5,
      "position": [
-      -1.978,
-      1.112,
-      3.073
+      -2.015,
+      1.177,
+      3.277
      ],
      "target": [
       -1.564,
@@ -667,25 +675,26 @@
       25.1
      ],
      "screenPx": [
-      532,
-      538
+      487,
+      494
      ],
-     "fillPercent": 23.8,
+     "fillPercent": 20,
+     "widthPercent": 40.5,
      "centerOffsetPx": [
-      6,
-      7
+      5,
+      6
      ],
-     "mineCells": 157,
+     "mineCells": 159,
      "touchPx": [
-      532,
-      502
+      487,
+      461
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
      "color": [
-      109,
+      108,
       134,
-      141
+      140
      ],
      "selectionIntensity": 0.6,
      "label": false,
@@ -700,7 +709,7 @@
       "USER_REPORTED"
      ],
      "backTo": "TIRE_SELECTION",
-     "backPoseMoved": 10.312
+     "backPoseMoved": 11.381
     },
     "ev-battery.pack": {
      "selectable": true,
@@ -708,13 +717,13 @@
      "crumb": "차량 점검 › EV 배터리",
      "listName": null,
      "state": "EV_BATTERY_PREVIEW",
-     "distance": 5.292,
+     "distance": 5.315,
      "azimuth": 125.5,
      "polar": 139.3,
      "position": [
-      2.683,
-      -3.842,
-      -2.006
+      2.695,
+      -3.859,
+      -2.014
      ],
      "target": [
       -0.125,
@@ -727,25 +736,26 @@
       116
      ],
      "screenPx": [
-      647,
-      562
+      644,
+      560
      ],
-     "fillPercent": 30.3,
+     "fillPercent": 30,
+     "widthPercent": 53.6,
      "centerOffsetPx": [
       -20,
-      -39
+      -38
      ],
      "mineCells": 110,
      "touchPx": [
-      474,
-      487
+      472,
+      485
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
      "color": [
       64,
-      173,
-      189
+      172,
+      187
      ],
      "selectionIntensity": null,
      "label": false,
@@ -763,7 +773,7 @@
       "USER_REPORTED"
      ],
      "backTo": "INSPECTION_OVERVIEW",
-     "backPoseMoved": 10.556
+     "backPoseMoved": 10.564
     },
     "ev-charge.port": {
      "selectable": true,
@@ -771,13 +781,13 @@
      "crumb": "차량 점검 › EV 충전구",
      "listName": "EV 충전구",
      "state": "CHARGE_PORT_PREVIEW",
-     "distance": 0.85,
+     "distance": 0.938,
      "azimuth": -31,
      "polar": 72,
      "position": [
-      -2.333,
-      1.243,
-      1.589
+      -2.376,
+      1.271,
+      1.661
      ],
      "target": [
       -1.917,
@@ -790,25 +800,26 @@
       8.1
      ],
      "screenPx": [
-      599,
-      492
+      541,
+      445
      ],
-     "fillPercent": 24.5,
+     "fillPercent": 20,
+     "widthPercent": 45,
      "centerOffsetPx": [
-      -16,
-      23
+      -13,
+      19
      ],
-     "mineCells": 34,
+     "mineCells": 31,
      "touchPx": [
-      479,
-      98
+      360,
+      89
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
      "color": [
-      96,
-      181,
-      195
+      97,
+      182,
+      196
      ],
      "selectionIntensity": null,
      "label": false,
@@ -826,7 +837,7 @@
       "USER_REPORTED"
      ],
      "backTo": "INSPECTION_OVERVIEW",
-     "backPoseMoved": 11.88
+     "backPoseMoved": 11.938
     },
     "ev-charge.flap": {
      "selectable": true,
@@ -834,13 +845,13 @@
      "crumb": "차량 점검 › EV 충전구",
      "listName": "EV 충전구 덮개",
      "state": "CHARGE_PORT_PREVIEW",
-     "distance": 0.85,
+     "distance": 0.79,
      "azimuth": -31,
      "polar": 72,
      "position": [
-      -2.332,
-      1.243,
-      1.592
+      -2.302,
+      1.225,
+      1.543
      ],
      "target": [
       -1.916,
@@ -853,23 +864,24 @@
       6.9
      ],
      "screenPx": [
-      501,
-      413
+      541,
+      444
      ],
-     "fillPercent": 17.2,
+     "fillPercent": 20,
+     "widthPercent": 45,
      "centerOffsetPx": [
-      -11,
-      16
+      -13,
+      19
      ],
      "mineCells": 122,
      "touchPx": [
-      468,
-      330
+      505,
+      356
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
      "color": [
-      137,
+      138,
       194,
       206
      ],
@@ -889,7 +901,7 @@
       "USER_REPORTED"
      ],
      "backTo": "INSPECTION_OVERVIEW",
-     "backPoseMoved": 11.881
+     "backPoseMoved": 11.841
     },
     "wiper.front.left": {
      "selectable": true,
@@ -897,13 +909,13 @@
      "crumb": "차량 점검 › 전면 와이퍼",
      "listName": "전면 왼쪽 와이퍼",
      "state": "VISIBILITY_PREVIEW",
-     "distance": 1.298,
+     "distance": 1.509,
      "azimuth": 114.6,
      "polar": 25.2,
      "position": [
-      1.518,
-      2.3,
-      -0.541
+      1.6,
+      2.492,
+      -0.578
      ],
      "target": [
       1.015,
@@ -916,25 +928,26 @@
       56
      ],
      "screenPx": [
-      702,
-      419
+      601,
+      360
      ],
-     "fillPercent": 24.5,
+     "fillPercent": 18,
+     "widthPercent": 50,
      "centerOffsetPx": [
-      8,
-      6
+      6,
+      4
      ],
-     "mineCells": 15,
+     "mineCells": 16,
      "touchPx": [
-      94,
-      56
+      80,
+      48
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
      "color": [
-      107,
-      184,
-      197
+      105,
+      179,
+      191
      ],
      "selectionIntensity": null,
      "label": false,
@@ -952,7 +965,7 @@
       "USER_REPORTED"
      ],
      "backTo": "INSPECTION_OVERVIEW",
-     "backPoseMoved": 7.411
+     "backPoseMoved": 7.25
     },
     "wiper.front.right": {
      "selectable": true,
@@ -960,13 +973,13 @@
      "crumb": "차량 점검 › 전면 와이퍼",
      "listName": "전면 오른쪽 와이퍼",
      "state": "VISIBILITY_PREVIEW",
-     "distance": 1.144,
+     "distance": 1.339,
      "azimuth": 65.4,
      "polar": 25.2,
      "position": [
-      1.458,
-      2.164,
-      0.478
+      1.534,
+      2.34,
+      0.513
      ],
      "target": [
       1.015,
@@ -979,25 +992,26 @@
       49
      ],
      "screenPx": [
-      707,
-      435
+      601,
+      372
      ],
-     "fillPercent": 25.6,
+     "fillPercent": 18.6,
+     "widthPercent": 50,
      "centerOffsetPx": [
-      -7,
-      6
+      -5,
+      4
      ],
      "mineCells": 16,
      "touchPx": [
-      141,
-      87
+      120,
+      74
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
      "color": [
-      102,
+      104,
       182,
-      196
+      195
      ],
      "selectionIntensity": null,
      "label": false,
@@ -1015,7 +1029,7 @@
       "USER_REPORTED"
      ],
      "backTo": "INSPECTION_OVERVIEW",
-     "backPoseMoved": 8.001
+     "backPoseMoved": 7.892
     },
     "light-low-beam-left-0": {
      "selectable": true,
@@ -1023,13 +1037,13 @@
      "crumb": "차량 점검 › 전조등",
      "listName": "왼쪽 하향등",
      "state": "VISIBILITY_PREVIEW",
-     "distance": 0.85,
+     "distance": 0.45,
      "azimuth": 99.9,
      "polar": 78.9,
      "position": [
-      2.949,
-      0.953,
-      -0.675
+      2.563,
+      0.876,
+      -0.607
      ],
      "target": [
       2.128,
@@ -1042,142 +1056,19 @@
       16.4
      ],
      "screenPx": [
-      303,
-      113
+      577,
+      213
      ],
-     "fillPercent": 2.8,
+     "fillPercent": 10.2,
+     "widthPercent": 48,
      "centerOffsetPx": [
-      2,
-      1
+      9,
+      2
      ],
-     "mineCells": 167,
+     "mineCells": 172,
      "touchPx": [
-      303,
-      90
-     ],
-     "meshes": 1,
-     "highlightedMeshes": 1,
-     "color": [
-      53,
-      130,
-      142
-     ],
-     "selectionIntensity": null,
-     "label": false,
-     "badge": "기존 커뮤니티 GLB 표식 · OEM 광학 구조 미검증",
-     "backButtons": [
-      "뒤로 · 차량 전체 보기"
-     ],
-     "focusOutline": true,
-     "hasMobile": true,
-     "noProcedureText": false,
-     "internalWords": [
-      "DETACHED",
-      "UNVERIFIED",
-      "USER_REPORTED"
-     ],
-     "backTo": "INSPECTION_OVERVIEW",
-     "backPoseMoved": 7.03
-    },
-    "light-low-beam-right-0": {
-     "selectable": true,
-     "title": "오른쪽 하향등",
-     "crumb": "차량 점검 › 전조등",
-     "listName": "오른쪽 하향등",
-     "state": "VISIBILITY_PREVIEW",
-     "distance": 0.85,
-     "azimuth": 80.1,
-     "polar": 78.9,
-     "position": [
-      2.949,
-      0.953,
-      0.675
-     ],
-     "target": [
-      2.128,
-      0.789,
-      0.531
-     ],
-     "sizeCm": [
-      0,
-      5.6,
-      16.4
-     ],
-     "screenPx": [
-      303,
-      113
-     ],
-     "fillPercent": 2.8,
-     "centerOffsetPx": [
-      -2,
-      1
-     ],
-     "mineCells": 167,
-     "touchPx": [
-      303,
-      90
-     ],
-     "meshes": 1,
-     "highlightedMeshes": 1,
-     "color": [
-      53,
-      130,
-      142
-     ],
-     "selectionIntensity": null,
-     "label": false,
-     "badge": "기존 커뮤니티 GLB 표식 · OEM 광학 구조 미검증",
-     "backButtons": [
-      "뒤로 · 차량 전체 보기"
-     ],
-     "focusOutline": true,
-     "hasMobile": true,
-     "noProcedureText": false,
-     "internalWords": [
-      "DETACHED",
-      "UNVERIFIED",
-      "USER_REPORTED"
-     ],
-     "backTo": "INSPECTION_OVERVIEW",
-     "backPoseMoved": 7.711
-    },
-    "light-high-beam-left-0": {
-     "selectable": true,
-     "title": "왼쪽 상향등",
-     "crumb": "차량 점검 › 전조등",
-     "listName": "왼쪽 상향등",
-     "state": "VISIBILITY_PREVIEW",
-     "distance": 0.85,
-     "azimuth": 95.7,
-     "polar": 90,
-     "position": [
-      2.743,
-      0.803,
-      -0.83
-     ],
-     "target": [
-      1.897,
-      0.803,
-      -0.745
-     ],
-     "sizeCm": [
-      0,
-      4.3,
-      16.3
-     ],
-     "screenPx": [
-      303,
-      81
-     ],
-     "fillPercent": 2,
-     "centerOffsetPx": [
-      1,
-      0
-     ],
-     "mineCells": 214,
-     "touchPx": [
-      303,
-      81
+      577,
+      185
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
@@ -1201,7 +1092,133 @@
       "USER_REPORTED"
      ],
      "backTo": "INSPECTION_OVERVIEW",
-     "backPoseMoved": 7.194
+     "backPoseMoved": 7.359
+    },
+    "light-low-beam-right-0": {
+     "selectable": true,
+     "title": "오른쪽 하향등",
+     "crumb": "차량 점검 › 전조등",
+     "listName": "오른쪽 하향등",
+     "state": "VISIBILITY_PREVIEW",
+     "distance": 0.45,
+     "azimuth": 80.1,
+     "polar": 78.9,
+     "position": [
+      2.563,
+      0.876,
+      0.607
+     ],
+     "target": [
+      2.128,
+      0.789,
+      0.531
+     ],
+     "sizeCm": [
+      0,
+      5.6,
+      16.4
+     ],
+     "screenPx": [
+      577,
+      213
+     ],
+     "fillPercent": 10.2,
+     "widthPercent": 48,
+     "centerOffsetPx": [
+      -9,
+      2
+     ],
+     "mineCells": 172,
+     "touchPx": [
+      577,
+      185
+     ],
+     "meshes": 1,
+     "highlightedMeshes": 1,
+     "color": [
+      52,
+      130,
+      142
+     ],
+     "selectionIntensity": null,
+     "label": false,
+     "badge": "기존 커뮤니티 GLB 표식 · OEM 광학 구조 미검증",
+     "backButtons": [
+      "뒤로 · 차량 전체 보기"
+     ],
+     "focusOutline": true,
+     "hasMobile": true,
+     "noProcedureText": false,
+     "internalWords": [
+      "DETACHED",
+      "UNVERIFIED",
+      "USER_REPORTED"
+     ],
+     "backTo": "INSPECTION_OVERVIEW",
+     "backPoseMoved": 7.949
+    },
+    "light-high-beam-left-0": {
+     "selectable": true,
+     "title": "왼쪽 상향등",
+     "crumb": "차량 점검 › 전조등",
+     "listName": "왼쪽 상향등",
+     "state": "VISIBILITY_PREVIEW",
+     "distance": 0.45,
+     "azimuth": 95.7,
+     "polar": 90,
+     "position": [
+      2.345,
+      0.803,
+      -0.79
+     ],
+     "target": [
+      1.897,
+      0.803,
+      -0.745
+     ],
+     "sizeCm": [
+      0,
+      4.3,
+      16.3
+     ],
+     "screenPx": [
+      572,
+      154
+     ],
+     "fillPercent": 7.3,
+     "widthPercent": 47.6,
+     "centerOffsetPx": [
+      5,
+      0
+     ],
+     "mineCells": 214,
+     "touchPx": [
+      572,
+      154
+     ],
+     "meshes": 1,
+     "highlightedMeshes": 1,
+     "color": [
+      52,
+      130,
+      142
+     ],
+     "selectionIntensity": null,
+     "label": false,
+     "badge": "기존 커뮤니티 GLB 표식 · OEM 광학 구조 미검증",
+     "backButtons": [
+      "뒤로 · 차량 전체 보기"
+     ],
+     "focusOutline": true,
+     "hasMobile": true,
+     "noProcedureText": false,
+     "internalWords": [
+      "DETACHED",
+      "UNVERIFIED",
+      "USER_REPORTED"
+     ],
+     "backTo": "INSPECTION_OVERVIEW",
+     "backPoseMoved": 7.476
     },
     "light-high-beam-right-0": {
      "selectable": true,
@@ -1209,13 +1226,13 @@
      "crumb": "차량 점검 › 전조등",
      "listName": "오른쪽 상향등",
      "state": "VISIBILITY_PREVIEW",
-     "distance": 0.85,
+     "distance": 0.45,
      "azimuth": 84.3,
      "polar": 90,
      "position": [
-      2.743,
+      2.345,
       0.803,
-      0.83
+      0.79
      ],
      "target": [
       1.897,
@@ -1228,18 +1245,19 @@
       16.3
      ],
      "screenPx": [
-      303,
-      81
+      572,
+      154
      ],
-     "fillPercent": 2,
+     "fillPercent": 7.3,
+     "widthPercent": 47.6,
      "centerOffsetPx": [
-      -1,
+      -5,
       0
      ],
      "mineCells": 214,
      "touchPx": [
-      303,
-      81
+      572,
+      154
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
@@ -1263,23 +1281,23 @@
       "USER_REPORTED"
      ],
      "backTo": "INSPECTION_OVERVIEW",
-     "backPoseMoved": 8.007
+     "backPoseMoved": 8.225
     }
    },
    "result": {
     "washer-fluid-cap": {
-     "distance": 6,
-     "azimuth": 116.6,
-     "polar": 61,
+     "distance": 0.551,
+     "azimuth": 65.4,
+     "polar": 25.2,
      "position": [
-      5.393,
-      3.66,
-      -2.347
+      1.514,
+      1.309,
+      0.578
      ],
      "target": [
-      0.7,
-      0.75,
-      0
+      1.3,
+      0.811,
+      0.48
      ],
      "sizeCm": [
       9.6,
@@ -1287,34 +1305,40 @@
       9.6
      ],
      "screenPx": [
-      40,
-      62
+      430,
+      559
      ],
-     "fillPercent": 0.2,
+     "fillPercent": 20,
+     "widthPercent": 35.8,
      "centerOffsetPx": [
-      -195,
-      29
+      5,
+      -28
      ],
-     "mineCells": 76,
+     "mineCells": 85,
      "touchPx": [
-      27,
-      45
+      316,
+      447
      ],
      "meshes": 2,
      "highlightedMeshes": 2,
      "title": "워셔액",
      "crumb": "차량 점검 › 워셔액",
      "hood": 60,
-     "backTo": "INSPECTION_SUMMARY"
+     "backTo": "INSPECTION_SUMMARY",
+     "historyPosition": [
+      1.514,
+      1.309,
+      0.578
+     ]
     },
     "coolant-reservoir": {
-     "distance": 0.85,
+     "distance": 0.883,
      "azimuth": 65.4,
      "polar": 25.2,
      "position": [
-      1.82,
-      1.541,
-      0.586
+      1.832,
+      1.571,
+      0.592
      ],
      "target": [
       1.49,
@@ -1327,54 +1351,65 @@
       18
      ],
      "screenPx": [
-      488,
-      534
+      468,
+      514
      ],
-     "fillPercent": 21.7,
+     "fillPercent": 20,
+     "widthPercent": 38.9,
      "centerOffsetPx": [
-      6,
+      5,
       -7
      ],
      "mineCells": 106,
      "touchPx": [
-      390,
-      427
+      374,
+      411
      ],
      "meshes": 2,
      "highlightedMeshes": 2,
      "title": "냉각수 리저버",
      "crumb": "차량 점검 › 냉각수 리저버",
      "hood": 60,
-     "backTo": "INSPECTION_SUMMARY"
+     "backTo": "INSPECTION_SUMMARY",
+     "historyPosition": [
+      1.832,
+      1.571,
+      0.592
+     ]
     },
     "lcw-coolant-reservoir": {
-     "distance": 3.536,
+     "distance": 2.315,
      "polar": 37.7,
      "azimuth": 106.7,
      "position": [
-      3.572,
-      3.417,
-      -0.622
+      2.877,
+      2.592,
+      -0.408
      ],
      "target": [
-      1.5,
-      0.62,
-      0
+      1.52,
+      0.761,
+      -0.001
      ],
      "bounds": null,
      "title": "저전도 냉각수 리저버",
      "crumb": "차량 점검 › 저전도 냉각수 리저버",
      "hood": 60,
-     "backTo": "INSPECTION_SUMMARY"
+     "backTo": "INSPECTION_SUMMARY",
+     "historyPosition": [
+      2.877,
+      2.592,
+      -0.408
+     ]
     },
     "brake-fluid-reservoir": {
-     "distance": 0.85,
+     "distance": 0.645,
      "azimuth": 114.6,
      "polar": 25.2,
      "position": [
-      1.64,
-      1.561,
-      -0.581
+      1.56,
+      1.375,
+      -0.545
      ],
      "target": [
       1.31,
@@ -1387,34 +1422,40 @@
       14
      ],
      "screenPx": [
-      354,
-      381
+      478,
+      503
      ],
-     "fillPercent": 11.2,
+     "fillPercent": 20,
+     "widthPercent": 39.8,
      "centerOffsetPx": [
-      -2,
-      -5
+      -4,
+      -8
      ],
-     "mineCells": 101,
+     "mineCells": 98,
      "touchPx": [
-      307,
-      280
+      382,
+      335
      ],
      "meshes": 2,
      "highlightedMeshes": 2,
      "title": "브레이크액",
      "crumb": "차량 점검 › 브레이크액",
      "hood": 60,
-     "backTo": "INSPECTION_SUMMARY"
+     "backTo": "INSPECTION_SUMMARY",
+     "historyPosition": [
+      1.56,
+      1.375,
+      -0.545
+     ]
     },
     "battery-12v": {
-     "distance": 0.85,
+     "distance": 1.049,
      "azimuth": 114.6,
      "polar": 25.2,
      "position": [
-      2,
-      1.5,
-      -0.591
+      2.077,
+      1.68,
+      -0.626
      ],
      "target": [
       1.67,
@@ -1427,34 +1468,40 @@
       18
      ],
      "screenPx": [
-      559,
-      673
+      441,
+      545
      ],
-     "fillPercent": 31.3,
+     "fillPercent": 20,
+     "widthPercent": 36.7,
      "centerOffsetPx": [
-      -11,
-      -15
+      -7,
+      -10
      ],
-     "mineCells": 125,
+     "mineCells": 130,
      "touchPx": [
-      447,
-      628
+      382,
+      508
      ],
      "meshes": 4,
      "highlightedMeshes": 4,
      "title": "12V 보조 배터리",
      "crumb": "차량 점검 › 12V 보조 배터리",
      "hood": 60,
-     "backTo": "INSPECTION_SUMMARY"
+     "backTo": "INSPECTION_SUMMARY",
+     "historyPosition": [
+      2.077,
+      1.68,
+      -0.626
+     ]
     },
     "fuse-box": {
-     "distance": 0.85,
+     "distance": 0.76,
      "azimuth": 114.6,
      "polar": 25.2,
      "position": [
-      1.79,
-      1.538,
-      -0.591
+      1.755,
+      1.457,
+      -0.575
      ],
      "target": [
       1.46,
@@ -1467,34 +1514,40 @@
       18
      ],
      "screenPx": [
-      435,
-      437
+      492,
+      489
      ],
-     "fillPercent": 15.8,
+     "fillPercent": 20,
+     "widthPercent": 40.9,
      "centerOffsetPx": [
-      -2,
-      -8
+      -3,
+      -10
      ],
-     "mineCells": 126,
+     "mineCells": 124,
      "touchPx": [
-      406,
-      320
+      459,
+      391
      ],
      "meshes": 2,
      "highlightedMeshes": 2,
      "title": "모터룸 퓨즈박스",
      "crumb": "차량 점검 › 모터룸 퓨즈박스",
      "hood": 60,
-     "backTo": "INSPECTION_SUMMARY"
+     "backTo": "INSPECTION_SUMMARY",
+     "historyPosition": [
+      1.755,
+      1.457,
+      -0.575
+     ]
     },
     "tire.front-left": {
-     "distance": 2.45,
+     "distance": 2.668,
      "azimuth": 169.8,
      "polar": 72.5,
      "position": [
-      1.873,
-      1.112,
-      -3.072
+      1.909,
+      1.177,
+      -3.277
      ],
      "target": [
       1.459,
@@ -1507,34 +1560,40 @@
       25.1
      ],
      "screenPx": [
-      532,
-      538
+      487,
+      494
      ],
-     "fillPercent": 23.8,
+     "fillPercent": 20,
+     "widthPercent": 40.5,
      "centerOffsetPx": [
-      6,
-      7
+      5,
+      6
      ],
-     "mineCells": 157,
+     "mineCells": 159,
      "touchPx": [
-      532,
-      502
+      487,
+      461
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
      "title": "앞 왼쪽 타이어",
      "crumb": "차량 점검 › 앞 왼쪽 타이어",
      "hood": 0,
-     "backTo": "INSPECTION_SUMMARY"
+     "backTo": "INSPECTION_SUMMARY",
+     "historyPosition": [
+      1.909,
+      1.177,
+      -3.277
+     ]
     },
     "tire.front-right": {
-     "distance": 2.45,
+     "distance": 2.668,
      "azimuth": 10.2,
      "polar": 72.5,
      "position": [
-      1.873,
-      1.112,
-      3.073
+      1.909,
+      1.177,
+      3.277
      ],
      "target": [
       1.459,
@@ -1547,34 +1606,40 @@
       25.1
      ],
      "screenPx": [
-      532,
-      538
+      487,
+      494
      ],
-     "fillPercent": 23.8,
+     "fillPercent": 20,
+     "widthPercent": 40.5,
      "centerOffsetPx": [
-      -6,
-      7
+      -5,
+      6
      ],
-     "mineCells": 157,
+     "mineCells": 159,
      "touchPx": [
-      532,
-      502
+      487,
+      461
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
      "title": "앞 오른쪽 타이어",
      "crumb": "차량 점검 › 앞 오른쪽 타이어",
      "hood": 0,
-     "backTo": "INSPECTION_SUMMARY"
+     "backTo": "INSPECTION_SUMMARY",
+     "historyPosition": [
+      1.909,
+      1.177,
+      3.277
+     ]
     },
     "tire.rear-left": {
-     "distance": 2.45,
+     "distance": 2.668,
      "azimuth": -169.8,
      "polar": 72.5,
      "position": [
-      -1.978,
-      1.112,
-      -3.072
+      -2.015,
+      1.177,
+      -3.277
      ],
      "target": [
       -1.564,
@@ -1587,34 +1652,40 @@
       25.1
      ],
      "screenPx": [
-      532,
-      538
+      487,
+      494
      ],
-     "fillPercent": 23.8,
+     "fillPercent": 20,
+     "widthPercent": 40.5,
      "centerOffsetPx": [
-      -6,
-      7
+      -5,
+      6
      ],
-     "mineCells": 157,
+     "mineCells": 159,
      "touchPx": [
-      532,
-      502
+      487,
+      461
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
      "title": "뒤 왼쪽 타이어",
      "crumb": "차량 점검 › 뒤 왼쪽 타이어",
      "hood": 0,
-     "backTo": "INSPECTION_SUMMARY"
+     "backTo": "INSPECTION_SUMMARY",
+     "historyPosition": [
+      -2.015,
+      1.177,
+      -3.277
+     ]
     },
     "tire.rear-right": {
-     "distance": 2.45,
+     "distance": 2.668,
      "azimuth": -10.2,
      "polar": 72.5,
      "position": [
-      -1.978,
-      1.112,
-      3.073
+      -2.015,
+      1.177,
+      3.277
      ],
      "target": [
       -1.564,
@@ -1627,34 +1698,40 @@
       25.1
      ],
      "screenPx": [
-      532,
-      538
+      487,
+      494
      ],
-     "fillPercent": 23.8,
+     "fillPercent": 20,
+     "widthPercent": 40.5,
      "centerOffsetPx": [
-      6,
-      7
+      5,
+      6
      ],
-     "mineCells": 157,
+     "mineCells": 159,
      "touchPx": [
-      532,
-      502
+      487,
+      461
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
      "title": "뒤 오른쪽 타이어",
      "crumb": "차량 점검 › 뒤 오른쪽 타이어",
      "hood": 0,
-     "backTo": "INSPECTION_SUMMARY"
+     "backTo": "INSPECTION_SUMMARY",
+     "historyPosition": [
+      -2.015,
+      1.177,
+      3.277
+     ]
     },
     "ev-charge.port": {
-     "distance": 0.85,
+     "distance": 0.938,
      "azimuth": -31,
      "polar": 72,
      "position": [
-      -2.333,
-      1.243,
-      1.589
+      -2.376,
+      1.271,
+      1.661
      ],
      "target": [
       -1.917,
@@ -1667,34 +1744,40 @@
       8.1
      ],
      "screenPx": [
-      599,
-      492
+      541,
+      445
      ],
-     "fillPercent": 24.5,
+     "fillPercent": 20,
+     "widthPercent": 45,
      "centerOffsetPx": [
-      -16,
-      23
+      -13,
+      19
      ],
-     "mineCells": 34,
+     "mineCells": 31,
      "touchPx": [
-      479,
-      98
+      360,
+      89
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
      "title": "EV 충전구",
      "crumb": "차량 점검 › EV 충전구",
      "hood": 0,
-     "backTo": "INSPECTION_SUMMARY"
+     "backTo": "INSPECTION_SUMMARY",
+     "historyPosition": [
+      -2.376,
+      1.271,
+      1.661
+     ]
     },
     "wiper.front.left": {
-     "distance": 1.298,
+     "distance": 1.509,
      "azimuth": 114.6,
      "polar": 25.2,
      "position": [
-      1.518,
-      2.3,
-      -0.541
+      1.6,
+      2.492,
+      -0.578
      ],
      "target": [
       1.015,
@@ -1707,34 +1790,40 @@
       56
      ],
      "screenPx": [
-      702,
-      419
+      601,
+      360
      ],
-     "fillPercent": 24.5,
+     "fillPercent": 18,
+     "widthPercent": 50,
      "centerOffsetPx": [
-      8,
-      6
+      6,
+      4
      ],
-     "mineCells": 15,
+     "mineCells": 16,
      "touchPx": [
-      94,
-      56
+      80,
+      48
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
      "title": "전면 왼쪽 와이퍼",
      "crumb": "차량 점검 › 전면 왼쪽 와이퍼",
      "hood": 0,
-     "backTo": "INSPECTION_SUMMARY"
+     "backTo": "INSPECTION_SUMMARY",
+     "historyPosition": [
+      1.6,
+      2.492,
+      -0.578
+     ]
     },
     "wiper.front.right": {
-     "distance": 1.144,
+     "distance": 1.339,
      "azimuth": 65.4,
      "polar": 25.2,
      "position": [
-      1.458,
-      2.164,
-      0.478
+      1.534,
+      2.34,
+      0.513
      ],
      "target": [
       1.015,
@@ -1747,34 +1836,40 @@
       49
      ],
      "screenPx": [
-      707,
-      435
+      601,
+      372
      ],
-     "fillPercent": 25.6,
+     "fillPercent": 18.6,
+     "widthPercent": 50,
      "centerOffsetPx": [
-      -7,
-      6
+      -5,
+      4
      ],
      "mineCells": 16,
      "touchPx": [
-      141,
-      87
+      120,
+      74
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
      "title": "전면 오른쪽 와이퍼",
      "crumb": "차량 점검 › 전면 오른쪽 와이퍼",
      "hood": 0,
-     "backTo": "INSPECTION_SUMMARY"
+     "backTo": "INSPECTION_SUMMARY",
+     "historyPosition": [
+      1.534,
+      2.34,
+      0.513
+     ]
     },
     "light-low-beam-left-0": {
-     "distance": 0.85,
+     "distance": 0.45,
      "azimuth": 99.9,
      "polar": 78.9,
      "position": [
-      2.949,
-      0.953,
-      -0.675
+      2.563,
+      0.876,
+      -0.607
      ],
      "target": [
       2.128,
@@ -1787,34 +1882,40 @@
       16.4
      ],
      "screenPx": [
-      303,
-      113
+      577,
+      213
      ],
-     "fillPercent": 2.8,
+     "fillPercent": 10.2,
+     "widthPercent": 48,
      "centerOffsetPx": [
-      2,
-      1
+      9,
+      2
      ],
-     "mineCells": 167,
+     "mineCells": 172,
      "touchPx": [
-      303,
-      90
+      577,
+      185
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
      "title": "왼쪽 하향등",
      "crumb": "차량 점검 › 왼쪽 하향등",
      "hood": 0,
-     "backTo": "INSPECTION_SUMMARY"
+     "backTo": "INSPECTION_SUMMARY",
+     "historyPosition": [
+      2.563,
+      0.876,
+      -0.607
+     ]
     },
     "light-low-beam-right-0": {
-     "distance": 0.85,
+     "distance": 0.45,
      "azimuth": 80.1,
      "polar": 78.9,
      "position": [
-      2.949,
-      0.953,
-      0.675
+      2.563,
+      0.876,
+      0.607
      ],
      "target": [
       2.128,
@@ -1827,34 +1928,40 @@
       16.4
      ],
      "screenPx": [
-      303,
-      113
+      577,
+      213
      ],
-     "fillPercent": 2.8,
+     "fillPercent": 10.2,
+     "widthPercent": 48,
      "centerOffsetPx": [
-      -2,
-      1
+      -9,
+      2
      ],
-     "mineCells": 167,
+     "mineCells": 172,
      "touchPx": [
-      303,
-      90
+      577,
+      185
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
      "title": "오른쪽 하향등",
      "crumb": "차량 점검 › 오른쪽 하향등",
      "hood": 0,
-     "backTo": "INSPECTION_SUMMARY"
+     "backTo": "INSPECTION_SUMMARY",
+     "historyPosition": [
+      2.563,
+      0.876,
+      0.607
+     ]
     },
     "light-high-beam-left-0": {
-     "distance": 0.85,
+     "distance": 0.45,
      "azimuth": 95.7,
-     "polar": 86.4,
+     "polar": 90,
      "position": [
-      2.741,
-      0.857,
-      -0.83
+      2.345,
+      0.803,
+      -0.79
      ],
      "target": [
       1.897,
@@ -1867,34 +1974,40 @@
       16.3
      ],
      "screenPx": [
-      303,
-      82
+      572,
+      154
      ],
-     "fillPercent": 2.1,
+     "fillPercent": 7.3,
+     "widthPercent": 47.6,
      "centerOffsetPx": [
-      1,
+      5,
       0
      ],
-     "mineCells": 175,
+     "mineCells": 214,
      "touchPx": [
-      303,
-      77
+      572,
+      154
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
      "title": "왼쪽 상향등",
      "crumb": "차량 점검 › 왼쪽 상향등",
      "hood": 0,
-     "backTo": "INSPECTION_SUMMARY"
+     "backTo": "INSPECTION_SUMMARY",
+     "historyPosition": [
+      2.345,
+      0.803,
+      -0.79
+     ]
     },
     "light-high-beam-right-0": {
-     "distance": 0.85,
+     "distance": 0.45,
      "azimuth": 84.3,
-     "polar": 86.4,
+     "polar": 90,
      "position": [
-      2.741,
-      0.857,
-      0.83
+      2.345,
+      0.803,
+      0.79
      ],
      "target": [
       1.897,
@@ -1907,25 +2020,31 @@
       16.3
      ],
      "screenPx": [
-      303,
-      82
+      572,
+      154
      ],
-     "fillPercent": 2.1,
+     "fillPercent": 7.3,
+     "widthPercent": 47.6,
      "centerOffsetPx": [
-      -1,
+      -5,
       0
      ],
-     "mineCells": 175,
+     "mineCells": 214,
      "touchPx": [
-      303,
-      77
+      572,
+      154
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
      "title": "오른쪽 상향등",
      "crumb": "차량 점검 › 오른쪽 상향등",
      "hood": 0,
-     "backTo": "INSPECTION_SUMMARY"
+     "backTo": "INSPECTION_SUMMARY",
+     "historyPosition": [
+      2.345,
+      0.803,
+      0.79
+     ]
     }
    },
    "flows": {
@@ -1940,9 +2059,9 @@
     },
     "resultBackFromList": "INSPECTION_SUMMARY",
     "tireList": {
-     "directDistance": 6.983,
-     "viaTireDistance": 9.509,
-     "viaTireAtOverviewPose": true
+     "directDistance": 7.868,
+     "viaTireDistance": 7.868,
+     "viaTireAtOverviewPose": false
     },
     "crossArea": {
      "kind": "hood",
@@ -1980,7 +2099,7 @@
       "dragRotated": true
      },
      "VISIBILITY_PREVIEW:light-low-beam-left-0": {
-      "none": "KEPT",
+      "none": "NO_SUCH_AREA",
       "other": "KEPT",
       "drag": "KEPT",
       "dragRotated": true
@@ -2028,8 +2147,8 @@
      "selected": true,
      "state": "WASHER_SELECTED",
      "touchPx": [
-      45,
-      77
+      69,
+      112
      ],
      "fromState": "COMPONENT_SELECTION"
     },
@@ -2038,8 +2157,8 @@
      "selected": true,
      "state": "COMPONENT_PREVIEW",
      "touchPx": [
-      92,
-      91
+      140,
+      133
      ],
      "fromState": "COMPONENT_SELECTION"
     },
@@ -2057,8 +2176,8 @@
      "selected": true,
      "state": "COMPONENT_PREVIEW",
      "touchPx": [
-      66,
-      50
+      99,
+      74
      ],
      "fromState": "COMPONENT_SELECTION"
     },
@@ -2067,8 +2186,8 @@
      "selected": true,
      "state": "COMPONENT_PREVIEW",
      "touchPx": [
-      99,
-      126
+      151,
+      238
      ],
      "fromState": "COMPONENT_SELECTION"
     },
@@ -2077,8 +2196,8 @@
      "selected": true,
      "state": "COMPONENT_PREVIEW",
      "touchPx": [
-      93,
-      69
+      142,
+      102
      ],
      "fromState": "COMPONENT_SELECTION"
     },
@@ -2087,8 +2206,8 @@
      "selected": true,
      "state": "TIRE_PREVIEW",
      "touchPx": [
-      220,
-      223
+      189,
+      194
      ],
      "fromState": "TIRE_SELECTION"
     },
@@ -2106,8 +2225,8 @@
      "selected": true,
      "state": "TIRE_PREVIEW",
      "touchPx": [
-      187,
-      200
+      163,
+      176
      ],
      "fromState": "TIRE_SELECTION"
     },
@@ -2205,6 +2324,10 @@
      ],
      "fromState": "INSPECTION_OVERVIEW"
     }
+   },
+   "areas": {
+    "bay": 70,
+    "tires": 70
    },
    "paint": {
     "tiresTinted": true,
@@ -2390,18 +2513,18 @@
      "crumb": "차량 점검 › 보닛 › 워셔액",
      "listName": null,
      "state": "WASHER_SELECTED",
-     "distance": 3.329,
-     "azimuth": 50.2,
-     "polar": 31.7,
+     "distance": 0.617,
+     "azimuth": 65.4,
+     "polar": 25.2,
      "position": [
-      2.692,
-      3.674,
-      1.519
+      1.539,
+      1.369,
+      0.59
      ],
      "target": [
-      1.35,
-      0.84,
-      0.4
+      1.3,
+      0.811,
+      0.48
      ],
      "sizeCm": [
       9.6,
@@ -2409,25 +2532,26 @@
       9.6
      ],
      "screenPx": [
-      58,
-      87
+      332,
+      438
      ],
-     "fillPercent": 0.7,
+     "fillPercent": 20,
+     "widthPercent": 40.2,
      "centerOffsetPx": [
-      -40,
-      10
+      3,
+      -19
      ],
-     "mineCells": 81,
+     "mineCells": 85,
      "touchPx": [
-      43,
-      64
+      243,
+      351
      ],
      "meshes": 2,
      "highlightedMeshes": 2,
      "color": [
-      149,
-      202,
-      217
+      152,
+      211,
+      227
      ],
      "selectionIntensity": null,
      "label": true,
@@ -2440,7 +2564,7 @@
      "noProcedureText": false,
      "internalWords": [],
      "backTo": "COMPONENT_SELECTION",
-     "backPoseMoved": 2.787
+     "backPoseMoved": 2.654
     },
     "coolant-reservoir": {
      "selectable": true,
@@ -2448,13 +2572,13 @@
      "crumb": "차량 점검 › 보닛 › 냉각수 리저버",
      "listName": "냉각수 리저버",
      "state": "COMPONENT_PREVIEW",
-     "distance": 0.85,
+     "distance": 0.994,
      "azimuth": 65.4,
      "polar": 25.2,
      "position": [
-      1.82,
-      1.541,
-      0.586
+      1.875,
+      1.671,
+      0.612
      ],
      "target": [
       1.49,
@@ -2467,25 +2591,26 @@
       18
      ],
      "screenPx": [
-      429,
-      470
+      362,
+      401
      ],
-     "fillPercent": 27.7,
+     "fillPercent": 20,
+     "widthPercent": 43.8,
      "centerOffsetPx": [
-      5,
-      -6
+      4,
+      -5
      ],
-     "mineCells": 106,
+     "mineCells": 108,
      "touchPx": [
-      344,
-      376
+      314,
+      321
      ],
      "meshes": 2,
      "highlightedMeshes": 2,
      "color": [
       203,
-      219,
-      221
+      220,
+      222
      ],
      "selectionIntensity": null,
      "label": false,
@@ -2498,7 +2623,7 @@
      "noProcedureText": true,
      "internalWords": [],
      "backTo": "COMPONENT_SELECTION",
-     "backPoseMoved": 3.799
+     "backPoseMoved": 2.262
     },
     "lcw-coolant-reservoir": {
      "selectable": false,
@@ -2510,13 +2635,13 @@
      "crumb": "차량 점검 › 보닛 › 브레이크액",
      "listName": "브레이크액",
      "state": "COMPONENT_PREVIEW",
-     "distance": 0.85,
+     "distance": 0.726,
      "azimuth": 114.6,
      "polar": 25.2,
      "position": [
-      1.64,
-      1.561,
-      -0.581
+      1.591,
+      1.448,
+      -0.559
      ],
      "target": [
       1.31,
@@ -2529,25 +2654,26 @@
       14
      ],
      "screenPx": [
-      312,
-      336
+      370,
+      393
      ],
-     "fillPercent": 14.4,
+     "fillPercent": 20,
+     "widthPercent": 44.7,
      "centerOffsetPx": [
-      -2,
-      -4
+      -3,
+      -6
      ],
-     "mineCells": 101,
+     "mineCells": 99,
      "touchPx": [
-      270,
-      246
+      320,
+      262
      ],
      "meshes": 2,
      "highlightedMeshes": 2,
      "color": [
       194,
       216,
-      218
+      219
      ],
      "selectionIntensity": null,
      "label": false,
@@ -2560,7 +2686,7 @@
      "noProcedureText": true,
      "internalWords": [],
      "backTo": "COMPONENT_SELECTION",
-     "backPoseMoved": 3.652
+     "backPoseMoved": 2.32
     },
     "battery-12v": {
      "selectable": true,
@@ -2568,13 +2694,13 @@
      "crumb": "차량 점검 › 보닛 › 12V 보조 배터리",
      "listName": "12V 보조 배터리",
      "state": "COMPONENT_PREVIEW",
-     "distance": 0.888,
+     "distance": 1.18,
      "azimuth": 114.6,
      "polar": 25.2,
      "position": [
-      2.014,
-      1.534,
-      -0.598
+      2.127,
+      1.798,
+      -0.65
      ],
      "target": [
       1.67,
@@ -2587,25 +2713,26 @@
       18
      ],
      "screenPx": [
-      468,
-      567
+      341,
+      426
      ],
-     "fillPercent": 36.5,
+     "fillPercent": 20,
+     "widthPercent": 41.3,
      "centerOffsetPx": [
-      -9,
-      -12
+      -5,
+      -7
      ],
-     "mineCells": 125,
+     "mineCells": 130,
      "touchPx": [
-      374,
-      529
+      296,
+      398
      ],
      "meshes": 4,
      "highlightedMeshes": 4,
      "color": [
-      142,
-      196,
-      208
+      138,
+      194,
+      206
      ],
      "selectionIntensity": null,
      "label": false,
@@ -2618,7 +2745,7 @@
      "noProcedureText": true,
      "internalWords": [],
      "backTo": "COMPONENT_SELECTION",
-     "backPoseMoved": 3.425
+     "backPoseMoved": 1.702
     },
     "fuse-box": {
      "selectable": true,
@@ -2626,13 +2753,13 @@
      "crumb": "차량 점검 › 보닛 › 모터룸 퓨즈박스",
      "listName": "모터룸 퓨즈박스",
      "state": "COMPONENT_PREVIEW",
-     "distance": 0.85,
+     "distance": 0.855,
      "azimuth": 114.6,
      "polar": 25.2,
      "position": [
-      1.79,
-      1.538,
-      -0.591
+      1.792,
+      1.543,
+      -0.592
      ],
      "target": [
       1.46,
@@ -2645,25 +2772,26 @@
       18
      ],
      "screenPx": [
-      383,
-      385
+      380,
+      382
      ],
-     "fillPercent": 20.3,
+     "fillPercent": 20,
+     "widthPercent": 46.1,
      "centerOffsetPx": [
       -2,
       -7
      ],
      "mineCells": 126,
      "touchPx": [
-      357,
-      282
+      355,
+      280
      ],
      "meshes": 2,
      "highlightedMeshes": 2,
      "color": [
       137,
       194,
-      207
+      206
      ],
      "selectionIntensity": null,
      "label": false,
@@ -2676,7 +2804,7 @@
      "noProcedureText": true,
      "internalWords": [],
      "backTo": "COMPONENT_SELECTION",
-     "backPoseMoved": 3.567
+     "backPoseMoved": 2.113
     },
     "tire.front-left": {
      "selectable": true,
@@ -2684,13 +2812,13 @@
      "crumb": "차량 점검 › 타이어 › 앞 왼쪽 타이어",
      "listName": "앞 왼쪽 타이어",
      "state": "TIRE_PREVIEW",
-     "distance": 2.597,
+     "distance": 3.012,
      "azimuth": 169.8,
      "polar": 72.5,
      "position": [
-      1.897,
-      1.156,
-      -3.21
+      1.967,
+      1.28,
+      -3.599
      ],
      "target": [
       1.459,
@@ -2703,25 +2831,26 @@
       25.1
      ],
      "screenPx": [
-      441,
-      447
+      378,
+      385
      ],
-     "fillPercent": 27.1,
+     "fillPercent": 20,
+     "widthPercent": 45.7,
      "centerOffsetPx": [
-      5,
-      6
+      4,
+      4
      ],
-     "mineCells": 158,
+     "mineCells": 159,
      "touchPx": [
-      441,
-      417
+      378,
+      359
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
      "color": [
-      72,
-      109,
-      116
+      73,
+      111,
+      118
      ],
      "selectionIntensity": 0.6,
      "label": false,
@@ -2736,7 +2865,7 @@
       "USER_REPORTED"
      ],
      "backTo": "TIRE_SELECTION",
-     "backPoseMoved": 5.267
+     "backPoseMoved": 6.007
     },
     "tire.front-right": {
      "selectable": true,
@@ -2744,13 +2873,13 @@
      "crumb": "차량 점검 › 타이어 › 앞 오른쪽 타이어",
      "listName": "앞 오른쪽 타이어",
      "state": "TIRE_PREVIEW",
-     "distance": 2.597,
+     "distance": 3.012,
      "azimuth": 10.2,
      "polar": 72.5,
      "position": [
-      1.897,
-      1.156,
-      3.21
+      1.967,
+      1.28,
+      3.599
      ],
      "target": [
       1.459,
@@ -2763,24 +2892,25 @@
       25.1
      ],
      "screenPx": [
-      441,
-      447
+      378,
+      385
      ],
-     "fillPercent": 27.1,
+     "fillPercent": 20,
+     "widthPercent": 45.7,
      "centerOffsetPx": [
-      -5,
-      6
+      -4,
+      4
      ],
-     "mineCells": 158,
+     "mineCells": 159,
      "touchPx": [
-      441,
-      417
+      378,
+      359
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
      "color": [
-      107,
-      132,
+      108,
+      133,
       139
      ],
      "selectionIntensity": 0.6,
@@ -2796,7 +2926,7 @@
       "USER_REPORTED"
      ],
      "backTo": "TIRE_SELECTION",
-     "backPoseMoved": 11.596
+     "backPoseMoved": 13.108
     },
     "tire.rear-left": {
      "selectable": true,
@@ -2804,13 +2934,13 @@
      "crumb": "차량 점검 › 타이어 › 뒤 왼쪽 타이어",
      "listName": "뒤 왼쪽 타이어",
      "state": "TIRE_PREVIEW",
-     "distance": 2.597,
+     "distance": 3.012,
      "azimuth": -169.8,
      "polar": 72.5,
      "position": [
-      -2.003,
-      1.156,
-      -3.21
+      -2.073,
+      1.28,
+      -3.599
      ],
      "target": [
       -1.564,
@@ -2823,18 +2953,19 @@
       25.1
      ],
      "screenPx": [
-      441,
-      447
+      378,
+      385
      ],
-     "fillPercent": 27.1,
+     "fillPercent": 20,
+     "widthPercent": 45.7,
      "centerOffsetPx": [
-      -5,
-      6
+      -4,
+      4
      ],
      "mineCells": 158,
      "touchPx": [
-      441,
-      417
+      378,
+      359
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
@@ -2856,7 +2987,7 @@
       "USER_REPORTED"
      ],
      "backTo": "TIRE_SELECTION",
-     "backPoseMoved": 6.481
+     "backPoseMoved": 7.269
     },
     "tire.rear-right": {
      "selectable": true,
@@ -2864,13 +2995,13 @@
      "crumb": "차량 점검 › 타이어 › 뒤 오른쪽 타이어",
      "listName": "뒤 오른쪽 타이어",
      "state": "TIRE_PREVIEW",
-     "distance": 2.597,
+     "distance": 3.012,
      "azimuth": -10.2,
      "polar": 72.5,
      "position": [
-      -2.003,
-      1.156,
-      3.21
+      -2.073,
+      1.28,
+      3.599
      ],
      "target": [
       -1.564,
@@ -2883,25 +3014,26 @@
       25.1
      ],
      "screenPx": [
-      441,
-      447
+      378,
+      385
      ],
-     "fillPercent": 27.1,
+     "fillPercent": 20,
+     "widthPercent": 45.7,
      "centerOffsetPx": [
-      5,
-      6
+      4,
+      4
      ],
      "mineCells": 158,
      "touchPx": [
-      441,
-      417
+      378,
+      359
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
      "color": [
-      108,
-      134,
-      141
+      109,
+      136,
+      142
      ],
      "selectionIntensity": 0.6,
      "label": false,
@@ -2916,7 +3048,7 @@
       "USER_REPORTED"
      ],
      "backTo": "TIRE_SELECTION",
-     "backPoseMoved": 12.196
+     "backPoseMoved": 13.732
     },
     "ev-battery.pack": {
      "selectable": true,
@@ -2924,13 +3056,13 @@
      "crumb": "차량 점검 › EV 배터리",
      "listName": null,
      "state": "EV_BATTERY_PREVIEW",
-     "distance": 5.608,
+     "distance": 5.997,
      "azimuth": 125.5,
      "polar": 139.3,
      "position": [
-      2.851,
-      -4.081,
-      -2.126
+      3.057,
+      -4.376,
+      -2.273
      ],
      "target": [
       -0.125,
@@ -2943,25 +3075,26 @@
       116
      ],
      "screenPx": [
-      537,
-      466
+      502,
+      435
      ],
-     "fillPercent": 34.4,
+     "fillPercent": 30,
+     "widthPercent": 60.7,
      "centerOffsetPx": [
-      -16,
-      -30
+      -14,
+      -26
      ],
-     "mineCells": 110,
+     "mineCells": 111,
      "touchPx": [
-      394,
-      404
+      368,
+      377
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
      "color": [
       64,
-      173,
-      189
+      172,
+      188
      ],
      "selectionIntensity": null,
      "label": false,
@@ -2979,7 +3112,7 @@
       "USER_REPORTED"
      ],
      "backTo": "INSPECTION_OVERVIEW",
-     "backPoseMoved": 11.199
+     "backPoseMoved": 11.346
     },
     "ev-charge.port": {
      "selectable": true,
@@ -2987,13 +3120,13 @@
      "crumb": "차량 점검 › EV 충전구",
      "listName": "EV 충전구",
      "state": "CHARGE_PORT_PREVIEW",
-     "distance": 0.901,
+     "distance": 1.059,
      "azimuth": -31,
      "polar": 72,
      "position": [
-      -2.358,
-      1.259,
-      1.63
+      -2.435,
+      1.308,
+      1.759
      ],
      "target": [
       -1.917,
@@ -3006,23 +3139,24 @@
       8.1
      ],
      "screenPx": [
-      496,
-      408
+      420,
+      346
      ],
-     "fillPercent": 27.8,
+     "fillPercent": 20,
+     "widthPercent": 50.8,
      "centerOffsetPx": [
-      -12,
-      18
+      -9,
+      13
      ],
-     "mineCells": 33,
+     "mineCells": 29,
      "touchPx": [
-      364,
-      82
+      252,
+      69
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
      "color": [
-      92,
+      93,
       180,
       194
      ],
@@ -3042,7 +3176,7 @@
       "USER_REPORTED"
      ],
      "backTo": "INSPECTION_OVERVIEW",
-     "backPoseMoved": 12.534
+     "backPoseMoved": 12.638
     },
     "ev-charge.flap": {
      "selectable": true,
@@ -3050,13 +3184,13 @@
      "crumb": "차량 점검 › EV 충전구",
      "listName": "EV 충전구 덮개",
      "state": "CHARGE_PORT_PREVIEW",
-     "distance": 0.85,
+     "distance": 0.891,
      "azimuth": -31,
      "polar": 72,
      "position": [
-      -2.332,
-      1.243,
-      1.592
+      -2.352,
+      1.256,
+      1.626
      ],
      "target": [
       -1.916,
@@ -3069,18 +3203,19 @@
       6.9
      ],
      "screenPx": [
-      441,
-      363
+      420,
+      346
      ],
-     "fillPercent": 22,
+     "fillPercent": 20,
+     "widthPercent": 50.9,
      "centerOffsetPx": [
-      -10,
-      14
+      -9,
+      13
      ],
-     "mineCells": 122,
+     "mineCells": 121,
      "touchPx": [
-      412,
-      290
+      392,
+      254
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
@@ -3105,7 +3240,7 @@
       "USER_REPORTED"
      ],
      "backTo": "INSPECTION_OVERVIEW",
-     "backPoseMoved": 12.502
+     "backPoseMoved": 12.528
     },
     "wiper.front.left": {
      "selectable": true,
@@ -3113,13 +3248,13 @@
      "crumb": "차량 점검 › 전면 와이퍼",
      "listName": "전면 왼쪽 와이퍼",
      "state": "VISIBILITY_PREVIEW",
-     "distance": 1.375,
+     "distance": 1.922,
      "azimuth": 114.6,
      "polar": 25.2,
      "position": [
-      1.548,
-      2.37,
-      -0.554
+      1.76,
+      2.865,
+      -0.651
      ],
      "target": [
       1.015,
@@ -3132,25 +3267,26 @@
       56
      ],
      "screenPx": [
-      582,
-      348
+      413,
+      249
      ],
-     "fillPercent": 27.8,
+     "fillPercent": 14.1,
+     "widthPercent": 50,
      "centerOffsetPx": [
-      6,
-      4
+      3,
+      2
      ],
      "mineCells": 16,
      "touchPx": [
-      78,
-      46
+      55,
+      33
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
      "color": [
       105,
-      177,
-      190
+      182,
+      195
      ],
      "selectionIntensity": null,
      "label": false,
@@ -3168,7 +3304,7 @@
       "USER_REPORTED"
      ],
      "backTo": "INSPECTION_OVERVIEW",
-     "backPoseMoved": 7.977
+     "backPoseMoved": 7.566
     },
     "wiper.front.right": {
      "selectable": true,
@@ -3176,13 +3312,13 @@
      "crumb": "차량 점검 › 전면 와이퍼",
      "listName": "전면 오른쪽 와이퍼",
      "state": "VISIBILITY_PREVIEW",
-     "distance": 1.213,
+     "distance": 1.705,
      "azimuth": 65.4,
      "polar": 25.2,
      "position": [
-      1.485,
-      2.226,
-      0.49
+      1.676,
+      2.671,
+      0.578
      ],
      "target": [
       1.015,
@@ -3195,25 +3331,26 @@
       49
      ],
      "screenPx": [
-      586,
-      362
+      413,
+      257
      ],
-     "fillPercent": 29.1,
+     "fillPercent": 14.6,
+     "widthPercent": 50,
      "centerOffsetPx": [
-      -5,
-      4
+      -3,
+      2
      ],
      "mineCells": 16,
      "touchPx": [
-      117,
-      72
+      83,
+      34
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
      "color": [
-      102,
-      179,
-      193
+      104,
+      177,
+      189
      ],
      "selectionIntensity": null,
      "label": false,
@@ -3231,7 +3368,7 @@
       "USER_REPORTED"
      ],
      "backTo": "INSPECTION_OVERVIEW",
-     "backPoseMoved": 8.582
+     "backPoseMoved": 8.312
     },
     "light-low-beam-left-0": {
      "selectable": true,
@@ -3239,13 +3376,13 @@
      "crumb": "차량 점검 › 전조등",
      "listName": "왼쪽 하향등",
      "state": "VISIBILITY_PREVIEW",
-     "distance": 0.85,
+     "distance": 0.552,
      "azimuth": 99.9,
      "polar": 78.9,
      "position": [
-      2.949,
-      0.953,
-      -0.675
+      2.661,
+      0.896,
+      -0.624
      ],
      "target": [
       2.128,
@@ -3258,18 +3395,19 @@
       16.4
      ],
      "screenPx": [
-      267,
-      99
+      413,
+      153
      ],
-     "fillPercent": 3.6,
+     "fillPercent": 8.7,
+     "widthPercent": 50,
      "centerOffsetPx": [
-      2,
-      0
+      5,
+      1
      ],
-     "mineCells": 167,
+     "mineCells": 170,
      "touchPx": [
-      267,
-      79
+      413,
+      132
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
@@ -3293,7 +3431,7 @@
       "USER_REPORTED"
      ],
      "backTo": "INSPECTION_OVERVIEW",
-     "backPoseMoved": 7.644
+     "backPoseMoved": 7.892
     },
     "light-low-beam-right-0": {
      "selectable": true,
@@ -3301,13 +3439,13 @@
      "crumb": "차량 점검 › 전조등",
      "listName": "오른쪽 하향등",
      "state": "VISIBILITY_PREVIEW",
-     "distance": 0.85,
+     "distance": 0.552,
      "azimuth": 80.1,
      "polar": 78.9,
      "position": [
-      2.949,
-      0.953,
-      0.675
+      2.661,
+      0.896,
+      0.624
      ],
      "target": [
       2.128,
@@ -3320,18 +3458,19 @@
       16.4
      ],
      "screenPx": [
-      267,
-      99
+      413,
+      153
      ],
-     "fillPercent": 3.6,
+     "fillPercent": 8.7,
+     "widthPercent": 50,
      "centerOffsetPx": [
-      -2,
-      0
+      -5,
+      1
      ],
-     "mineCells": 167,
+     "mineCells": 170,
      "touchPx": [
-      267,
-      79
+      413,
+      132
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
@@ -3355,7 +3494,7 @@
       "USER_REPORTED"
      ],
      "backTo": "INSPECTION_OVERVIEW",
-     "backPoseMoved": 8.315
+     "backPoseMoved": 8.496
     },
     "light-high-beam-left-0": {
      "selectable": true,
@@ -3363,13 +3502,13 @@
      "crumb": "차량 점검 › 전조등",
      "listName": "왼쪽 상향등",
      "state": "VISIBILITY_PREVIEW",
-     "distance": 0.85,
+     "distance": 0.548,
      "azimuth": 95.7,
      "polar": 90,
      "position": [
-      2.743,
+      2.442,
       0.803,
-      -0.83
+      -0.8
      ],
      "target": [
       1.897,
@@ -3382,18 +3521,19 @@
       16.3
      ],
      "screenPx": [
-      266,
-      71
+      413,
+      111
      ],
-     "fillPercent": 2.6,
+     "fillPercent": 6.3,
+     "widthPercent": 50,
      "centerOffsetPx": [
-      1,
+      3,
       0
      ],
      "mineCells": 214,
      "touchPx": [
-      266,
-      71
+      413,
+      111
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
@@ -3417,7 +3557,7 @@
       "USER_REPORTED"
      ],
      "backTo": "INSPECTION_OVERVIEW",
-     "backPoseMoved": 7.81
+     "backPoseMoved": 8.024
     },
     "light-high-beam-right-0": {
      "selectable": true,
@@ -3425,13 +3565,13 @@
      "crumb": "차량 점검 › 전조등",
      "listName": "오른쪽 상향등",
      "state": "VISIBILITY_PREVIEW",
-     "distance": 0.85,
+     "distance": 0.548,
      "azimuth": 84.3,
      "polar": 90,
      "position": [
-      2.743,
+      2.442,
       0.803,
-      0.83
+      0.8
      ],
      "target": [
       1.897,
@@ -3444,18 +3584,19 @@
       16.3
      ],
      "screenPx": [
-      266,
-      71
+      413,
+      111
      ],
-     "fillPercent": 2.6,
+     "fillPercent": 6.3,
+     "widthPercent": 50,
      "centerOffsetPx": [
-      -1,
+      -3,
       0
      ],
      "mineCells": 214,
      "touchPx": [
-      266,
-      71
+      413,
+      111
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
@@ -3479,23 +3620,23 @@
       "USER_REPORTED"
      ],
      "backTo": "INSPECTION_OVERVIEW",
-     "backPoseMoved": 8.611
+     "backPoseMoved": 8.779
     }
    },
    "result": {
     "washer-fluid-cap": {
-     "distance": 6,
-     "azimuth": 116.6,
-     "polar": 61,
+     "distance": 0.617,
+     "azimuth": 65.4,
+     "polar": 25.2,
      "position": [
-      5.393,
-      3.66,
-      -2.347
+      1.539,
+      1.369,
+      0.59
      ],
      "target": [
-      0.7,
-      0.75,
-      0
+      1.3,
+      0.811,
+      0.48
      ],
      "sizeCm": [
       9.6,
@@ -3503,34 +3644,40 @@
       9.6
      ],
      "screenPx": [
-      35,
-      54
+      332,
+      438
      ],
-     "fillPercent": 0.3,
+     "fillPercent": 20,
+     "widthPercent": 40.2,
      "centerOffsetPx": [
-      -171,
-      25
+      3,
+      -19
      ],
-     "mineCells": 76,
+     "mineCells": 85,
      "touchPx": [
-      24,
-      40
+      243,
+      351
      ],
      "meshes": 2,
      "highlightedMeshes": 2,
      "title": "워셔액",
      "crumb": "차량 점검 › 워셔액",
      "hood": 60,
-     "backTo": "INSPECTION_SUMMARY"
+     "backTo": "INSPECTION_SUMMARY",
+     "historyPosition": [
+      1.539,
+      1.369,
+      0.59
+     ]
     },
     "coolant-reservoir": {
-     "distance": 0.85,
+     "distance": 0.994,
      "azimuth": 65.4,
      "polar": 25.2,
      "position": [
-      1.82,
-      1.541,
-      0.586
+      1.875,
+      1.671,
+      0.612
      ],
      "target": [
       1.49,
@@ -3543,54 +3690,65 @@
       18
      ],
      "screenPx": [
-      429,
-      470
+      362,
+      401
      ],
-     "fillPercent": 27.7,
+     "fillPercent": 20,
+     "widthPercent": 43.8,
      "centerOffsetPx": [
-      5,
-      -6
+      4,
+      -5
      ],
-     "mineCells": 106,
+     "mineCells": 108,
      "touchPx": [
-      344,
-      376
+      314,
+      321
      ],
      "meshes": 2,
      "highlightedMeshes": 2,
      "title": "냉각수 리저버",
      "crumb": "차량 점검 › 냉각수 리저버",
      "hood": 60,
-     "backTo": "INSPECTION_SUMMARY"
+     "backTo": "INSPECTION_SUMMARY",
+     "historyPosition": [
+      1.875,
+      1.671,
+      0.612
+     ]
     },
     "lcw-coolant-reservoir": {
-     "distance": 4.528,
+     "distance": 2.933,
      "polar": 37.7,
      "azimuth": 106.7,
      "position": [
-      4.153,
-      4.202,
-      -0.796
+      3.239,
+      3.081,
+      -0.517
      ],
      "target": [
-      1.5,
-      0.62,
-      0
+      1.52,
+      0.761,
+      -0.001
      ],
      "bounds": null,
      "title": "저전도 냉각수 리저버",
      "crumb": "차량 점검 › 저전도 냉각수 리저버",
      "hood": 60,
-     "backTo": "INSPECTION_SUMMARY"
+     "backTo": "INSPECTION_SUMMARY",
+     "historyPosition": [
+      3.239,
+      3.081,
+      -0.517
+     ]
     },
     "brake-fluid-reservoir": {
-     "distance": 0.85,
+     "distance": 0.726,
      "azimuth": 114.6,
      "polar": 25.2,
      "position": [
-      1.64,
-      1.561,
-      -0.581
+      1.591,
+      1.448,
+      -0.559
      ],
      "target": [
       1.31,
@@ -3603,34 +3761,40 @@
       14
      ],
      "screenPx": [
-      312,
-      336
+      370,
+      393
      ],
-     "fillPercent": 14.4,
+     "fillPercent": 20,
+     "widthPercent": 44.7,
      "centerOffsetPx": [
-      -2,
-      -4
+      -3,
+      -6
      ],
-     "mineCells": 101,
+     "mineCells": 99,
      "touchPx": [
-      270,
-      246
+      320,
+      262
      ],
      "meshes": 2,
      "highlightedMeshes": 2,
      "title": "브레이크액",
      "crumb": "차량 점검 › 브레이크액",
      "hood": 60,
-     "backTo": "INSPECTION_SUMMARY"
+     "backTo": "INSPECTION_SUMMARY",
+     "historyPosition": [
+      1.591,
+      1.448,
+      -0.559
+     ]
     },
     "battery-12v": {
-     "distance": 0.888,
+     "distance": 1.18,
      "azimuth": 114.6,
      "polar": 25.2,
      "position": [
-      2.014,
-      1.534,
-      -0.598
+      2.127,
+      1.798,
+      -0.65
      ],
      "target": [
       1.67,
@@ -3643,34 +3807,40 @@
       18
      ],
      "screenPx": [
-      468,
-      567
+      341,
+      426
      ],
-     "fillPercent": 36.5,
+     "fillPercent": 20,
+     "widthPercent": 41.3,
      "centerOffsetPx": [
-      -9,
-      -12
+      -5,
+      -7
      ],
-     "mineCells": 125,
+     "mineCells": 130,
      "touchPx": [
-      374,
-      529
+      296,
+      398
      ],
      "meshes": 4,
      "highlightedMeshes": 4,
      "title": "12V 보조 배터리",
      "crumb": "차량 점검 › 12V 보조 배터리",
      "hood": 60,
-     "backTo": "INSPECTION_SUMMARY"
+     "backTo": "INSPECTION_SUMMARY",
+     "historyPosition": [
+      2.127,
+      1.798,
+      -0.65
+     ]
     },
     "fuse-box": {
-     "distance": 0.85,
+     "distance": 0.855,
      "azimuth": 114.6,
      "polar": 25.2,
      "position": [
-      1.79,
-      1.538,
-      -0.591
+      1.792,
+      1.543,
+      -0.592
      ],
      "target": [
       1.46,
@@ -3683,34 +3853,40 @@
       18
      ],
      "screenPx": [
-      383,
-      385
+      380,
+      382
      ],
-     "fillPercent": 20.3,
+     "fillPercent": 20,
+     "widthPercent": 46.1,
      "centerOffsetPx": [
       -2,
       -7
      ],
      "mineCells": 126,
      "touchPx": [
-      357,
-      282
+      355,
+      280
      ],
      "meshes": 2,
      "highlightedMeshes": 2,
      "title": "모터룸 퓨즈박스",
      "crumb": "차량 점검 › 모터룸 퓨즈박스",
      "hood": 60,
-     "backTo": "INSPECTION_SUMMARY"
+     "backTo": "INSPECTION_SUMMARY",
+     "historyPosition": [
+      1.792,
+      1.543,
+      -0.592
+     ]
     },
     "tire.front-left": {
-     "distance": 2.597,
+     "distance": 3.012,
      "azimuth": 169.8,
      "polar": 72.5,
      "position": [
-      1.897,
-      1.156,
-      -3.21
+      1.967,
+      1.28,
+      -3.599
      ],
      "target": [
       1.459,
@@ -3723,34 +3899,40 @@
       25.1
      ],
      "screenPx": [
-      441,
-      447
+      378,
+      385
      ],
-     "fillPercent": 27.1,
+     "fillPercent": 20,
+     "widthPercent": 45.7,
      "centerOffsetPx": [
-      5,
-      6
+      4,
+      4
      ],
-     "mineCells": 158,
+     "mineCells": 159,
      "touchPx": [
-      441,
-      417
+      378,
+      359
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
      "title": "앞 왼쪽 타이어",
      "crumb": "차량 점검 › 앞 왼쪽 타이어",
      "hood": 0,
-     "backTo": "INSPECTION_SUMMARY"
+     "backTo": "INSPECTION_SUMMARY",
+     "historyPosition": [
+      1.967,
+      1.28,
+      -3.599
+     ]
     },
     "tire.front-right": {
-     "distance": 2.597,
+     "distance": 3.012,
      "azimuth": 10.2,
      "polar": 72.5,
      "position": [
-      1.897,
-      1.156,
-      3.21
+      1.967,
+      1.28,
+      3.599
      ],
      "target": [
       1.459,
@@ -3763,34 +3945,40 @@
       25.1
      ],
      "screenPx": [
-      441,
-      447
+      378,
+      385
      ],
-     "fillPercent": 27.1,
+     "fillPercent": 20,
+     "widthPercent": 45.7,
      "centerOffsetPx": [
-      -5,
-      6
+      -4,
+      4
      ],
-     "mineCells": 158,
+     "mineCells": 159,
      "touchPx": [
-      441,
-      417
+      378,
+      359
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
      "title": "앞 오른쪽 타이어",
      "crumb": "차량 점검 › 앞 오른쪽 타이어",
      "hood": 0,
-     "backTo": "INSPECTION_SUMMARY"
+     "backTo": "INSPECTION_SUMMARY",
+     "historyPosition": [
+      1.967,
+      1.28,
+      3.599
+     ]
     },
     "tire.rear-left": {
-     "distance": 2.597,
+     "distance": 3.012,
      "azimuth": -169.8,
      "polar": 72.5,
      "position": [
-      -2.003,
-      1.156,
-      -3.21
+      -2.073,
+      1.28,
+      -3.599
      ],
      "target": [
       -1.564,
@@ -3803,34 +3991,40 @@
       25.1
      ],
      "screenPx": [
-      441,
-      447
+      378,
+      385
      ],
-     "fillPercent": 27.1,
+     "fillPercent": 20,
+     "widthPercent": 45.7,
      "centerOffsetPx": [
-      -5,
-      6
+      -4,
+      4
      ],
      "mineCells": 158,
      "touchPx": [
-      441,
-      417
+      378,
+      359
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
      "title": "뒤 왼쪽 타이어",
      "crumb": "차량 점검 › 뒤 왼쪽 타이어",
      "hood": 0,
-     "backTo": "INSPECTION_SUMMARY"
+     "backTo": "INSPECTION_SUMMARY",
+     "historyPosition": [
+      -2.073,
+      1.28,
+      -3.599
+     ]
     },
     "tire.rear-right": {
-     "distance": 2.597,
+     "distance": 3.012,
      "azimuth": -10.2,
      "polar": 72.5,
      "position": [
-      -2.003,
-      1.156,
-      3.21
+      -2.073,
+      1.28,
+      3.599
      ],
      "target": [
       -1.564,
@@ -3843,34 +4037,40 @@
       25.1
      ],
      "screenPx": [
-      441,
-      447
+      378,
+      385
      ],
-     "fillPercent": 27.1,
+     "fillPercent": 20,
+     "widthPercent": 45.7,
      "centerOffsetPx": [
-      5,
-      6
+      4,
+      4
      ],
      "mineCells": 158,
      "touchPx": [
-      441,
-      417
+      378,
+      359
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
      "title": "뒤 오른쪽 타이어",
      "crumb": "차량 점검 › 뒤 오른쪽 타이어",
      "hood": 0,
-     "backTo": "INSPECTION_SUMMARY"
+     "backTo": "INSPECTION_SUMMARY",
+     "historyPosition": [
+      -2.073,
+      1.28,
+      3.599
+     ]
     },
     "ev-charge.port": {
-     "distance": 0.901,
+     "distance": 1.059,
      "azimuth": -31,
      "polar": 72,
      "position": [
-      -2.358,
-      1.259,
-      1.63
+      -2.435,
+      1.308,
+      1.759
      ],
      "target": [
       -1.917,
@@ -3883,34 +4083,40 @@
       8.1
      ],
      "screenPx": [
-      496,
-      408
+      420,
+      346
      ],
-     "fillPercent": 27.8,
+     "fillPercent": 20,
+     "widthPercent": 50.8,
      "centerOffsetPx": [
-      -12,
-      18
+      -9,
+      13
      ],
-     "mineCells": 33,
+     "mineCells": 29,
      "touchPx": [
-      364,
-      82
+      252,
+      69
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
      "title": "EV 충전구",
      "crumb": "차량 점검 › EV 충전구",
      "hood": 0,
-     "backTo": "INSPECTION_SUMMARY"
+     "backTo": "INSPECTION_SUMMARY",
+     "historyPosition": [
+      -2.435,
+      1.308,
+      1.759
+     ]
     },
     "wiper.front.left": {
-     "distance": 1.375,
+     "distance": 1.922,
      "azimuth": 114.6,
      "polar": 25.2,
      "position": [
-      1.548,
-      2.37,
-      -0.554
+      1.76,
+      2.865,
+      -0.651
      ],
      "target": [
       1.015,
@@ -3923,34 +4129,40 @@
       56
      ],
      "screenPx": [
-      582,
-      348
+      413,
+      249
      ],
-     "fillPercent": 27.8,
+     "fillPercent": 14.1,
+     "widthPercent": 50,
      "centerOffsetPx": [
-      6,
-      4
+      3,
+      2
      ],
      "mineCells": 16,
      "touchPx": [
-      78,
-      46
+      55,
+      33
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
      "title": "전면 왼쪽 와이퍼",
      "crumb": "차량 점검 › 전면 왼쪽 와이퍼",
      "hood": 0,
-     "backTo": "INSPECTION_SUMMARY"
+     "backTo": "INSPECTION_SUMMARY",
+     "historyPosition": [
+      1.76,
+      2.865,
+      -0.651
+     ]
     },
     "wiper.front.right": {
-     "distance": 1.213,
+     "distance": 1.705,
      "azimuth": 65.4,
      "polar": 25.2,
      "position": [
-      1.485,
-      2.226,
-      0.49
+      1.676,
+      2.671,
+      0.578
      ],
      "target": [
       1.015,
@@ -3963,34 +4175,40 @@
       49
      ],
      "screenPx": [
-      586,
-      362
+      413,
+      257
      ],
-     "fillPercent": 29.1,
+     "fillPercent": 14.6,
+     "widthPercent": 50,
      "centerOffsetPx": [
-      -5,
-      4
+      -3,
+      2
      ],
      "mineCells": 16,
      "touchPx": [
-      117,
-      72
+      83,
+      34
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
      "title": "전면 오른쪽 와이퍼",
      "crumb": "차량 점검 › 전면 오른쪽 와이퍼",
      "hood": 0,
-     "backTo": "INSPECTION_SUMMARY"
+     "backTo": "INSPECTION_SUMMARY",
+     "historyPosition": [
+      1.676,
+      2.671,
+      0.578
+     ]
     },
     "light-low-beam-left-0": {
-     "distance": 0.85,
+     "distance": 0.552,
      "azimuth": 99.9,
      "polar": 78.9,
      "position": [
-      2.949,
-      0.953,
-      -0.675
+      2.661,
+      0.896,
+      -0.624
      ],
      "target": [
       2.128,
@@ -4003,34 +4221,40 @@
       16.4
      ],
      "screenPx": [
-      267,
-      99
+      413,
+      153
      ],
-     "fillPercent": 3.6,
+     "fillPercent": 8.7,
+     "widthPercent": 50,
      "centerOffsetPx": [
-      2,
-      0
+      5,
+      1
      ],
-     "mineCells": 167,
+     "mineCells": 170,
      "touchPx": [
-      267,
-      79
+      413,
+      132
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
      "title": "왼쪽 하향등",
      "crumb": "차량 점검 › 왼쪽 하향등",
      "hood": 0,
-     "backTo": "INSPECTION_SUMMARY"
+     "backTo": "INSPECTION_SUMMARY",
+     "historyPosition": [
+      2.661,
+      0.896,
+      -0.624
+     ]
     },
     "light-low-beam-right-0": {
-     "distance": 0.85,
+     "distance": 0.552,
      "azimuth": 80.1,
      "polar": 78.9,
      "position": [
-      2.949,
-      0.953,
-      0.675
+      2.661,
+      0.896,
+      0.624
      ],
      "target": [
       2.128,
@@ -4043,34 +4267,40 @@
       16.4
      ],
      "screenPx": [
-      267,
-      99
+      413,
+      153
      ],
-     "fillPercent": 3.6,
+     "fillPercent": 8.7,
+     "widthPercent": 50,
      "centerOffsetPx": [
-      -2,
-      0
+      -5,
+      1
      ],
-     "mineCells": 167,
+     "mineCells": 170,
      "touchPx": [
-      267,
-      79
+      413,
+      132
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
      "title": "오른쪽 하향등",
      "crumb": "차량 점검 › 오른쪽 하향등",
      "hood": 0,
-     "backTo": "INSPECTION_SUMMARY"
+     "backTo": "INSPECTION_SUMMARY",
+     "historyPosition": [
+      2.661,
+      0.896,
+      0.624
+     ]
     },
     "light-high-beam-left-0": {
-     "distance": 0.85,
+     "distance": 0.548,
      "azimuth": 95.7,
-     "polar": 86.4,
+     "polar": 90,
      "position": [
-      2.741,
-      0.857,
-      -0.83
+      2.442,
+      0.803,
+      -0.8
      ],
      "target": [
       1.897,
@@ -4083,34 +4313,40 @@
       16.3
      ],
      "screenPx": [
-      267,
-      72
+      413,
+      111
      ],
-     "fillPercent": 2.6,
+     "fillPercent": 6.3,
+     "widthPercent": 50,
      "centerOffsetPx": [
-      1,
+      3,
       0
      ],
-     "mineCells": 175,
+     "mineCells": 214,
      "touchPx": [
-      267,
-      67
+      413,
+      111
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
      "title": "왼쪽 상향등",
      "crumb": "차량 점검 › 왼쪽 상향등",
      "hood": 0,
-     "backTo": "INSPECTION_SUMMARY"
+     "backTo": "INSPECTION_SUMMARY",
+     "historyPosition": [
+      2.442,
+      0.803,
+      -0.8
+     ]
     },
     "light-high-beam-right-0": {
-     "distance": 0.85,
+     "distance": 0.548,
      "azimuth": 84.3,
-     "polar": 86.4,
+     "polar": 90,
      "position": [
-      2.741,
-      0.857,
-      0.83
+      2.442,
+      0.803,
+      0.8
      ],
      "target": [
       1.897,
@@ -4123,25 +4359,31 @@
       16.3
      ],
      "screenPx": [
-      267,
-      72
+      413,
+      111
      ],
-     "fillPercent": 2.6,
+     "fillPercent": 6.3,
+     "widthPercent": 50,
      "centerOffsetPx": [
-      -1,
+      -3,
       0
      ],
-     "mineCells": 175,
+     "mineCells": 214,
      "touchPx": [
-      267,
-      67
+      413,
+      111
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
      "title": "오른쪽 상향등",
      "crumb": "차량 점검 › 오른쪽 상향등",
      "hood": 0,
-     "backTo": "INSPECTION_SUMMARY"
+     "backTo": "INSPECTION_SUMMARY",
+     "historyPosition": [
+      2.442,
+      0.803,
+      0.8
+     ]
     }
    },
    "flows": {
@@ -4156,9 +4398,9 @@
     },
     "resultBackFromList": "INSPECTION_SUMMARY",
     "tireList": {
-     "directDistance": 8.762,
-     "viaTireDistance": 10.137,
-     "viaTireAtOverviewPose": true
+     "directDistance": 9.937,
+     "viaTireDistance": 9.937,
+     "viaTireAtOverviewPose": false
     },
     "crossArea": {
      "kind": "hood",
@@ -4196,7 +4438,7 @@
       "dragRotated": true
      },
      "VISIBILITY_PREVIEW:light-low-beam-left-0": {
-      "none": "KEPT",
+      "none": "NO_SUCH_AREA",
       "other": "KEPT",
       "drag": "KEPT",
       "dragRotated": true
@@ -4244,8 +4486,8 @@
      "selected": true,
      "state": "WASHER_SELECTED",
      "touchPx": [
-      30,
-      53
+      47,
+      78
      ],
      "fromState": "COMPONENT_SELECTION"
     },
@@ -4254,8 +4496,8 @@
      "selected": true,
      "state": "COMPONENT_PREVIEW",
      "touchPx": [
-      62,
-      63
+      95,
+      93
      ],
      "fromState": "COMPONENT_SELECTION"
     },
@@ -4273,8 +4515,8 @@
      "selected": true,
      "state": "COMPONENT_PREVIEW",
      "touchPx": [
-      45,
-      34
+      68,
+      51
      ],
      "fromState": "COMPONENT_SELECTION"
     },
@@ -4283,8 +4525,8 @@
      "selected": true,
      "state": "COMPONENT_PREVIEW",
      "touchPx": [
-      74,
-      85
+      102,
+      147
      ],
      "fromState": "COMPONENT_SELECTION"
     },
@@ -4293,8 +4535,8 @@
      "selected": true,
      "state": "COMPONENT_PREVIEW",
      "touchPx": [
-      63,
-      47
+      97,
+      70
      ],
      "fromState": "COMPONENT_SELECTION"
     },
@@ -4303,8 +4545,8 @@
      "selected": true,
      "state": "TIRE_PREVIEW",
      "touchPx": [
-      145,
-      151
+      126,
+      131
      ],
      "fromState": "TIRE_SELECTION"
     },
@@ -4322,8 +4564,8 @@
      "selected": true,
      "state": "TIRE_PREVIEW",
      "touchPx": [
-      128,
-      139
+      111,
+      121
      ],
      "fromState": "TIRE_SELECTION"
     },
@@ -4421,6 +4663,10 @@
      ],
      "fromState": "INSPECTION_OVERVIEW"
     }
+   },
+   "areas": {
+    "bay": 70,
+    "tires": 70
    },
    "paint": {
     "tiresTinted": true,
@@ -4606,18 +4852,18 @@
      "crumb": "차량 점검 › 보닛 › 워셔액",
      "listName": null,
      "state": "WASHER_SELECTED",
-     "distance": 2.995,
-     "azimuth": 50.2,
-     "polar": 31.7,
+     "distance": 0.588,
+     "azimuth": 65.4,
+     "polar": 25.2,
      "position": [
-      2.558,
-      3.39,
-      1.406
+      1.528,
+      1.342,
+      0.584
      ],
      "target": [
-      1.35,
-      0.84,
-      0.4
+      1.3,
+      0.811,
+      0.48
      ],
      "sizeCm": [
       9.6,
@@ -4625,25 +4871,26 @@
       9.6
      ],
      "screenPx": [
-      44,
-      66
+      239,
+      314
      ],
-     "fillPercent": 0.8,
+     "fillPercent": 20,
+     "widthPercent": 38.2,
      "centerOffsetPx": [
-      -30,
-      8
+      2,
+      -15
      ],
-     "mineCells": 81,
+     "mineCells": 85,
      "touchPx": [
-      32,
-      48
+      176,
+      251
      ],
      "meshes": 2,
      "highlightedMeshes": 2,
      "color": [
-      146,
-      197,
-      211
+      153,
+      211,
+      228
      ],
      "selectionIntensity": null,
      "label": true,
@@ -4656,7 +4903,7 @@
      "noProcedureText": false,
      "internalWords": [],
      "backTo": "COMPONENT_SELECTION",
-     "backPoseMoved": 2.545
+     "backPoseMoved": 2.405
     },
     "coolant-reservoir": {
      "selectable": true,
@@ -4664,13 +4911,13 @@
      "crumb": "차량 점검 › 보닛 › 냉각수 리저버",
      "listName": "냉각수 리저버",
      "state": "COMPONENT_PREVIEW",
-     "distance": 0.85,
+     "distance": 0.945,
      "azimuth": 65.4,
      "polar": 25.2,
      "position": [
-      1.82,
-      1.541,
-      0.586
+      1.856,
+      1.627,
+      0.603
      ],
      "target": [
       1.49,
@@ -4683,25 +4930,26 @@
       18
      ],
      "screenPx": [
-      293,
-      320
+      261,
+      288
      ],
-     "fillPercent": 25,
+     "fillPercent": 20,
+     "widthPercent": 41.7,
      "centerOffsetPx": [
-      4,
+      3,
       -4
      ],
-     "mineCells": 106,
+     "mineCells": 108,
      "touchPx": [
-      234,
-      256
+      226,
+      230
      ],
      "meshes": 2,
      "highlightedMeshes": 2,
      "color": [
       202,
       219,
-      221
+      220
      ],
      "selectionIntensity": null,
      "label": false,
@@ -4714,7 +4962,7 @@
      "noProcedureText": true,
      "internalWords": [],
      "backTo": "COMPONENT_SELECTION",
-     "backPoseMoved": 3.357
+     "backPoseMoved": 2.034
     },
     "lcw-coolant-reservoir": {
      "selectable": false,
@@ -4726,13 +4974,13 @@
      "crumb": "차량 점검 › 보닛 › 브레이크액",
      "listName": "브레이크액",
      "state": "COMPONENT_PREVIEW",
-     "distance": 0.85,
+     "distance": 0.69,
      "azimuth": 114.6,
      "polar": 25.2,
      "position": [
-      1.64,
-      1.561,
-      -0.581
+      1.577,
+      1.416,
+      -0.553
      ],
      "target": [
       1.31,
@@ -4745,23 +4993,24 @@
       14
      ],
      "screenPx": [
-      212,
-      229
+      266,
+      282
      ],
-     "fillPercent": 12.9,
+     "fillPercent": 20,
+     "widthPercent": 42.5,
      "centerOffsetPx": [
-      -1,
-      -3
+      -2,
+      -4
      ],
-     "mineCells": 101,
+     "mineCells": 99,
      "touchPx": [
-      184,
-      168
+      231,
+      188
      ],
      "meshes": 2,
      "highlightedMeshes": 2,
      "color": [
-      194,
+      195,
       215,
       218
      ],
@@ -4776,7 +5025,7 @@
      "noProcedureText": true,
      "internalWords": [],
      "backTo": "COMPONENT_SELECTION",
-     "backPoseMoved": 3.205
+     "backPoseMoved": 2.079
     },
     "battery-12v": {
      "selectable": true,
@@ -4784,13 +5033,13 @@
      "crumb": "차량 점검 › 보닛 › 12V 보조 배터리",
      "listName": "12V 보조 배터리",
      "state": "COMPONENT_PREVIEW",
-     "distance": 0.85,
+     "distance": 1.122,
      "azimuth": 114.6,
      "polar": 25.2,
      "position": [
-      2,
-      1.5,
-      -0.591
+      2.105,
+      1.746,
+      -0.639
      ],
      "target": [
       1.67,
@@ -4803,25 +5052,26 @@
       18
      ],
      "screenPx": [
-      335,
-      404
+      246,
+      306
      ],
-     "fillPercent": 36,
+     "fillPercent": 20,
+     "widthPercent": 39.3,
      "centerOffsetPx": [
-      -7,
-      -9
+      -4,
+      -5
      ],
-     "mineCells": 125,
+     "mineCells": 130,
      "touchPx": [
-      268,
-      377
+      213,
+      285
      ],
      "meshes": 4,
      "highlightedMeshes": 4,
      "color": [
-      142,
-      196,
-      208
+      138,
+      194,
+      206
      ],
      "selectionIntensity": null,
      "label": false,
@@ -4834,7 +5084,7 @@
      "noProcedureText": true,
      "internalWords": [],
      "backTo": "COMPONENT_SELECTION",
-     "backPoseMoved": 3.011
+     "backPoseMoved": 1.484
     },
     "fuse-box": {
      "selectable": true,
@@ -4842,13 +5092,13 @@
      "crumb": "차량 점검 › 보닛 › 모터룸 퓨즈박스",
      "listName": "모터룸 퓨즈박스",
      "state": "COMPONENT_PREVIEW",
-     "distance": 0.85,
+     "distance": 0.813,
      "azimuth": 114.6,
      "polar": 25.2,
      "position": [
-      1.79,
-      1.538,
-      -0.591
+      1.775,
+      1.505,
+      -0.584
      ],
      "target": [
       1.46,
@@ -4861,25 +5111,26 @@
       18
      ],
      "screenPx": [
-      261,
-      262
+      274,
+      274
      ],
-     "fillPercent": 18.2,
+     "fillPercent": 20,
+     "widthPercent": 43.8,
      "centerOffsetPx": [
       -1,
       -5
      ],
-     "mineCells": 126,
+     "mineCells": 124,
      "touchPx": [
-      244,
-      192
+      256,
+      201
      ],
      "meshes": 2,
      "highlightedMeshes": 2,
      "color": [
-      137,
-      193,
-      205
+      138,
+      194,
+      206
      ],
      "selectionIntensity": null,
      "label": false,
@@ -4892,7 +5143,7 @@
      "noProcedureText": true,
      "internalWords": [],
      "backTo": "COMPONENT_SELECTION",
-     "backPoseMoved": 3.119
+     "backPoseMoved": 1.878
     },
     "tire.front-left": {
      "selectable": true,
@@ -4900,13 +5151,13 @@
      "crumb": "차량 점검 › 타이어 › 앞 왼쪽 타이어",
      "listName": "앞 왼쪽 타이어",
      "state": "TIRE_PREVIEW",
-     "distance": 2.45,
+     "distance": 2.86,
      "azimuth": 169.8,
      "polar": 72.5,
      "position": [
-      1.873,
-      1.112,
-      -3.072
+      1.942,
+      1.235,
+      -3.456
      ],
      "target": [
       1.459,
@@ -4919,23 +5170,24 @@
       25.1
      ],
      "screenPx": [
-      319,
-      323
+      272,
+      277
      ],
-     "fillPercent": 27.4,
+     "fillPercent": 20,
+     "widthPercent": 43.4,
      "centerOffsetPx": [
-      4,
-      4
+      3,
+      3
      ],
-     "mineCells": 157,
+     "mineCells": 159,
      "touchPx": [
-      319,
-      301
+      272,
+      258
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
      "color": [
-      74,
+      73,
       111,
       118
      ],
@@ -4952,7 +5204,7 @@
       "USER_REPORTED"
      ],
      "backTo": "TIRE_SELECTION",
-     "backPoseMoved": 4.621
+     "backPoseMoved": 5.196
     },
     "tire.front-right": {
      "selectable": true,
@@ -4960,13 +5212,13 @@
      "crumb": "차량 점검 › 타이어 › 앞 오른쪽 타이어",
      "listName": "앞 오른쪽 타이어",
      "state": "TIRE_PREVIEW",
-     "distance": 2.45,
+     "distance": 2.86,
      "azimuth": 10.2,
      "polar": 72.5,
      "position": [
-      1.873,
-      1.112,
-      3.073
+      1.942,
+      1.235,
+      3.457
      ],
      "target": [
       1.459,
@@ -4979,25 +5231,26 @@
       25.1
      ],
      "screenPx": [
-      319,
-      323
+      272,
+      277
      ],
-     "fillPercent": 27.4,
+     "fillPercent": 20,
+     "widthPercent": 43.4,
      "centerOffsetPx": [
-      -4,
-      4
+      -3,
+      3
      ],
-     "mineCells": 157,
+     "mineCells": 159,
      "touchPx": [
-      319,
-      301
+      272,
+      258
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
      "color": [
       107,
       132,
-      139
+      138
      ],
      "selectionIntensity": 0.6,
      "label": false,
@@ -5012,7 +5265,7 @@
       "USER_REPORTED"
      ],
      "backTo": "TIRE_SELECTION",
-     "backPoseMoved": 10.678
+     "backPoseMoved": 12.018
     },
     "tire.rear-left": {
      "selectable": true,
@@ -5020,13 +5273,13 @@
      "crumb": "차량 점검 › 타이어 › 뒤 왼쪽 타이어",
      "listName": "뒤 왼쪽 타이어",
      "state": "TIRE_PREVIEW",
-     "distance": 2.45,
+     "distance": 2.86,
      "azimuth": -169.8,
      "polar": 72.5,
      "position": [
-      -1.978,
-      1.112,
-      -3.072
+      -2.047,
+      1.235,
+      -3.456
      ],
      "target": [
       -1.564,
@@ -5039,25 +5292,26 @@
       25.1
      ],
      "screenPx": [
-      319,
-      323
+      272,
+      277
      ],
-     "fillPercent": 27.4,
+     "fillPercent": 20,
+     "widthPercent": 43.4,
      "centerOffsetPx": [
-      -4,
-      4
+      -3,
+      3
      ],
-     "mineCells": 157,
+     "mineCells": 159,
      "touchPx": [
-      319,
-      301
+      272,
+      258
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
      "color": [
-      70,
-      108,
-      115
+      68,
+      105,
+      113
      ],
      "selectionIntensity": 0.6,
      "label": false,
@@ -5072,7 +5326,7 @@
       "USER_REPORTED"
      ],
      "backTo": "TIRE_SELECTION",
-     "backPoseMoved": 5.842
+     "backPoseMoved": 6.473
     },
     "tire.rear-right": {
      "selectable": true,
@@ -5080,13 +5334,13 @@
      "crumb": "차량 점검 › 타이어 › 뒤 오른쪽 타이어",
      "listName": "뒤 오른쪽 타이어",
      "state": "TIRE_PREVIEW",
-     "distance": 2.45,
+     "distance": 2.86,
      "azimuth": -10.2,
      "polar": 72.5,
      "position": [
-      -1.978,
-      1.112,
-      3.073
+      -2.047,
+      1.235,
+      3.457
      ],
      "target": [
       -1.564,
@@ -5099,24 +5353,25 @@
       25.1
      ],
      "screenPx": [
-      319,
-      323
+      272,
+      277
      ],
-     "fillPercent": 27.4,
+     "fillPercent": 20,
+     "widthPercent": 43.4,
      "centerOffsetPx": [
-      4,
-      4
+      3,
+      3
      ],
-     "mineCells": 157,
+     "mineCells": 159,
      "touchPx": [
-      319,
-      301
+      272,
+      258
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
      "color": [
-      109,
-      134,
+      108,
+      135,
       141
      ],
      "selectionIntensity": 0.6,
@@ -5132,7 +5387,7 @@
       "USER_REPORTED"
      ],
      "backTo": "TIRE_SELECTION",
-     "backPoseMoved": 11.26
+     "backPoseMoved": 12.623
     },
     "ev-battery.pack": {
      "selectable": true,
@@ -5140,13 +5395,13 @@
      "crumb": "차량 점검 › EV 배터리",
      "listName": null,
      "state": "EV_BATTERY_PREVIEW",
-     "distance": 5.292,
+     "distance": 5.695,
      "azimuth": 125.5,
      "polar": 139.3,
      "position": [
-      2.683,
-      -3.842,
-      -2.006
+      2.897,
+      -4.147,
+      -2.159
      ],
      "target": [
       -0.125,
@@ -5159,25 +5414,26 @@
       116
      ],
      "screenPx": [
-      388,
-      337
+      360,
+      313
      ],
-     "fillPercent": 34.9,
+     "fillPercent": 30,
+     "widthPercent": 57.6,
      "centerOffsetPx": [
-      -12,
-      -23
+      -10,
+      -20
      ],
      "mineCells": 110,
      "touchPx": [
-      285,
-      292
+      264,
+      271
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
      "color": [
-      64,
-      171,
-      187
+      65,
+      174,
+      190
      ],
      "selectionIntensity": null,
      "label": false,
@@ -5195,7 +5451,7 @@
       "USER_REPORTED"
      ],
      "backTo": "INSPECTION_OVERVIEW",
-     "backPoseMoved": 10.556
+     "backPoseMoved": 10.71
     },
     "ev-charge.port": {
      "selectable": true,
@@ -5203,13 +5459,13 @@
      "crumb": "차량 점검 › EV 충전구",
      "listName": "EV 충전구",
      "state": "CHARGE_PORT_PREVIEW",
-     "distance": 0.85,
+     "distance": 1.005,
      "azimuth": -31,
      "polar": 72,
      "position": [
-      -2.333,
-      1.243,
-      1.589
+      -2.409,
+      1.291,
+      1.716
      ],
      "target": [
       -1.917,
@@ -5222,25 +5478,26 @@
       8.1
      ],
      "screenPx": [
-      359,
-      295
+      302,
+      249
      ],
-     "fillPercent": 28.2,
+     "fillPercent": 20,
+     "widthPercent": 48.2,
      "centerOffsetPx": [
-      -9,
-      14
+      -7,
+      10
      ],
-     "mineCells": 34,
+     "mineCells": 29,
      "touchPx": [
-      288,
-      59
+      201,
+      50
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
      "color": [
-      96,
-      181,
-      195
+      97,
+      182,
+      196
      ],
      "selectionIntensity": null,
      "label": false,
@@ -5258,7 +5515,7 @@
       "USER_REPORTED"
      ],
      "backTo": "INSPECTION_OVERVIEW",
-     "backPoseMoved": 11.88
+     "backPoseMoved": 11.983
     },
     "ev-charge.flap": {
      "selectable": true,
@@ -5266,13 +5523,13 @@
      "crumb": "차량 점검 › EV 충전구",
      "listName": "EV 충전구 덮개",
      "state": "CHARGE_PORT_PREVIEW",
-     "distance": 0.85,
+     "distance": 0.846,
      "azimuth": -31,
      "polar": 72,
      "position": [
-      -2.332,
-      1.243,
-      1.592
+      -2.33,
+      1.242,
+      1.589
      ],
      "target": [
       -1.916,
@@ -5285,23 +5542,24 @@
       6.9
      ],
      "screenPx": [
-      301,
-      248
+      302,
+      249
      ],
-     "fillPercent": 19.8,
+     "fillPercent": 20,
+     "widthPercent": 48.3,
      "centerOffsetPx": [
       -7,
       10
      ],
      "mineCells": 122,
      "touchPx": [
-      281,
-      198
+      282,
+      199
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
      "color": [
-      137,
+      138,
       194,
       206
      ],
@@ -5321,7 +5579,7 @@
       "USER_REPORTED"
      ],
      "backTo": "INSPECTION_OVERVIEW",
-     "backPoseMoved": 11.881
+     "backPoseMoved": 11.878
     },
     "wiper.front.left": {
      "selectable": true,
@@ -5329,13 +5587,13 @@
      "crumb": "차량 점검 › 전면 와이퍼",
      "listName": "전면 왼쪽 와이퍼",
      "state": "VISIBILITY_PREVIEW",
-     "distance": 1.298,
+     "distance": 1.733,
      "azimuth": 114.6,
      "polar": 25.2,
      "position": [
-      1.518,
-      2.3,
-      -0.541
+      1.687,
+      2.694,
+      -0.618
      ],
      "target": [
       1.015,
@@ -5348,25 +5606,26 @@
       56
      ],
      "screenPx": [
-      421,
-      251
+      313,
+      188
      ],
-     "fillPercent": 28.2,
+     "fillPercent": 15.7,
+     "widthPercent": 50,
      "centerOffsetPx": [
-      5,
-      3
+      3,
+      2
      ],
-     "mineCells": 15,
+     "mineCells": 16,
      "touchPx": [
-      56,
-      33
+      42,
+      25
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
      "color": [
-      107,
-      184,
-      197
+      105,
+      182,
+      195
      ],
      "selectionIntensity": null,
      "label": false,
@@ -5384,7 +5643,7 @@
       "USER_REPORTED"
      ],
      "backTo": "INSPECTION_OVERVIEW",
-     "backPoseMoved": 7.411
+     "backPoseMoved": 7.082
     },
     "wiper.front.right": {
      "selectable": true,
@@ -5392,13 +5651,13 @@
      "crumb": "차량 점검 › 전면 와이퍼",
      "listName": "전면 오른쪽 와이퍼",
      "state": "VISIBILITY_PREVIEW",
-     "distance": 1.144,
+     "distance": 1.537,
      "azimuth": 65.4,
      "polar": 25.2,
      "position": [
-      1.458,
-      2.164,
-      0.478
+      1.611,
+      2.52,
+      0.548
      ],
      "target": [
       1.015,
@@ -5411,25 +5670,26 @@
       49
      ],
      "screenPx": [
-      424,
-      261
+      313,
+      194
      ],
-     "fillPercent": 29.5,
+     "fillPercent": 16.2,
+     "widthPercent": 50,
      "centerOffsetPx": [
-      -4,
-      3
+      -2,
+      2
      ],
      "mineCells": 16,
      "touchPx": [
-      85,
-      52
+      63,
+      39
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
      "color": [
-      101,
-      178,
-      191
+      103,
+      176,
+      189
      ],
      "selectionIntensity": null,
      "label": false,
@@ -5447,7 +5707,7 @@
       "USER_REPORTED"
      ],
      "backTo": "INSPECTION_OVERVIEW",
-     "backPoseMoved": 8.001
+     "backPoseMoved": 7.786
     },
     "light-low-beam-left-0": {
      "selectable": true,
@@ -5455,13 +5715,13 @@
      "crumb": "차량 점검 › 전조등",
      "listName": "왼쪽 하향등",
      "state": "VISIBILITY_PREVIEW",
-     "distance": 0.85,
+     "distance": 0.497,
      "azimuth": 99.9,
      "polar": 78.9,
      "position": [
-      2.949,
-      0.953,
-      -0.675
+      2.608,
+      0.885,
+      -0.615
      ],
      "target": [
       2.128,
@@ -5474,23 +5734,24 @@
       16.4
      ],
      "screenPx": [
-      182,
-      68
+      313,
+      116
      ],
-     "fillPercent": 3.3,
+     "fillPercent": 9.6,
+     "widthPercent": 50,
      "centerOffsetPx": [
-      1,
-      0
+      4,
+      1
      ],
-     "mineCells": 167,
+     "mineCells": 170,
      "touchPx": [
-      182,
-      54
+      313,
+      100
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
      "color": [
-      53,
+      52,
       130,
       142
      ],
@@ -5509,7 +5770,7 @@
       "USER_REPORTED"
      ],
      "backTo": "INSPECTION_OVERVIEW",
-     "backPoseMoved": 7.03
+     "backPoseMoved": 7.32
     },
     "light-low-beam-right-0": {
      "selectable": true,
@@ -5517,13 +5778,13 @@
      "crumb": "차량 점검 › 전조등",
      "listName": "오른쪽 하향등",
      "state": "VISIBILITY_PREVIEW",
-     "distance": 0.85,
+     "distance": 0.497,
      "azimuth": 80.1,
      "polar": 78.9,
      "position": [
-      2.949,
-      0.953,
-      0.675
+      2.608,
+      0.885,
+      0.615
      ],
      "target": [
       2.128,
@@ -5536,23 +5797,24 @@
       16.4
      ],
      "screenPx": [
-      182,
-      68
+      313,
+      116
      ],
-     "fillPercent": 3.3,
+     "fillPercent": 9.6,
+     "widthPercent": 50,
      "centerOffsetPx": [
-      -1,
-      0
+      -4,
+      1
      ],
-     "mineCells": 167,
+     "mineCells": 170,
      "touchPx": [
-      182,
-      54
+      313,
+      100
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
      "color": [
-      53,
+      52,
       130,
       142
      ],
@@ -5571,7 +5833,7 @@
       "USER_REPORTED"
      ],
      "backTo": "INSPECTION_OVERVIEW",
-     "backPoseMoved": 7.711
+     "backPoseMoved": 7.92
     },
     "light-high-beam-left-0": {
      "selectable": true,
@@ -5579,13 +5841,13 @@
      "crumb": "차량 점검 › 전조등",
      "listName": "왼쪽 상향등",
      "state": "VISIBILITY_PREVIEW",
-     "distance": 0.85,
+     "distance": 0.493,
      "azimuth": 95.7,
      "polar": 90,
      "position": [
-      2.743,
+      2.388,
       0.803,
-      -0.83
+      -0.795
      ],
      "target": [
       1.897,
@@ -5598,18 +5860,82 @@
       16.3
      ],
      "screenPx": [
-      182,
-      49
+      313,
+      84
      ],
-     "fillPercent": 2.3,
+     "fillPercent": 7,
+     "widthPercent": 50,
      "centerOffsetPx": [
-      1,
+      3,
       0
      ],
      "mineCells": 214,
      "touchPx": [
-      182,
-      49
+      313,
+      84
+     ],
+     "meshes": 1,
+     "highlightedMeshes": 1,
+     "color": [
+      52,
+      130,
+      142
+     ],
+     "selectionIntensity": null,
+     "label": false,
+     "badge": "기존 커뮤니티 GLB 표식 · OEM 광학 구조 미검증",
+     "backButtons": [
+      "뒤로 · 차량 전체 보기"
+     ],
+     "focusOutline": true,
+     "hasMobile": true,
+     "noProcedureText": false,
+     "internalWords": [
+      "DETACHED",
+      "UNVERIFIED",
+      "USER_REPORTED"
+     ],
+     "backTo": "INSPECTION_OVERVIEW",
+     "backPoseMoved": 7.445
+    },
+    "light-high-beam-right-0": {
+     "selectable": true,
+     "title": "오른쪽 상향등",
+     "crumb": "차량 점검 › 전조등",
+     "listName": "오른쪽 상향등",
+     "state": "VISIBILITY_PREVIEW",
+     "distance": 0.493,
+     "azimuth": 84.3,
+     "polar": 90,
+     "position": [
+      2.388,
+      0.803,
+      0.795
+     ],
+     "target": [
+      1.897,
+      0.803,
+      0.745
+     ],
+     "sizeCm": [
+      0,
+      4.3,
+      16.3
+     ],
+     "screenPx": [
+      313,
+      84
+     ],
+     "fillPercent": 7,
+     "widthPercent": 50,
+     "centerOffsetPx": [
+      -3,
+      0
+     ],
+     "mineCells": 214,
+     "touchPx": [
+      313,
+      84
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
@@ -5633,85 +5959,23 @@
       "USER_REPORTED"
      ],
      "backTo": "INSPECTION_OVERVIEW",
-     "backPoseMoved": 7.194
-    },
-    "light-high-beam-right-0": {
-     "selectable": true,
-     "title": "오른쪽 상향등",
-     "crumb": "차량 점검 › 전조등",
-     "listName": "오른쪽 상향등",
-     "state": "VISIBILITY_PREVIEW",
-     "distance": 0.85,
-     "azimuth": 84.3,
-     "polar": 90,
-     "position": [
-      2.743,
-      0.803,
-      0.83
-     ],
-     "target": [
-      1.897,
-      0.803,
-      0.745
-     ],
-     "sizeCm": [
-      0,
-      4.3,
-      16.3
-     ],
-     "screenPx": [
-      182,
-      49
-     ],
-     "fillPercent": 2.3,
-     "centerOffsetPx": [
-      -1,
-      0
-     ],
-     "mineCells": 214,
-     "touchPx": [
-      182,
-      49
-     ],
-     "meshes": 1,
-     "highlightedMeshes": 1,
-     "color": [
-      54,
-      130,
-      142
-     ],
-     "selectionIntensity": null,
-     "label": false,
-     "badge": "기존 커뮤니티 GLB 표식 · OEM 광학 구조 미검증",
-     "backButtons": [
-      "뒤로 · 차량 전체 보기"
-     ],
-     "focusOutline": true,
-     "hasMobile": true,
-     "noProcedureText": false,
-     "internalWords": [
-      "DETACHED",
-      "UNVERIFIED",
-      "USER_REPORTED"
-     ],
-     "backTo": "INSPECTION_OVERVIEW",
-     "backPoseMoved": 8.007
+     "backPoseMoved": 8.2
     }
    },
    "result": {
     "washer-fluid-cap": {
-     "distance": 6,
-     "azimuth": 116.6,
-     "polar": 61,
+     "distance": 0.588,
+     "azimuth": 65.4,
+     "polar": 25.2,
      "position": [
-      5.393,
-      3.66,
-      -2.347
+      1.528,
+      1.342,
+      0.584
      ],
      "target": [
-      0.7,
-      0.75,
-      0
+      1.3,
+      0.811,
+      0.48
      ],
      "sizeCm": [
       9.6,
@@ -5719,34 +5983,40 @@
       9.6
      ],
      "screenPx": [
-      24,
-      37
+      239,
+      314
      ],
-     "fillPercent": 0.2,
+     "fillPercent": 20,
+     "widthPercent": 38.2,
      "centerOffsetPx": [
-      -117,
-      17
+      2,
+      -15
      ],
-     "mineCells": 76,
+     "mineCells": 85,
      "touchPx": [
-      16,
-      27
+      176,
+      251
      ],
      "meshes": 2,
      "highlightedMeshes": 2,
      "title": "워셔액",
      "crumb": "차량 점검 › 워셔액",
      "hood": 60,
-     "backTo": "INSPECTION_SUMMARY"
+     "backTo": "INSPECTION_SUMMARY",
+     "historyPosition": [
+      1.528,
+      1.342,
+      0.584
+     ]
     },
     "coolant-reservoir": {
-     "distance": 0.85,
+     "distance": 0.945,
      "azimuth": 65.4,
      "polar": 25.2,
      "position": [
-      1.82,
-      1.541,
-      0.586
+      1.856,
+      1.627,
+      0.603
      ],
      "target": [
       1.49,
@@ -5759,54 +6029,65 @@
       18
      ],
      "screenPx": [
-      293,
-      320
+      261,
+      288
      ],
-     "fillPercent": 25,
+     "fillPercent": 20,
+     "widthPercent": 41.7,
      "centerOffsetPx": [
-      4,
+      3,
       -4
      ],
-     "mineCells": 106,
+     "mineCells": 108,
      "touchPx": [
-      234,
-      256
+      226,
+      230
      ],
      "meshes": 2,
      "highlightedMeshes": 2,
      "title": "냉각수 리저버",
      "crumb": "차량 점검 › 냉각수 리저버",
      "hood": 60,
-     "backTo": "INSPECTION_SUMMARY"
+     "backTo": "INSPECTION_SUMMARY",
+     "historyPosition": [
+      1.856,
+      1.627,
+      0.603
+     ]
     },
     "lcw-coolant-reservoir": {
-     "distance": 4.073,
+     "distance": 2.65,
      "polar": 37.7,
      "azimuth": 106.7,
      "position": [
-      3.887,
-      3.842,
-      -0.716
+      3.073,
+      2.857,
+      -0.467
      ],
      "target": [
-      1.5,
-      0.62,
-      0
+      1.52,
+      0.761,
+      -0.001
      ],
      "bounds": null,
      "title": "저전도 냉각수 리저버",
      "crumb": "차량 점검 › 저전도 냉각수 리저버",
      "hood": 60,
-     "backTo": "INSPECTION_SUMMARY"
+     "backTo": "INSPECTION_SUMMARY",
+     "historyPosition": [
+      3.073,
+      2.857,
+      -0.467
+     ]
     },
     "brake-fluid-reservoir": {
-     "distance": 0.85,
+     "distance": 0.69,
      "azimuth": 114.6,
      "polar": 25.2,
      "position": [
-      1.64,
-      1.561,
-      -0.581
+      1.577,
+      1.416,
+      -0.553
      ],
      "target": [
       1.31,
@@ -5819,34 +6100,40 @@
       14
      ],
      "screenPx": [
-      212,
-      229
+      266,
+      282
      ],
-     "fillPercent": 12.9,
+     "fillPercent": 20,
+     "widthPercent": 42.5,
      "centerOffsetPx": [
-      -1,
-      -3
+      -2,
+      -4
      ],
-     "mineCells": 101,
+     "mineCells": 99,
      "touchPx": [
-      184,
-      168
+      231,
+      188
      ],
      "meshes": 2,
      "highlightedMeshes": 2,
      "title": "브레이크액",
      "crumb": "차량 점검 › 브레이크액",
      "hood": 60,
-     "backTo": "INSPECTION_SUMMARY"
+     "backTo": "INSPECTION_SUMMARY",
+     "historyPosition": [
+      1.577,
+      1.416,
+      -0.553
+     ]
     },
     "battery-12v": {
-     "distance": 0.85,
+     "distance": 1.122,
      "azimuth": 114.6,
      "polar": 25.2,
      "position": [
-      2,
-      1.5,
-      -0.591
+      2.105,
+      1.746,
+      -0.639
      ],
      "target": [
       1.67,
@@ -5859,34 +6146,40 @@
       18
      ],
      "screenPx": [
-      335,
-      404
+      246,
+      306
      ],
-     "fillPercent": 36,
+     "fillPercent": 20,
+     "widthPercent": 39.3,
      "centerOffsetPx": [
-      -7,
-      -9
+      -4,
+      -5
      ],
-     "mineCells": 125,
+     "mineCells": 130,
      "touchPx": [
-      268,
-      377
+      213,
+      285
      ],
      "meshes": 4,
      "highlightedMeshes": 4,
      "title": "12V 보조 배터리",
      "crumb": "차량 점검 › 12V 보조 배터리",
      "hood": 60,
-     "backTo": "INSPECTION_SUMMARY"
+     "backTo": "INSPECTION_SUMMARY",
+     "historyPosition": [
+      2.105,
+      1.746,
+      -0.639
+     ]
     },
     "fuse-box": {
-     "distance": 0.85,
+     "distance": 0.813,
      "azimuth": 114.6,
      "polar": 25.2,
      "position": [
-      1.79,
-      1.538,
-      -0.591
+      1.775,
+      1.505,
+      -0.584
      ],
      "target": [
       1.46,
@@ -5899,34 +6192,40 @@
       18
      ],
      "screenPx": [
-      261,
-      262
+      274,
+      274
      ],
-     "fillPercent": 18.2,
+     "fillPercent": 20,
+     "widthPercent": 43.8,
      "centerOffsetPx": [
       -1,
       -5
      ],
-     "mineCells": 126,
+     "mineCells": 124,
      "touchPx": [
-      244,
-      192
+      256,
+      201
      ],
      "meshes": 2,
      "highlightedMeshes": 2,
      "title": "모터룸 퓨즈박스",
      "crumb": "차량 점검 › 모터룸 퓨즈박스",
      "hood": 60,
-     "backTo": "INSPECTION_SUMMARY"
+     "backTo": "INSPECTION_SUMMARY",
+     "historyPosition": [
+      1.775,
+      1.505,
+      -0.584
+     ]
     },
     "tire.front-left": {
-     "distance": 2.45,
+     "distance": 2.86,
      "azimuth": 169.8,
      "polar": 72.5,
      "position": [
-      1.873,
-      1.112,
-      -3.072
+      1.942,
+      1.235,
+      -3.456
      ],
      "target": [
       1.459,
@@ -5939,34 +6238,40 @@
       25.1
      ],
      "screenPx": [
-      319,
-      323
+      272,
+      277
      ],
-     "fillPercent": 27.4,
+     "fillPercent": 20,
+     "widthPercent": 43.4,
      "centerOffsetPx": [
-      4,
-      4
+      3,
+      3
      ],
-     "mineCells": 157,
+     "mineCells": 159,
      "touchPx": [
-      319,
-      301
+      272,
+      258
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
      "title": "앞 왼쪽 타이어",
      "crumb": "차량 점검 › 앞 왼쪽 타이어",
      "hood": 0,
-     "backTo": "INSPECTION_SUMMARY"
+     "backTo": "INSPECTION_SUMMARY",
+     "historyPosition": [
+      1.942,
+      1.235,
+      -3.456
+     ]
     },
     "tire.front-right": {
-     "distance": 2.45,
+     "distance": 2.86,
      "azimuth": 10.2,
      "polar": 72.5,
      "position": [
-      1.873,
-      1.112,
-      3.073
+      1.942,
+      1.235,
+      3.457
      ],
      "target": [
       1.459,
@@ -5979,34 +6284,40 @@
       25.1
      ],
      "screenPx": [
-      319,
-      323
+      272,
+      277
      ],
-     "fillPercent": 27.4,
+     "fillPercent": 20,
+     "widthPercent": 43.4,
      "centerOffsetPx": [
-      -4,
-      4
+      -3,
+      3
      ],
-     "mineCells": 157,
+     "mineCells": 159,
      "touchPx": [
-      319,
-      301
+      272,
+      258
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
      "title": "앞 오른쪽 타이어",
      "crumb": "차량 점검 › 앞 오른쪽 타이어",
      "hood": 0,
-     "backTo": "INSPECTION_SUMMARY"
+     "backTo": "INSPECTION_SUMMARY",
+     "historyPosition": [
+      1.942,
+      1.235,
+      3.457
+     ]
     },
     "tire.rear-left": {
-     "distance": 2.45,
+     "distance": 2.86,
      "azimuth": -169.8,
      "polar": 72.5,
      "position": [
-      -1.978,
-      1.112,
-      -3.072
+      -2.047,
+      1.235,
+      -3.456
      ],
      "target": [
       -1.564,
@@ -6019,34 +6330,40 @@
       25.1
      ],
      "screenPx": [
-      319,
-      323
+      272,
+      277
      ],
-     "fillPercent": 27.4,
+     "fillPercent": 20,
+     "widthPercent": 43.4,
      "centerOffsetPx": [
-      -4,
-      4
+      -3,
+      3
      ],
-     "mineCells": 157,
+     "mineCells": 159,
      "touchPx": [
-      319,
-      301
+      272,
+      258
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
      "title": "뒤 왼쪽 타이어",
      "crumb": "차량 점검 › 뒤 왼쪽 타이어",
      "hood": 0,
-     "backTo": "INSPECTION_SUMMARY"
+     "backTo": "INSPECTION_SUMMARY",
+     "historyPosition": [
+      -2.047,
+      1.235,
+      -3.456
+     ]
     },
     "tire.rear-right": {
-     "distance": 2.45,
+     "distance": 2.86,
      "azimuth": -10.2,
      "polar": 72.5,
      "position": [
-      -1.978,
-      1.112,
-      3.073
+      -2.047,
+      1.235,
+      3.457
      ],
      "target": [
       -1.564,
@@ -6059,34 +6376,40 @@
       25.1
      ],
      "screenPx": [
-      319,
-      323
+      272,
+      277
      ],
-     "fillPercent": 27.4,
+     "fillPercent": 20,
+     "widthPercent": 43.4,
      "centerOffsetPx": [
-      4,
-      4
+      3,
+      3
      ],
-     "mineCells": 157,
+     "mineCells": 159,
      "touchPx": [
-      319,
-      301
+      272,
+      258
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
      "title": "뒤 오른쪽 타이어",
      "crumb": "차량 점검 › 뒤 오른쪽 타이어",
      "hood": 0,
-     "backTo": "INSPECTION_SUMMARY"
+     "backTo": "INSPECTION_SUMMARY",
+     "historyPosition": [
+      -2.047,
+      1.235,
+      3.457
+     ]
     },
     "ev-charge.port": {
-     "distance": 0.85,
+     "distance": 1.005,
      "azimuth": -31,
      "polar": 72,
      "position": [
-      -2.333,
-      1.243,
-      1.589
+      -2.409,
+      1.291,
+      1.716
      ],
      "target": [
       -1.917,
@@ -6099,34 +6422,40 @@
       8.1
      ],
      "screenPx": [
-      359,
-      295
+      302,
+      249
      ],
-     "fillPercent": 28.2,
+     "fillPercent": 20,
+     "widthPercent": 48.2,
      "centerOffsetPx": [
-      -9,
-      14
+      -7,
+      10
      ],
-     "mineCells": 34,
+     "mineCells": 29,
      "touchPx": [
-      288,
-      59
+      201,
+      50
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
      "title": "EV 충전구",
      "crumb": "차량 점검 › EV 충전구",
      "hood": 0,
-     "backTo": "INSPECTION_SUMMARY"
+     "backTo": "INSPECTION_SUMMARY",
+     "historyPosition": [
+      -2.409,
+      1.291,
+      1.716
+     ]
     },
     "wiper.front.left": {
-     "distance": 1.298,
+     "distance": 1.733,
      "azimuth": 114.6,
      "polar": 25.2,
      "position": [
-      1.518,
-      2.3,
-      -0.541
+      1.687,
+      2.694,
+      -0.618
      ],
      "target": [
       1.015,
@@ -6139,34 +6468,40 @@
       56
      ],
      "screenPx": [
-      421,
-      251
+      313,
+      188
      ],
-     "fillPercent": 28.2,
+     "fillPercent": 15.7,
+     "widthPercent": 50,
      "centerOffsetPx": [
-      5,
-      3
+      3,
+      2
      ],
-     "mineCells": 15,
+     "mineCells": 16,
      "touchPx": [
-      56,
-      33
+      42,
+      25
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
      "title": "전면 왼쪽 와이퍼",
      "crumb": "차량 점검 › 전면 왼쪽 와이퍼",
      "hood": 0,
-     "backTo": "INSPECTION_SUMMARY"
+     "backTo": "INSPECTION_SUMMARY",
+     "historyPosition": [
+      1.687,
+      2.694,
+      -0.618
+     ]
     },
     "wiper.front.right": {
-     "distance": 1.144,
+     "distance": 1.537,
      "azimuth": 65.4,
      "polar": 25.2,
      "position": [
-      1.458,
-      2.164,
-      0.478
+      1.611,
+      2.52,
+      0.548
      ],
      "target": [
       1.015,
@@ -6179,34 +6514,40 @@
       49
      ],
      "screenPx": [
-      424,
-      261
+      313,
+      194
      ],
-     "fillPercent": 29.5,
+     "fillPercent": 16.2,
+     "widthPercent": 50,
      "centerOffsetPx": [
-      -4,
-      3
+      -2,
+      2
      ],
      "mineCells": 16,
      "touchPx": [
-      85,
-      52
+      63,
+      39
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
      "title": "전면 오른쪽 와이퍼",
      "crumb": "차량 점검 › 전면 오른쪽 와이퍼",
      "hood": 0,
-     "backTo": "INSPECTION_SUMMARY"
+     "backTo": "INSPECTION_SUMMARY",
+     "historyPosition": [
+      1.611,
+      2.52,
+      0.548
+     ]
     },
     "light-low-beam-left-0": {
-     "distance": 0.85,
+     "distance": 0.497,
      "azimuth": 99.9,
      "polar": 78.9,
      "position": [
-      2.949,
-      0.953,
-      -0.675
+      2.608,
+      0.885,
+      -0.615
      ],
      "target": [
       2.128,
@@ -6219,34 +6560,40 @@
       16.4
      ],
      "screenPx": [
-      182,
-      68
+      313,
+      116
      ],
-     "fillPercent": 3.3,
+     "fillPercent": 9.6,
+     "widthPercent": 50,
      "centerOffsetPx": [
-      1,
-      0
+      4,
+      1
      ],
-     "mineCells": 167,
+     "mineCells": 170,
      "touchPx": [
-      182,
-      54
+      313,
+      100
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
      "title": "왼쪽 하향등",
      "crumb": "차량 점검 › 왼쪽 하향등",
      "hood": 0,
-     "backTo": "INSPECTION_SUMMARY"
+     "backTo": "INSPECTION_SUMMARY",
+     "historyPosition": [
+      2.608,
+      0.885,
+      -0.615
+     ]
     },
     "light-low-beam-right-0": {
-     "distance": 0.85,
+     "distance": 0.497,
      "azimuth": 80.1,
      "polar": 78.9,
      "position": [
-      2.949,
-      0.953,
-      0.675
+      2.608,
+      0.885,
+      0.615
      ],
      "target": [
       2.128,
@@ -6259,34 +6606,40 @@
       16.4
      ],
      "screenPx": [
-      182,
-      68
+      313,
+      116
      ],
-     "fillPercent": 3.3,
+     "fillPercent": 9.6,
+     "widthPercent": 50,
      "centerOffsetPx": [
-      -1,
-      0
+      -4,
+      1
      ],
-     "mineCells": 167,
+     "mineCells": 170,
      "touchPx": [
-      182,
-      54
+      313,
+      100
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
      "title": "오른쪽 하향등",
      "crumb": "차량 점검 › 오른쪽 하향등",
      "hood": 0,
-     "backTo": "INSPECTION_SUMMARY"
+     "backTo": "INSPECTION_SUMMARY",
+     "historyPosition": [
+      2.608,
+      0.885,
+      0.615
+     ]
     },
     "light-high-beam-left-0": {
-     "distance": 0.85,
+     "distance": 0.493,
      "azimuth": 95.7,
-     "polar": 86.4,
+     "polar": 90,
      "position": [
-      2.741,
-      0.857,
-      -0.83
+      2.388,
+      0.803,
+      -0.795
      ],
      "target": [
       1.897,
@@ -6299,34 +6652,40 @@
       16.3
      ],
      "screenPx": [
-      182,
-      49
+      313,
+      84
      ],
-     "fillPercent": 2.4,
+     "fillPercent": 7,
+     "widthPercent": 50,
      "centerOffsetPx": [
-      1,
+      3,
       0
      ],
-     "mineCells": 175,
+     "mineCells": 214,
      "touchPx": [
-      182,
-      46
+      313,
+      84
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
      "title": "왼쪽 상향등",
      "crumb": "차량 점검 › 왼쪽 상향등",
      "hood": 0,
-     "backTo": "INSPECTION_SUMMARY"
+     "backTo": "INSPECTION_SUMMARY",
+     "historyPosition": [
+      2.388,
+      0.803,
+      -0.795
+     ]
     },
     "light-high-beam-right-0": {
-     "distance": 0.85,
+     "distance": 0.493,
      "azimuth": 84.3,
-     "polar": 86.4,
+     "polar": 90,
      "position": [
-      2.741,
-      0.857,
-      0.83
+      2.388,
+      0.803,
+      0.795
      ],
      "target": [
       1.897,
@@ -6339,25 +6698,31 @@
       16.3
      ],
      "screenPx": [
-      182,
-      49
+      313,
+      84
      ],
-     "fillPercent": 2.4,
+     "fillPercent": 7,
+     "widthPercent": 50,
      "centerOffsetPx": [
-      -1,
+      -3,
       0
      ],
-     "mineCells": 175,
+     "mineCells": 214,
      "touchPx": [
-      182,
-      46
+      313,
+      84
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
      "title": "오른쪽 상향등",
      "crumb": "차량 점검 › 오른쪽 상향등",
      "hood": 0,
-     "backTo": "INSPECTION_SUMMARY"
+     "backTo": "INSPECTION_SUMMARY",
+     "historyPosition": [
+      2.388,
+      0.803,
+      0.795
+     ]
     }
    },
    "flows": {
@@ -6372,9 +6737,9 @@
     },
     "resultBackFromList": "INSPECTION_SUMMARY",
     "tireList": {
-     "directDistance": 7.947,
-     "viaTireDistance": 9.509,
-     "viaTireAtOverviewPose": true
+     "directDistance": 8.953,
+     "viaTireDistance": 8.953,
+     "viaTireAtOverviewPose": false
     },
     "crossArea": {
      "kind": "hood",
@@ -6412,7 +6777,7 @@
       "dragRotated": true
      },
      "VISIBILITY_PREVIEW:light-low-beam-left-0": {
-      "none": "KEPT",
+      "none": "NO_SUCH_AREA",
       "other": "KEPT",
       "drag": "KEPT",
       "dragRotated": true
@@ -6460,8 +6825,8 @@
      "selected": true,
      "state": "WASHER_SELECTED",
      "touchPx": [
-      23,
-      40
+      36,
+      59
      ],
      "fromState": "COMPONENT_SELECTION"
     },
@@ -6470,8 +6835,8 @@
      "selected": true,
      "state": "COMPONENT_PREVIEW",
      "touchPx": [
-      47,
-      48
+      73,
+      70
      ],
      "fromState": "COMPONENT_SELECTION"
     },
@@ -6489,8 +6854,8 @@
      "selected": true,
      "state": "COMPONENT_PREVIEW",
      "touchPx": [
-      34,
-      26
+      52,
+      39
      ],
      "fromState": "COMPONENT_SELECTION"
     },
@@ -6499,8 +6864,8 @@
      "selected": true,
      "state": "COMPONENT_PREVIEW",
      "touchPx": [
-      51,
-      65
+      78,
+      111
      ],
      "fromState": "COMPONENT_SELECTION"
     },
@@ -6509,8 +6874,8 @@
      "selected": true,
      "state": "COMPONENT_PREVIEW",
      "touchPx": [
-      48,
-      35
+      74,
+      53
      ],
      "fromState": "COMPONENT_SELECTION"
     },
@@ -6519,8 +6884,8 @@
      "selected": true,
      "state": "TIRE_PREVIEW",
      "touchPx": [
-      112,
-      115
+      97,
+      100
      ],
      "fromState": "TIRE_SELECTION"
     },
@@ -6538,8 +6903,8 @@
      "selected": true,
      "state": "TIRE_PREVIEW",
      "touchPx": [
-      97,
-      105
+      85,
+      92
      ],
      "fromState": "TIRE_SELECTION"
     },
@@ -6637,6 +7002,10 @@
      ],
      "fromState": "INSPECTION_OVERVIEW"
     }
+   },
+   "areas": {
+    "bay": 70,
+    "tires": 70
    },
    "paint": {
     "tiresTinted": true,
@@ -6822,18 +7191,18 @@
      "crumb": "차량 점검 › 보닛 › 워셔액",
      "listName": null,
      "state": "WASHER_SELECTED",
-     "distance": 3.455,
-     "azimuth": 50.2,
-     "polar": 31.7,
+     "distance": 1.123,
+     "azimuth": 65.4,
+     "polar": 25.2,
      "position": [
-      2.743,
-      3.781,
-      1.561
+      1.735,
+      1.827,
+      0.68
      ],
      "target": [
-      1.35,
-      0.84,
-      0.4
+      1.3,
+      0.811,
+      0.48
      ],
      "sizeCm": [
       9.6,
@@ -6841,25 +7210,26 @@
       9.6
      ],
      "screenPx": [
-      55,
-      82
+      167,
+      234
      ],
-     "fillPercent": 2.3,
+     "fillPercent": 20,
+     "widthPercent": 39.7,
      "centerOffsetPx": [
-      -37,
-      10
+      1,
+      -6
      ],
-     "mineCells": 81,
+     "mineCells": 85,
      "touchPx": [
-      40,
-      60
+      122,
+      172
      ],
      "meshes": 2,
      "highlightedMeshes": 2,
      "color": [
       149,
-      202,
-      217
+      210,
+      227
      ],
      "selectionIntensity": null,
      "label": true,
@@ -6872,7 +7242,7 @@
      "noProcedureText": false,
      "internalWords": [],
      "backTo": "COMPONENT_SELECTION",
-     "backPoseMoved": 3.18
+     "backPoseMoved": 4.78
     },
     "coolant-reservoir": {
      "selectable": true,
@@ -6880,13 +7250,13 @@
      "crumb": "차량 점검 › 보닛 › 냉각수 리저버",
      "listName": "냉각수 리저버",
      "state": "COMPONENT_PREVIEW",
-     "distance": 1.343,
+     "distance": 1.841,
      "azimuth": 65.4,
      "polar": 25.2,
      "position": [
-      2.011,
-      1.987,
-      0.674
+      2.204,
+      2.437,
+      0.762
      ],
      "target": [
       1.49,
@@ -6899,25 +7269,26 @@
       18
      ],
      "screenPx": [
-      257,
-      290
+      184,
+      212
      ],
-     "fillPercent": 38.2,
+     "fillPercent": 20,
+     "widthPercent": 43.9,
      "centerOffsetPx": [
-      2,
-      -3
+      1,
+      -1
      ],
-     "mineCells": 109,
+     "mineCells": 112,
      "touchPx": [
-      222,
-      232
+      160,
+      169
      ],
      "meshes": 2,
      "highlightedMeshes": 2,
      "color": [
-      203,
-      220,
-      222
+      205,
+      221,
+      223
      ],
      "selectionIntensity": null,
      "label": false,
@@ -6930,7 +7301,7 @@
      "noProcedureText": true,
      "internalWords": [],
      "backTo": "COMPONENT_SELECTION",
-     "backPoseMoved": 4.024
+     "backPoseMoved": 4.104
     },
     "lcw-coolant-reservoir": {
      "selectable": false,
@@ -6942,13 +7313,13 @@
      "crumb": "차량 점검 › 보닛 › 브레이크액",
      "listName": "브레이크액",
      "state": "COMPONENT_PREVIEW",
-     "distance": 0.986,
+     "distance": 1.343,
      "azimuth": 114.6,
      "polar": 25.2,
      "position": [
-      1.692,
-      1.683,
-      -0.605
+      1.83,
+      2.006,
+      -0.669
      ],
      "target": [
       1.31,
@@ -6961,18 +7332,19 @@
       14
      ],
      "screenPx": [
-      260,
-      283
+      188,
+      208
      ],
-     "fillPercent": 37.7,
+     "fillPercent": 20,
+     "widthPercent": 44.7,
      "centerOffsetPx": [
-      -2,
-      -3
+      -1,
+      -2
      ],
      "mineCells": 102,
      "touchPx": [
-      225,
-      207
+      163,
+      138
      ],
      "meshes": 2,
      "highlightedMeshes": 2,
@@ -6992,7 +7364,7 @@
      "noProcedureText": true,
      "internalWords": [],
      "backTo": "COMPONENT_SELECTION",
-     "backPoseMoved": 4.15
+     "backPoseMoved": 4.3
     },
     "battery-12v": {
      "selectable": true,
@@ -7000,13 +7372,13 @@
      "crumb": "차량 점검 › 보닛 › 12V 보조 배터리",
      "listName": "12V 보조 배터리",
      "state": "COMPONENT_PREVIEW",
-     "distance": 1.655,
+     "distance": 2.178,
      "azimuth": 114.6,
      "polar": 25.2,
      "position": [
-      2.312,
-      2.228,
-      -0.734
+      2.514,
+      2.701,
+      -0.827
      ],
      "target": [
       1.67,
@@ -7019,79 +7391,22 @@
       18
      ],
      "screenPx": [
-      231,
-      297
+      173,
+      225
      ],
-     "fillPercent": 35.2,
+     "fillPercent": 20,
+     "widthPercent": 41.2,
      "centerOffsetPx": [
-      -2,
-      -3
+      -1,
+      -2
      ],
-     "mineCells": 133,
+     "mineCells": 134,
      "touchPx": [
-      200,
-      257
+      150,
+      195
      ],
      "meshes": 4,
      "highlightedMeshes": 4,
-     "color": [
-      137,
-      193,
-      205
-     ],
-     "selectionIntensity": null,
-     "label": false,
-     "badge": "추정 모델 · 점검 절차 미제공",
-     "backButtons": [
-      "점검 목록과 이전 시점으로"
-     ],
-     "focusOutline": true,
-     "hasMobile": true,
-     "noProcedureText": true,
-     "internalWords": [],
-     "backTo": "COMPONENT_SELECTION",
-     "backPoseMoved": 3.323
-    },
-    "fuse-box": {
-     "selectable": true,
-     "title": "모터룸 퓨즈박스",
-     "crumb": "차량 점검 › 보닛 › 모터룸 퓨즈박스",
-     "listName": "모터룸 퓨즈박스",
-     "state": "COMPONENT_PREVIEW",
-     "distance": 1.188,
-     "azimuth": 114.6,
-     "polar": 25.2,
-     "position": [
-      1.921,
-      1.844,
-      -0.651
-     ],
-     "target": [
-      1.46,
-      0.769,
-      -0.44
-     ],
-     "sizeCm": [
-      12,
-      15.8,
-      18
-     ],
-     "screenPx": [
-      261,
-      269
-     ],
-     "fillPercent": 35.9,
-     "centerOffsetPx": [
-      -1,
-      -4
-     ],
-     "mineCells": 124,
-     "touchPx": [
-      244,
-      197
-     ],
-     "meshes": 2,
-     "highlightedMeshes": 2,
      "color": [
       136,
       194,
@@ -7108,7 +7423,66 @@
      "noProcedureText": true,
      "internalWords": [],
      "backTo": "COMPONENT_SELECTION",
-     "backPoseMoved": 3.875
+     "backPoseMoved": 3.318
+    },
+    "fuse-box": {
+     "selectable": true,
+     "title": "모터룸 퓨즈박스",
+     "crumb": "차량 점검 › 보닛 › 모터룸 퓨즈박스",
+     "listName": "모터룸 퓨즈박스",
+     "state": "COMPONENT_PREVIEW",
+     "distance": 1.58,
+     "azimuth": 114.6,
+     "polar": 25.2,
+     "position": [
+      2.072,
+      2.198,
+      -0.721
+     ],
+     "target": [
+      1.46,
+      0.769,
+      -0.44
+     ],
+     "sizeCm": [
+      12,
+      15.8,
+      18
+     ],
+     "screenPx": [
+      193,
+      202
+     ],
+     "fillPercent": 20,
+     "widthPercent": 46,
+     "centerOffsetPx": [
+      0,
+      -2
+     ],
+     "mineCells": 124,
+     "touchPx": [
+      180,
+      148
+     ],
+     "meshes": 2,
+     "highlightedMeshes": 2,
+     "color": [
+      135,
+      193,
+      205
+     ],
+     "selectionIntensity": null,
+     "label": false,
+     "badge": "추정 모델 · 점검 절차 미제공",
+     "backButtons": [
+      "점검 목록과 이전 시점으로"
+     ],
+     "focusOutline": true,
+     "hasMobile": true,
+     "noProcedureText": true,
+     "internalWords": [],
+     "backTo": "COMPONENT_SELECTION",
+     "backPoseMoved": 3.992
     },
     "tire.front-left": {
      "selectable": true,
@@ -7116,13 +7490,13 @@
      "crumb": "차량 점검 › 타이어 › 앞 왼쪽 타이어",
      "listName": "앞 왼쪽 타이어",
      "state": "TIRE_PREVIEW",
-     "distance": 4.842,
+     "distance": 5.629,
      "azimuth": 169.8,
      "polar": 72.5,
      "position": [
-      2.277,
-      1.83,
-      -5.317
+      2.41,
+      2.067,
+      -6.056
      ],
      "target": [
       1.459,
@@ -7135,23 +7509,24 @@
       25.1
      ],
      "screenPx": [
-      226,
-      234
+      194,
+      201
      ],
-     "fillPercent": 27.1,
+     "fillPercent": 20,
+     "widthPercent": 46.1,
      "centerOffsetPx": [
       1,
-      2
+      1
      ],
-     "mineCells": 154,
+     "mineCells": 153,
      "touchPx": [
-      226,
-      218
+      194,
+      174
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
      "color": [
-      73,
+      72,
       110,
       117
      ],
@@ -7168,7 +7543,7 @@
       "USER_REPORTED"
      ],
      "backTo": "TIRE_SELECTION",
-     "backPoseMoved": 10.431
+     "backPoseMoved": 12.375
     },
     "tire.front-right": {
      "selectable": true,
@@ -7176,13 +7551,13 @@
      "crumb": "차량 점검 › 타이어 › 앞 오른쪽 타이어",
      "listName": "앞 오른쪽 타이어",
      "state": "TIRE_PREVIEW",
-     "distance": 4.842,
+     "distance": 5.629,
      "azimuth": 10.2,
      "polar": 72.5,
      "position": [
-      2.277,
-      1.83,
-      5.318
+      2.41,
+      2.067,
+      6.057
      ],
      "target": [
       1.459,
@@ -7195,25 +7570,26 @@
       25.1
      ],
      "screenPx": [
-      226,
-      234
+      194,
+      201
      ],
-     "fillPercent": 27.1,
+     "fillPercent": 20,
+     "widthPercent": 46.1,
      "centerOffsetPx": [
       -1,
-      2
+      1
      ],
-     "mineCells": 154,
+     "mineCells": 153,
      "touchPx": [
-      226,
-      218
+      194,
+      174
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
      "color": [
       107,
       132,
-      139
+      138
      ],
      "selectionIntensity": 0.6,
      "label": false,
@@ -7228,7 +7604,7 @@
       "USER_REPORTED"
      ],
      "backTo": "TIRE_SELECTION",
-     "backPoseMoved": 20.895
+     "backPoseMoved": 24.28
     },
     "tire.rear-left": {
      "selectable": true,
@@ -7236,13 +7612,13 @@
      "crumb": "차량 점검 › 타이어 › 뒤 왼쪽 타이어",
      "listName": "뒤 왼쪽 타이어",
      "state": "TIRE_PREVIEW",
-     "distance": 4.842,
+     "distance": 5.629,
      "azimuth": -169.8,
      "polar": 72.5,
      "position": [
-      -2.382,
-      1.83,
-      -5.317
+      -2.515,
+      2.067,
+      -6.056
      ],
      "target": [
       -1.564,
@@ -7255,18 +7631,19 @@
       25.1
      ],
      "screenPx": [
-      226,
-      234
+      194,
+      201
      ],
-     "fillPercent": 27.1,
+     "fillPercent": 20,
+     "widthPercent": 46.1,
      "centerOffsetPx": [
       -1,
-      2
+      1
      ],
-     "mineCells": 155,
+     "mineCells": 153,
      "touchPx": [
-      226,
-      218
+      194,
+      188
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
@@ -7288,7 +7665,7 @@
       "USER_REPORTED"
      ],
      "backTo": "TIRE_SELECTION",
-     "backPoseMoved": 11.849
+     "backPoseMoved": 13.862
     },
     "tire.rear-right": {
      "selectable": true,
@@ -7296,13 +7673,13 @@
      "crumb": "차량 점검 › 타이어 › 뒤 오른쪽 타이어",
      "listName": "뒤 오른쪽 타이어",
      "state": "TIRE_PREVIEW",
-     "distance": 4.842,
+     "distance": 5.629,
      "azimuth": -10.2,
      "polar": 72.5,
      "position": [
-      -2.382,
-      1.83,
-      5.318
+      -2.515,
+      2.067,
+      6.057
      ],
      "target": [
       -1.564,
@@ -7315,18 +7692,19 @@
       25.1
      ],
      "screenPx": [
-      226,
-      234
+      194,
+      201
      ],
-     "fillPercent": 27.1,
+     "fillPercent": 20,
+     "widthPercent": 46.1,
      "centerOffsetPx": [
       1,
-      2
+      1
      ],
-     "mineCells": 155,
+     "mineCells": 153,
      "touchPx": [
-      226,
-      218
+      194,
+      188
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
@@ -7348,7 +7726,7 @@
       "USER_REPORTED"
      ],
      "backTo": "TIRE_SELECTION",
-     "backPoseMoved": 21.638
+     "backPoseMoved": 25.071
     },
     "ev-battery.pack": {
      "selectable": true,
@@ -7356,13 +7734,13 @@
      "crumb": "차량 점검 › EV 배터리",
      "listName": null,
      "state": "EV_BATTERY_PREVIEW",
-     "distance": 10.456,
+     "distance": 11.226,
      "azimuth": 125.5,
      "polar": 139.3,
      "position": [
-      5.424,
-      -7.757,
-      -3.963
+      5.832,
+      -8.34,
+      -4.255
      ],
      "target": [
       -0.125,
@@ -7375,25 +7753,26 @@
       116
      ],
      "screenPx": [
-      280,
-      241
+      261,
+      225
      ],
-     "fillPercent": 34.6,
+     "fillPercent": 30,
+     "widthPercent": 62,
      "centerOffsetPx": [
       -4,
-      -8
+      -7
      ],
      "mineCells": 111,
      "touchPx": [
-      205,
-      209
+      191,
+      195
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
      "color": [
-      65,
+      64,
       172,
-      188
+      187
      ],
      "selectionIntensity": null,
      "label": false,
@@ -7411,7 +7790,7 @@
       "USER_REPORTED"
      ],
      "backTo": "INSPECTION_OVERVIEW",
-     "backPoseMoved": 19.2
+     "backPoseMoved": 19.511
     },
     "ev-charge.port": {
      "selectable": true,
@@ -7419,13 +7798,13 @@
      "crumb": "차량 점검 › EV 충전구",
      "listName": "EV 충전구",
      "state": "CHARGE_PORT_PREVIEW",
-     "distance": 1.68,
+     "distance": 1.978,
      "azimuth": -31,
      "polar": 72,
      "position": [
-      -2.739,
-      1.5,
-      2.266
+      -2.885,
+      1.593,
+      2.509
      ],
      "target": [
       -1.917,
@@ -7438,25 +7817,26 @@
       8.1
      ],
      "screenPx": [
-      255,
-      213
+      216,
+      180
      ],
-     "fillPercent": 27.8,
+     "fillPercent": 20,
+     "widthPercent": 51.5,
      "centerOffsetPx": [
-      -3,
-      5
+      -2,
+      4
      ],
      "mineCells": 29,
      "touchPx": [
-      102,
-      57
+      86,
+      48
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
      "color": [
-      100,
-      183,
-      196
+      103,
+      184,
+      197
      ],
      "selectionIntensity": null,
      "label": false,
@@ -7474,7 +7854,7 @@
       "USER_REPORTED"
      ],
      "backTo": "INSPECTION_OVERVIEW",
-     "backPoseMoved": 20.372
+     "backPoseMoved": 20.565
     },
     "ev-charge.flap": {
      "selectable": true,
@@ -7482,13 +7862,13 @@
      "crumb": "차량 점검 › EV 충전구",
      "listName": "EV 충전구 덮개",
      "state": "CHARGE_PORT_PREVIEW",
-     "distance": 1.413,
+     "distance": 1.665,
      "azimuth": -31,
      "polar": 72,
      "position": [
-      -2.607,
-      1.418,
-      2.051
+      -2.731,
+      1.496,
+      2.257
      ],
      "target": [
       -1.916,
@@ -7501,25 +7881,26 @@
       6.9
      ],
      "screenPx": [
-      256,
-      213
+      216,
+      180
      ],
-     "fillPercent": 27.9,
+     "fillPercent": 20,
+     "widthPercent": 51.5,
      "centerOffsetPx": [
-      -3,
-      5
+      -2,
+      4
      ],
-     "mineCells": 124,
+     "mineCells": 126,
      "touchPx": [
-      239,
-      156
+      202,
+      132
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
      "color": [
-      138,
-      194,
-      206
+      139,
+      195,
+      207
      ],
      "selectionIntensity": null,
      "label": false,
@@ -7537,7 +7918,7 @@
       "USER_REPORTED"
      ],
      "backTo": "INSPECTION_OVERVIEW",
-     "backPoseMoved": 20.203
+     "backPoseMoved": 20.364
     },
     "wiper.front.left": {
      "selectable": true,
@@ -7545,13 +7926,13 @@
      "crumb": "차량 점검 › 전면 와이퍼",
      "listName": "전면 왼쪽 와이퍼",
      "state": "VISIBILITY_PREVIEW",
-     "distance": 2.564,
+     "distance": 3.658,
      "azimuth": 114.6,
      "polar": 25.2,
      "position": [
-      2.009,
-      3.445,
-      -0.766
+      2.433,
+      4.436,
+      -0.96
      ],
      "target": [
       1.015,
@@ -7564,23 +7945,24 @@
       56
      ],
      "screenPx": [
-      301,
-      182
+      210,
+      128
      ],
-     "fillPercent": 28.1,
+     "fillPercent": 13.7,
+     "widthPercent": 50,
      "centerOffsetPx": [
-      2,
+      1,
       1
      ],
      "mineCells": 16,
      "touchPx": [
-      40,
-      24
+      28,
+      17
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
      "color": [
-      104,
+      105,
       182,
       195
      ],
@@ -7600,7 +7982,7 @@
       "USER_REPORTED"
      ],
      "backTo": "INSPECTION_OVERVIEW",
-     "backPoseMoved": 14.443
+     "backPoseMoved": 13.634
     },
     "wiper.front.right": {
      "selectable": true,
@@ -7608,13 +7990,13 @@
      "crumb": "차량 점검 › 전면 와이퍼",
      "listName": "전면 오른쪽 와이퍼",
      "state": "VISIBILITY_PREVIEW",
-     "distance": 2.261,
+     "distance": 3.242,
      "azimuth": 65.4,
      "polar": 25.2,
      "position": [
-      1.891,
-      3.174,
-      0.677
+      2.272,
+      4.062,
+      0.851
      ],
      "target": [
       1.015,
@@ -7627,25 +8009,26 @@
       49
      ],
      "screenPx": [
-      303,
-      189
+      210,
+      132
      ],
-     "fillPercent": 29.4,
+     "fillPercent": 14.2,
+     "widthPercent": 50,
      "centerOffsetPx": [
       -1,
       1
      ],
-     "mineCells": 16,
+     "mineCells": 15,
      "touchPx": [
-      61,
-      25
+      28,
+      18
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
      "color": [
       104,
-      177,
-      189
+      180,
+      193
      ],
      "selectionIntensity": null,
      "label": false,
@@ -7663,7 +8046,7 @@
       "USER_REPORTED"
      ],
      "backTo": "INSPECTION_OVERVIEW",
-     "backPoseMoved": 15.306
+     "backPoseMoved": 14.764
     },
     "light-low-beam-left-0": {
      "selectable": true,
@@ -7671,13 +8054,13 @@
      "crumb": "차량 점검 › 전조등",
      "listName": "왼쪽 하향등",
      "state": "VISIBILITY_PREVIEW",
-     "distance": 0.85,
+     "distance": 1.055,
      "azimuth": 99.9,
      "polar": 78.9,
      "position": [
-      2.949,
-      0.953,
-      -0.675
+      3.147,
+      0.993,
+      -0.709
      ],
      "target": [
       2.128,
@@ -7690,25 +8073,26 @@
       16.4
      ],
      "screenPx": [
-      261,
-      97
+      210,
+      78
      ],
-     "fillPercent": 13,
+     "fillPercent": 8.4,
+     "widthPercent": 50,
      "centerOffsetPx": [
-      2,
+      1,
       0
      ],
-     "mineCells": 167,
+     "mineCells": 168,
      "touchPx": [
-      261,
-      78
+      210,
+      62
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
      "color": [
-      53,
-      130,
-      142
+      54,
+      131,
+      143
      ],
      "selectionIntensity": null,
      "label": false,
@@ -7725,7 +8109,7 @@
       "USER_REPORTED"
      ],
      "backTo": "INSPECTION_OVERVIEW",
-     "backPoseMoved": 14.969
+     "backPoseMoved": 14.79
     },
     "light-low-beam-right-0": {
      "selectable": true,
@@ -7733,13 +8117,13 @@
      "crumb": "차량 점검 › 전조등",
      "listName": "오른쪽 하향등",
      "state": "VISIBILITY_PREVIEW",
-     "distance": 0.85,
+     "distance": 1.055,
      "azimuth": 80.1,
      "polar": 78.9,
      "position": [
-      2.949,
-      0.953,
-      0.675
+      3.147,
+      0.993,
+      0.709
      ],
      "target": [
       2.128,
@@ -7752,25 +8136,26 @@
       16.4
      ],
      "screenPx": [
-      261,
-      97
+      210,
+      78
      ],
-     "fillPercent": 13,
+     "fillPercent": 8.4,
+     "widthPercent": 50,
      "centerOffsetPx": [
-      -2,
+      -1,
       0
      ],
-     "mineCells": 167,
+     "mineCells": 168,
      "touchPx": [
-      261,
-      78
+      210,
+      62
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
      "color": [
-      53,
-      130,
-      142
+      54,
+      131,
+      143
      ],
      "selectionIntensity": null,
      "label": false,
@@ -7787,7 +8172,7 @@
       "USER_REPORTED"
      ],
      "backTo": "INSPECTION_OVERVIEW",
-     "backPoseMoved": 15.575
+     "backPoseMoved": 15.434
     },
     "light-high-beam-left-0": {
      "selectable": true,
@@ -7795,13 +8180,13 @@
      "crumb": "차량 점검 › 전조등",
      "listName": "왼쪽 상향등",
      "state": "VISIBILITY_PREVIEW",
-     "distance": 0.85,
+     "distance": 1.053,
      "azimuth": 95.7,
      "polar": 90,
      "position": [
-      2.743,
+      2.945,
       0.803,
-      -0.83
+      -0.85
      ],
      "target": [
       1.897,
@@ -7814,18 +8199,19 @@
       16.3
      ],
      "screenPx": [
-      260,
-      70
+      210,
+      56
      ],
-     "fillPercent": 9.3,
+     "fillPercent": 6,
+     "widthPercent": 50,
      "centerOffsetPx": [
       1,
       0
      ],
      "mineCells": 214,
      "touchPx": [
-      260,
-      70
+      210,
+      56
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
@@ -7849,7 +8235,7 @@
       "USER_REPORTED"
      ],
      "backTo": "INSPECTION_OVERVIEW",
-     "backPoseMoved": 15.139
+     "backPoseMoved": 14.985
     },
     "light-high-beam-right-0": {
      "selectable": true,
@@ -7857,13 +8243,13 @@
      "crumb": "차량 점검 › 전조등",
      "listName": "오른쪽 상향등",
      "state": "VISIBILITY_PREVIEW",
-     "distance": 0.85,
+     "distance": 1.053,
      "azimuth": 84.3,
      "polar": 90,
      "position": [
-      2.743,
+      2.945,
       0.803,
-      0.83
+      0.85
      ],
      "target": [
       1.897,
@@ -7876,18 +8262,19 @@
       16.3
      ],
      "screenPx": [
-      260,
-      70
+      210,
+      56
      ],
-     "fillPercent": 9.3,
+     "fillPercent": 6,
+     "widthPercent": 50,
      "centerOffsetPx": [
       -1,
       0
      ],
      "mineCells": 214,
      "touchPx": [
-      260,
-      70
+      210,
+      56
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
@@ -7911,23 +8298,23 @@
       "USER_REPORTED"
      ],
      "backTo": "INSPECTION_OVERVIEW",
-     "backPoseMoved": 15.873
+     "backPoseMoved": 15.744
     }
    },
    "result": {
     "washer-fluid-cap": {
-     "distance": 6,
-     "azimuth": 116.6,
-     "polar": 61,
+     "distance": 1.123,
+     "azimuth": 65.4,
+     "polar": 25.2,
      "position": [
-      5.393,
-      3.66,
-      -2.347
+      1.735,
+      1.827,
+      0.68
      ],
      "target": [
-      0.7,
-      0.75,
-      0
+      1.3,
+      0.811,
+      0.48
      ],
      "sizeCm": [
       9.6,
@@ -7935,34 +8322,40 @@
       9.6
      ],
      "screenPx": [
-      35,
-      53
+      167,
+      234
      ],
-     "fillPercent": 0.9,
+     "fillPercent": 20,
+     "widthPercent": 39.7,
      "centerOffsetPx": [
-      -167,
-      25
+      1,
+      -6
      ],
-     "mineCells": 76,
+     "mineCells": 85,
      "touchPx": [
-      23,
-      39
+      122,
+      172
      ],
      "meshes": 2,
      "highlightedMeshes": 2,
      "title": "워셔액",
      "crumb": "차량 점검 › 워셔액",
      "hood": 60,
-     "backTo": "INSPECTION_SUMMARY"
+     "backTo": "INSPECTION_SUMMARY",
+     "historyPosition": [
+      1.735,
+      1.827,
+      0.68
+     ]
     },
     "coolant-reservoir": {
-     "distance": 1.343,
+     "distance": 1.841,
      "azimuth": 65.4,
      "polar": 25.2,
      "position": [
-      2.011,
-      1.987,
-      0.674
+      2.204,
+      2.437,
+      0.762
      ],
      "target": [
       1.49,
@@ -7975,54 +8368,65 @@
       18
      ],
      "screenPx": [
-      257,
-      290
+      184,
+      212
      ],
-     "fillPercent": 38.2,
+     "fillPercent": 20,
+     "widthPercent": 43.9,
      "centerOffsetPx": [
-      2,
-      -3
+      1,
+      -1
      ],
-     "mineCells": 109,
+     "mineCells": 112,
      "touchPx": [
-      222,
-      232
+      160,
+      169
      ],
      "meshes": 2,
      "highlightedMeshes": 2,
      "title": "냉각수 리저버",
      "crumb": "차량 점검 › 냉각수 리저버",
      "hood": 60,
-     "backTo": "INSPECTION_SUMMARY"
+     "backTo": "INSPECTION_SUMMARY",
+     "historyPosition": [
+      2.204,
+      2.437,
+      0.762
+     ]
     },
     "lcw-coolant-reservoir": {
-     "distance": 4.699,
+     "distance": 5.533,
      "polar": 37.7,
      "azimuth": 106.7,
      "position": [
-      4.254,
-      4.337,
-      -0.826
+      4.762,
+      5.137,
+      -0.974
      ],
      "target": [
-      1.5,
-      0.62,
-      0
+      1.52,
+      0.761,
+      -0.001
      ],
      "bounds": null,
      "title": "저전도 냉각수 리저버",
      "crumb": "차량 점검 › 저전도 냉각수 리저버",
      "hood": 60,
-     "backTo": "INSPECTION_SUMMARY"
+     "backTo": "INSPECTION_SUMMARY",
+     "historyPosition": [
+      4.762,
+      5.137,
+      -0.974
+     ]
     },
     "brake-fluid-reservoir": {
-     "distance": 0.986,
+     "distance": 1.343,
      "azimuth": 114.6,
      "polar": 25.2,
      "position": [
-      1.692,
-      1.683,
-      -0.605
+      1.83,
+      2.006,
+      -0.669
      ],
      "target": [
       1.31,
@@ -8035,34 +8439,40 @@
       14
      ],
      "screenPx": [
-      260,
-      283
+      188,
+      208
      ],
-     "fillPercent": 37.7,
+     "fillPercent": 20,
+     "widthPercent": 44.7,
      "centerOffsetPx": [
-      -2,
-      -3
+      -1,
+      -2
      ],
      "mineCells": 102,
      "touchPx": [
-      225,
-      207
+      163,
+      138
      ],
      "meshes": 2,
      "highlightedMeshes": 2,
      "title": "브레이크액",
      "crumb": "차량 점검 › 브레이크액",
      "hood": 60,
-     "backTo": "INSPECTION_SUMMARY"
+     "backTo": "INSPECTION_SUMMARY",
+     "historyPosition": [
+      1.83,
+      2.006,
+      -0.669
+     ]
     },
     "battery-12v": {
-     "distance": 1.655,
+     "distance": 2.178,
      "azimuth": 114.6,
      "polar": 25.2,
      "position": [
-      2.312,
-      2.228,
-      -0.734
+      2.514,
+      2.701,
+      -0.827
      ],
      "target": [
       1.67,
@@ -8075,34 +8485,40 @@
       18
      ],
      "screenPx": [
-      231,
-      297
+      173,
+      225
      ],
-     "fillPercent": 35.2,
+     "fillPercent": 20,
+     "widthPercent": 41.2,
      "centerOffsetPx": [
-      -2,
-      -3
+      -1,
+      -2
      ],
-     "mineCells": 133,
+     "mineCells": 134,
      "touchPx": [
-      200,
-      257
+      150,
+      195
      ],
      "meshes": 4,
      "highlightedMeshes": 4,
      "title": "12V 보조 배터리",
      "crumb": "차량 점검 › 12V 보조 배터리",
      "hood": 60,
-     "backTo": "INSPECTION_SUMMARY"
+     "backTo": "INSPECTION_SUMMARY",
+     "historyPosition": [
+      2.514,
+      2.701,
+      -0.827
+     ]
     },
     "fuse-box": {
-     "distance": 1.188,
+     "distance": 1.58,
      "azimuth": 114.6,
      "polar": 25.2,
      "position": [
-      1.921,
-      1.844,
-      -0.651
+      2.072,
+      2.198,
+      -0.721
      ],
      "target": [
       1.46,
@@ -8115,34 +8531,40 @@
       18
      ],
      "screenPx": [
-      261,
-      269
+      193,
+      202
      ],
-     "fillPercent": 35.9,
+     "fillPercent": 20,
+     "widthPercent": 46,
      "centerOffsetPx": [
-      -1,
-      -4
+      0,
+      -2
      ],
      "mineCells": 124,
      "touchPx": [
-      244,
-      197
+      180,
+      148
      ],
      "meshes": 2,
      "highlightedMeshes": 2,
      "title": "모터룸 퓨즈박스",
      "crumb": "차량 점검 › 모터룸 퓨즈박스",
      "hood": 60,
-     "backTo": "INSPECTION_SUMMARY"
+     "backTo": "INSPECTION_SUMMARY",
+     "historyPosition": [
+      2.072,
+      2.198,
+      -0.721
+     ]
     },
     "tire.front-left": {
-     "distance": 4.842,
+     "distance": 5.629,
      "azimuth": 169.8,
      "polar": 72.5,
      "position": [
-      2.277,
-      1.83,
-      -5.317
+      2.41,
+      2.067,
+      -6.056
      ],
      "target": [
       1.459,
@@ -8155,34 +8577,40 @@
       25.1
      ],
      "screenPx": [
-      226,
-      234
+      194,
+      201
      ],
-     "fillPercent": 27.1,
+     "fillPercent": 20,
+     "widthPercent": 46.1,
      "centerOffsetPx": [
       1,
-      2
+      1
      ],
-     "mineCells": 154,
+     "mineCells": 153,
      "touchPx": [
-      226,
-      218
+      194,
+      174
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
      "title": "앞 왼쪽 타이어",
      "crumb": "차량 점검 › 앞 왼쪽 타이어",
      "hood": 0,
-     "backTo": "INSPECTION_SUMMARY"
+     "backTo": "INSPECTION_SUMMARY",
+     "historyPosition": [
+      2.41,
+      2.067,
+      -6.056
+     ]
     },
     "tire.front-right": {
-     "distance": 4.842,
+     "distance": 5.629,
      "azimuth": 10.2,
      "polar": 72.5,
      "position": [
-      2.277,
-      1.83,
-      5.318
+      2.41,
+      2.067,
+      6.057
      ],
      "target": [
       1.459,
@@ -8195,34 +8623,40 @@
       25.1
      ],
      "screenPx": [
-      226,
-      234
+      194,
+      201
      ],
-     "fillPercent": 27.1,
+     "fillPercent": 20,
+     "widthPercent": 46.1,
      "centerOffsetPx": [
       -1,
-      2
+      1
      ],
-     "mineCells": 154,
+     "mineCells": 153,
      "touchPx": [
-      226,
-      218
+      194,
+      174
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
      "title": "앞 오른쪽 타이어",
      "crumb": "차량 점검 › 앞 오른쪽 타이어",
      "hood": 0,
-     "backTo": "INSPECTION_SUMMARY"
+     "backTo": "INSPECTION_SUMMARY",
+     "historyPosition": [
+      2.41,
+      2.067,
+      6.057
+     ]
     },
     "tire.rear-left": {
-     "distance": 4.842,
+     "distance": 5.629,
      "azimuth": -169.8,
      "polar": 72.5,
      "position": [
-      -2.382,
-      1.83,
-      -5.317
+      -2.515,
+      2.067,
+      -6.056
      ],
      "target": [
       -1.564,
@@ -8235,34 +8669,40 @@
       25.1
      ],
      "screenPx": [
-      226,
-      234
+      194,
+      201
      ],
-     "fillPercent": 27.1,
+     "fillPercent": 20,
+     "widthPercent": 46.1,
      "centerOffsetPx": [
       -1,
-      2
+      1
      ],
-     "mineCells": 155,
+     "mineCells": 153,
      "touchPx": [
-      226,
-      218
+      194,
+      188
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
      "title": "뒤 왼쪽 타이어",
      "crumb": "차량 점검 › 뒤 왼쪽 타이어",
      "hood": 0,
-     "backTo": "INSPECTION_SUMMARY"
+     "backTo": "INSPECTION_SUMMARY",
+     "historyPosition": [
+      -2.515,
+      2.067,
+      -6.056
+     ]
     },
     "tire.rear-right": {
-     "distance": 4.842,
+     "distance": 5.629,
      "azimuth": -10.2,
      "polar": 72.5,
      "position": [
-      -2.382,
-      1.83,
-      5.318
+      -2.515,
+      2.067,
+      6.057
      ],
      "target": [
       -1.564,
@@ -8275,34 +8715,40 @@
       25.1
      ],
      "screenPx": [
-      226,
-      234
+      194,
+      201
      ],
-     "fillPercent": 27.1,
+     "fillPercent": 20,
+     "widthPercent": 46.1,
      "centerOffsetPx": [
       1,
-      2
+      1
      ],
-     "mineCells": 155,
+     "mineCells": 153,
      "touchPx": [
-      226,
-      218
+      194,
+      188
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
      "title": "뒤 오른쪽 타이어",
      "crumb": "차량 점검 › 뒤 오른쪽 타이어",
      "hood": 0,
-     "backTo": "INSPECTION_SUMMARY"
+     "backTo": "INSPECTION_SUMMARY",
+     "historyPosition": [
+      -2.515,
+      2.067,
+      6.057
+     ]
     },
     "ev-charge.port": {
-     "distance": 1.68,
+     "distance": 1.978,
      "azimuth": -31,
      "polar": 72,
      "position": [
-      -2.739,
-      1.5,
-      2.266
+      -2.885,
+      1.593,
+      2.509
      ],
      "target": [
       -1.917,
@@ -8315,34 +8761,40 @@
       8.1
      ],
      "screenPx": [
-      255,
-      213
+      216,
+      180
      ],
-     "fillPercent": 27.8,
+     "fillPercent": 20,
+     "widthPercent": 51.5,
      "centerOffsetPx": [
-      -3,
-      5
+      -2,
+      4
      ],
      "mineCells": 29,
      "touchPx": [
-      102,
-      57
+      86,
+      48
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
      "title": "EV 충전구",
      "crumb": "차량 점검 › EV 충전구",
      "hood": 0,
-     "backTo": "INSPECTION_SUMMARY"
+     "backTo": "INSPECTION_SUMMARY",
+     "historyPosition": [
+      -2.885,
+      1.593,
+      2.509
+     ]
     },
     "wiper.front.left": {
-     "distance": 2.564,
+     "distance": 3.658,
      "azimuth": 114.6,
      "polar": 25.2,
      "position": [
-      2.009,
-      3.445,
-      -0.766
+      2.433,
+      4.436,
+      -0.96
      ],
      "target": [
       1.015,
@@ -8355,34 +8807,40 @@
       56
      ],
      "screenPx": [
-      301,
-      182
+      210,
+      128
      ],
-     "fillPercent": 28.1,
+     "fillPercent": 13.7,
+     "widthPercent": 50,
      "centerOffsetPx": [
-      2,
+      1,
       1
      ],
      "mineCells": 16,
      "touchPx": [
-      40,
-      24
+      28,
+      17
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
      "title": "전면 왼쪽 와이퍼",
      "crumb": "차량 점검 › 전면 왼쪽 와이퍼",
      "hood": 0,
-     "backTo": "INSPECTION_SUMMARY"
+     "backTo": "INSPECTION_SUMMARY",
+     "historyPosition": [
+      2.433,
+      4.436,
+      -0.96
+     ]
     },
     "wiper.front.right": {
-     "distance": 2.261,
+     "distance": 3.242,
      "azimuth": 65.4,
      "polar": 25.2,
      "position": [
-      1.891,
-      3.174,
-      0.677
+      2.272,
+      4.062,
+      0.851
      ],
      "target": [
       1.015,
@@ -8395,34 +8853,40 @@
       49
      ],
      "screenPx": [
-      303,
-      189
+      210,
+      132
      ],
-     "fillPercent": 29.4,
+     "fillPercent": 14.2,
+     "widthPercent": 50,
      "centerOffsetPx": [
       -1,
       1
      ],
-     "mineCells": 16,
+     "mineCells": 15,
      "touchPx": [
-      61,
-      25
+      28,
+      18
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
      "title": "전면 오른쪽 와이퍼",
      "crumb": "차량 점검 › 전면 오른쪽 와이퍼",
      "hood": 0,
-     "backTo": "INSPECTION_SUMMARY"
+     "backTo": "INSPECTION_SUMMARY",
+     "historyPosition": [
+      2.272,
+      4.062,
+      0.851
+     ]
     },
     "light-low-beam-left-0": {
-     "distance": 0.85,
+     "distance": 1.055,
      "azimuth": 99.9,
      "polar": 78.9,
      "position": [
-      2.949,
-      0.953,
-      -0.675
+      3.147,
+      0.993,
+      -0.709
      ],
      "target": [
       2.128,
@@ -8435,34 +8899,40 @@
       16.4
      ],
      "screenPx": [
-      261,
-      97
+      210,
+      78
      ],
-     "fillPercent": 13,
+     "fillPercent": 8.4,
+     "widthPercent": 50,
      "centerOffsetPx": [
-      2,
+      1,
       0
      ],
-     "mineCells": 167,
+     "mineCells": 168,
      "touchPx": [
-      261,
-      78
+      210,
+      62
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
      "title": "왼쪽 하향등",
      "crumb": "차량 점검 › 왼쪽 하향등",
      "hood": 0,
-     "backTo": "INSPECTION_SUMMARY"
+     "backTo": "INSPECTION_SUMMARY",
+     "historyPosition": [
+      3.147,
+      0.993,
+      -0.709
+     ]
     },
     "light-low-beam-right-0": {
-     "distance": 0.85,
+     "distance": 1.055,
      "azimuth": 80.1,
      "polar": 78.9,
      "position": [
-      2.949,
-      0.953,
-      0.675
+      3.147,
+      0.993,
+      0.709
      ],
      "target": [
       2.128,
@@ -8475,34 +8945,40 @@
       16.4
      ],
      "screenPx": [
-      261,
-      97
+      210,
+      78
      ],
-     "fillPercent": 13,
+     "fillPercent": 8.4,
+     "widthPercent": 50,
      "centerOffsetPx": [
-      -2,
+      -1,
       0
      ],
-     "mineCells": 167,
+     "mineCells": 168,
      "touchPx": [
-      261,
-      78
+      210,
+      62
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
      "title": "오른쪽 하향등",
      "crumb": "차량 점검 › 오른쪽 하향등",
      "hood": 0,
-     "backTo": "INSPECTION_SUMMARY"
+     "backTo": "INSPECTION_SUMMARY",
+     "historyPosition": [
+      3.147,
+      0.993,
+      0.709
+     ]
     },
     "light-high-beam-left-0": {
-     "distance": 0.85,
+     "distance": 1.053,
      "azimuth": 95.7,
-     "polar": 86.4,
+     "polar": 90,
      "position": [
-      2.741,
-      0.857,
-      -0.83
+      2.945,
+      0.803,
+      -0.85
      ],
      "target": [
       1.897,
@@ -8515,34 +8991,40 @@
       16.3
      ],
      "screenPx": [
-      261,
-      70
+      210,
+      56
      ],
-     "fillPercent": 9.4,
+     "fillPercent": 6,
+     "widthPercent": 50,
      "centerOffsetPx": [
       1,
       0
      ],
-     "mineCells": 175,
+     "mineCells": 214,
      "touchPx": [
-      261,
-      66
+      210,
+      56
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
      "title": "왼쪽 상향등",
      "crumb": "차량 점검 › 왼쪽 상향등",
      "hood": 0,
-     "backTo": "INSPECTION_SUMMARY"
+     "backTo": "INSPECTION_SUMMARY",
+     "historyPosition": [
+      2.945,
+      0.803,
+      -0.85
+     ]
     },
     "light-high-beam-right-0": {
-     "distance": 0.85,
+     "distance": 1.053,
      "azimuth": 84.3,
-     "polar": 86.4,
+     "polar": 90,
      "position": [
-      2.741,
-      0.857,
-      0.83
+      2.945,
+      0.803,
+      0.85
      ],
      "target": [
       1.897,
@@ -8555,25 +9037,31 @@
       16.3
      ],
      "screenPx": [
-      261,
-      70
+      210,
+      56
      ],
-     "fillPercent": 9.4,
+     "fillPercent": 6,
+     "widthPercent": 50,
      "centerOffsetPx": [
       -1,
       0
      ],
-     "mineCells": 175,
+     "mineCells": 214,
      "touchPx": [
-      261,
-      66
+      210,
+      56
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
      "title": "오른쪽 상향등",
      "crumb": "차량 점검 › 오른쪽 상향등",
      "hood": 0,
-     "backTo": "INSPECTION_SUMMARY"
+     "backTo": "INSPECTION_SUMMARY",
+     "historyPosition": [
+      2.945,
+      0.803,
+      0.85
+     ]
     }
    },
    "flows": {
@@ -8588,9 +9076,9 @@
     },
     "resultBackFromList": "INSPECTION_SUMMARY",
     "tireList": {
-     "directDistance": 16.245,
-     "viaTireDistance": 17.533,
-     "viaTireAtOverviewPose": true
+     "directDistance": 18.986,
+     "viaTireDistance": 18.986,
+     "viaTireAtOverviewPose": false
     },
     "crossArea": {
      "kind": "hood",
@@ -8676,8 +9164,8 @@
      "selected": true,
      "state": "WASHER_SELECTED",
      "touchPx": [
-      25,
-      45
+      23,
+      41
      ],
      "fromState": "COMPONENT_SELECTION"
     },
@@ -8686,8 +9174,8 @@
      "selected": true,
      "state": "COMPONENT_PREVIEW",
      "touchPx": [
-      52,
-      54
+      47,
+      49
      ],
      "fromState": "COMPONENT_SELECTION"
     },
@@ -8705,8 +9193,8 @@
      "selected": true,
      "state": "COMPONENT_PREVIEW",
      "touchPx": [
-      38,
-      29
+      35,
+      27
      ],
      "fromState": "COMPONENT_SELECTION"
     },
@@ -8715,8 +9203,8 @@
      "selected": true,
      "state": "COMPONENT_PREVIEW",
      "touchPx": [
-      62,
-      73
+      57,
+      66
      ],
      "fromState": "COMPONENT_SELECTION"
     },
@@ -8725,8 +9213,8 @@
      "selected": true,
      "state": "COMPONENT_PREVIEW",
      "touchPx": [
-      53,
-      40
+      48,
+      36
      ],
      "fromState": "COMPONENT_SELECTION"
     },
@@ -8735,8 +9223,8 @@
      "selected": true,
      "state": "TIRE_PREVIEW",
      "touchPx": [
-      71,
-      74
+      60,
+      63
      ],
      "fromState": "TIRE_SELECTION"
     },
@@ -8754,8 +9242,8 @@
      "selected": true,
      "state": "TIRE_PREVIEW",
      "touchPx": [
-      70,
-      71
+      60,
+      61
      ],
      "fromState": "TIRE_SELECTION"
     },
@@ -8855,6 +9343,10 @@
      "fromState": "INSPECTION_OVERVIEW"
     }
    },
+   "areas": {
+    "bay": 70,
+    "tires": 70
+   },
    "paint": {
     "tiresTinted": true,
     "othersKeepMaterial": true,
@@ -8883,64 +9375,67 @@
  },
  "crossesBody": {
   "1600x1000": {
-   "tire.front-left>tire.front-right": true,
+   "tire.front-left>tire.front-right": false,
    "tire.front-left>tire.rear-left": false,
-   "tire.front-left>tire.rear-right": true,
-   "tire.front-right>tire.front-left": true,
-   "tire.front-right>tire.rear-left": true,
+   "tire.front-left>tire.rear-right": false,
+   "tire.front-right>tire.front-left": false,
+   "tire.front-right>tire.rear-left": false,
    "tire.front-right>tire.rear-right": false,
    "tire.rear-left>tire.front-left": false,
-   "tire.rear-left>tire.front-right": true,
-   "tire.rear-left>tire.rear-right": true,
-   "tire.rear-right>tire.front-left": true,
+   "tire.rear-left>tire.front-right": false,
+   "tire.rear-left>tire.rear-right": false,
+   "tire.rear-right>tire.front-left": false,
    "tire.rear-right>tire.front-right": false,
-   "tire.rear-right>tire.rear-left": true,
+   "tire.rear-right>tire.rear-left": false,
    "overview>ev-charge": false,
    "overview>ev-battery": false,
    "overview>light": false,
    "bay>coolant": false,
    "coolant>battery-12v": false,
-   "battery-12v>washer": false
+   "battery-12v>washer": true,
+   "washer>rear-right-result": true
   },
   "1224x880": {
-   "tire.front-left>tire.front-right": true,
+   "tire.front-left>tire.front-right": false,
    "tire.front-left>tire.rear-left": false,
-   "tire.front-left>tire.rear-right": true,
-   "tire.front-right>tire.front-left": true,
-   "tire.front-right>tire.rear-left": true,
+   "tire.front-left>tire.rear-right": false,
+   "tire.front-right>tire.front-left": false,
+   "tire.front-right>tire.rear-left": false,
    "tire.front-right>tire.rear-right": false,
    "tire.rear-left>tire.front-left": false,
-   "tire.rear-left>tire.front-right": true,
-   "tire.rear-left>tire.rear-right": true,
-   "tire.rear-right>tire.front-left": true,
+   "tire.rear-left>tire.front-right": false,
+   "tire.rear-left>tire.rear-right": false,
+   "tire.rear-right>tire.front-left": false,
    "tire.rear-right>tire.front-right": false,
-   "tire.rear-right>tire.rear-left": true,
+   "tire.rear-right>tire.rear-left": false,
    "overview>ev-charge": false,
    "overview>ev-battery": false,
    "overview>light": false,
    "bay>coolant": false,
    "coolant>battery-12v": false,
-   "battery-12v>washer": false
+   "battery-12v>washer": true,
+   "washer>rear-right-result": true
   },
   "1024x600": {
-   "tire.front-left>tire.front-right": true,
+   "tire.front-left>tire.front-right": false,
    "tire.front-left>tire.rear-left": false,
-   "tire.front-left>tire.rear-right": true,
-   "tire.front-right>tire.front-left": true,
-   "tire.front-right>tire.rear-left": true,
+   "tire.front-left>tire.rear-right": false,
+   "tire.front-right>tire.front-left": false,
+   "tire.front-right>tire.rear-left": false,
    "tire.front-right>tire.rear-right": false,
    "tire.rear-left>tire.front-left": false,
-   "tire.rear-left>tire.front-right": true,
-   "tire.rear-left>tire.rear-right": true,
-   "tire.rear-right>tire.front-left": true,
+   "tire.rear-left>tire.front-right": false,
+   "tire.rear-left>tire.rear-right": false,
+   "tire.rear-right>tire.front-left": false,
    "tire.rear-right>tire.front-right": false,
-   "tire.rear-right>tire.rear-left": true,
+   "tire.rear-right>tire.rear-left": false,
    "overview>ev-charge": false,
    "overview>ev-battery": false,
    "overview>light": false,
    "bay>coolant": false,
    "coolant>battery-12v": false,
-   "battery-12v>washer": false
+   "battery-12v>washer": true,
+   "washer>rear-right-result": true
   },
   "420x860": {
    "tire.front-left>tire.front-right": false,
@@ -8960,7 +9455,8 @@
    "overview>light": false,
    "bay>coolant": false,
    "coolant>battery-12v": false,
-   "battery-12v>washer": false
+   "battery-12v>washer": false,
+   "washer>rear-right-result": false
   }
  }
 }
