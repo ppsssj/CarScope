@@ -4,6 +4,11 @@
 import {targetForTask,targetForPart,exact,epoch,digestShape,validateMobileResult,digestResult,mobileReportState} from './mobile-result-contract.mjs';
 
 export const HISTORY_PAGE_LIMIT=20;
+/** Which label a record must carry. VERIFIED is the default, so the P8 store and screen keep refusing simulator rows. */
+export const HISTORY_AUTHORITY=Object.freeze({
+  VERIFIED:Object.freeze({namespace:'VERIFIED_VEHICLE',evidence:'SESSION_CREATION_BINDING'}),
+  AVD_SIMULATOR:Object.freeze({namespace:'AVD_SIMULATOR',evidence:'AVD_REGISTRATION_BINDING'}),
+});
 export const HISTORY_STATUSES=Object.freeze(['OK','NEEDS_REFILL','UNSURE','REVIEW_NEEDED','UNABLE','NO_FINDINGS_REPORTED']);
 const V1_STATUSES=Object.freeze(['OK','NEEDS_REFILL','UNSURE']);
 const V2_STATUSES=Object.freeze(['REVIEW_NEEDED','UNABLE','NO_FINDINGS_REPORTED']);
@@ -62,14 +67,14 @@ export function historyQueryFromFilters(filters,{cursor=null,limit=HISTORY_PAGE_
   return {ok:true,query:Object.freeze(query)};
 }
 
-function validRecord(r,keys){
+function validRecord(r,keys,authority){
   if(!exact(r,keys))return false;
   const t=targetForTask(r.taskId);
   if(!t||r.partId!==t.partId||r.schemaVersion!==t.schemaVersion)return false;
   if(!(t.schemaVersion===1?V1_STATUSES:V2_STATUSES).includes(r.inspectionStatus))return false;
   if(!isRecordId(r.recordId)||!isRecordId(r.inspectionId)||!digestShape(r.resultDigest))return false;
   if(!signedTime(r.completedAt)||!epoch(r.receivedAt)||!epoch(r.acceptedAt)||!epoch(r.createdAt)||r.acceptedAt<r.receivedAt)return false;
-  return r.source==='USER_REPORTED'&&r.method==='SELF'&&r.channel==='MOBILE'&&r.authorityNamespace==='VERIFIED_VEHICLE'&&r.ownershipEvidence==='SESSION_CREATION_BINDING'&&r.sdkDataIncluded===false;
+  return r.source==='USER_REPORTED'&&r.method==='SELF'&&r.channel==='MOBILE'&&r.authorityNamespace===authority.namespace&&r.ownershipEvidence===authority.evidence&&r.sdkDataIncluded===false;
 }
 const newerThan=(a,b)=>a.completedAt>b.completedAt||a.completedAt===b.completedAt&&a.recordId>b.recordId;
 function matchesQuery(r,q){
@@ -79,7 +84,7 @@ function matchesQuery(r,q){
 }
 
 /** Validates one list page against the exact request that produced it and the rows already shown. */
-export function parseHistoryList(body,{query,prior=[]}){
+export function parseHistoryList(body,{query,prior=[],authority=HISTORY_AUTHORITY.VERIFIED}){
   if(!exact(body,['schemaVersion','items','page'])||body.schemaVersion!==1||!Array.isArray(body.items))return invalid('shape');
   const page=body.page,limit=Number(query.limit);
   if(!exact(page,['limit','hasMore','nextCursor'])||page.limit!==limit||typeof page.hasMore!=='boolean')return invalid('page');
@@ -88,7 +93,7 @@ export function parseHistoryList(body,{query,prior=[]}){
   const records=new Set(prior.map(r=>r.recordId)),inspections=new Set(prior.map(r=>r.inspectionId));
   let previous=prior.at(-1)??null;
   for(const item of body.items){
-    if(!validRecord(item,LIST_KEYS))return invalid('record');
+    if(!validRecord(item,LIST_KEYS,authority))return invalid('record');
     if(!matchesQuery(item,query))return invalid('filter');
     if(records.has(item.recordId)||inspections.has(item.inspectionId))return invalid('duplicate');
     if(previous&&!newerThan(previous,item))return invalid('order');
@@ -98,10 +103,10 @@ export function parseHistoryList(body,{query,prior=[]}){
 }
 
 /** Validates a detail reply, including an independent canonical digest of the stored original. */
-export async function parseHistoryDetail(body,{recordId,listItem=null,hash=digestResult}){
+export async function parseHistoryDetail(body,{recordId,listItem=null,hash=digestResult,authority=HISTORY_AUTHORITY.VERIFIED}){
   if(!exact(body,['schemaVersion','record'])||body.schemaVersion!==1)return invalid('shape');
   const r=body.record;
-  if(!validRecord(r,DETAIL_KEYS)||r.recordId!==recordId)return invalid('record');
+  if(!validRecord(r,DETAIL_KEYS,authority)||r.recordId!==recordId)return invalid('record');
   const o=r.originalResult,t=targetForTask(r.taskId);
   if(!validateMobileResult(o,{allowPreEpoch:true})||o.taskId!==r.taskId||o.inspectionId!==r.inspectionId||o.schemaVersion!==r.schemaVersion||o.status!==r.inspectionStatus||Date.parse(o.completedAt)!==r.completedAt)return invalid('original');
   // Schema v1 washer records have no per-question answers: an empty object is valid, not missing data.

@@ -27,6 +27,34 @@ class NativeInspectionWebChannelTest {
         override fun getMethod() = method
         override fun getRequestHeaders() = if (referer == null) emptyMap() else mapOf("Referer" to referer)
     }
+    @Test fun `the history channel is separate, off unless composed, and limited to the current asset page`() {
+        val activity = Robolectric.buildActivity(Activity::class.java).setup()
+        val rpcHistory = "https://$host/native-history-v1?command=%7B%22op%22%3A%22list%22%7D"
+        val reads = mutableListOf<String>(); val bridge = mutableListOf<String>()
+        val screen = DebugWebScreen(activity.get(), "HistoryTest", host, "inspection", emptyMap(),
+            inspectionBridge = { bridge += it; """{"ok":true}""" }, historyChannel = { reads += it; """{"status":200,"body":{}}""" })
+        val web = screen.create("capture=1")
+        val closed = DebugWebScreen(activity.get(), "HistoryOffTest", host, "inspection", emptyMap())
+        val webClosed = closed.create("capture=1")
+        try {
+            val client = shadowOf(web).webViewClient!!
+            client.onPageStarted(web, page, null)
+            val reply = client.shouldInterceptRequest(web, request(rpcHistory))!!
+            assertEquals(200, reply.statusCode); assertEquals("no-store", reply.responseHeaders!!["Cache-Control"])
+            assertEquals("""{"status":200,"body":{}}""", reply.data!!.bufferedReader().readText())
+            assertEquals(listOf("""{"op":"list"}"""), reads)
+            assertTrue("history reads never reach the inspection bridge", bridge.isEmpty())
+            for ((name, denied) in listOf("no referer" to request(rpcHistory, referer = null), "main frame" to request(rpcHistory, mainFrame = true),
+                "post" to request(rpcHistory, method = "POST"), "extra parameter" to request("$rpcHistory&x=1"),
+                "remote host" to request(rpcHistory.replace(host, "evil.invalid")), "no command" to request("https://$host/native-history-v1")))
+                assertEquals(name, 404, client.shouldInterceptRequest(web, denied)!!.statusCode)
+            assertEquals("a different WebView", 404, client.shouldInterceptRequest(WebView(activity.get()), request(rpcHistory))!!.statusCode)
+            val off = shadowOf(webClosed).webViewClient!!
+            off.onPageStarted(webClosed, page, null)
+            assertEquals("not composed", 404, off.shouldInterceptRequest(webClosed, request(rpcHistory))!!.statusCode)
+            assertEquals(1, reads.size)
+        } finally { screen.destroy(); closed.destroy(); activity.pause().stop().destroy() }
+    }
     @Test fun `only the current WebView main asset page reaches the bridge and the reply is not cached`() {
         val activity = Robolectric.buildActivity(Activity::class.java).setup()
         val commands = mutableListOf<String>()

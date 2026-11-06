@@ -18,4 +18,20 @@ class NativeInspectionOriginTest {
         for (bad in listOf(url.replace(host, "evil.invalid"), "$url&extra=1", "$url#fake", url.replace("/native", "/../native")))
             assertFalse(NativeInspectionOrigin.allowed(bad, host, "GET", false, page, page))
     }
+
+    @Test fun `the history channel has the same rules and the two paths do not open each other`() {
+        val host = "carscope-inspection.invalid"
+        val page = "https://$host/index.html"
+        val history = "https://$host/native-history-v1?command=%7B%7D"
+        val inspection = "https://$host/native-inspection-v1?command=%7B%7D"
+        val path = NativeInspectionOrigin.HISTORY_PATH
+        assertTrue(NativeInspectionOrigin.allowed(history, host, "GET", false, page, page, path))
+        assertFalse(NativeInspectionOrigin.allowed(inspection, host, "GET", false, page, page, path))
+        assertFalse(NativeInspectionOrigin.allowed(history, host, "GET", false, page, page))
+        assertFalse(NativeInspectionOrigin.allowed(history, host, "GET", true, page, page, path))
+        assertFalse(NativeInspectionOrigin.allowed(history, host, "POST", false, page, page, path))
+        assertFalse(NativeInspectionOrigin.allowed(history, host, "GET", false, "https://evil.invalid/index.html", page, path))
+        assertFalse(NativeInspectionOrigin.allowed(history, host, "GET", false, page, null, path))
+        assertFalse(NativeInspectionOrigin.allowed("$history&extra=1", host, "GET", false, page, page, path))
+    }
 }
