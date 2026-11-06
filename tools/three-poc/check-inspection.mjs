@@ -45,7 +45,7 @@ const actions = [
   expect(`!document.getElementById('capLabel').hasAttribute('data-hidden')&&document.querySelectorAll('[data-action=component]').length===5&&document.querySelectorAll('.item[aria-disabled=true]').length===1`, 'cap label shown; washer + 4 geometry previews, LCW planned'),
   ...shot('04-component-selection'),
   ev(tap(`${I}.capPoint()`)), settled('WASHER_SELECTED'),
-  expect(`${I}.state.component==='washer-fluid-cap'&&document.querySelector('#panel h2').textContent==='워셔액 점검'&&document.querySelector('#panel a.link').href.startsWith('https://manuals.hyundai.co.uk/')`, 'washer detail with manual source'),
+  expect(`${I}.state.component==='washer-fluid-cap'&&document.querySelector('#panel h2').textContent==='워셔액'&&document.querySelector('#panel a.link').href.startsWith('https://manuals.hyundai.co.uk/')`, 'washer detail with manual source'),
   ...shot('05-washer-detail'),
   ['click', '[data-action=handoff]'], settled('MOBILE_HANDOFF_READY'),
   ['until', "document.querySelector('.qr img')?.complete&&document.querySelector('.qr img').naturalWidth>0", 5000],

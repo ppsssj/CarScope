@@ -23,6 +23,7 @@ export const PART_UX_ISSUES=Object.freeze([
   {id:'P1-11',severity:'P1',title:'The part without geometry has the strongest list border',measure:'BROWSER',fixIn:'P10-6'},
   {id:'P1-12',severity:'P1',title:'A preview says no procedure exists next to the button that starts one',measure:'BROWSER',fixIn:'P10-6'},
   {id:'P1-13',severity:'P1',title:'Thin parts offer a small target for a finger',measure:'BROWSER',fixIn:'P10-5'},
+  {id:'P1-14',severity:'P1',status:'FIXED',title:'One part used different names on different screens',measure:'BROWSER',fixIn:'P10-1'},
   {id:'P2-1',severity:'P2',title:'Charge port and wipers appear and disappear between screens',measure:'BROWSER',fixIn:'P10-7'},
   {id:'P2-2',severity:'P2',title:'Back buttons use several different labels',measure:'BROWSER',fixIn:'P10-3'},
   {id:'P2-3',severity:'P2',title:'Internal values reach the user',measure:'BROWSER',fixIn:'P10-6'},

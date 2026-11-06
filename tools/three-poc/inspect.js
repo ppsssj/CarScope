@@ -18,6 +18,7 @@ import { componentDistance, boxDistance } from "./inspection-camera.mjs";
 import { createTireInspection, updateTireInspection, inspectionProgress } from "./tire-inspection.mjs";
 import { inspectionStateMap } from './inspection-state-map.mjs';
 import {targetForPart,targetForTask} from './mobile-result-contract.mjs';
+import {partLabel} from './inspection-parts.mjs';
 import {createNativeInspectionResults} from './native-inspection-results.mjs';
 import {projectInspectionResults} from './inspection-results.mjs';
 import {partResultHtml,refreshResultRegions,resultSummaryHtml} from './inspection-results-view.mjs';
@@ -313,7 +314,7 @@ function componentBounds(id) {
 }
 
 // ---------- panel ----------
-const crumbs = { IDLE: "", INSPECTION_OVERVIEW: "차량 점검", HOOD_OPENING: "차량 점검 › 보닛", HOOD_CLOSING: "차량 점검", COMPONENT_SELECTION: "차량 점검 › 보닛", WASHER_SELECTED: "차량 점검 › 보닛 › 워셔액", MOBILE_HANDOFF_READY: "차량 점검 › 보닛 › 워셔액" };
+const crumbs = { IDLE: "", INSPECTION_OVERVIEW: "차량 점검", HOOD_OPENING: "차량 점검 › 보닛", HOOD_CLOSING: "차량 점검", COMPONENT_SELECTION: "차량 점검 › 보닛", WASHER_SELECTED: `차량 점검 › 보닛 › ${partLabel('washer-fluid-cap')}`, MOBILE_HANDOFF_READY: `차량 점검 › 보닛 › ${partLabel('washer-fluid-cap')}` };
 const hints = { INSPECTION_OVERVIEW: "모델의 부위나 목록을 선택하세요", COMPONENT_SELECTION: "모델의 부품이나 목록을 선택하세요" };
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 const item = (x, action) => ['available', 'preview'].includes(x.status)||targetForPart(x.id)
@@ -343,7 +344,7 @@ function panelContents() {
       const part=areaOf(state).components.find(c=>c.id===state.component),wiper=state.area==='wipers';
       return `<div class="eyebrow">${wiper?'전면 와이퍼 · 한 유리 영역':'전조등 · 전역 SDK 보고'}</div><h2>${esc(part.label)}</h2>
         <span class="badge">${wiper?'ESTIMATED_GEOMETRY · 정적 휴지 자세':'기존 커뮤니티 GLB 표식 · OEM 광학 구조 미검증'}</span>
-        <p>${wiper?'전면 유리의 물을 닦는 암과 블레이드의 추정 외관입니다. 두 와이퍼는 전면 유리 하나의 작동 상태를 공유합니다. 작동 각도·위치·속도·마모·교체 시기는 측정하지 않습니다.':'하향등은 가까운 전방, 상향등은 먼 전방을 비추는 기능입니다. 이 평면 표식은 기존 모델의 위치 안내이며 실제 bulb·광도·광축·고장 진단이 아닙니다. 하우징에 가릴 수 있으며 좌우 선택에도 같은 전역 상태가 표시됩니다.'}</p>
+        <p>${wiper?'전면 유리의 물을 닦는 암과 블레이드의 추정 외관입니다. 두 와이퍼는 전면 유리 하나의 작동 상태를 공유합니다. 작동 각도·위치·속도·마모·교체 시기는 측정하지 않습니다.':'하향등은 가까운 전방, 상향등은 먼 전방을 비추는 기능입니다. 이 평면 표식은 기존 모델의 위치 안내이며 실제 bulb·광도·광축·고장 진단이 아닙니다. 하우징에 가릴 수 있으며 좌우 선택에도 같은 전역 상태가 표시됩니다.'} 좌우는 운전자가 전방을 보는 기준입니다.</p>
         <p class="note">${wiper?'ON·SERVICE 보고로 와이퍼를 움직이거나 실제 자세를 재현하지 않습니다.':'강조는 선택 표시이며 실제 램프 발광이나 광도 재현이 아닙니다. 차체·하우징을 관통 선택하지 않습니다.'}</p>
         ${!wiper&&M.lights.get(state.component).sightline.status==='SOURCE_OCCLUDED'?'<p role="status">이 참조 모델의 표식은 차체에 가려져 있습니다. 목록으로 위치와 전역 SDK 보고를 확인할 수 있습니다.</p>':''}
         <ul class="items">${areaOf(state).components.map(c=>item(c,'visibility-part')).join('')}</ul>
@@ -351,7 +352,7 @@ function panelContents() {
         <div class="actions"><button type="button" class="secondary" data-action="back">뒤로 · 차량 전체 보기</button></div>`;
     }
     case S.CHARGE_PORT_PREVIEW:
-      return `<div class="eyebrow">EV 충전구 · 차량 우측 후방</div><h2>${state.component === EV_CHARGE_IDS.flap ? '충전구 덮개' : '충전구 외곽'}</h2>
+      return `<div class="eyebrow">EV 충전구 · 차량 우측 후방</div><h2>${esc(partLabel(state.component))}</h2>
         <span class="badge">ESTIMATED_GEOMETRY · 정적 닫힌 형상</span>
         <p>모델 우측 후방의 추정 외함입니다. 형상·치수·배치와 실제 차량 변형의 일치는 미검증입니다. 힌지축·각도·소켓·정비 절차를 제공하지 않습니다.</p>
         <p class="note">SDK true/false는 보고값이며 형상을 열거나 회전시키지 않습니다. 현재 모델의 정적 자세가 실제 차량의 닫힘 상태를 뜻하지 않습니다.</p>
@@ -410,7 +411,7 @@ function panelContents() {
         <div class="actions"><button type="button" class="secondary" data-action="back">점검 목록과 이전 시점으로</button></div>`;
     }
     case S.WASHER_SELECTED:
-      return `<div class="eyebrow">보닛 · 워셔액</div><h2>워셔액 점검</h2><span class="badge">위치·형상 추정</span>
+      return `<div class="eyebrow">보닛 · 워셔액</div><h2>${esc(partLabel('washer-fluid-cap'))}</h2><span class="badge">위치·형상 추정</span>
         <h3>점검 방법</h3><ol><li>평탄한 곳에 정차하고 차량 전원을 끕니다.</li><li>보닛을 열고 워셔 기호가 표시된 캡을 찾습니다.</li><li>캡을 열어 워셔액 양을 확인합니다.</li><li>부족하면 차량·기후에 맞는 워셔액을 보충하고 캡을 닫습니다.</li></ol>
         <h3>주의</h3><ul><li>냉각계용 냉각수나 부동액을 넣지 마세요.</li><li>캡 표기를 확인해 다른 리저버와 혼동하지 마세요.</li><li>이 화면의 위치와 형상은 추정입니다. 실제 차량의 표기와 사용설명서를 우선하세요.</li></ul>
         <h3>출처</h3><p><a class="link" href="${esc(SERVICE_MANUAL)}" target="_blank" rel="noopener noreferrer">Hyundai IONIQ 5 (2022, UK) 정비 설명서 9-14 워셔액</a></p>

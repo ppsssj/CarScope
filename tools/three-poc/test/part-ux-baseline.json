@@ -170,6 +170,9 @@
    "preview": {
     "washer-fluid-cap": {
      "selectable": true,
+     "title": "워셔액",
+     "crumb": "차량 점검 › 보닛 › 워셔액",
+     "listName": null,
      "state": "WASHER_SELECTED",
      "distance": 2.6,
      "azimuth": 50.2,
@@ -225,6 +228,9 @@
     },
     "coolant-reservoir": {
      "selectable": true,
+     "title": "냉각수 리저버",
+     "crumb": "차량 점검 › 보닛 › 냉각수 리저버",
+     "listName": "냉각수 리저버",
      "state": "COMPONENT_PREVIEW",
      "distance": 0.85,
      "azimuth": 65.4,
@@ -284,6 +290,9 @@
     },
     "brake-fluid-reservoir": {
      "selectable": true,
+     "title": "브레이크액",
+     "crumb": "차량 점검 › 보닛 › 브레이크액",
+     "listName": "브레이크액",
      "state": "COMPONENT_PREVIEW",
      "distance": 0.85,
      "azimuth": 114.6,
@@ -339,6 +348,9 @@
     },
     "battery-12v": {
      "selectable": true,
+     "title": "12V 보조 배터리",
+     "crumb": "차량 점검 › 보닛 › 12V 보조 배터리",
+     "listName": "12V 보조 배터리",
      "state": "COMPONENT_PREVIEW",
      "distance": 0.85,
      "azimuth": 114.6,
@@ -394,6 +406,9 @@
     },
     "fuse-box": {
      "selectable": true,
+     "title": "모터룸 퓨즈박스",
+     "crumb": "차량 점검 › 보닛 › 모터룸 퓨즈박스",
+     "listName": "모터룸 퓨즈박스",
      "state": "COMPONENT_PREVIEW",
      "distance": 0.85,
      "azimuth": 114.6,
@@ -449,6 +464,9 @@
     },
     "tire.front-left": {
      "selectable": true,
+     "title": "앞 왼쪽 타이어",
+     "crumb": "차량 점검 › 타이어 › 앞 왼쪽 타이어",
+     "listName": "앞 왼쪽 타이어",
      "state": "TIRE_PREVIEW",
      "distance": 2.45,
      "azimuth": 169.8,
@@ -506,6 +524,9 @@
     },
     "tire.front-right": {
      "selectable": true,
+     "title": "앞 오른쪽 타이어",
+     "crumb": "차량 점검 › 타이어 › 앞 오른쪽 타이어",
+     "listName": "앞 오른쪽 타이어",
      "state": "TIRE_PREVIEW",
      "distance": 2.45,
      "azimuth": 10.2,
@@ -563,6 +584,9 @@
     },
     "tire.rear-left": {
      "selectable": true,
+     "title": "뒤 왼쪽 타이어",
+     "crumb": "차량 점검 › 타이어 › 뒤 왼쪽 타이어",
+     "listName": "뒤 왼쪽 타이어",
      "state": "TIRE_PREVIEW",
      "distance": 2.45,
      "azimuth": -169.8,
@@ -620,6 +644,9 @@
     },
     "tire.rear-right": {
      "selectable": true,
+     "title": "뒤 오른쪽 타이어",
+     "crumb": "차량 점검 › 타이어 › 뒤 오른쪽 타이어",
+     "listName": "뒤 오른쪽 타이어",
      "state": "TIRE_PREVIEW",
      "distance": 2.45,
      "azimuth": -10.2,
@@ -677,6 +704,9 @@
     },
     "ev-battery.pack": {
      "selectable": true,
+     "title": "고전압 배터리 팩",
+     "crumb": "차량 점검 › EV 배터리",
+     "listName": null,
      "state": "EV_BATTERY_PREVIEW",
      "distance": 5.292,
      "azimuth": 125.5,
@@ -737,6 +767,9 @@
     },
     "ev-charge.port": {
      "selectable": true,
+     "title": "EV 충전구",
+     "crumb": "차량 점검 › EV 충전구",
+     "listName": "EV 충전구",
      "state": "CHARGE_PORT_PREVIEW",
      "distance": 0.85,
      "azimuth": -31,
@@ -797,6 +830,9 @@
     },
     "ev-charge.flap": {
      "selectable": true,
+     "title": "EV 충전구 덮개",
+     "crumb": "차량 점검 › EV 충전구",
+     "listName": "EV 충전구 덮개",
      "state": "CHARGE_PORT_PREVIEW",
      "distance": 0.85,
      "azimuth": -31,
@@ -857,6 +893,9 @@
     },
     "wiper.front.left": {
      "selectable": true,
+     "title": "전면 왼쪽 와이퍼",
+     "crumb": "차량 점검 › 전면 와이퍼",
+     "listName": "전면 왼쪽 와이퍼",
      "state": "VISIBILITY_PREVIEW",
      "distance": 1.298,
      "azimuth": 114.6,
@@ -917,6 +956,9 @@
     },
     "wiper.front.right": {
      "selectable": true,
+     "title": "전면 오른쪽 와이퍼",
+     "crumb": "차량 점검 › 전면 와이퍼",
+     "listName": "전면 오른쪽 와이퍼",
      "state": "VISIBILITY_PREVIEW",
      "distance": 1.144,
      "azimuth": 65.4,
@@ -977,6 +1019,9 @@
     },
     "light-low-beam-left-0": {
      "selectable": true,
+     "title": "왼쪽 하향등",
+     "crumb": "차량 점검 › 전조등",
+     "listName": "왼쪽 하향등",
      "state": "VISIBILITY_PREVIEW",
      "distance": 0.85,
      "azimuth": 99.9,
@@ -1036,6 +1081,9 @@
     },
     "light-low-beam-right-0": {
      "selectable": true,
+     "title": "오른쪽 하향등",
+     "crumb": "차량 점검 › 전조등",
+     "listName": "오른쪽 하향등",
      "state": "VISIBILITY_PREVIEW",
      "distance": 0.85,
      "azimuth": 80.1,
@@ -1095,6 +1143,9 @@
     },
     "light-high-beam-left-0": {
      "selectable": true,
+     "title": "왼쪽 상향등",
+     "crumb": "차량 점검 › 전조등",
+     "listName": "왼쪽 상향등",
      "state": "VISIBILITY_PREVIEW",
      "distance": 0.85,
      "azimuth": 95.7,
@@ -1154,6 +1205,9 @@
     },
     "light-high-beam-right-0": {
      "selectable": true,
+     "title": "오른쪽 상향등",
+     "crumb": "차량 점검 › 전조등",
+     "listName": "오른쪽 상향등",
      "state": "VISIBILITY_PREVIEW",
      "distance": 0.85,
      "azimuth": 84.3,
@@ -1248,6 +1302,8 @@
      ],
      "meshes": 2,
      "highlightedMeshes": 2,
+     "title": "워셔액",
+     "crumb": "차량 점검 › 워셔액",
      "hood": 60,
      "backTo": "INSPECTION_SUMMARY"
     },
@@ -1286,6 +1342,8 @@
      ],
      "meshes": 2,
      "highlightedMeshes": 2,
+     "title": "냉각수 리저버",
+     "crumb": "차량 점검 › 냉각수 리저버",
      "hood": 60,
      "backTo": "INSPECTION_SUMMARY"
     },
@@ -1304,6 +1362,8 @@
       0
      ],
      "bounds": null,
+     "title": "저전도 냉각수 리저버",
+     "crumb": "차량 점검 › 저전도 냉각수 리저버",
      "hood": 60,
      "backTo": "INSPECTION_SUMMARY"
     },
@@ -1342,6 +1402,8 @@
      ],
      "meshes": 2,
      "highlightedMeshes": 2,
+     "title": "브레이크액",
+     "crumb": "차량 점검 › 브레이크액",
      "hood": 60,
      "backTo": "INSPECTION_SUMMARY"
     },
@@ -1380,6 +1442,8 @@
      ],
      "meshes": 4,
      "highlightedMeshes": 4,
+     "title": "12V 보조 배터리",
+     "crumb": "차량 점검 › 12V 보조 배터리",
      "hood": 60,
      "backTo": "INSPECTION_SUMMARY"
     },
@@ -1418,6 +1482,8 @@
      ],
      "meshes": 2,
      "highlightedMeshes": 2,
+     "title": "모터룸 퓨즈박스",
+     "crumb": "차량 점검 › 모터룸 퓨즈박스",
      "hood": 60,
      "backTo": "INSPECTION_SUMMARY"
     },
@@ -1456,6 +1522,8 @@
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
+     "title": "앞 왼쪽 타이어",
+     "crumb": "차량 점검 › 앞 왼쪽 타이어",
      "hood": 0,
      "backTo": "INSPECTION_SUMMARY"
     },
@@ -1494,6 +1562,8 @@
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
+     "title": "앞 오른쪽 타이어",
+     "crumb": "차량 점검 › 앞 오른쪽 타이어",
      "hood": 0,
      "backTo": "INSPECTION_SUMMARY"
     },
@@ -1532,6 +1602,8 @@
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
+     "title": "뒤 왼쪽 타이어",
+     "crumb": "차량 점검 › 뒤 왼쪽 타이어",
      "hood": 0,
      "backTo": "INSPECTION_SUMMARY"
     },
@@ -1570,6 +1642,8 @@
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
+     "title": "뒤 오른쪽 타이어",
+     "crumb": "차량 점검 › 뒤 오른쪽 타이어",
      "hood": 0,
      "backTo": "INSPECTION_SUMMARY"
     },
@@ -1608,6 +1682,8 @@
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
+     "title": "EV 충전구",
+     "crumb": "차량 점검 › EV 충전구",
      "hood": 0,
      "backTo": "INSPECTION_SUMMARY"
     },
@@ -1646,6 +1722,8 @@
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
+     "title": "전면 왼쪽 와이퍼",
+     "crumb": "차량 점검 › 전면 왼쪽 와이퍼",
      "hood": 0,
      "backTo": "INSPECTION_SUMMARY"
     },
@@ -1684,6 +1762,8 @@
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
+     "title": "전면 오른쪽 와이퍼",
+     "crumb": "차량 점검 › 전면 오른쪽 와이퍼",
      "hood": 0,
      "backTo": "INSPECTION_SUMMARY"
     },
@@ -1722,6 +1802,8 @@
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
+     "title": "왼쪽 하향등",
+     "crumb": "차량 점검 › 왼쪽 하향등",
      "hood": 0,
      "backTo": "INSPECTION_SUMMARY"
     },
@@ -1760,6 +1842,8 @@
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
+     "title": "오른쪽 하향등",
+     "crumb": "차량 점검 › 오른쪽 하향등",
      "hood": 0,
      "backTo": "INSPECTION_SUMMARY"
     },
@@ -1798,6 +1882,8 @@
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
+     "title": "왼쪽 상향등",
+     "crumb": "차량 점검 › 왼쪽 상향등",
      "hood": 0,
      "backTo": "INSPECTION_SUMMARY"
     },
@@ -1836,12 +1922,22 @@
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
+     "title": "오른쪽 상향등",
+     "crumb": "차량 점검 › 오른쪽 상향등",
      "hood": 0,
      "backTo": "INSPECTION_SUMMARY"
     }
    },
    "flows": {
     "bayLabel": true,
+    "hoodListNames": {
+     "washer-fluid-cap": "워셔액",
+     "coolant-reservoir": "냉각수 리저버",
+     "lcw-coolant-reservoir": "저전도 냉각수 리저버",
+     "brake-fluid-reservoir": "브레이크액",
+     "battery-12v": "12V 보조 배터리",
+     "fuse-box": "모터룸 퓨즈박스"
+    },
     "resultBackFromList": "INSPECTION_SUMMARY",
     "tireList": {
      "directDistance": 6.983,
@@ -2290,6 +2386,9 @@
    "preview": {
     "washer-fluid-cap": {
      "selectable": true,
+     "title": "워셔액",
+     "crumb": "차량 점검 › 보닛 › 워셔액",
+     "listName": null,
      "state": "WASHER_SELECTED",
      "distance": 3.329,
      "azimuth": 50.2,
@@ -2345,6 +2444,9 @@
     },
     "coolant-reservoir": {
      "selectable": true,
+     "title": "냉각수 리저버",
+     "crumb": "차량 점검 › 보닛 › 냉각수 리저버",
+     "listName": "냉각수 리저버",
      "state": "COMPONENT_PREVIEW",
      "distance": 0.85,
      "azimuth": 65.4,
@@ -2404,6 +2506,9 @@
     },
     "brake-fluid-reservoir": {
      "selectable": true,
+     "title": "브레이크액",
+     "crumb": "차량 점검 › 보닛 › 브레이크액",
+     "listName": "브레이크액",
      "state": "COMPONENT_PREVIEW",
      "distance": 0.85,
      "azimuth": 114.6,
@@ -2459,6 +2564,9 @@
     },
     "battery-12v": {
      "selectable": true,
+     "title": "12V 보조 배터리",
+     "crumb": "차량 점검 › 보닛 › 12V 보조 배터리",
+     "listName": "12V 보조 배터리",
      "state": "COMPONENT_PREVIEW",
      "distance": 0.888,
      "azimuth": 114.6,
@@ -2514,6 +2622,9 @@
     },
     "fuse-box": {
      "selectable": true,
+     "title": "모터룸 퓨즈박스",
+     "crumb": "차량 점검 › 보닛 › 모터룸 퓨즈박스",
+     "listName": "모터룸 퓨즈박스",
      "state": "COMPONENT_PREVIEW",
      "distance": 0.85,
      "azimuth": 114.6,
@@ -2569,6 +2680,9 @@
     },
     "tire.front-left": {
      "selectable": true,
+     "title": "앞 왼쪽 타이어",
+     "crumb": "차량 점검 › 타이어 › 앞 왼쪽 타이어",
+     "listName": "앞 왼쪽 타이어",
      "state": "TIRE_PREVIEW",
      "distance": 2.597,
      "azimuth": 169.8,
@@ -2626,6 +2740,9 @@
     },
     "tire.front-right": {
      "selectable": true,
+     "title": "앞 오른쪽 타이어",
+     "crumb": "차량 점검 › 타이어 › 앞 오른쪽 타이어",
+     "listName": "앞 오른쪽 타이어",
      "state": "TIRE_PREVIEW",
      "distance": 2.597,
      "azimuth": 10.2,
@@ -2683,6 +2800,9 @@
     },
     "tire.rear-left": {
      "selectable": true,
+     "title": "뒤 왼쪽 타이어",
+     "crumb": "차량 점검 › 타이어 › 뒤 왼쪽 타이어",
+     "listName": "뒤 왼쪽 타이어",
      "state": "TIRE_PREVIEW",
      "distance": 2.597,
      "azimuth": -169.8,
@@ -2740,6 +2860,9 @@
     },
     "tire.rear-right": {
      "selectable": true,
+     "title": "뒤 오른쪽 타이어",
+     "crumb": "차량 점검 › 타이어 › 뒤 오른쪽 타이어",
+     "listName": "뒤 오른쪽 타이어",
      "state": "TIRE_PREVIEW",
      "distance": 2.597,
      "azimuth": -10.2,
@@ -2797,6 +2920,9 @@
     },
     "ev-battery.pack": {
      "selectable": true,
+     "title": "고전압 배터리 팩",
+     "crumb": "차량 점검 › EV 배터리",
+     "listName": null,
      "state": "EV_BATTERY_PREVIEW",
      "distance": 5.608,
      "azimuth": 125.5,
@@ -2857,6 +2983,9 @@
     },
     "ev-charge.port": {
      "selectable": true,
+     "title": "EV 충전구",
+     "crumb": "차량 점검 › EV 충전구",
+     "listName": "EV 충전구",
      "state": "CHARGE_PORT_PREVIEW",
      "distance": 0.901,
      "azimuth": -31,
@@ -2917,6 +3046,9 @@
     },
     "ev-charge.flap": {
      "selectable": true,
+     "title": "EV 충전구 덮개",
+     "crumb": "차량 점검 › EV 충전구",
+     "listName": "EV 충전구 덮개",
      "state": "CHARGE_PORT_PREVIEW",
      "distance": 0.85,
      "azimuth": -31,
@@ -2977,6 +3109,9 @@
     },
     "wiper.front.left": {
      "selectable": true,
+     "title": "전면 왼쪽 와이퍼",
+     "crumb": "차량 점검 › 전면 와이퍼",
+     "listName": "전면 왼쪽 와이퍼",
      "state": "VISIBILITY_PREVIEW",
      "distance": 1.375,
      "azimuth": 114.6,
@@ -3037,6 +3172,9 @@
     },
     "wiper.front.right": {
      "selectable": true,
+     "title": "전면 오른쪽 와이퍼",
+     "crumb": "차량 점검 › 전면 와이퍼",
+     "listName": "전면 오른쪽 와이퍼",
      "state": "VISIBILITY_PREVIEW",
      "distance": 1.213,
      "azimuth": 65.4,
@@ -3097,6 +3235,9 @@
     },
     "light-low-beam-left-0": {
      "selectable": true,
+     "title": "왼쪽 하향등",
+     "crumb": "차량 점검 › 전조등",
+     "listName": "왼쪽 하향등",
      "state": "VISIBILITY_PREVIEW",
      "distance": 0.85,
      "azimuth": 99.9,
@@ -3156,6 +3297,9 @@
     },
     "light-low-beam-right-0": {
      "selectable": true,
+     "title": "오른쪽 하향등",
+     "crumb": "차량 점검 › 전조등",
+     "listName": "오른쪽 하향등",
      "state": "VISIBILITY_PREVIEW",
      "distance": 0.85,
      "azimuth": 80.1,
@@ -3215,6 +3359,9 @@
     },
     "light-high-beam-left-0": {
      "selectable": true,
+     "title": "왼쪽 상향등",
+     "crumb": "차량 점검 › 전조등",
+     "listName": "왼쪽 상향등",
      "state": "VISIBILITY_PREVIEW",
      "distance": 0.85,
      "azimuth": 95.7,
@@ -3274,6 +3421,9 @@
     },
     "light-high-beam-right-0": {
      "selectable": true,
+     "title": "오른쪽 상향등",
+     "crumb": "차량 점검 › 전조등",
+     "listName": "오른쪽 상향등",
      "state": "VISIBILITY_PREVIEW",
      "distance": 0.85,
      "azimuth": 84.3,
@@ -3368,6 +3518,8 @@
      ],
      "meshes": 2,
      "highlightedMeshes": 2,
+     "title": "워셔액",
+     "crumb": "차량 점검 › 워셔액",
      "hood": 60,
      "backTo": "INSPECTION_SUMMARY"
     },
@@ -3406,6 +3558,8 @@
      ],
      "meshes": 2,
      "highlightedMeshes": 2,
+     "title": "냉각수 리저버",
+     "crumb": "차량 점검 › 냉각수 리저버",
      "hood": 60,
      "backTo": "INSPECTION_SUMMARY"
     },
@@ -3424,6 +3578,8 @@
       0
      ],
      "bounds": null,
+     "title": "저전도 냉각수 리저버",
+     "crumb": "차량 점검 › 저전도 냉각수 리저버",
      "hood": 60,
      "backTo": "INSPECTION_SUMMARY"
     },
@@ -3462,6 +3618,8 @@
      ],
      "meshes": 2,
      "highlightedMeshes": 2,
+     "title": "브레이크액",
+     "crumb": "차량 점검 › 브레이크액",
      "hood": 60,
      "backTo": "INSPECTION_SUMMARY"
     },
@@ -3500,6 +3658,8 @@
      ],
      "meshes": 4,
      "highlightedMeshes": 4,
+     "title": "12V 보조 배터리",
+     "crumb": "차량 점검 › 12V 보조 배터리",
      "hood": 60,
      "backTo": "INSPECTION_SUMMARY"
     },
@@ -3538,6 +3698,8 @@
      ],
      "meshes": 2,
      "highlightedMeshes": 2,
+     "title": "모터룸 퓨즈박스",
+     "crumb": "차량 점검 › 모터룸 퓨즈박스",
      "hood": 60,
      "backTo": "INSPECTION_SUMMARY"
     },
@@ -3576,6 +3738,8 @@
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
+     "title": "앞 왼쪽 타이어",
+     "crumb": "차량 점검 › 앞 왼쪽 타이어",
      "hood": 0,
      "backTo": "INSPECTION_SUMMARY"
     },
@@ -3614,6 +3778,8 @@
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
+     "title": "앞 오른쪽 타이어",
+     "crumb": "차량 점검 › 앞 오른쪽 타이어",
      "hood": 0,
      "backTo": "INSPECTION_SUMMARY"
     },
@@ -3652,6 +3818,8 @@
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
+     "title": "뒤 왼쪽 타이어",
+     "crumb": "차량 점검 › 뒤 왼쪽 타이어",
      "hood": 0,
      "backTo": "INSPECTION_SUMMARY"
     },
@@ -3690,6 +3858,8 @@
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
+     "title": "뒤 오른쪽 타이어",
+     "crumb": "차량 점검 › 뒤 오른쪽 타이어",
      "hood": 0,
      "backTo": "INSPECTION_SUMMARY"
     },
@@ -3728,6 +3898,8 @@
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
+     "title": "EV 충전구",
+     "crumb": "차량 점검 › EV 충전구",
      "hood": 0,
      "backTo": "INSPECTION_SUMMARY"
     },
@@ -3766,6 +3938,8 @@
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
+     "title": "전면 왼쪽 와이퍼",
+     "crumb": "차량 점검 › 전면 왼쪽 와이퍼",
      "hood": 0,
      "backTo": "INSPECTION_SUMMARY"
     },
@@ -3804,6 +3978,8 @@
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
+     "title": "전면 오른쪽 와이퍼",
+     "crumb": "차량 점검 › 전면 오른쪽 와이퍼",
      "hood": 0,
      "backTo": "INSPECTION_SUMMARY"
     },
@@ -3842,6 +4018,8 @@
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
+     "title": "왼쪽 하향등",
+     "crumb": "차량 점검 › 왼쪽 하향등",
      "hood": 0,
      "backTo": "INSPECTION_SUMMARY"
     },
@@ -3880,6 +4058,8 @@
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
+     "title": "오른쪽 하향등",
+     "crumb": "차량 점검 › 오른쪽 하향등",
      "hood": 0,
      "backTo": "INSPECTION_SUMMARY"
     },
@@ -3918,6 +4098,8 @@
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
+     "title": "왼쪽 상향등",
+     "crumb": "차량 점검 › 왼쪽 상향등",
      "hood": 0,
      "backTo": "INSPECTION_SUMMARY"
     },
@@ -3956,12 +4138,22 @@
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
+     "title": "오른쪽 상향등",
+     "crumb": "차량 점검 › 오른쪽 상향등",
      "hood": 0,
      "backTo": "INSPECTION_SUMMARY"
     }
    },
    "flows": {
     "bayLabel": true,
+    "hoodListNames": {
+     "washer-fluid-cap": "워셔액",
+     "coolant-reservoir": "냉각수 리저버",
+     "lcw-coolant-reservoir": "저전도 냉각수 리저버",
+     "brake-fluid-reservoir": "브레이크액",
+     "battery-12v": "12V 보조 배터리",
+     "fuse-box": "모터룸 퓨즈박스"
+    },
     "resultBackFromList": "INSPECTION_SUMMARY",
     "tireList": {
      "directDistance": 8.762,
@@ -4410,6 +4602,9 @@
    "preview": {
     "washer-fluid-cap": {
      "selectable": true,
+     "title": "워셔액",
+     "crumb": "차량 점검 › 보닛 › 워셔액",
+     "listName": null,
      "state": "WASHER_SELECTED",
      "distance": 2.995,
      "azimuth": 50.2,
@@ -4465,6 +4660,9 @@
     },
     "coolant-reservoir": {
      "selectable": true,
+     "title": "냉각수 리저버",
+     "crumb": "차량 점검 › 보닛 › 냉각수 리저버",
+     "listName": "냉각수 리저버",
      "state": "COMPONENT_PREVIEW",
      "distance": 0.85,
      "azimuth": 65.4,
@@ -4524,6 +4722,9 @@
     },
     "brake-fluid-reservoir": {
      "selectable": true,
+     "title": "브레이크액",
+     "crumb": "차량 점검 › 보닛 › 브레이크액",
+     "listName": "브레이크액",
      "state": "COMPONENT_PREVIEW",
      "distance": 0.85,
      "azimuth": 114.6,
@@ -4579,6 +4780,9 @@
     },
     "battery-12v": {
      "selectable": true,
+     "title": "12V 보조 배터리",
+     "crumb": "차량 점검 › 보닛 › 12V 보조 배터리",
+     "listName": "12V 보조 배터리",
      "state": "COMPONENT_PREVIEW",
      "distance": 0.85,
      "azimuth": 114.6,
@@ -4634,6 +4838,9 @@
     },
     "fuse-box": {
      "selectable": true,
+     "title": "모터룸 퓨즈박스",
+     "crumb": "차량 점검 › 보닛 › 모터룸 퓨즈박스",
+     "listName": "모터룸 퓨즈박스",
      "state": "COMPONENT_PREVIEW",
      "distance": 0.85,
      "azimuth": 114.6,
@@ -4689,6 +4896,9 @@
     },
     "tire.front-left": {
      "selectable": true,
+     "title": "앞 왼쪽 타이어",
+     "crumb": "차량 점검 › 타이어 › 앞 왼쪽 타이어",
+     "listName": "앞 왼쪽 타이어",
      "state": "TIRE_PREVIEW",
      "distance": 2.45,
      "azimuth": 169.8,
@@ -4746,6 +4956,9 @@
     },
     "tire.front-right": {
      "selectable": true,
+     "title": "앞 오른쪽 타이어",
+     "crumb": "차량 점검 › 타이어 › 앞 오른쪽 타이어",
+     "listName": "앞 오른쪽 타이어",
      "state": "TIRE_PREVIEW",
      "distance": 2.45,
      "azimuth": 10.2,
@@ -4803,6 +5016,9 @@
     },
     "tire.rear-left": {
      "selectable": true,
+     "title": "뒤 왼쪽 타이어",
+     "crumb": "차량 점검 › 타이어 › 뒤 왼쪽 타이어",
+     "listName": "뒤 왼쪽 타이어",
      "state": "TIRE_PREVIEW",
      "distance": 2.45,
      "azimuth": -169.8,
@@ -4860,6 +5076,9 @@
     },
     "tire.rear-right": {
      "selectable": true,
+     "title": "뒤 오른쪽 타이어",
+     "crumb": "차량 점검 › 타이어 › 뒤 오른쪽 타이어",
+     "listName": "뒤 오른쪽 타이어",
      "state": "TIRE_PREVIEW",
      "distance": 2.45,
      "azimuth": -10.2,
@@ -4917,6 +5136,9 @@
     },
     "ev-battery.pack": {
      "selectable": true,
+     "title": "고전압 배터리 팩",
+     "crumb": "차량 점검 › EV 배터리",
+     "listName": null,
      "state": "EV_BATTERY_PREVIEW",
      "distance": 5.292,
      "azimuth": 125.5,
@@ -4977,6 +5199,9 @@
     },
     "ev-charge.port": {
      "selectable": true,
+     "title": "EV 충전구",
+     "crumb": "차량 점검 › EV 충전구",
+     "listName": "EV 충전구",
      "state": "CHARGE_PORT_PREVIEW",
      "distance": 0.85,
      "azimuth": -31,
@@ -5037,6 +5262,9 @@
     },
     "ev-charge.flap": {
      "selectable": true,
+     "title": "EV 충전구 덮개",
+     "crumb": "차량 점검 › EV 충전구",
+     "listName": "EV 충전구 덮개",
      "state": "CHARGE_PORT_PREVIEW",
      "distance": 0.85,
      "azimuth": -31,
@@ -5097,6 +5325,9 @@
     },
     "wiper.front.left": {
      "selectable": true,
+     "title": "전면 왼쪽 와이퍼",
+     "crumb": "차량 점검 › 전면 와이퍼",
+     "listName": "전면 왼쪽 와이퍼",
      "state": "VISIBILITY_PREVIEW",
      "distance": 1.298,
      "azimuth": 114.6,
@@ -5157,6 +5388,9 @@
     },
     "wiper.front.right": {
      "selectable": true,
+     "title": "전면 오른쪽 와이퍼",
+     "crumb": "차량 점검 › 전면 와이퍼",
+     "listName": "전면 오른쪽 와이퍼",
      "state": "VISIBILITY_PREVIEW",
      "distance": 1.144,
      "azimuth": 65.4,
@@ -5217,6 +5451,9 @@
     },
     "light-low-beam-left-0": {
      "selectable": true,
+     "title": "왼쪽 하향등",
+     "crumb": "차량 점검 › 전조등",
+     "listName": "왼쪽 하향등",
      "state": "VISIBILITY_PREVIEW",
      "distance": 0.85,
      "azimuth": 99.9,
@@ -5276,6 +5513,9 @@
     },
     "light-low-beam-right-0": {
      "selectable": true,
+     "title": "오른쪽 하향등",
+     "crumb": "차량 점검 › 전조등",
+     "listName": "오른쪽 하향등",
      "state": "VISIBILITY_PREVIEW",
      "distance": 0.85,
      "azimuth": 80.1,
@@ -5335,6 +5575,9 @@
     },
     "light-high-beam-left-0": {
      "selectable": true,
+     "title": "왼쪽 상향등",
+     "crumb": "차량 점검 › 전조등",
+     "listName": "왼쪽 상향등",
      "state": "VISIBILITY_PREVIEW",
      "distance": 0.85,
      "azimuth": 95.7,
@@ -5394,6 +5637,9 @@
     },
     "light-high-beam-right-0": {
      "selectable": true,
+     "title": "오른쪽 상향등",
+     "crumb": "차량 점검 › 전조등",
+     "listName": "오른쪽 상향등",
      "state": "VISIBILITY_PREVIEW",
      "distance": 0.85,
      "azimuth": 84.3,
@@ -5488,6 +5734,8 @@
      ],
      "meshes": 2,
      "highlightedMeshes": 2,
+     "title": "워셔액",
+     "crumb": "차량 점검 › 워셔액",
      "hood": 60,
      "backTo": "INSPECTION_SUMMARY"
     },
@@ -5526,6 +5774,8 @@
      ],
      "meshes": 2,
      "highlightedMeshes": 2,
+     "title": "냉각수 리저버",
+     "crumb": "차량 점검 › 냉각수 리저버",
      "hood": 60,
      "backTo": "INSPECTION_SUMMARY"
     },
@@ -5544,6 +5794,8 @@
       0
      ],
      "bounds": null,
+     "title": "저전도 냉각수 리저버",
+     "crumb": "차량 점검 › 저전도 냉각수 리저버",
      "hood": 60,
      "backTo": "INSPECTION_SUMMARY"
     },
@@ -5582,6 +5834,8 @@
      ],
      "meshes": 2,
      "highlightedMeshes": 2,
+     "title": "브레이크액",
+     "crumb": "차량 점검 › 브레이크액",
      "hood": 60,
      "backTo": "INSPECTION_SUMMARY"
     },
@@ -5620,6 +5874,8 @@
      ],
      "meshes": 4,
      "highlightedMeshes": 4,
+     "title": "12V 보조 배터리",
+     "crumb": "차량 점검 › 12V 보조 배터리",
      "hood": 60,
      "backTo": "INSPECTION_SUMMARY"
     },
@@ -5658,6 +5914,8 @@
      ],
      "meshes": 2,
      "highlightedMeshes": 2,
+     "title": "모터룸 퓨즈박스",
+     "crumb": "차량 점검 › 모터룸 퓨즈박스",
      "hood": 60,
      "backTo": "INSPECTION_SUMMARY"
     },
@@ -5696,6 +5954,8 @@
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
+     "title": "앞 왼쪽 타이어",
+     "crumb": "차량 점검 › 앞 왼쪽 타이어",
      "hood": 0,
      "backTo": "INSPECTION_SUMMARY"
     },
@@ -5734,6 +5994,8 @@
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
+     "title": "앞 오른쪽 타이어",
+     "crumb": "차량 점검 › 앞 오른쪽 타이어",
      "hood": 0,
      "backTo": "INSPECTION_SUMMARY"
     },
@@ -5772,6 +6034,8 @@
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
+     "title": "뒤 왼쪽 타이어",
+     "crumb": "차량 점검 › 뒤 왼쪽 타이어",
      "hood": 0,
      "backTo": "INSPECTION_SUMMARY"
     },
@@ -5810,6 +6074,8 @@
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
+     "title": "뒤 오른쪽 타이어",
+     "crumb": "차량 점검 › 뒤 오른쪽 타이어",
      "hood": 0,
      "backTo": "INSPECTION_SUMMARY"
     },
@@ -5848,6 +6114,8 @@
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
+     "title": "EV 충전구",
+     "crumb": "차량 점검 › EV 충전구",
      "hood": 0,
      "backTo": "INSPECTION_SUMMARY"
     },
@@ -5886,6 +6154,8 @@
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
+     "title": "전면 왼쪽 와이퍼",
+     "crumb": "차량 점검 › 전면 왼쪽 와이퍼",
      "hood": 0,
      "backTo": "INSPECTION_SUMMARY"
     },
@@ -5924,6 +6194,8 @@
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
+     "title": "전면 오른쪽 와이퍼",
+     "crumb": "차량 점검 › 전면 오른쪽 와이퍼",
      "hood": 0,
      "backTo": "INSPECTION_SUMMARY"
     },
@@ -5962,6 +6234,8 @@
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
+     "title": "왼쪽 하향등",
+     "crumb": "차량 점검 › 왼쪽 하향등",
      "hood": 0,
      "backTo": "INSPECTION_SUMMARY"
     },
@@ -6000,6 +6274,8 @@
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
+     "title": "오른쪽 하향등",
+     "crumb": "차량 점검 › 오른쪽 하향등",
      "hood": 0,
      "backTo": "INSPECTION_SUMMARY"
     },
@@ -6038,6 +6314,8 @@
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
+     "title": "왼쪽 상향등",
+     "crumb": "차량 점검 › 왼쪽 상향등",
      "hood": 0,
      "backTo": "INSPECTION_SUMMARY"
     },
@@ -6076,12 +6354,22 @@
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
+     "title": "오른쪽 상향등",
+     "crumb": "차량 점검 › 오른쪽 상향등",
      "hood": 0,
      "backTo": "INSPECTION_SUMMARY"
     }
    },
    "flows": {
     "bayLabel": true,
+    "hoodListNames": {
+     "washer-fluid-cap": "워셔액",
+     "coolant-reservoir": "냉각수 리저버",
+     "lcw-coolant-reservoir": "저전도 냉각수 리저버",
+     "brake-fluid-reservoir": "브레이크액",
+     "battery-12v": "12V 보조 배터리",
+     "fuse-box": "모터룸 퓨즈박스"
+    },
     "resultBackFromList": "INSPECTION_SUMMARY",
     "tireList": {
      "directDistance": 7.947,
@@ -6530,6 +6818,9 @@
    "preview": {
     "washer-fluid-cap": {
      "selectable": true,
+     "title": "워셔액",
+     "crumb": "차량 점검 › 보닛 › 워셔액",
+     "listName": null,
      "state": "WASHER_SELECTED",
      "distance": 3.455,
      "azimuth": 50.2,
@@ -6585,6 +6876,9 @@
     },
     "coolant-reservoir": {
      "selectable": true,
+     "title": "냉각수 리저버",
+     "crumb": "차량 점검 › 보닛 › 냉각수 리저버",
+     "listName": "냉각수 리저버",
      "state": "COMPONENT_PREVIEW",
      "distance": 1.343,
      "azimuth": 65.4,
@@ -6644,6 +6938,9 @@
     },
     "brake-fluid-reservoir": {
      "selectable": true,
+     "title": "브레이크액",
+     "crumb": "차량 점검 › 보닛 › 브레이크액",
+     "listName": "브레이크액",
      "state": "COMPONENT_PREVIEW",
      "distance": 0.986,
      "azimuth": 114.6,
@@ -6699,6 +6996,9 @@
     },
     "battery-12v": {
      "selectable": true,
+     "title": "12V 보조 배터리",
+     "crumb": "차량 점검 › 보닛 › 12V 보조 배터리",
+     "listName": "12V 보조 배터리",
      "state": "COMPONENT_PREVIEW",
      "distance": 1.655,
      "azimuth": 114.6,
@@ -6754,6 +7054,9 @@
     },
     "fuse-box": {
      "selectable": true,
+     "title": "모터룸 퓨즈박스",
+     "crumb": "차량 점검 › 보닛 › 모터룸 퓨즈박스",
+     "listName": "모터룸 퓨즈박스",
      "state": "COMPONENT_PREVIEW",
      "distance": 1.188,
      "azimuth": 114.6,
@@ -6809,6 +7112,9 @@
     },
     "tire.front-left": {
      "selectable": true,
+     "title": "앞 왼쪽 타이어",
+     "crumb": "차량 점검 › 타이어 › 앞 왼쪽 타이어",
+     "listName": "앞 왼쪽 타이어",
      "state": "TIRE_PREVIEW",
      "distance": 4.842,
      "azimuth": 169.8,
@@ -6866,6 +7172,9 @@
     },
     "tire.front-right": {
      "selectable": true,
+     "title": "앞 오른쪽 타이어",
+     "crumb": "차량 점검 › 타이어 › 앞 오른쪽 타이어",
+     "listName": "앞 오른쪽 타이어",
      "state": "TIRE_PREVIEW",
      "distance": 4.842,
      "azimuth": 10.2,
@@ -6923,6 +7232,9 @@
     },
     "tire.rear-left": {
      "selectable": true,
+     "title": "뒤 왼쪽 타이어",
+     "crumb": "차량 점검 › 타이어 › 뒤 왼쪽 타이어",
+     "listName": "뒤 왼쪽 타이어",
      "state": "TIRE_PREVIEW",
      "distance": 4.842,
      "azimuth": -169.8,
@@ -6980,6 +7292,9 @@
     },
     "tire.rear-right": {
      "selectable": true,
+     "title": "뒤 오른쪽 타이어",
+     "crumb": "차량 점검 › 타이어 › 뒤 오른쪽 타이어",
+     "listName": "뒤 오른쪽 타이어",
      "state": "TIRE_PREVIEW",
      "distance": 4.842,
      "azimuth": -10.2,
@@ -7037,6 +7352,9 @@
     },
     "ev-battery.pack": {
      "selectable": true,
+     "title": "고전압 배터리 팩",
+     "crumb": "차량 점검 › EV 배터리",
+     "listName": null,
      "state": "EV_BATTERY_PREVIEW",
      "distance": 10.456,
      "azimuth": 125.5,
@@ -7097,6 +7415,9 @@
     },
     "ev-charge.port": {
      "selectable": true,
+     "title": "EV 충전구",
+     "crumb": "차량 점검 › EV 충전구",
+     "listName": "EV 충전구",
      "state": "CHARGE_PORT_PREVIEW",
      "distance": 1.68,
      "azimuth": -31,
@@ -7157,6 +7478,9 @@
     },
     "ev-charge.flap": {
      "selectable": true,
+     "title": "EV 충전구 덮개",
+     "crumb": "차량 점검 › EV 충전구",
+     "listName": "EV 충전구 덮개",
      "state": "CHARGE_PORT_PREVIEW",
      "distance": 1.413,
      "azimuth": -31,
@@ -7217,6 +7541,9 @@
     },
     "wiper.front.left": {
      "selectable": true,
+     "title": "전면 왼쪽 와이퍼",
+     "crumb": "차량 점검 › 전면 와이퍼",
+     "listName": "전면 왼쪽 와이퍼",
      "state": "VISIBILITY_PREVIEW",
      "distance": 2.564,
      "azimuth": 114.6,
@@ -7277,6 +7604,9 @@
     },
     "wiper.front.right": {
      "selectable": true,
+     "title": "전면 오른쪽 와이퍼",
+     "crumb": "차량 점검 › 전면 와이퍼",
+     "listName": "전면 오른쪽 와이퍼",
      "state": "VISIBILITY_PREVIEW",
      "distance": 2.261,
      "azimuth": 65.4,
@@ -7337,6 +7667,9 @@
     },
     "light-low-beam-left-0": {
      "selectable": true,
+     "title": "왼쪽 하향등",
+     "crumb": "차량 점검 › 전조등",
+     "listName": "왼쪽 하향등",
      "state": "VISIBILITY_PREVIEW",
      "distance": 0.85,
      "azimuth": 99.9,
@@ -7396,6 +7729,9 @@
     },
     "light-low-beam-right-0": {
      "selectable": true,
+     "title": "오른쪽 하향등",
+     "crumb": "차량 점검 › 전조등",
+     "listName": "오른쪽 하향등",
      "state": "VISIBILITY_PREVIEW",
      "distance": 0.85,
      "azimuth": 80.1,
@@ -7455,6 +7791,9 @@
     },
     "light-high-beam-left-0": {
      "selectable": true,
+     "title": "왼쪽 상향등",
+     "crumb": "차량 점검 › 전조등",
+     "listName": "왼쪽 상향등",
      "state": "VISIBILITY_PREVIEW",
      "distance": 0.85,
      "azimuth": 95.7,
@@ -7514,6 +7853,9 @@
     },
     "light-high-beam-right-0": {
      "selectable": true,
+     "title": "오른쪽 상향등",
+     "crumb": "차량 점검 › 전조등",
+     "listName": "오른쪽 상향등",
      "state": "VISIBILITY_PREVIEW",
      "distance": 0.85,
      "azimuth": 84.3,
@@ -7608,6 +7950,8 @@
      ],
      "meshes": 2,
      "highlightedMeshes": 2,
+     "title": "워셔액",
+     "crumb": "차량 점검 › 워셔액",
      "hood": 60,
      "backTo": "INSPECTION_SUMMARY"
     },
@@ -7646,6 +7990,8 @@
      ],
      "meshes": 2,
      "highlightedMeshes": 2,
+     "title": "냉각수 리저버",
+     "crumb": "차량 점검 › 냉각수 리저버",
      "hood": 60,
      "backTo": "INSPECTION_SUMMARY"
     },
@@ -7664,6 +8010,8 @@
       0
      ],
      "bounds": null,
+     "title": "저전도 냉각수 리저버",
+     "crumb": "차량 점검 › 저전도 냉각수 리저버",
      "hood": 60,
      "backTo": "INSPECTION_SUMMARY"
     },
@@ -7702,6 +8050,8 @@
      ],
      "meshes": 2,
      "highlightedMeshes": 2,
+     "title": "브레이크액",
+     "crumb": "차량 점검 › 브레이크액",
      "hood": 60,
      "backTo": "INSPECTION_SUMMARY"
     },
@@ -7740,6 +8090,8 @@
      ],
      "meshes": 4,
      "highlightedMeshes": 4,
+     "title": "12V 보조 배터리",
+     "crumb": "차량 점검 › 12V 보조 배터리",
      "hood": 60,
      "backTo": "INSPECTION_SUMMARY"
     },
@@ -7778,6 +8130,8 @@
      ],
      "meshes": 2,
      "highlightedMeshes": 2,
+     "title": "모터룸 퓨즈박스",
+     "crumb": "차량 점검 › 모터룸 퓨즈박스",
      "hood": 60,
      "backTo": "INSPECTION_SUMMARY"
     },
@@ -7816,6 +8170,8 @@
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
+     "title": "앞 왼쪽 타이어",
+     "crumb": "차량 점검 › 앞 왼쪽 타이어",
      "hood": 0,
      "backTo": "INSPECTION_SUMMARY"
     },
@@ -7854,6 +8210,8 @@
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
+     "title": "앞 오른쪽 타이어",
+     "crumb": "차량 점검 › 앞 오른쪽 타이어",
      "hood": 0,
      "backTo": "INSPECTION_SUMMARY"
     },
@@ -7892,6 +8250,8 @@
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
+     "title": "뒤 왼쪽 타이어",
+     "crumb": "차량 점검 › 뒤 왼쪽 타이어",
      "hood": 0,
      "backTo": "INSPECTION_SUMMARY"
     },
@@ -7930,6 +8290,8 @@
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
+     "title": "뒤 오른쪽 타이어",
+     "crumb": "차량 점검 › 뒤 오른쪽 타이어",
      "hood": 0,
      "backTo": "INSPECTION_SUMMARY"
     },
@@ -7968,6 +8330,8 @@
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
+     "title": "EV 충전구",
+     "crumb": "차량 점검 › EV 충전구",
      "hood": 0,
      "backTo": "INSPECTION_SUMMARY"
     },
@@ -8006,6 +8370,8 @@
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
+     "title": "전면 왼쪽 와이퍼",
+     "crumb": "차량 점검 › 전면 왼쪽 와이퍼",
      "hood": 0,
      "backTo": "INSPECTION_SUMMARY"
     },
@@ -8044,6 +8410,8 @@
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
+     "title": "전면 오른쪽 와이퍼",
+     "crumb": "차량 점검 › 전면 오른쪽 와이퍼",
      "hood": 0,
      "backTo": "INSPECTION_SUMMARY"
     },
@@ -8082,6 +8450,8 @@
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
+     "title": "왼쪽 하향등",
+     "crumb": "차량 점검 › 왼쪽 하향등",
      "hood": 0,
      "backTo": "INSPECTION_SUMMARY"
     },
@@ -8120,6 +8490,8 @@
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
+     "title": "오른쪽 하향등",
+     "crumb": "차량 점검 › 오른쪽 하향등",
      "hood": 0,
      "backTo": "INSPECTION_SUMMARY"
     },
@@ -8158,6 +8530,8 @@
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
+     "title": "왼쪽 상향등",
+     "crumb": "차량 점검 › 왼쪽 상향등",
      "hood": 0,
      "backTo": "INSPECTION_SUMMARY"
     },
@@ -8196,12 +8570,22 @@
      ],
      "meshes": 1,
      "highlightedMeshes": 1,
+     "title": "오른쪽 상향등",
+     "crumb": "차량 점검 › 오른쪽 상향등",
      "hood": 0,
      "backTo": "INSPECTION_SUMMARY"
     }
    },
    "flows": {
     "bayLabel": true,
+    "hoodListNames": {
+     "washer-fluid-cap": "워셔액",
+     "coolant-reservoir": "냉각수 리저버",
+     "lcw-coolant-reservoir": "저전도 냉각수 리저버",
+     "brake-fluid-reservoir": "브레이크액",
+     "battery-12v": "12V 보조 배터리",
+     "fuse-box": "모터룸 퓨즈박스"
+    },
     "resultBackFromList": "INSPECTION_SUMMARY",
     "tireList": {
      "directDistance": 16.245,
