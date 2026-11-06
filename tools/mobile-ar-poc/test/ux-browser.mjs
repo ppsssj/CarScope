@@ -62,6 +62,7 @@ try {
       assert.match(await page.locator('#sync-connection').innerText(), /차량과 연결됐어요/);
       await plainWords(page, `${where} intro`); await fits(page, `${where} intro`);
       assert.equal(await page.locator('#manual-start').isDisabled(), true, 'nothing starts before the safety check');
+      assert.match(await page.locator('#safety-limit').innerText(), /위 안전 조건을 지킬 수 없다면 점검을 시작하지 마세요\./);
       assert.equal(await page.locator('#primary').isDisabled(), true);
       await startManual(page);
       for (const index of [0, 1, 2]) {

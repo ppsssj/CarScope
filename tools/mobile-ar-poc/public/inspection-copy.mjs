@@ -45,7 +45,7 @@ export function taskCopy(task) {
   if (task.id === 'brake-fluid') return BRAKE;
   return KIND[task.kind];
 }
-export const CANNOT_CONFIRM_NOTE = '하나라도 확인할 수 없으면 시작하지 마세요.';
+export const CANNOT_CONFIRM_NOTE = '위 안전 조건을 지킬 수 없다면 점검을 시작하지 마세요.';
 export const SAFETY_ACK = '위 내용을 모두 확인했어요';
 
 // Each question reads so that "보여요" is the stored FOUND and "없어요" is the stored NOT_FOUND. The tip keeps what the driver must not do.

@@ -4,7 +4,7 @@ import {taskLinks} from '../public/inspection-tasks.mjs';
 import {getChecklistProfile} from '../public/checklist-profiles.mjs';
 import {ANSWERS} from '../public/checklist-result.mjs';
 import {STATUSES} from '../public/inspection-result.mjs';
-import {taskCopy,questionCopy,ANSWER_COPY,CHECKLIST_OUTCOME,WASHER_OUTCOME} from '../public/inspection-copy.mjs';
+import {taskCopy,questionCopy,ANSWER_COPY,CHECKLIST_OUTCOME,WASHER_OUTCOME,CANNOT_CONFIRM_NOTE} from '../public/inspection-copy.mjs';
 import {MOBILE_MODULES} from '../public-modules.mjs';
 
 const ids=taskLinks().map(t=>t.id).filter(id=>id!=='washer-fluid');
@@ -47,6 +47,10 @@ test('the words always on screen keep the conditions and prohibitions of safetyT
   assert.match(taskCopy(getChecklistProfile('wiper.front.left')).lead,/완전히 멈춘/);
   for(const id of ids){const task=getChecklistProfile(id);if(task.supportsObservationStop)assert.ok(taskCopy(task).stop,`${id} has a stop rule on screen`);
     assert.ok(task.safetyText&&task.limitations&&task.safetyHelp,id);}
+});
+test('the note before starting is about the safety conditions, not about items the person could not check',()=>{
+  assert.equal(CANNOT_CONFIRM_NOTE,'위 안전 조건을 지킬 수 없다면 점검을 시작하지 마세요.');
+  assert.doesNotMatch(CANNOT_CONFIRM_NOTE,/확인할 수 없/,'"확인하기 어려워요" is a valid answer during the inspection');
 });
 test('each question keeps the part-specific prohibition of its full help',()=>{
   const q=(id,index)=>questionCopy(getChecklistProfile(id),getChecklistProfile(id).checks[index]);
