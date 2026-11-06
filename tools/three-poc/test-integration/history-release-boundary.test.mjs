@@ -8,7 +8,7 @@ import {resolve,dirname,join} from 'node:path';
 import {fileURLToPath} from 'node:url';
 const repo=resolve(dirname(fileURLToPath(import.meta.url)),'../../..');
 const walk=dir=>existsSync(dir)?readdirSync(dir,{withFileTypes:true}).flatMap(e=>e.isDirectory()?walk(join(dir,e.name)):[join(dir,e.name)]):[];
-const MODULES=['inspection-history-contract.mjs','inspection-history-store.mjs','inspection-history-view.mjs'];
+const MODULES=['inspection-history-contract.mjs','inspection-history-store.mjs','inspection-history-view.mjs','inspection-history-client.mjs','native-history-provider.mjs'];
 
 test('Debug package has the History UI unchanged, no provider, and no synthetic data or credential path',()=>{
   const fixture=mkdtempSync(join(tmpdir(),'carscope-history-packaging-')),tools=join(fixture,'tools');mkdirSync(tools);
@@ -24,12 +24,12 @@ test('Debug package has the History UI unchanged, no provider, and no synthetic 
   assert.ok(page.includes('createInspectionHistoryStore({provider:null})'),'no provider is composed');
   assert.ok(!/history-demo|demoHistoryProvider|demoRows/.test(page));
   assert.ok(!files.some(f=>/history-demo|fixture|[\\/]test[\\/]/.test(f.slice(out.length))),'synthetic History data is not packaged');
-  for(const file of files.filter(f=>/inspection-history|inspect\.js$|inspection-flow|inspection-product|android-inspect-shell/.test(f))){
+  for(const file of files.filter(f=>/inspection-history|native-history|inspect\.js$|inspection-flow|inspection-product|android-inspect-shell/.test(f))){
     const text=readFileSync(file,'utf8').replace(/^\s*\/\/.*$/gm,'');
     assert.ok(!/Authorization|[Bb]earer\s|X-Forwarded|\/v1\/inspection-records|history:read|PG_TEST_URL|onrender\.com/.test(text),file);
     assert.ok(!/synthetic-(user|vehicle|device|registration)|issuer\.example/.test(text),file);
   }
-  for(const file of files.filter(f=>/inspection-history-(contract|store|view)/.test(f)))assert.ok(!/\bfetch\s*\(/.test(readFileSync(file,'utf8')),file);
+  for(const file of files.filter(f=>/inspection-history-(contract|store|view|client)/.test(f)))assert.ok(!/\bfetch\s*\(/.test(readFileSync(file,'utf8')),file);
   assert.ok(!existsSync(join(fixture,'app/src/release')),'builder writes nothing to Release');
   assert.ok(!existsSync(join(fixture,'app/src/main/assets/inspection')),'builder writes nothing to main');
 });

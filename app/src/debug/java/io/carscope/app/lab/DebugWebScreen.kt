@@ -33,6 +33,7 @@ internal class DebugWebScreen(
     private val chargePortStatusJson: (() -> String)? = null,
     private val visibilityStatusJson: (() -> String)? = null,
     private val inspectionBridge: ((String) -> String)? = null,
+    private val historyChannel: ((String) -> String)? = null,
 ) {
     @Volatile private var view: WebView? = null
     @Volatile private var currentPage: String? = null
@@ -68,6 +69,13 @@ internal class DebugWebScreen(
                             currentPage, request.requestHeaders.entries.firstOrNull { it.key.equals("Referer", true) }?.value)) return notFound()
                     val command = url.getQueryParameter("command") ?: return notFound()
                     return ok("application/json", csp, inspectionBridge.invoke(command).byteInputStream(Charsets.UTF_8))
+                }
+                if (url.path == NativeInspectionOrigin.HISTORY_PATH) {
+                    if (view !== this@DebugWebScreen.view || historyChannel == null ||
+                        !NativeInspectionOrigin.allowed(url.toString(), host, request.method, request.isForMainFrame,
+                            currentPage, request.requestHeaders.entries.firstOrNull { it.key.equals("Referer", true) }?.value, NativeInspectionOrigin.HISTORY_PATH)) return notFound()
+                    val command = url.getQueryParameter("command") ?: return notFound()
+                    return ok("application/json", csp, historyChannel.invoke(command).byteInputStream(Charsets.UTF_8))
                 }
                 val path = url.path.orEmpty().trimStart('/').ifEmpty { "index.html" }
                 if (path.contains("..")) return notFound()

@@ -24,6 +24,7 @@ const timestamp = (x) => Number.isSafeInteger(x) && Math.abs(x) <= 8_640_000_000
 const uuid = (x) =>
   typeof x === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(x);
 export const HISTORY_NAMESPACES = Object.freeze(['UNVERIFIED', 'AVD_SIMULATOR', 'VERIFIED_VEHICLE']);
+export const AVD_SIMULATOR_ISSUER = 'carscope:avd-simulator';
 export const UNVERIFIED_AUTHORITY = Object.freeze({
   authorityNamespace: 'UNVERIFIED',
   authorityIssuer: 'unverified',
@@ -128,9 +129,16 @@ const scope = (principal) => {
   if (a.authorityNamespace !== 'VERIFIED_VEHICLE') fail('FORBIDDEN', 403);
   return a;
 };
+const avdScope = (principal) => {
+  const a = historyAuthority(principal);
+  if (a.authorityNamespace !== 'AVD_SIMULATOR' || a.authorityIssuer !== AVD_SIMULATOR_ISSUER) fail('FORBIDDEN', 403);
+  return a;
+};
 export function historyQuery(params = new URLSearchParams(), principal) {
-  const owner = scope(principal),
-    allowed = ['limit', 'cursor', 'taskId', 'partId', 'status', 'from', 'to'];
+  return boundedQuery(params, scope(principal));
+}
+function boundedQuery(params, owner) {
+  const allowed = ['limit', 'cursor', 'taskId', 'partId', 'status', 'from', 'to'];
   for (const key of params.keys()) if (!allowed.includes(key) || params.getAll(key).length !== 1) fail();
   const limit = params.has('limit') ? Number(params.get('limit')) : 20;
   if (
@@ -165,6 +173,7 @@ export function historyQuery(params = new URLSearchParams(), principal) {
     issuer: owner.authorityIssuer,
     userId: owner.userId,
     vehicleId: owner.vehicleId,
+    ...(owner.authorityNamespace === 'AVD_SIMULATOR' ? { registrationId: owner.registrationId } : {}),
     ...filter,
   });
   let after = null;
@@ -204,7 +213,8 @@ export function historyDto(row, detail = false) {
     method: 'SELF',
     channel: 'MOBILE',
     authorityNamespace: row.authorityNamespace,
-    ownershipEvidence: 'SESSION_CREATION_BINDING',
+    // A simulator registration is not a vehicle owner, and the label must keep saying so.
+    ownershipEvidence: row.authorityNamespace === 'AVD_SIMULATOR' ? 'AVD_REGISTRATION_BINDING' : 'SESSION_CREATION_BINDING',
     sdkDataIncluded: false,
   };
   if (detail) {
@@ -213,50 +223,54 @@ export function historyDto(row, detail = false) {
   }
   return out;
 }
+async function verifyRow(row, owner, ownerKeys) {
+  if (
+    !row.originalResult ||
+    !SUPPORTED_TASKS.includes(row.taskId) ||
+    !ownerKeys.every((k) => row[k] === owner[k]) ||
+    checkEnvelope(
+      { protocol: 'inspection-sync', protocolVersion: 1, result: row.originalResult },
+      row.taskId,
+    ).length ||
+    (await resultDigest(row.originalResult)) !== row.resultDigest ||
+    row.inspectionId !== row.originalResult.inspectionId ||
+    row.schemaVersion !== row.originalResult.schemaVersion ||
+    row.inspectionStatus !== row.originalResult.status ||
+    partIdForTask(row.taskId) !== row.partId
+  )
+    fail('INTERNAL', 500);
+}
+async function listPage(rows, query, ownerKeys) {
+  const hasMore = rows.length > query.limit,
+    visible = rows.slice(0, query.limit),
+    last = visible.at(-1);
+  await Promise.all(visible.map((row) => verifyRow(row, query.owner, ownerKeys)));
+  const nextCursor = hasMore
+    ? Buffer.from(
+        JSON.stringify({
+          v: 1,
+          completedAt: last.completedAt,
+          recordId: last.recordId,
+          fingerprint: query.fingerprint,
+        }),
+      ).toString('base64url')
+    : null;
+  return {
+    schemaVersion: 1,
+    items: visible.map((r) => historyDto(r)),
+    page: { limit: query.limit, hasMore, nextCursor },
+  };
+}
+const OWNER_KEYS = Object.freeze(['authorityNamespace', 'authorityIssuer', 'userId', 'vehicleId']);
+const AVD_OWNER_KEYS = Object.freeze(['authorityNamespace', 'authorityIssuer', 'registrationId']);
 export class HistoryService {
   constructor({ store } = {}) {
     this.store = store;
   }
-  async verify(row, owner) {
-    if (
-      !row.originalResult ||
-      !SUPPORTED_TASKS.includes(row.taskId) ||
-      !['authorityNamespace', 'authorityIssuer', 'userId', 'vehicleId'].every((k) => row[k] === owner[k]) ||
-      checkEnvelope(
-        { protocol: 'inspection-sync', protocolVersion: 1, result: row.originalResult },
-        row.taskId,
-      ).length ||
-      (await resultDigest(row.originalResult)) !== row.resultDigest ||
-      row.inspectionId !== row.originalResult.inspectionId ||
-      row.schemaVersion !== row.originalResult.schemaVersion ||
-      row.inspectionStatus !== row.originalResult.status ||
-      partIdForTask(row.taskId) !== row.partId
-    )
-      fail('INTERNAL', 500);
-  }
   async list(principal, params) {
     const query = historyQuery(params, principal);
     if (typeof this.store?.historyList !== 'function') fail('FORBIDDEN', 403);
-    const rows = await this.store.historyList(query),
-      hasMore = rows.length > query.limit,
-      visible = rows.slice(0, query.limit),
-      last = visible.at(-1);
-    await Promise.all(visible.map((row) => this.verify(row, query.owner)));
-    const nextCursor = hasMore
-      ? Buffer.from(
-          JSON.stringify({
-            v: 1,
-            completedAt: last.completedAt,
-            recordId: last.recordId,
-            fingerprint: query.fingerprint,
-          }),
-        ).toString('base64url')
-      : null;
-    return {
-      schemaVersion: 1,
-      items: visible.map((r) => historyDto(r)),
-      page: { limit: query.limit, hasMore, nextCursor },
-    };
+    return listPage(await this.store.historyList(query), query, OWNER_KEYS);
   }
   async detail(principal, recordId) {
     const owner = scope(principal);
@@ -264,7 +278,31 @@ export class HistoryService {
     if (typeof this.store?.historyGet !== 'function') fail('FORBIDDEN', 403);
     const row = await this.store.historyGet(owner, recordId);
     if (!row) fail('NOT_FOUND', 404);
-    await this.verify(row, owner);
+    await verifyRow(row, owner, OWNER_KEYS);
+    return { schemaVersion: 1, record: historyDto(row, true) };
+  }
+}
+/**
+ * Debug AVD reads, separate from HistoryService on purpose: it refuses every namespace but AVD_SIMULATOR, the
+ * way HistoryService refuses every namespace but VERIFIED_VEHICLE. The scope is the one registration that
+ * created a record. It proves the holder of that enrollment, never a user, a vehicle or ownership.
+ */
+export class AvdSimulatorHistoryService {
+  constructor({ store } = {}) {
+    this.store = store;
+  }
+  async list(principal, params = new URLSearchParams()) {
+    const query = boundedQuery(params, avdScope(principal));
+    if (typeof this.store?.avdHistoryList !== 'function') fail('FORBIDDEN', 403);
+    return listPage(await this.store.avdHistoryList(query), query, AVD_OWNER_KEYS);
+  }
+  async detail(principal, recordId) {
+    const owner = avdScope(principal);
+    if (!uuid(recordId)) fail();
+    if (typeof this.store?.avdHistoryGet !== 'function') fail('FORBIDDEN', 403);
+    const row = await this.store.avdHistoryGet(owner, recordId);
+    if (!row) fail('NOT_FOUND', 404);
+    await verifyRow(row, owner, AVD_OWNER_KEYS);
     return { schemaVersion: 1, record: historyDto(row, true) };
   }
 }

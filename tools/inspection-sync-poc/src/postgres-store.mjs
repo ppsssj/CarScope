@@ -166,8 +166,19 @@ export class PostgreSQLSessionStore {
     }
   }
   async historyList(query) {
-    const {owner}=query,values=[owner.authorityNamespace,owner.authorityIssuer,owner.userId,owner.vehicleId];
-    const where=['authority_namespace=$1','authority_issuer=$2','user_id=$3','vehicle_id=$4'];
+    const {owner}=query;
+    return this.#historyPage(query,[owner.authorityNamespace,owner.authorityIssuer,owner.userId,owner.vehicleId],['authority_namespace=$1','authority_issuer=$2','user_id=$3','vehicle_id=$4']);
+  }
+  // The namespace is a literal: a NULL user and vehicle never widen these two statements to another kind of owner.
+  async avdHistoryList(query) {
+    const {owner}=query;
+    return this.#historyPage(query,[owner.authorityIssuer,owner.registrationId],["authority_namespace='AVD_SIMULATOR'",'authority_issuer=$1','registration_id=$2']);
+  }
+  async avdHistoryGet(owner,recordId) {
+    const r=await this.#pool.query("SELECT * FROM cs_inspection_records WHERE record_id=$1 AND authority_namespace='AVD_SIMULATOR' AND authority_issuer=$2 AND registration_id=$3",[recordId,owner.authorityIssuer,owner.registrationId]);
+    return r.rows[0]?this.#record(r.rows[0]):null;
+  }
+  async #historyPage(query,values,where) {
     const add=(sql,value)=>{values.push(value);where.push(sql.replace('?', '$'+values.length));};
     if(query.taskId!==null)add('task_id=?',query.taskId);
     if(query.partId!==null)add('part_id=?',query.partId);

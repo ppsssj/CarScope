@@ -24,7 +24,7 @@
     "serve:https": "node src/https-mobile-service.mjs",
     "test:service-tls": "node --test test/auth-contract.test.mjs test/https-service.test.mjs",
     "test:postgres": "node --test test/postgres-store.test.mjs",
-    "test:history": "node --test test/history.test.mjs test/history-postgres.test.mjs test/history-auth.test.mjs test/history-auth-postgres.test.mjs",
+    "test:history": "node --test test/history.test.mjs test/history-postgres.test.mjs test/history-auth.test.mjs test/history-auth-postgres.test.mjs test/avd-history.test.mjs test/avd-history-postgres.test.mjs",
     "check:history": "node --check src/history.mjs && node --check src/history-authorizer.mjs && node --check src/https-authority-transport.mjs && node --check src/https-history-authority.mjs",
     "serve:render-stateful": "node src/render-stateful.mjs",
     "test:avd-simulator": "node --test test/avd-simulator.test.mjs",
