@@ -112,7 +112,7 @@ Remove-Item Env:CARSCOPE_READONLY_DB
 | 2 | 사용 중인 모든 AVD·기기에 이 APK 설치와 endpoint·GLB 배치 | [P9 A](p9-e2e-checklist.md#a-apk-식별과-설치), [B](p9-e2e-checklist.md#b-기기-준비). 구버전 기기를 남기지 않는다 |
 | 3 | 현재 서버의 기본 상태 확인. `DENIED`이므로 **세션 생성 비활성이 합격이다** | [P9 C1](p9-e2e-checklist.md#c1-기본-서버-상태-deny_default) |
 | 4 | PR #78 병합. **완료:** `8a6f559`. 운영은 아직 바뀌지 않았다 | `static`의 `SERVER_NOW_CONTRACT` PASS |
-| 5 | 운영 DB 백업, 읽기 전용 검사, 별도 DB 복원 리허설 | 아래 절차 |
+| 5 | 운영 DB 백업, 읽기 전용 검사, 별도 DB 복원 리허설 | [P9-A3 G](p9-a3-db-recovery-readiness.md#g-운영-g3-실행-전-승인-체크리스트) |
 | 6 | Render Manual Deploy로 main 배포. 이때 DDL이 적용된다. **시뮬레이터 변수는 함께 넣지 않는다** | `/healthz`, `render --deployed-commit` |
 | 7 | 배포 후 확인. 신규 코드도 `STATEFUL_DENY_DEFAULT`, `DENIED`여야 한다 | 아래 절차, P9 C1 재확인 |
 | 8 | 시뮬레이터 활성화, enrollment, Native 세션, `serverNow`, Native→3D를 단계별 승인으로 진행 | [P9 C2~C6](p9-e2e-checklist.md#c-서버와-세션-단계) |
@@ -162,7 +162,7 @@ History를 여는 환경변수는 없다. `startRenderStateful({historyAuthority
 
 ## 백업과 복구
 
-**이 절차는 실행하지 않았다. 복원 리허설도 NOT_RUN이다.** 이번 환경의 임베디드 PostgreSQL에는 `pg_dump`가 없다.
+**실행 도구와 절차는 [P9-A3](p9-a3-db-recovery-readiness.md)이 대체한다.** 격리 PG16과 합성 데이터의 리허설만 실행했고 운영 DB 백업과 복원 리허설은 NOT_RUN이다. 아래 명령은 P8-C1 당시의 수동 절차로, 스냅샷 일관성·빈 대상 강제·복원본 비교가 없으므로 새로 쓰지 않는다.
 
 ### 배포 전
 

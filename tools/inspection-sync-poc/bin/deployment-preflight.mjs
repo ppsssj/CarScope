@@ -4,16 +4,15 @@
 //   compat  [--apk <path>]                     decoder/server matrix and APK generation
 //   database --url-env <NAME> [--allow-remote-read-only]   READ ONLY schema inspection
 //   probe   --origin <https> [--approve-rate-window-writes] /healthz, optionally refused /v1 probes
-//   render  [--deployed-commit <sha>] [--auto-deploy off|on] [--env-names-file <path>]
+//   render  [--deployed-commit <sha>] [--target-commit <sha>] [--auto-deploy off|on] [--env-names-file <path>] [--recovery-report <path>]
 //   regression                                 existing Sync/History suites; PG suites only on an isolated database
 //   all     [--apk <path>]                     static + compat + render + regression (never a remote call)
 // Options common to all: --json, --report <new file outside the repository>
 // Exit: 0 no FAIL (open items may remain), 1 at least one FAIL, 2 usage error.
 import { spawn } from 'node:child_process';
-import { readFileSync, writeFileSync, realpathSync } from 'node:fs';
-import { dirname, resolve, relative, isAbsolute, sep } from 'node:path';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { check, renderText, summarize } from '../preflight/report.mjs';
+import { check, renderText, summarize, assertOutsideRepository } from '../preflight/report.mjs';
 import { runStaticGates, TOOL_ROOT, REPO_ROOT } from '../preflight/static-gates.mjs';
 import { runCompatGates } from '../preflight/compat.mjs';
 import { inspectDatabaseUrl, assertIsolatedTestDatabase } from '../preflight/database.mjs';
@@ -25,7 +24,7 @@ const FLAGS = {
   compat: { value: ['apk'], bool: [] },
   database: { value: ['url-env'], bool: ['allow-remote-read-only'] },
   probe: { value: ['origin'], bool: ['approve-rate-window-writes'] },
-  render: { value: ['deployed-commit', 'auto-deploy', 'env-names-file'], bool: [] },
+  render: { value: ['deployed-commit', 'target-commit', 'auto-deploy', 'env-names-file', 'recovery-report'], bool: [] },
   regression: { value: [], bool: [] },
   all: { value: ['apk'], bool: [] },
 };
@@ -59,7 +58,7 @@ export function parseTestSummary(output) {
 }
 
 const PLAIN_SUITES = ['test/service.test.mjs', 'test/server.test.mjs', 'test/security.test.mjs', 'test/auth-contract.test.mjs', 'test/history.test.mjs', 'test/history-auth.test.mjs', 'test/render-preflight.test.mjs'];
-const PG_SUITES = ['test/postgres-store.test.mjs', 'test/avd-simulator.test.mjs', 'test/avd-simulator-admin.test.mjs', 'test/history-postgres.test.mjs', 'test/history-auth-postgres.test.mjs', 'test/deployment-postgres.test.mjs'];
+const PG_SUITES = ['test/postgres-store.test.mjs', 'test/avd-simulator.test.mjs', 'test/avd-simulator-admin.test.mjs', 'test/history-postgres.test.mjs', 'test/history-auth-postgres.test.mjs', 'test/deployment-postgres.test.mjs', 'test/db-recovery-postgres.test.mjs'];
 
 /** The suite gets only the isolated test URL: service variables are removed from its environment. */
 function runSuite(id, files, url) {
@@ -95,10 +94,8 @@ export async function runRegression(env = process.env) {
 
 /** Evidence stays out of Git and an existing file is never overwritten. */
 function writeReport(path, payload) {
-  const target = resolve(path);
-  const from = relative(realpathSync(REPO_ROOT), realpathSync(dirname(target)));
-  if (!from.startsWith('..' + sep) && from !== '..' && !isAbsolute(from)) throw new Error('REPORT_IN_REPOSITORY_FORBIDDEN');
-  writeFileSync(target, JSON.stringify(payload, null, 2) + '\n', { flag: 'wx', mode: 0o600 });
+  assertOutsideRepository(path, REPO_ROOT, 'REPORT_IN_REPOSITORY_FORBIDDEN');
+  writeFileSync(path, JSON.stringify(payload, null, 2) + '\n', { flag: 'wx', mode: 0o600 });
 }
 
 const FIXED_VERDICTS = ['RENDER_DEPLOYMENT_NOT_RUN', 'PRODUCTION_AUTH_BLOCKED', 'DEVICE_E2E_NOT_RUN'];
@@ -110,8 +107,9 @@ export async function runCommand({ command, opts }, env = process.env) {
     case 'database': return inspectDatabaseUrl({ url: env[opts['url-env']], allowRemoteReadOnly: opts['allow-remote-read-only'] === true, env });
     case 'probe': return probeDeployment({ origin: opts.origin, approveRateWindowWrites: opts['approve-rate-window-writes'] === true });
     case 'render': return runRenderGates({
-      deployedCommit: opts['deployed-commit'], autoDeploy: opts['auto-deploy'],
+      deployedCommit: opts['deployed-commit'], targetCommit: opts['target-commit'], autoDeploy: opts['auto-deploy'],
       envNames: opts['env-names-file'] ? readFileSync(opts['env-names-file'], 'utf8') : undefined,
+      recoveryReport: opts['recovery-report'] ? readFileSync(opts['recovery-report'], 'utf8') : undefined,
     });
     case 'regression': return runRegression(env);
     case 'all': return [...await runStaticGates(), ...await runCompatGates({ apk: opts.apk }), ...runRenderGates(), ...await runRegression(env)];

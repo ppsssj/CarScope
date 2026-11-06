@@ -3,6 +3,8 @@
 P8-C1 adds a read-only deployment preflight: `npm run preflight:deploy -- static` (also `compat`, `database`, `probe`, `render`, `regression`, `all`).
 It has no deploy, migration or environment command. [Gates, deployment order, DDL, backup and recovery](../../docs/p8-c1-deployment-readiness.md).
 
+P9-A3 adds a separate rehearsal CLI, `npm run recovery -- <environment|create-isolated|backup|inspect|restore|verify>`. It restores only into a loopback `carscope_rehearsal_*` database, and no argument widens that. [Runbook and G3/G4 checklists](../../docs/p9-a3-db-recovery-readiness.md).
+
 P5-A2 adds `ev-charge.port` with strict schema-v2 keys `flapDamage`, `debris`, `visibleDamage`.
 Washer v1, four tire v2 tasks, protocolVersion 1 and auth/TLS/session/receipt rules are preserved.
 [Charge result and Native follow-up](../../docs/contracts/charge-port-mobile-result-v2.md) ·

@@ -1,4 +1,13 @@
 // Shared result vocabulary. A check never carries a URL, password or token: only codes and names.
+import { realpathSync } from 'node:fs';
+import { dirname, resolve, relative, isAbsolute, sep } from 'node:path';
+
+/** Evidence and backups stay out of Git. The parent directory must already exist, which also keeps a typo from creating one. */
+export function assertOutsideRepository(path, root, code) {
+  const from = relative(realpathSync(root), realpathSync(dirname(resolve(path))));
+  if (!from.startsWith('..' + sep) && from !== '..' && !isAbsolute(from)) throw new Error(code);
+}
+
 export const STATUSES = Object.freeze(['PASS', 'FAIL', 'MANUAL', 'BLOCKED', 'NOT_VERIFIED', 'NOT_RUN']);
 
 export function check(id, status, detail = '', extra = {}) {

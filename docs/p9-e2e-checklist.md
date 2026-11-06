@@ -16,8 +16,8 @@
 |---|---|---|
 | G1 | 호스트 메모리 확보 후 AVD 시작, APK·endpoint·GLB 배치 | AVD만 변경 |
 | G2 | `/v1` 프로브(`--approve-rate-window-writes`) 또는 "서비스 연결 확인" 클릭 | 운영 `cs_rate_windows`에 쓰기 |
-| G3 | 운영 DB 백업, 읽기 전용 검사, 별도 DB 복원 리허설 | 운영 DB 읽기, 새 DB 사용 |
-| G4 | 최신 main Render Manual Deploy | **운영 DDL 적용**, 응답에 `serverNow` 추가 |
+| G3 | 운영 DB 백업, 읽기 전용 검사, 별도 DB 복원 리허설. [P9-A3 체크리스트](p9-a3-db-recovery-readiness.md#g-운영-g3-실행-전-승인-체크리스트) | 운영 DB 읽기, 격리 DB 사용 |
+| G4 | 최신 main Render Manual Deploy. [P9-A3 체크리스트](p9-a3-db-recovery-readiness.md#h-render-g4-배포-전-승인-체크리스트) | **운영 DDL 적용**, 응답에 `serverNow` 추가 |
 | G5 | `CARSCOPE_AVD_SIMULATOR_MODE=OPERATOR_APPROVED` 설정과 재배포 | 시뮬레이터 등록자에게 세션 생성 개방, `cs_avd_*` DDL |
 | G6 | enrollment 발급과 AVD 주입 | 운영 DB DDL 확인·행 추가, bearer proof 생성 |
 | G7 | 등록 후 Activity 시작 | 시작 즉시 운영으로 grant 요청 |
@@ -149,7 +149,7 @@ node tools/inspection-sync-poc/bin/deployment-preflight.mjs probe --origin https
 | C1d | (G2 선택) `서비스 연결 확인`: `HTTPS 응답 확인 · 서버 인증서 검증 성공 · 차량 인증과는 별개입니다.` 이것은 인증 성공이 아니다 |
 | C1e | (G2 선택) `probe --approve-rate-window-writes`: records 403, session 401, 생성 403 |
 
-**이어서 [배포 순서](p8-c1-deployment-readiness.md#배포-순서)의 백업(G3)과 Manual Deploy(G4)를 수행한 뒤 C1a~C1c를 다시 확인한다.** 신규 코드도 DENY_DEFAULT여야 한다. `render --deployed-commit <SHA>`가 `returns serverNow`를 출력해야 한다.
+**이어서 [배포 순서](p8-c1-deployment-readiness.md#배포-순서)의 백업(G3, [실행 절차](p9-a3-db-recovery-readiness.md#g-운영-g3-실행-전-승인-체크리스트))과 Manual Deploy(G4)를 수행한 뒤 C1a~C1c를 다시 확인한다.** 신규 코드도 DENY_DEFAULT여야 한다. `render --deployed-commit <SHA>`가 `returns serverNow`를 출력해야 한다.
 
 ### C2. 승인된 AVD 시뮬레이터 활성화 (G5)
 
