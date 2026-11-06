@@ -1,5 +1,9 @@
 # 로드맵 및 진입 조건
 
+## P9-A4 — Supabase PostgreSQL 이전 사전 검증
+
+Render PostgreSQL을 독립된 Supabase 프로젝트로 옮기기 위한 호환성 분석, 런타임 수정(CA 고정 TLS, 전용 스키마 확인, 연결 끊김 처리), 절차와 롤백을 준비했다. Docker PostgreSQL 16·17과 합성 데이터로 검증했다. **Supabase 프로젝트 생성·연결, 운영 DB 접근, 데이터 이전, Render 배포는 NOT_RUN이고 각각 별도 승인이 필요하다.** [분석과 Runbook](p9-a4-supabase-migration.md), [증거 인덱스](evidence/p9-a4/README.md).
+
 ## P9-A3 — PostgreSQL 백업·복원과 배포 준비
 
 운영 G3·G4 전에 쓸 백업·복원 CLI, 승인 체크리스트, PowerShell 절차를 준비했다. 복원 대상은 loopback의 리허설 DB로 제한된다. 격리 PostgreSQL 16과 합성 데이터로 백업, 복원, 비교, 실패·권한 시나리오를 실행했다. **운영 DB 접근과 Render 배포는 NOT_RUN이고, G3·G4는 별도 승인이 필요하다.** [절차와 체크리스트](p9-a3-db-recovery-readiness.md), [증거 인덱스](evidence/p9-a3/README.md).

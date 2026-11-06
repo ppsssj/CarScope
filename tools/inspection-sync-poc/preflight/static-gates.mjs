@@ -27,7 +27,7 @@ const ENTRY = 'src/render-stateful.mjs';
 /** The only variables the Render path may read. Anything else, e.g. a history switch, fails this gate. */
 export const ALLOWED_ENV = Object.freeze([
   'RENDER', 'RENDER_EXTERNAL_URL', 'DATABASE_URL', 'NODE_TLS_REJECT_UNAUTHORIZED', 'PORT',
-  'CARSCOPE_AVD_SIMULATOR_MODE', 'NODE_ENV',
+  'CARSCOPE_AVD_SIMULATOR_MODE', 'NODE_ENV', 'CARSCOPE_DB_CA_PEM_BASE64', 'CARSCOPE_DB_SCHEMA',
 ]);
 export const FORBIDDEN_RENDER_ENV = Object.freeze([
   'SYNC_LOCAL_TEST_AUTH', 'SYNC_FIXTURE_TOKEN', 'SYNC_DEBUG_PAGE', 'SYNC_ALLOWED_ORIGIN',

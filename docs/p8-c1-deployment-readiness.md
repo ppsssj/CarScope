@@ -136,7 +136,8 @@ PR #78은 DDL을 바꾸지 않는다. 운영 DB에 History 테이블이 이미 �
 
 | 변수 | 요구 |
 |---|---|
-| `DATABASE_URL` | 필수. Internal URL, secret. 쿼리 문자열이 있으면 시작 거부 |
+| `DATABASE_URL` | 필수. Internal URL, secret. 쿼리 문자열이 있으면 시작 거부. P9-A4 이후 호스트에 점이 있으면 CA 없이 시작 거부 |
+| `CARSCOPE_DB_SCHEMA`, `CARSCOPE_DB_CA_PEM_BASE64` | 기본 없음. [Supabase 전환](p9-a4-supabase-migration.md#render-전환-runbook) 때 함께 설정. DB 연결만 정하며 인증에 관여하지 않는다 |
 | `NODE_VERSION` | `22.16.0` |
 | `RENDER`, `RENDER_EXTERNAL_URL`, `PORT` | Render 제공 |
 | `CARSCOPE_AVD_SIMULATOR_MODE` | 기본 없음. 값은 `OPERATOR_APPROVED`만 허용. 켜면 생성이 시뮬레이터에 한해 열린다. OEM 소유권이 아니다 |

@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { writeFile, realpath } from 'node:fs/promises';
 import { resolve, dirname, relative, isAbsolute, sep } from 'node:path';
 import { AvdSimulatorCredentialStore, AVD_MAX_ENROLLMENT_MS } from '../src/avd-simulator-credentials.mjs';
+import { databasePoolOptions } from '../src/database-config.mjs';
 
 /** Pure, testable operator CLI parser; all keys are normalized before action validation.
  *  No command-line secrets: --label, --out, --hours and --id only.
@@ -39,8 +40,14 @@ async function run(argv=process.argv.slice(2)) {
   if (!['postgresql:','postgres:'].includes(url.protocol) || !url.hostname || !url.username || !url.password ||
       !url.pathname || url.pathname === '/' || url.hash) throw new Error('INVALID_POSTGRES_URL');
   const { Pool } = await import('pg');
-  const pool = new Pool({ connectionString: process.env.PG_ADMIN_DATABASE_URL, max: 1, connectionTimeoutMillis: 5000 });
+  // The same CA and schema rules as the service whenever they are configured. A plain External URL behaves as before.
+  const hardened = process.env.CARSCOPE_DB_CA_PEM_BASE64 || process.env.CARSCOPE_DB_SCHEMA;
+  const { expectedSchema, ...connection } = hardened
+    ? databasePoolOptions({ url: process.env.PG_ADMIN_DATABASE_URL, caPemBase64: process.env.CARSCOPE_DB_CA_PEM_BASE64, schema: process.env.CARSCOPE_DB_SCHEMA })
+    : { connectionString: process.env.PG_ADMIN_DATABASE_URL, expectedSchema: null };
+  const pool = new Pool({ ...connection, max: 1, connectionTimeoutMillis: 5000 });
   try {
+    if (expectedSchema !== null && (await pool.query('SELECT current_schema() AS name')).rows[0]?.name !== expectedSchema) throw new Error('DATABASE_SCHEMA_MISMATCH');
     const auth = new AvdSimulatorCredentialStore({ pool });
     await auth.initialize();
     if (cmd === 'issue') {

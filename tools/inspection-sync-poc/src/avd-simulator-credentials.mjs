@@ -22,6 +22,9 @@ export class AvdSimulatorCredentialStore {
   }
   async #tx(fn) {
     const c = await this.#pool.connect();
+    let lost = null;
+    const onLost = (error) => { lost = error; }; // See PostgreSQLSessionStore: a lost connection must not end the process.
+    c.on('error', onLost);
     try {
       await c.query('BEGIN');
       const result = await fn(c);
@@ -30,7 +33,7 @@ export class AvdSimulatorCredentialStore {
     } catch (e) {
       try { await c.query('ROLLBACK'); } catch { /* fail closed */ }
       throw e;
-    } finally { c.release(); }
+    } finally { c.removeListener('error', onLost); c.release(lost ?? undefined); }
   }
   async initialize() {
     await this.#tx(async c => {

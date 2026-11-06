@@ -116,7 +116,8 @@ test('version rules: an older client fails, an unknown version blocks, an unveri
   assert.equal(versionCompatibility('X', 16, 16).status, 'PASS');
   assert.equal(versionCompatibility('X', 15, 16).status, 'FAIL');
   assert.equal(versionCompatibility('X', 17, 16).status, 'MANUAL');
-  assert.equal(versionCompatibility('X', 17, 17).status, 'MANUAL');
+  assert.equal(versionCompatibility('X', 17, 17).status, 'PASS');
+  assert.equal(versionCompatibility('X', 18, 18).status, 'MANUAL');
   assert.equal(versionCompatibility('X', null, 16).status, 'BLOCKED');
   assert.equal(versionCompatibility('X', 16, null).status, 'BLOCKED');
   assert.equal(parseMajor('pg_dump (PostgreSQL) 16.15 (Debian 16.15-1.pgdg13+2)'), 16);
