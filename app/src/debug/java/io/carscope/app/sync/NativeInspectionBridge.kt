@@ -10,7 +10,9 @@ internal class NativeInspectionBridge(
     private val elapsed: () -> Long,
     private val requestNative: (NativeInspectionRequest) -> Unit,
     private val resetNative: () -> Unit,
-    private val reopenNative: (NativeInspectionRequest) -> Unit = {}
+    private val reopenNative: (NativeInspectionRequest) -> Unit = {},
+    /** Lifecycle and anomaly lines only: sanitized stages and counters, never a session ID, task or body. */
+    private val diag: (String) -> Unit = {}
 ) {
     private val gson = Gson()
     private var active = true
@@ -34,12 +36,20 @@ internal class NativeInspectionBridge(
             else -> null
         }
         private val identifier = Regex("[A-Za-z0-9._:-]{1,128}")
+        private val ops = setOf("open", "request", "poll", "verify", "close")
+        private const val SLOW_HANDLE_MS = 500L
     }
     @Synchronized fun handle(body: String): String {
-        if (!active || body.toByteArray().size > 4096) return gson.toJson(mapOf("error" to "UNAVAILABLE"))
+        if (!active || body.toByteArray().size > 4096) {
+            diag("rejected reply=UNAVAILABLE stage=${if (active) "OVERSIZED" else "INACTIVE"}")
+            return gson.toJson(mapOf("error" to "UNAVAILABLE"))
+        }
+        val started = elapsed(); var stage = "PARSE"; var opName = "other"
         return try {
             val x = SyncHttpDecoder.objectBody(body.toByteArray(Charsets.UTF_8), "application/json")
             val op = x["op"] as? String ?: error("INVALID")
+            if (op in ops) opName = op
+            stage = "SHAPE"
             val session = x["localSessionId"] as? String ?: error("INVALID")
             val epoch = SyncHttpDecoder.number(x["generation"])
             require(identifier.matches(session) && epoch in 1..9_007_199_254_740_991L)
@@ -47,12 +57,16 @@ internal class NativeInspectionBridge(
             if (op == "open") {
                 keys()
                 if (local != session || generation != epoch) {
+                    stage = "GENERATION_NOT_NEWER"
                     require(epoch > lastGeneration)
                     clear(); local = session; generation = epoch; lastGeneration = epoch
+                    diag("open generation=$epoch")
                 }
                 gson.toJson(mapOf("ok" to true))
             } else {
+                stage = if (local == null) "SESSION_CLEARED" else "SESSION_MISMATCH"
                 require(local == session && generation == epoch)
+                stage = op.takeIf { it in ops }?.uppercase() ?: "UNKNOWN_OP"
                 when (op) {
                     "request" -> {
                         keys("taskId", "partId")
@@ -61,6 +75,7 @@ internal class NativeInspectionBridge(
                         val request = NativeInspectionRequest(task, session, epoch)
                         if (pendingTask == task) reopenNative(request)
                         else {
+                            stage = "PENDING_CONFLICT"
                             require(pendingTask == null && entries.size < 100)
                             pendingTask = task; armed = false; notice = null; requestNative(request)
                         }
@@ -83,7 +98,13 @@ internal class NativeInspectionBridge(
                     else -> error("INVALID")
                 }
             }
-        } catch (_: Exception) { gson.toJson(mapOf("error" to "REJECTED")) }
+        } catch (_: Exception) {
+            diag("rejected reply=REJECTED op=$opName stage=$stage")
+            gson.toJson(mapOf("error" to "REJECTED"))
+        } finally {
+            val took = elapsed() - started
+            if (took >= SLOW_HANDLE_MS) diag("slow op=$opName ms=$took")
+        }
     }
     private fun live(e: Entry): Boolean = e.terminal == null &&
         e.clock.upperNow(elapsed())?.let { it <= e.binding.getValue("expiresAt") as Long } == true
@@ -160,7 +181,12 @@ internal class NativeInspectionBridge(
         armed = true; return true
     }
     val blockingReason: String? @Synchronized get() = notice
-    @Synchronized fun suspend() { active = false; clear() }
-    @Synchronized fun resume() { if (!destroyed) active = true }
-    @Synchronized fun destroy() { destroyed = true; active = false; clear() }
+    @Synchronized fun suspend() {
+        if (active) diag("suspend hadSession=${local != null} pending=${pendingTask != null}")
+        active = false; clear()
+    }
+    @Synchronized fun resume() {
+        if (!destroyed) { if (!active) diag("resume"); active = true }
+    }
+    @Synchronized fun destroy() { diag("destroy hadSession=${local != null}"); destroyed = true; active = false; clear() }
 }

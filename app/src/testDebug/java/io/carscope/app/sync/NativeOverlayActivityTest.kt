@@ -167,6 +167,23 @@ class NativeOverlayActivityTest {
         h.b.stop().destroy()
     }
 
+    // Same Activity and same page: nothing visible tells the user that a pause happened, yet the channel stays closed.
+    // The real onPause runs. For resume only the bridge step of onResume runs: the rest binds the process-wide vehicle
+    // service, whose callback would reach a later test because Robolectric has no Pleos service. The AVD covers it.
+    @Test fun `a pause then the resume bridge step closes the channel and reopens nothing`() {
+        val h = host(); val bridge = ReflectionHelpers.getField<NativeInspectionBridge>(h.a, "bridge")
+        h.open(); assertEquals(View.VISIBLE, h.overlay.visibility); h.click("close-panel")
+        h.b.pause(); h.idle()
+        assertTrue(h.rpc("poll").contains("UNAVAILABLE"))
+        bridge.resume(); h.idle()
+        assertFalse(h.a.isFinishing)
+        assertTrue("resume restores no session", h.rpc("poll").contains("REJECTED"))
+        h.rpc("request", """, "taskId":"washer-fluid","partId":"washer-fluid-cap""""); h.idle()
+        assertEquals("the page gets no panel", View.GONE, h.overlay.visibility); assertFalse(h.secure())
+        assertTrue("the old generation cannot reopen", h.rpc("open").contains("REJECTED"))
+        h.b.stop().destroy()
+    }
+
     @Test fun `without creation authority the panel shows the state and no QR or enabled create`() {
         val b = Robolectric.buildActivity(OverlayDenyActivity::class.java).create().start(); val a = b.get()
         val root = a.findViewById<ViewGroup>(android.R.id.content).getChildAt(0) as ViewGroup

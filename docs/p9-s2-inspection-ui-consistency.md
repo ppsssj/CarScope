@@ -30,7 +30,8 @@
 | `REJECTED` | Native가 `REJECTED`로 답함 | `점검 요청을 시작할 수 없습니다` |
 | `FAILED` | 통신 실패, `UNAVAILABLE`, 지연, 형식 불명, 8초 무응답 | `Native 연결을 확인하지 못했습니다` |
 | `NOT_CONNECTED` | 전달 경로가 없어 보내지 않음 | `Native 전달 경로 미완료 · 요청을 시작할 수 없습니다.` |
-| `STALE` | 요청한 세션이 끝남 | 없음 |
+| `CHANNEL_CLOSED` | 이 세션의 채널이 이미 닫혀 보내지 않음 (P9-S1) | `Native 연결이 종료되었습니다 · 3D 점검 화면을 닫고 새로 열어 주세요` |
+| `STALE` | 요청한 세션이 끝났거나, 응답을 기다리는 중 채널이 닫힘 | 없음 |
 
 `ACCEPTED`는 QR이나 서버 세션 생성을 뜻하지 않는다. 거부 사유를 페이지가 알 수 없으므로 `다른 부품 요청 중`이라고 말하지 않는다.
 
@@ -39,12 +40,23 @@
 - **세션 종료·교체·화면 닫기:** 대기 중인 요청을 즉시 `STALE`로 끝낸다. 늦은 응답은 토스트도 안내도 남기지 않고, 새 세션의 요청을 막지 않는다.
 - **Back 등 화면 이동:** 토스트는 요청한 화면에서만 표시한다. 거부와 실패는 패널 안내로 남아 사라지지 않는다.
 - **토스트 타이머:** 4초 자동 해제와 이전 타이머 취소는 그대로다.
+- **대기 중 채널 종료:** 토스트 없이 `STALE`로 끝난다. 연결 상태는 패널이 알린다. 재시작 안내 토스트는 닫힌 뒤의 다음 요청에서 표시된다.
+
+## P9-S1과의 통합
+
+PR #85(`8e8c7e3`)를 병합하며 두 기능을 함께 유지했다.
+
+- **진단과 거부 구별:** 어댑터의 모든 오류는 진단 코드로 다시 만들어진다. `nativeRejected`를 `failure()`가 `NATIVE_REJECTED`에서 정하므로, 진단 기록과 `REJECTED` 토스트가 같은 응답에서 나온다.
+- **재시작 안내:** `mobileRequestToast(started, connection)`는 없어지고, 같은 문구가 `CHANNEL_CLOSED` 결과로 옮겨졌다.
+- **요청 충돌:** P9-S1의 "동시 요청이 어댑터 큐에 차례로 들어간다"는 동작은 응답을 기다리는 동안 `IN_FLIGHT`로 바뀌어, 대기 중에는 두 번째 요청을 보내지 않는다. 응답 뒤의 요청은 Native까지 차례로 전달된다. 이 경우 Native 충돌은 `REJECTED`로 표시되고 채널은 닫히지 않는다.
+
+[P9-S1 증거](evidence/p9-s1/README.md)는 병합 전 실행 기록이며 수정하지 않았다. 그 문서의 `request()`가 `false`를 돌려줬다는 설명은 이제 `NOT_CONNECTED` 또는 `CHANNEL_CLOSED`에 해당한다.
 
 ## 변경 범위
 
-Android, 브리지 RPC, QR·토큰 계약, 결과 계약, Render, PostgreSQL, WebXR은 변경하지 않았다.
+Android, 브리지 RPC, QR·토큰 계약, 결과 계약, Render, PostgreSQL, WebXR은 이 PR의 자체 변경 대상이 아니다. main 병합으로 P9-S1의 Debug Android 진단이 함께 들어와 있다.
 
-JS 어댑터 `android-native-inspection-adapter.mjs`는 한 곳을 고쳤다. 기존 응답의 `error: "REJECTED"`를 오류 표시로 구별할 뿐이며 RPC 명령과 응답 형식은 같다.
+JS 어댑터 `android-native-inspection-adapter.mjs`는 `failure()` 한 곳을 고쳤다. 기존 응답의 `error: "REJECTED"`를 오류 표시로 구별할 뿐이며 RPC 명령과 응답 형식은 같다.
 
 ## Native 담당에게 넘기는 사항 (수정하지 않음)
 

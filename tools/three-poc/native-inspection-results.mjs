@@ -68,9 +68,10 @@ export function createNativeInspectionResults({adapter=null,now=()=>performance.
     },
     endSession,tick,
     /** Resolves, never rejects, with what was actually confirmed. ACCEPTED means Native took the request: no QR or server session is implied.
-     * NOT_CONNECTED: nothing was sent. IN_FLIGHT: an earlier request is unanswered, so nothing was sent and it is left alone.
-     * REJECTED: Native refused without a reason this page can name. FAILED: no usable answer. STALE: the session it belonged to has ended. */
-    request(taskId){const t=targetForTask(taskId);if(!t||!localSessionId||connection!=='ADAPTER_CONNECTED'||typeof adapter?.requestTask!=='function'){fail('NATIVE_NOT_CONNECTED');return Promise.resolve('NOT_CONNECTED');}
+     * NOT_CONNECTED: nothing was sent. CHANNEL_CLOSED: nothing was sent because this session's channel closed and only a new screen reopens it.
+     * IN_FLIGHT: an earlier request is unanswered, so nothing was sent and it is left alone.
+     * REJECTED: Native refused without a reason this page can name. FAILED: no usable answer. STALE: the session it belonged to has ended, or its channel closed while waiting. */
+    request(taskId){const t=targetForTask(taskId);if(!t||!localSessionId||connection!=='ADAPTER_CONNECTED'||typeof adapter?.requestTask!=='function'){fail('NATIVE_NOT_CONNECTED');return Promise.resolve(connection==='UNAVAILABLE'?'CHANNEL_CLOSED':'NOT_CONNECTED');}
       if(pendingRequest)return Promise.resolve('IN_FLIGHT');
       if(REQUEST_NOTICES.has(notice)){notice=null;emit();}
       const session=localSessionId,epochId=generation;

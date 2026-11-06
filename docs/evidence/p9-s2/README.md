@@ -4,7 +4,7 @@
 
 **판정 범위:** 실제 `inspect.html`, 참조 GLB, 실제 Chrome에 **스크립트로 답하는 테스트 어댑터**를 쓴 합성 검증이다. `AVD_NOT_RUN`. Native와 실기기는 NOT_RUN이다.
 
-환경: 기준 main `542ee164bf635b483852360250e6eea165436c76`, Windows 10, Node 22.16.0, Chrome 156.0.8078.80, Edge 156.0.4314.58.
+병합 전 실행 환경: 기준 main `542ee164bf635b483852360250e6eea165436c76`, Windows 10, Node 22.16.0, Chrome 156.0.8078.80, Edge 156.0.4314.58.
 
 ## 수정 전후
 
@@ -22,7 +22,26 @@
 
 수정 전에도 통과한 시나리오는 그 사실만으로 근거가 되지 않는다. 중복 확정·답변 수정은 카드가 계속 `미점검`이어서, Back·세션 종료 중 늦은 응답은 늦은 토스트 경로가 없어서 통과했다. 수정 후 다시 검사했다.
 
-## 새 로컬 실행 (2026-11-06)
+## main 병합 후 재실행 (PR #85 `8e8c7e3` 반영, 2026-11-06)
+
+아래 "병합 전 로컬 실행"과 별개의 새 실행이다. 환경: Windows 10, Node 22.16.0, Chrome 157.0.8103.38, Edge 156.0.4314.58. 근거 경로는 `C:/CarScope-External/p9-s2/merge-main-8e8c7e3/` 기준이다. `AVD_NOT_RUN`. Native와 실기기는 NOT_RUN이다.
+
+| 검사 | 결과 | 명령·근거 |
+|---|---|---|
+| 충돌 표시만 해결한 상태 | FAIL (의도한 기준선) | `fixed adapter maps the conflict answer…`가 `REJECTED` 대신 `FAILED`, reliability 파일은 없어진 `mobileRequestToast` import로 로드 실패 |
+| 문법 | PASS | `npm run check:results` |
+| three-poc Node | PASS 220건, SKIP 0 | `npm test`, `node.txt` |
+| Android asset | PASS 4건 | `npm run test:android-assets` |
+| DOM (CI 범위) 결과·일관성·History | PASS | `test:results-browser`, `test:consistency-browser`, `test:history-browser`, `dom-*/` |
+| 실제 GLB 페이지 일관성 | PASS 15개 시나리오 | `test:consistency-browser`, `real-consistency/` |
+| 실제 GLB 페이지 토스트·결과·History | PASS | `test:toast-browser`, `test:results-browser`, `test:history-browser`, `real-*/` |
+| mobile-ar-poc Node | PASS 122건 | `npm test` |
+| 17개 모바일 점검과 QR v2 회귀 | PASS 5개 스위트 | `npm run test:browser`, `regression-17.txt` |
+| Sync, Kotlin, 형상 | 이 로컬에서 NOT_RUN | 이번 병합 해결이 건드리지 않음. PR CI 결과로 확인 |
+
+**병합으로 바뀐 기존 테스트:** `native-bridge-reliability.test.mjs`의 동기 `true/false` 기대값을 확인된 결과로 옮겼다. 중복·동시 요청 2건은 대기 중 `IN_FLIGHT`로 보내지 않는 동작을 검사하고, 응답 뒤의 요청으로 Native까지의 전달과 충돌을 계속 검사한다. UNAVAILABLE 뒤의 요청을 보는 2건은 기대값이 `CHANNEL_CLOSED`가 됐다. 임계값을 바꾸거나 검사를 제외하지 않았다. 토스트와 진단 코드를 함께 보는 검사 2건을 추가했다.
+
+## 병합 전 로컬 실행 (2026-11-06)
 
 | 검사 | 결과 | 명령·근거 |
 |---|---|---|

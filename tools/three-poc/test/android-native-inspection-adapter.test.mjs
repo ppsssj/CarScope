@@ -65,7 +65,7 @@ test('Native server-clock block reaches 3D as UNAVAILABLE, stops polling and nev
       assert.equal(consumer.snapshot.notice,expected);assert.equal(consumer.snapshot.records.length,0);
       const polls=commands.filter(c=>c.op==='poll').length;await new Promise(r=>setTimeout(r,400));
       assert.equal(commands.filter(c=>c.op==='poll').length,polls,'no further polling after UNAVAILABLE');
-      assert.equal(await consumer.request('washer-fluid'),'NOT_CONNECTED','no new Native request after UNAVAILABLE');
+      assert.equal(await consumer.request('washer-fluid'),'CHANNEL_CLOSED','no new Native request after UNAVAILABLE');
     });
   }
 });

@@ -11,6 +11,8 @@ export const MOBILE_REQUEST_TEXT = Object.freeze({
   REJECTED: '점검 요청을 시작할 수 없습니다',
   FAILED: 'Native 연결을 확인하지 못했습니다',
   NOT_CONNECTED: 'Native 전달 경로 미완료 · 요청을 시작할 수 없습니다.',
+  // A closed channel never reconnects by itself: fail-closed, so the user has to start a new screen.
+  CHANNEL_CLOSED: 'Native 연결이 종료되었습니다 · 3D 점검 화면을 닫고 새로 열어 주세요',
 });
 
 /**

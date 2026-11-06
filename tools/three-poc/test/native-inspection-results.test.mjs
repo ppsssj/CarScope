@@ -93,5 +93,5 @@ test('session change during asynchronous SHA-256 and terminal change during veri
 test('unavailable adapter revokes its callback capability, including fresh bindings and late verification',async()=>{
   const {authority:a,controller:c}=setup(),old=a.callbacks,b=binding(old,MOBILE_TARGETS[0]),r=wireResult();old.onBinding(b);
   let release;a.delay(()=>new Promise(resolve=>release=resolve));const pending=deliver(old,b,r);while(!release)await new Promise(resolve=>setTimeout(resolve,0));
-  old.onUnavailable();release();assert.equal(await pending,'OLD_SESSION');assert.equal(c.snapshot.connection,'UNAVAILABLE');assert.equal(old.onBinding(binding(old,MOBILE_TARGETS[0],'late')),'OLD_SESSION');assert.equal(await deliver(old,b,r),'OLD_SESSION');assert.equal(c.snapshot.records.length,0);assert.equal(await c.request(r.taskId),'NOT_CONNECTED');c.dispose();
+  old.onUnavailable();release();assert.equal(await pending,'OLD_SESSION');assert.equal(c.snapshot.connection,'UNAVAILABLE');assert.equal(old.onBinding(binding(old,MOBILE_TARGETS[0],'late')),'OLD_SESSION');assert.equal(await deliver(old,b,r),'OLD_SESSION');assert.equal(c.snapshot.records.length,0);assert.equal(await c.request(r.taskId),'CHANNEL_CLOSED');c.dispose();
 });
