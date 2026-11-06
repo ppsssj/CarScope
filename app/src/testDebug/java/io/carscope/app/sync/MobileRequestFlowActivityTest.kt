@@ -105,6 +105,8 @@ class MobileRequestFlowActivityTest {
         fake.claimed = true; h.tick(5); assertEquals("CONNECTED", h.receiver()!!["phase"].asString); assertEquals(0, fake.accepted)
         fake.result = true; h.tick(5)
         assertEquals(1, fake.accepted); assertEquals("COMPLETED", h.receiver()!!["phase"].asString)
+        assertTrue(h.status(), h.status().contains("자동 수신 확인")); assertTrue(h.status(), h.status().contains("차량 소유자 승인·안전 판정 아님"))
+        assertFalse("not worded as a person accepting", h.status().contains("수락 완료"))
         val delivered = JsonParser.parseString(h.rpc("poll")).asJsonObject["accepted"].asJsonArray
         assertEquals(1, delivered.size())
         val d = delivered[0].asJsonObject

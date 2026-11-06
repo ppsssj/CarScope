@@ -19,7 +19,7 @@ reload/pagehide/BFCache 복귀는 연결을 복원하지 않는다. 토큰은 DO
 | 상태 | 사용자 의미 | 동작 |
 | --- | --- | --- |
 | INVITED / CLAIMING / CLAIMED | 요청 수신 / 연결 중 / 연결됨 | 명시적 연결 1회, 완료 전 전송 불가 |
-| NOT_SENT | 전송 안 됨 | 연결+COMPLETED일 때만 결과 전송 |
+| NOT_SENT | 전송 안 됨 (P11부터 표시 문구는 `mobile-sync.mjs`의 `SYNC_TEXT`, 상태의 의미는 같다) | 연결+COMPLETED일 때만 결과 전송 |
 | SENDING | 전송 중 | 중복 전송 불가 |
 | SENT | 서버 수신 확인·차량 수락 전 | 재전송 버튼 비활성, 상태 조회 |
 | ACCEPTED | 차량 측 수락 완료 | 서버 조회+같은 record Receipt 검증, polling 중지 |

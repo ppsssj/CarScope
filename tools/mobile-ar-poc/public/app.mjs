@@ -7,7 +7,8 @@ import { reduce, initialState, allChecked, progressOf, CHECK_ITEMS } from './sel
 import { validateResult, STATUS_TEXT } from './inspection-result.mjs';
 import {isChecklistTask,parseInspectionHandoff,taskLinks,WASHER_TASK} from './inspection-tasks.mjs';
 import {prepareChecklistPage,startChecklistPage} from './checklist-page.mjs';
-import {renderSummary as summary,mountLocationGuide} from './inspection-ui.mjs';
+import {renderSummary as summary,renderOutcome,mountLocationGuide} from './inspection-ui.mjs';
+import {WASHER_OUTCOME,REPORT_NOTE} from './inspection-copy.mjs';
 
 export function prepareInspectionPage(handoff){if(handoff.valid&&isChecklistTask(handoff.task))prepareChecklistPage(handoff.task,{locked:handoff.source==='qr-sync'});}
 export async function startInspectionPage(options={}){const handoff=options.handoff??parseInspectionHandoff(location.hash);
@@ -18,7 +19,7 @@ export async function startInspectionPage(options={}){const handoff=options.hand
 // Both entries use the same AR-01 flow; only the isolated development entry supplies sync callbacks.
 async function startWasherInspectionPage({ handoff = parseHandoff(location.hash), onComplete = () => {}, onRestart = () => {} } = {}) {
 const $ = id => document.getElementById(id);
-if(handoff.source!=='qr-sync'){const nav=document.createElement('nav');nav.className='task-links';nav.setAttribute('aria-label','다른 부품 점검');for(const t of taskLinks()){const a=document.createElement('a');a.href=t.href;a.textContent=t.label;nav.append(a);}$('step-intro').append(nav);}
+if(handoff.source!=='qr-sync'){const more=document.createElement('details'),title=document.createElement('summary'),nav=document.createElement('nav');title.textContent='다른 부품 점검하기';nav.className='task-links';nav.setAttribute('aria-label','다른 부품 점검');for(const t of taskLinks()){const a=document.createElement('a');a.href=t.href;a.textContent=t.label;nav.append(a);}more.append(title,nav);$('step-intro').append(more);}
 const video = $('video');
 mountLocationGuide(WASHER_TASK,$('camera'));
 const frame = document.createElement('canvas'), frameContext = frame.getContext('2d', { willReadFrequently: true });
@@ -45,9 +46,9 @@ camera = new InspectionCamera({
     frameContext.drawImage(video, 0, 0, frame.width, frame.height);
     candidates = detectCandidates(frameContext.getImageData(0, 0, frame.width, frame.height));
     updateChip();
-    if (candidates.length) { misses = 0; return `파란색 후보 ${candidates.length}개 · 주입구 식별 아님. 워셔 표시를 직접 확인하고 화면을 탭해 위치를 지정하세요.`; }
+    if (candidates.length) { misses = 0; return `파란색 후보 ${candidates.length}개 · 색만 본 표시예요. 워셔 표시를 직접 확인하고 화면을 탭해 주세요.`; }
     misses++;
-    return misses >= 12 ? '후보를 찾지 못했습니다. 화면을 탭해 직접 지정하거나 수동 안내를 사용하세요.' : '후보 없음 · 조명과 촬영 각도를 바꾸거나 화면을 탭해 직접 지정하세요.';
+    return misses >= 12 ? '후보를 찾지 못했습니다. 화면을 탭해 직접 표시하거나 도움말을 봐 주세요.' : '조명이나 각도를 바꾸거나 화면을 탭해 직접 표시해 주세요.';
   },
   drawGuide: (ctx, rect, dpr) => {
     ctx.strokeStyle = '#ffe16a'; ctx.fillStyle = '#ffe16a'; ctx.lineWidth = 3 * dpr;
@@ -67,8 +68,8 @@ const startCamera = () => camera.start();
 function updateChip() {
   const chip = $('stage-chip');
   if (!camera.timer) { chip.textContent = ''; return; }
-  chip.textContent = state.step === 'check' ? '3/4 셀프 점검 · 아래 항목을 직접 확인하세요'
-    : camera.mark ? '2/4 위치 지정됨 · 다시 탭하면 옮겨집니다' : '2/4 위치 찾기 · 주입구를 찾으면 화면을 탭하세요';
+  chip.textContent = state.step === 'check' ? '아래 항목을 직접 확인해 주세요'
+    : camera.mark ? '위치 지정됨 · 다시 탭하면 옮겨져요' : '주입구를 찾으면 화면을 탭해 주세요';
 }
 
 // ---------- flow ----------
@@ -80,7 +81,7 @@ function dispatch(event) {
   if (prev.step !== 'done' && state.step === 'done') { doneGuardUntil = Date.now() + DONE_GUARD_MS; setTimeout(render, DONE_GUARD_MS + 20); }
   // Camera only on the locate/check steps in camera mode.
   if (prev.step !== state.step) camera.clearMark();
-  if (!canCamera()) stop(state.step === 'intro' ? '카메라 중지' : '다음 단계로 이동해 카메라를 중지했습니다.');
+  if (!canCamera()) stop(state.step === 'intro' ? '카메라가 꺼져 있어요.' : '다음 단계로 이동해 카메라를 껐어요.');
   render();
   if (prev.step !== 'done' && state.step === 'done') onComplete(state.record);
   if (prev.step === 'done' && state.step === 'intro') onRestart();
@@ -96,14 +97,15 @@ const fmt = (iso) => new Date(iso).toLocaleString('ko-KR', { dateStyle: 'medium'
 
 const PRIMARY = {
   intro: ['카메라로 점검 시작', () => true],
-  locate: ['다음: 셀프 점검', () => true],
-  check: ['다음: 결과 선택', () => allChecked(state)],
-  result: ['다음: 결과 확인', () => Boolean(state.choice)],
+  locate: ['다음', () => true],
+  check: ['다음', () => allChecked(state)],
+  result: ['다음', () => Boolean(state.choice)],
   confirm: ['이 결과로 점검 완료', () => true],
   done: ['새 점검 시작', () => Date.now() >= doneGuardUntil],
 };
 
 function render() {
+  document.body.dataset.ready = 'true';
   document.body.dataset.step = state.step;
   document.body.dataset.mode = state.mode ?? '';
   const p = progressOf(state.step);
@@ -122,14 +124,17 @@ function render() {
   for (const b of $('choices').querySelectorAll('button')) b.setAttribute('aria-checked', String(b.dataset.status === state.choice));
   $('confirm-unsure').hidden = !(state.step === 'confirm' && state.unsureFrom);
   if (state.step === 'confirm') {
-    summary($('confirm-summary'), [['점검 항목', '워셔액'], ['선택한 결과', STATUS_TEXT[state.choice].label, `status-${state.choice}`], ['점검 방식', '셀프 점검 (SELF)'],
-      ['확인 근거', state.unsureFrom ? '사용자 보고 · 확인하지 못함' : '사용자 직접 확인']]);
+    const outcome = WASHER_OUTCOME[state.choice];
+    summary($('confirm-summary'), [['워셔액 상태', outcome.title, `tone-${outcome.tone}`, () => dispatch({ type: 'BACK' })],
+      ['확인 방법', state.unsureFrom ? '확인하지 못했어요' : '직접 보고 확인했어요']]);
   }
   if (state.step === 'done') {
     const r = state.record, problems = validateResult(r);
     if (problems.length) { $('done-follow').textContent = `결과 데이터를 만들지 못했습니다 (${problems.join(', ')}). 새 점검을 시작하세요.`; return; }
-    summary($('done-summary'), [['점검 항목', '워셔액'], ['사용자 확인 결과', STATUS_TEXT[r.status].label, `status-${r.status}`], ['점검 시각', fmt(r.completedAt)], ['점검 방식', 'SELF · 셀프 점검'], ['확인 근거', 'USER_REPORTED · 사용자 보고']]);
-    $('done-follow').textContent = STATUS_TEXT[r.status].followUp;
+    const outcome = WASHER_OUTCOME[r.status];
+    renderOutcome($('done-outcome'), outcome.title, outcome.tone);
+    summary($('done-summary'), [['점검 시각', fmt(r.completedAt)]]);
+    $('done-follow').textContent = `${STATUS_TEXT[r.status].followUp} ${REPORT_NOTE}`;
     $('result-json').textContent = JSON.stringify(r, null, 2);
   }
   updateChip();
@@ -161,14 +166,15 @@ $('locate-manual').addEventListener('click', () => dispatch({ type: 'TO_CHECK', 
 // "확인할 수 없음": straight to confirming UNSURE; the checklist is left exactly as the user marked it.
 for (const id of ['unsure-locate', 'unsure-check']) $(id).addEventListener('click', () => dispatch({ type: 'CANNOT_CONFIRM' }));
 $('back').addEventListener('click', () => dispatch({ type: 'BACK' }));
-$('cancel').addEventListener('click', () => { stop('취소 확인 중 카메라를 중지했습니다.'); $('cancel-confirm').hidden = false; $('cancel-no').focus(); });
+$('cancel').addEventListener('click', () => { stop('확인하는 동안 카메라를 껐어요.'); $('cancel-confirm').hidden = false; $('cancel-no').focus(); });
 $('cancel-no').addEventListener('click', () => { $('cancel-confirm').hidden = true; });
-$('cancel-yes').addEventListener('click', () => { stop('점검을 취소했습니다.'); dispatch({ type: 'CANCEL' }); });
-$('manual').addEventListener('click', () => { stop('수동 안내 모드 · 카메라를 중지했습니다.'); $('guidance').focus(); });
+$('cancel-yes').addEventListener('click', () => { stop('점검을 그만뒀어요.'); dispatch({ type: 'CANCEL' }); });
+$('manual').addEventListener('click', () => { stop('도움말을 보는 동안 카메라를 껐어요.'); document.body.dataset.guide = 'open'; $('guidance').focus(); });
+$('guidance-close').addEventListener('click', () => { delete document.body.dataset.guide; $('manual').focus(); });
 addEventListener('hashchange', () => location.reload());
 
-$('handoff-status').textContent = !handoff.valid ? '지원하지 않는 QR 요청입니다. 점검을 시작할 수 없습니다. 아래 수동 안내를 사용하세요.' :
-  handoff.source === 'qr-task' ? 'QR 작업 수신: 워셔액 점검 · 차량·센서 연결 없음' : '직접 방문 · 차량·센서 연결 없음';
+$('handoff-status').textContent = !handoff.valid ? '지원하지 않는 QR 요청입니다. 점검을 시작할 수 없어요. 도움말의 수동 점검 안내를 봐 주세요.' :
+  handoff.source === 'qr-sync' ? '' : '이 휴대폰에만 기록돼요';
 $('start').disabled = !handoff.valid;
 render();
 // Test hook (read-only view of the flow; the page itself never sends this anywhere).
@@ -205,7 +211,7 @@ try {
   const response = await fetch('/handoff.json');
   if (!response.ok) throw new Error('handoff unavailable');
   const config = await response.json();
-  if (!config.configured) $('qr-status').textContent = 'QR 미설정 · 서버의 POC_BASE_URL에 스마트폰에서 접근 가능한 HTTPS 루트 주소를 설정하세요.';
+  if (!config.configured) $('qr-status').textContent = 'QR을 준비하지 못했어요.';
   else {
     const url = new URL(config.url);
     if (url.protocol !== 'https:' || !parseHandoff(url.hash).valid) throw new Error('invalid handoff');
