@@ -31,7 +31,9 @@
     "admin:avd": "node bin/avd-simulator-admin.mjs",
     "preflight:deploy": "node bin/deployment-preflight.mjs",
     "test:deployment": "node --test test/deployment-preflight.test.mjs test/deployment-postgres.test.mjs",
-    "check:preflight": "node --check bin/deployment-preflight.mjs && node --check preflight/report.mjs && node --check preflight/static-gates.mjs && node --check preflight/database.mjs && node --check preflight/compat.mjs && node --check preflight/probe.mjs && node --check preflight/render-gates.mjs && node --check preflight/run-decoder-probe.mjs"
+    "recovery": "node bin/db-recovery.mjs",
+    "test:recovery": "node --test --test-concurrency=1 test/db-recovery.test.mjs test/db-recovery-postgres.test.mjs",
+    "check:preflight": "node --check bin/deployment-preflight.mjs && node --check bin/db-recovery.mjs && node --check preflight/report.mjs && node --check preflight/static-gates.mjs && node --check preflight/database.mjs && node --check preflight/compat.mjs && node --check preflight/probe.mjs && node --check preflight/render-gates.mjs && node --check preflight/recovery.mjs && node --check preflight/recovery-seed.mjs && node --check preflight/run-decoder-probe.mjs"
   },
   "dependencies": {
     "pg": "8.23.1"

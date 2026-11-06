@@ -1,5 +1,9 @@
 # 로드맵 및 진입 조건
 
+## P9-A3 — PostgreSQL 백업·복원과 배포 준비
+
+운영 G3·G4 전에 쓸 백업·복원 CLI, 승인 체크리스트, PowerShell 절차를 준비했다. 복원 대상은 loopback의 리허설 DB로 제한된다. 격리 PostgreSQL 16과 합성 데이터로 백업, 복원, 비교, 실패·권한 시나리오를 실행했다. **운영 DB 접근과 Render 배포는 NOT_RUN이고, G3·G4는 별도 승인이 필요하다.** [절차와 체크리스트](p9-a3-db-recovery-readiness.md), [증거 인덱스](evidence/p9-a3/README.md).
+
 ## P9-S2 — 점검 화면 상태 일관성
 
 로컬 결과 확정 즉시 결과 카드·요약·배지·3D 색상이 같은 기록을 보여 주도록 갱신 경로를 하나로 합쳤다. 모바일 요청 토스트는 전달 중, 접수, 거부, 연결 불가, 채널 종료(P9-S1 재시작 안내)를 구별하고 늦은 응답을 다른 화면에 표시하지 않는다. P9-S1 진단은 그대로 유지한다. Android, 브리지 RPC, QR·결과 계약은 바꾸지 않았다. **합성 어댑터 검증이며 `AVD_NOT_RUN`이다.** [설계](p9-s2-inspection-ui-consistency.md), [증거 인덱스](evidence/p9-s2/README.md).
