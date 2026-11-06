@@ -71,6 +71,14 @@ Windows 10, Node 22.16.0, Docker 29.8.1. `postgres:16` `sha256:933463a6…a66a32
 
 ## CI
 
-실행 결과는 PR 체크를 따른다. `pg-matrix`는 Docker PostgreSQL 16·17 합성 범위이고 `PG_MATRIX_BIND=0.0.0.0`으로 Linux 게이트웨이를 사용한다. Supabase·Render·기기 결과가 아니다.
+`a56936e` PR 실행, 13개 job 전부 PASS. `pg-matrix`는 Docker PostgreSQL 16·17 합성 범위이고 `PG_MATRIX_BIND=0.0.0.0`으로 Linux 게이트웨이를 사용한다. Supabase·Render·기기 결과가 아니다.
+
+| job | 결과 |
+|---|---|
+| [`pg-matrix`](https://github.com/ppsssj/CarScope/actions/runs/42185639725) | PG 16·17 신규 스위트 각 27 중 26 PASS / 1 SKIP(교차 버전, 다음 단계에서 실행). 16→17 복원 1 PASS. 음성 테스트 포함 전체 실행이다 |
+| 같은 job의 회귀 | 16·17 모두 `REGRESSION_SYNC_HISTORY` pass=52, `REGRESSION_POSTGRES` pass=96 skipped=1 → **NOT_RUN** 표기. skip은 원격 경로 테스트로, `postgres-integration` job이 PG 16에서만 실행한다. **원격 경로의 PG 17 실행은 없다** |
+| `postgres-integration`, preflight, decoder, Sync Ubuntu/Windows, geometry, core, identity, tire, 3D 결과, WebXR, GitGuardian | PASS. 각 job 범위 |
+
+위 "PG 16과 교차 버전의 재실행"은 이 job으로 완료되었다. Linux Docker의 `--docker-image` 경로도 여기서 실행됐다.
 
 원본 로그와 합성 산출물은 작업 PC `C:\CarScope-External\p9-a4\20261106T080729Z`에 있으며 Git에 포함하지 않는다. DB URL과 비밀번호는 기록하지 않는다.
