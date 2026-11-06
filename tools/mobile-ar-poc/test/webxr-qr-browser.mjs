@@ -45,7 +45,7 @@ async function pair(host, { taskId = 'washer-fluid', fake = {} } = {}) {
 }
 const count = (log, suffix, method = 'POST') => log.requests.filter(r => r.method === method && r.url.endsWith(suffix)).length;
 const claim = async ({ page }) => {
-  await page.locator('#sync-claim').click();
+  
   await page.waitForFunction(() => document.querySelector('#sync-claim').disabled && document.body.textContent.includes('연결됨'));
 };
 const waitPhase = (page, name) => page.waitForFunction(value => window.__webXrGuide?.state?.phase === value, name);

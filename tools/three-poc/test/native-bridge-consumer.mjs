@@ -34,7 +34,7 @@ while(consumer.snapshot.records.length<17){
   assert.equal(consumer.snapshot.connection,'ADAPTER_CONNECTED');
   await new Promise(resolve=>setTimeout(resolve,10));
 }
-assert.equal(projectInspectionResults(local,consumer.snapshot).filter(r=>r.status==='NOT_INSPECTED').length,17);
+assert.equal(projectInspectionResults(local,consumer.snapshot).filter(r=>r.status==='NOT_INSPECTED').length,0,'each verified result is shown');
 for(const target of MOBILE_TARGETS){
   const record=consumer.snapshot.records.find(r=>r.taskId===target.taskId);
   assert.equal(record.partId,target.partId);assert.equal(record.proof.sessionState,'ACCEPTED');

@@ -8,7 +8,9 @@ export const setRequestReply=fn=>{reply=fn;};
 export const rejectedByNative=()=>Promise.reject(Object.assign(Error('Native rejected request'),{nativeRejected:true}));
 export const unreachable=()=>Promise.reject(Error('Native unavailable'));
 export function deferredReply(){let settle;const promise=new Promise((resolve,reject)=>{settle={resolve,reject};});return {reply:()=>promise,...settle};}
-export const fixtureAdapter={open(context){contexts.push(context);return()=>{};},requestTask(request){requests.push(request);return reply(request);},async verifyAccepted(d){return {version:1,proofId:'synthetic-browser-proof',sessionState:'ACCEPTED',bindingId:d.bindingId,localSessionId:d.localSessionId,generation:d.generation,syncSessionId:d.syncSessionId,taskId:d.taskId,inspectionId:d.inspectionId,resultDigest:d.resultDigest,receivedAt:1001,acceptedAt:1002};}};
+export const panelSlots=[],controls=[];
+export const receiver=(status,index=contexts.length-1)=>contexts[index].onReceiver(status);
+export const fixtureAdapter={open(context){contexts.push(context);return()=>{};},panelSlot(slot){panelSlots.push(slot);return Promise.resolve({ok:true});},control(action){controls.push(action);return Promise.resolve({ok:true});},requestTask(request){requests.push(request);return reply(request);},async verifyAccepted(d){return {version:1,proofId:'synthetic-browser-proof',sessionState:'ACCEPTED',confirmation:'NATIVE_EXPLICIT',bindingId:d.bindingId,localSessionId:d.localSessionId,generation:d.generation,syncSessionId:d.syncSessionId,taskId:d.taskId,inspectionId:d.inspectionId,resultDigest:d.resultDigest,receivedAt:1001,acceptedAt:1002};}};
 export async function publish(result,partId,index=contexts.length-1){
   const c=contexts[index],bindingId='test-'+result.taskId,syncSessionId='sync-'+result.taskId;
   const bound=c.onBinding({bindingId,localSessionId:c.localSessionId,generation:c.generation,syncSessionId,taskId:result.taskId,partId,serverNow:1000,expiresAt:1000000});

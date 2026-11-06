@@ -97,7 +97,7 @@ try {
   sync=await startMobileDevServer({port:0,authorizer:new LocalTestSessionCreationAuthorizer()});
   const receiver=new ReceiverClient({baseUrl:sync.url}),session=await receiver.create('brake-fluid');
   await page.goto(sync.url+'/'+session.fragment);await step('intro');assert.equal(await page.evaluate(()=>location.hash),'');assert.equal(await page.locator('.task-links').count(),0);
-  await page.locator('#sync-claim').click();await page.waitForFunction(()=>document.querySelector('#sync-claim').disabled);
+  await page.waitForFunction(()=>document.querySelector('#sync-claim').disabled);
   await safe();await nav('#manual-start');await answerAll();
   await page.screenshot({path:path.join(output,'04-sync-review.png'),fullPage:true});
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);

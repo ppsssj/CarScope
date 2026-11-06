@@ -1,5 +1,6 @@
 package io.carscope.app.lab
 
+import android.graphics.Bitmap
 import android.graphics.Color
 import android.os.Handler
 import android.os.Looper
@@ -11,12 +12,14 @@ import android.view.WindowManager
 import android.webkit.WebView
 import android.widget.Button
 import android.widget.FrameLayout
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import io.carscope.app.sync.ReceiverPhase
 import io.carscope.app.sync.SyncReceiverActivity
 import io.carscope.app.sync.SyncReceiverState
 import io.carscope.app.sync.NativeInspectionBridge
+import io.carscope.app.sync.NativePanelCommand
 import android.os.Bundle
 import java.io.File
 import io.carscope.app.tire.TireProcessOwner
@@ -45,6 +48,11 @@ open class InspectionActivity : SyncReceiverActivity() {
     private var showingReceiver = false
     private lateinit var bridgeStatus: TextView
     private lateinit var componentStatus: ComponentUiChannel
+    // Drawn over a slot the page reserves in its part panel, so the page lays the QR out without ever holding it.
+    private lateinit var inlineQr: ImageView
+    private var inlineActive = false
+    private var inlineBitmap: Bitmap? = null
+    private var slotCommand = NativePanelCommand("slot")
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -82,20 +90,26 @@ open class InspectionActivity : SyncReceiverActivity() {
             bridgeHandler.post {
                 if (!bridgeStopped && bridge.isCurrent(request)) {
                     receiverTask(request.taskId)
-                    if (bridge.arm(request)) { showReceiver(true); createWhenAuthorized(request.taskId) }
+                    if (bridge.arm(request)) { inlineActive = true; createWhenAuthorized(request.taskId); publishPanelStatus() }
                 }
             }
-        }, { bridgeHandler.post { if (!bridgeStopped) { resetReceiver(); showReceiver(false) } } },
-            { request -> bridgeHandler.post { if (!bridgeStopped && bridge.isCurrent(request)) showReceiver(true) } },
-            { line -> Log.i(TAG, "CARSCOPE_NATIVE_BRIDGE $line") })
+        }, { bridgeHandler.post { if (!bridgeStopped) { inlineActive = false; slotCommand = NativePanelCommand("slot"); resetReceiver(); showReceiver(false) } } },
+            { request -> bridgeHandler.post { if (!bridgeStopped && bridge.isCurrent(request)) { inlineActive = true; updateInlineQr() } } },
+            { line -> Log.i(TAG, "CARSCOPE_NATIVE_BRIDGE $line") },
+            { command -> bridgeHandler.post { if (!bridgeStopped) panelCommand(command) } })
         tireStatus = TireUiChannel(TireProcessOwner.get(applicationContext))
         componentStatus = ComponentUiChannel(ComponentProcessOwner.get(applicationContext))
         screen = DebugWebScreen(this, TAG, HOST, ROOT, mapOf("external/ioniq5.glb" to File(filesDir, DebugWebScreen.MODEL_PATH)), tireStatus::readJson, componentStatus::readJson, componentStatus::readChargePortJson, componentStatus::readVisibilityJson, bridge::handle)
         inspectionPanel = screen.create(intent.getStringExtra("query").orEmpty())
         webFocusability = inspectionPanel.descendantFocusability
+        inlineQr = ImageView(this).apply {
+            tag = "inline-qr"; contentDescription = "모바일 점검 초대 QR · 공유하지 마세요"; visibility = View.GONE; isSaveEnabled = false
+            isClickable = false; isFocusable = false; scaleType = ImageView.ScaleType.FIT_CENTER
+        }
         setContentView(FrameLayout(this).apply {
             addView(inspectionPanel, FrameLayout.LayoutParams(-1, -1))
             addView(receiverOverlay, FrameLayout.LayoutParams(-1, -1))
+            addView(inlineQr, FrameLayout.LayoutParams(0, 0))
         })
     }
 
@@ -123,17 +137,75 @@ open class InspectionActivity : SyncReceiverActivity() {
     override fun onStop() {
         bridgeStopped = true
         bridgeHandler.removeCallbacksAndMessages(null)
+        inlineActive = false; slotCommand = NativePanelCommand("slot")
         bridge.suspend() // background/rotation/Back revokes the token-free binding and proof vault
         showReceiver(false)
         super.onStop() // closes receiver credentials, HTTP, polls and provisioning
     }
 
     internal override fun provisionOnStart() = false
-    internal override fun creationPanelVisible() = showingReceiver
+    internal override fun creationPanelVisible() = showingReceiver || inlineActive
+    // A vehicle owner path keeps the explicit Accept in the management panel. This never records an owner's approval.
+    internal override fun autoConfirmReceivedResult() = usesAvdSimulator
+    internal override fun onQrBitmap(bitmap: Bitmap?) {
+        if (bitmap == null) inlineQr.setImageDrawable(null) else inlineQr.setImageBitmap(bitmap)
+        inlineBitmap = bitmap
+        updateInlineQr()
+    }
+
+    private fun panelCommand(command: NativePanelCommand) {
+        when (command.action) {
+            "slot" -> {
+                slotCommand = command; inlineActive = command.slot != "NONE"
+                updateInlineQr()
+            }
+            "refresh" -> retryReceiver()
+            "cancel" -> cancelReceiver()
+            "admin" -> showReceiver(true)
+        }
+    }
+
+    /** Only a QR that fits the visible page is drawn, and the window is secure only while one is. */
+    private fun updateInlineQr() {
+        val density = resources.displayMetrics.density
+        val x = (slotCommand.x * density).toInt(); val y = (slotCommand.y * density).toInt(); val size = (slotCommand.size * density).toInt()
+        val fits = inspectionPanel.width == 0 || x + size <= inspectionPanel.width && y + size <= inspectionPanel.height
+        val show = inlineBitmap != null && slotCommand.slot == "SHOWN" && slotCommand.size in MIN_QR_DP..MAX_QR_DP && fits && !showingReceiver && !bridgeStopped
+        if (show) (inlineQr.layoutParams as FrameLayout.LayoutParams).let {
+            if (it.width != size || it.leftMargin != x || it.topMargin != y) {
+                it.width = size; it.height = size; it.leftMargin = x; it.topMargin = y; inlineQr.layoutParams = it
+            }
+        }
+        inlineQr.visibility = if (show) View.VISIBLE else View.GONE
+        if (show || showingReceiver) window.addFlags(WindowManager.LayoutParams.FLAG_SECURE) else window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
+    }
+
+    /** Words for the page's own panel. No QR, invite, receiver token or grant passes through here. */
+    private fun publishPanelStatus() {
+        val taskId = requestedReceiverTask
+        val state = receiverState
+        bridge.receiverStatus(if (taskId == null) null else mapOf("taskId" to taskId,
+            "phase" to panelPhase(state, creationAuthorityStatus), "failure" to state?.failure?.name,
+            "retryAvailable" to (state?.retryAvailable == true && state.busy.not()), "canCancel" to (state?.canCancel == true),
+            "inviteExpiresAt" to state?.inviteExpiresAt))
+    }
+    private fun panelPhase(state: SyncReceiverState?, authority: String): String = when (state?.phase) {
+        null -> if (authority == "NOT_CONFIGURED") "NOT_CONFIGURED" else "AUTH_FAILED"
+        ReceiverPhase.IDLE -> when (authority) { "GRANTED" -> "CREATING"; "DENIED" -> "AUTH_FAILED"; "NOT_CONFIGURED" -> "NOT_CONFIGURED"; else -> "AUTH_WAITING" }
+        ReceiverPhase.CREATING -> "CREATING"
+        ReceiverPhase.WAITING -> if (state.phoneClaimed) "CONNECTED" else if (state.qr != null) "QR_READY" else "QR_EXPIRED"
+        ReceiverPhase.RESULT_SUBMITTED -> "RESULT_RECEIVED"
+        ReceiverPhase.ACCEPTED -> "COMPLETED"
+        ReceiverPhase.CANCELLED -> "CANCELLED"
+        ReceiverPhase.EXPIRED -> "EXPIRED"
+        ReceiverPhase.FAILED -> "FAILED"
+        ReceiverPhase.CLOSED -> "CLOSED"
+    }
 
     internal override fun onReceiverState(state: SyncReceiverState) {
         if (::bridge.isInitialized && !bridgeStopped) {
             bridge.state(state)
+            publishPanelStatus()
             val noRequest = state.phase == ReceiverPhase.IDLE || state.phase == ReceiverPhase.CANCELLED || state.phase == ReceiverPhase.EXPIRED
             closePanel.text = if (noRequest) "패널 닫기" else "패널 닫기 · 점검 요청 유지"
             closeNote.text = if (noRequest) NO_REQUEST_NOTE else "패널을 닫아도 서버의 점검 요청은 취소되지 않습니다. 취소하려면 아래 '점검 요청 취소'를 누르세요."
@@ -144,14 +216,14 @@ open class InspectionActivity : SyncReceiverActivity() {
             }
         }
     }
-    /** Closing hides the panel only. The server session, its polling and the QR stay until Cancel, stop or expiry. */
+    /** The Debug management panel. Closing hides it only: the server session, polling and QR stay until Cancel, stop or expiry. */
     private fun showReceiver(show: Boolean) {
         if (show) window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
         showingReceiver = show
         lock3dInput(show)
         receiverOverlay.visibility = if (show) View.VISIBLE else View.GONE
         if (show) closePanel.requestFocus()
-        if (!show) window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
+        updateInlineQr()
     }
     /** The page stays visible and keeps its state; keys, rotary focus and accessibility follow the panel meanwhile. */
     private fun lock3dInput(locked: Boolean) {
@@ -181,5 +253,7 @@ open class InspectionActivity : SyncReceiverActivity() {
         const val ROOT = "inspection"
         const val OVERLAY_DIM = 0x33000000
         const val NO_REQUEST_NOTE = "현재 진행 중인 점검 요청이 없습니다."
+        const val MIN_QR_DP = 120
+        const val MAX_QR_DP = 600
     }
 }

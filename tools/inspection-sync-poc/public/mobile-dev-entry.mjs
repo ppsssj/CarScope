@@ -16,6 +16,7 @@ if (entry.version === 2) {
   const send = document.createElement('button'); send.id = 'sync-send'; send.type = 'button'; send.textContent = '결과 전송'; send.disabled = true;
   const refresh = document.createElement('button'); refresh.id = 'sync-refresh'; refresh.type = 'button'; refresh.textContent = '처리 상태 다시 확인';
   const info = document.createElement('p'); info.className = 'fine'; info.textContent = '사용자 보고 결과만 전송합니다. 실제 차량 센서 진단이 아닙니다. 새로고침하면 연결을 복구할 수 없습니다.';
+  claim.hidden = true; // Connecting needs no tap. The element carries the state that a failed claim leaves behind.
   connection.append(title, message, claim, info);
   document.getElementById('handoff-status').after(connection);
   const transport = document.getElementById('done-sync'); transport.setAttribute('role', 'status'); transport.setAttribute('aria-live', 'polite');
@@ -30,16 +31,17 @@ if (entry.version === 2) {
     transport.dataset.syncState = s.display; // status only, never token/credential/receipt
   } });
   entry.invite = null;
-  claim.addEventListener('click', () => { void sync.claim(); });
+  // The invite stays one-time on the server. Only a page someone is looking at uses it, so a prerender or a background preview does not.
+  const connect = () => { if (!document.hidden) void sync.claim(); };
+  document.addEventListener('visibilitychange', connect);
   send.addEventListener('click', () => { void sync.send(); });
   refresh.addEventListener('click', () => { void sync.refresh(); });
   // Initial render contains no credentials.
   message.textContent = SYNC_TEXT.INVITED; transport.textContent = SYNC_TEXT.NOT_SENT; refresh.disabled = true;
+  connect();
   addEventListener('pagehide', () => sync.close());
   addEventListener('pageshow', (e) => { if (e.persisted) sync.close(); });
   document.addEventListener('visibilitychange', () => document.hidden ? sync.pause() : sync.resume());
 }
-// A person who finished the inspection before connecting must not stop at a disabled send button.
-const completed = (record) => { sync?.setResult(record); if (sync?.snapshot.canClaim) void sync.claim(); };
-await startInspectionPage({ handoff: entry.handoff, onComplete: completed, onRestart: () => sync?.close() });
+await startInspectionPage({ handoff: entry.handoff, onComplete: (record) => sync?.setResult(record), onRestart: () => sync?.close() });
 if (entry.version === 2) document.getElementById('handoff-status').textContent = 'QR v2 점검 요청 · 사용자 보고 결과 전송';

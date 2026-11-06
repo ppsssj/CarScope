@@ -50,7 +50,7 @@ class NativeOverlayActivityTest {
         fun idle() = shadowOf(Looper.getMainLooper()).idle()
         fun poll() = shadowOf(Looper.getMainLooper()).idleFor(5, TimeUnit.SECONDS)
         fun rpc(op: String, extra: String = "") = bridge.handle("""{"op":"$op","localSessionId":"host","generation":1$extra}""")
-        fun open(task: String = "washer-fluid", part: String = "washer-fluid-cap") { rpc("open"); rpc("request", """, "taskId":"$task","partId":"$part""""); idle() }
+        fun open(task: String = "washer-fluid", part: String = "washer-fluid-cap") { rpc("open"); rpc("request", """, "taskId":"$task","partId":"$part""""); idle(); rpc("control", """, "action":"admin""""); idle() }
         fun <T : View> tag(name: String): T = root.findViewWithTag(name)
         fun text(name: String) = tag<TextView>(name).text.toString()
         fun click(name: String) = tag<Button>(name).performClick()
@@ -175,6 +175,7 @@ class NativeOverlayActivityTest {
         assertFalse(h.a.isFinishing)
         assertTrue("resume restores no session", h.rpc("poll").contains("REJECTED"))
         h.rpc("request", """, "taskId":"washer-fluid","partId":"washer-fluid-cap""""); h.idle()
+        h.rpc("control", """, "action":"admin""""); h.idle()
         assertEquals("the page gets no panel", View.GONE, h.overlay.visibility); assertFalse(h.secure())
         assertTrue("the old generation cannot reopen", h.rpc("open").contains("REJECTED"))
         h.b.stop().destroy()
@@ -186,6 +187,8 @@ class NativeOverlayActivityTest {
         val bridge = ReflectionHelpers.getField<NativeInspectionBridge>(a, "bridge")
         fun rpc(op: String, extra: String = "") = bridge.handle("""{"op":"$op","localSessionId":"host","generation":1$extra}""")
         rpc("open"); rpc("request", """, "taskId":"washer-fluid","partId":"washer-fluid-cap""""); shadowOf(Looper.getMainLooper()).idle()
+        assertTrue(rpc("poll").contains("NOT_CONFIGURED"))
+        rpc("control", """, "action":"admin""""); shadowOf(Looper.getMainLooper()).idle()
         assertEquals(View.VISIBLE, root.getChildAt(1).visibility)
         assertFalse(root.findViewWithTag<Button>("create").isEnabled); assertEquals(View.GONE, root.findViewWithTag<ImageView>("qr").visibility)
         assertEquals("패널 닫기", root.findViewWithTag<Button>("close-panel").text.toString())

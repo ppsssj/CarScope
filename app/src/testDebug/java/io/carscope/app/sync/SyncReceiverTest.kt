@@ -20,6 +20,7 @@ class SyncReceiverTest {
         var creates = 0; var views = 0; var accepts = 0; var cancels = 0; var cancelledRequests = 0
         var createReply: SyncReply<CreatedSyncSession> = SyncReply.Success(CreatedSyncSession(id, ReceiverCredential(token), InviteCredential(invite), 2000, 3000))
         var reply: SyncReply<SyncReceiverView> = SyncReply.Success(view(SyncSessionState.CLAIMED))
+        var acceptReply: SyncReply<SyncReceiverView>? = null
         var defer = false
         var later: (() -> Unit)? = null
         var acceptedDigest: String? = null
@@ -33,22 +34,51 @@ class SyncReceiverTest {
             views++; usedCredential = receiver; return respond(reply, callback)
         }
         override fun accept(id: String, receiver: ReceiverCredential, digest: String, callback: (SyncReply<SyncReceiverView>) -> Unit): SyncCancellation {
-            accepts++; acceptedDigest = digest; return respond(reply, callback)
+            accepts++; acceptedDigest = digest; return respond(acceptReply ?: reply, callback)
         }
         override fun cancel(id: String, receiver: ReceiverCredential, callback: (SyncReply<SyncReceiverView>) -> Unit): SyncCancellation {
             cancels++; return respond(reply, callback)
         }
     }
     private fun view(phase: SyncSessionState, value: CompletedInspection? = null, digest: String? = value?.digest()) = SyncReceiverView(id, phase, 3000, value, digest)
-    private inner class Fixture {
+    private inner class Fixture(auto: Boolean = false) {
         var now = 1000L
         val transport = Transport(); val timer = Timer(); val changes = mutableListOf<SyncReceiverState>()
         val client = SyncReceiverClient(transport) { now }
-        val owner = SyncReceiverController(client, timer, changes::add)
+        val owner = SyncReceiverController(client, timer, { auto }, changes::add)
         fun start() = owner.create("https://mobile.example/")
         fun submitted() { start(); transport.reply = SyncReply.Success(view(SyncSessionState.RESULT_SUBMITTED, result)); owner.poll() }
     }
 
+    @Test fun `without the simulator a result waits for the explicit Accept`() {
+        val f = Fixture(); f.submitted()
+        assertEquals(0, f.transport.accepts); assertEquals(ReceiverPhase.RESULT_SUBMITTED, f.owner.state.phase)
+    }
+    @Test fun `the simulator confirms the exact digest once and it never reads as an explicit Accept`() {
+        val f = Fixture(auto = true); f.transport.acceptReply = SyncReply.Success(view(SyncSessionState.ACCEPTED, result))
+        f.submitted()
+        assertEquals(1, f.transport.accepts); assertEquals(result.digest(), f.transport.acceptedDigest)
+        assertEquals(ReceiverPhase.ACCEPTED, f.owner.state.phase); assertTrue(f.owner.state.autoConfirmed); assertFalse(f.owner.state.explicitlyAccepted)
+    }
+    @Test fun `a lost automatic confirmation is recovered by a poll for that digest only`() {
+        val f = Fixture(auto = true); f.transport.acceptReply = SyncReply.Failure(SyncFailure.NETWORK)
+        f.submitted()
+        assertEquals(ReceiverPhase.RESULT_SUBMITTED, f.owner.state.phase); assertTrue(f.owner.state.retryAvailable)
+        f.transport.reply = SyncReply.Success(view(SyncSessionState.ACCEPTED, result)); f.owner.poll()
+        assertEquals(ReceiverPhase.ACCEPTED, f.owner.state.phase); assertTrue(f.owner.state.autoConfirmed)
+    }
+    @Test fun `automatic confirmation stops after its attempts until someone retries`() {
+        val f = Fixture(auto = true); f.transport.acceptReply = SyncReply.Failure(SyncFailure.SERVER)
+        f.submitted(); repeat(6) { f.owner.poll() }
+        assertEquals(3, f.transport.accepts); assertEquals(ReceiverPhase.RESULT_SUBMITTED, f.owner.state.phase)
+        f.owner.retryPolling(); assertEquals(4, f.transport.accepts)
+    }
+    @Test fun `a confirmation answered with another digest fails closed`() {
+        val f = Fixture(auto = true)
+        f.transport.acceptReply = SyncReply.Success(view(SyncSessionState.ACCEPTED, result, "sha256:" + "0".repeat(64)))
+        f.submitted()
+        assertEquals(ReceiverPhase.FAILED, f.owner.state.phase); assertFalse(f.owner.state.autoConfirmed)
+    }
     @Test fun `canonical digest matches Node protocol golden record`() {
         assertTrue(result.valid())
         assertEquals("sha256:4ab36ad950704e07554f67234a7948fbb58b6f1cb6a36971cdc13deab222f3ff", result.digest())

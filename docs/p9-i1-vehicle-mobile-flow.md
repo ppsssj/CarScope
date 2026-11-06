@@ -8,11 +8,11 @@
 |---|---|---|
 | 1 | Launcher의 `CarScope 차량 점검 (debug)` | Debug `AndroidManifest.xml`, `InspectionActivity` |
 | 2~3 | 부품 선택 → `모바일로 점검하기` | `inspection-results-view.mjs`, `native-inspection-results.mjs` |
-| 4 | 패널이 열리고, grant를 받아 세션을 만든다 | `NativeInspectionBridge`, `SyncReceiverActivity.createWhenAuthorized` |
-| 5 | QR v2 표시. 상태: 인증 대기 → QR 생성 중 → QR 생성 완료 → 스마트폰 연결됨 → 결과 수신 / 만료 | `SyncReceiverActivity`, `SyncQrRenderer` |
-| 6~8 | 스캔 → 해당 부품 페이지 → `차량 요청에 연결` → 점검. 연결 전에 끝내면 완료 시 한 번 연결한다 | `mobile-dev-entry.mjs`, `mobile-handoff.mjs` |
+| 4 | 같은 부품 패널에서 grant를 받아 세션을 만든다 | `NativeInspectionBridge`, `SyncReceiverActivity.createWhenAuthorized` |
+| 5 | 부품 패널의 빈 자리에 Native가 QR을 그린다. 상태: 권한 확인 → QR 생성 중 → QR 스캔 → 스마트폰 연결됨 → 결과 수신 / 만료 | `InspectionActivity`, `inspection-results-view.mjs` |
+| 6~8 | 스캔 → 해당 부품 페이지 → 자동 연결 → 점검 | `mobile-dev-entry.mjs`, `mobile-handoff.mjs` |
 | 9 | `결과 전송`. 서버 영수증을 확인해야 전송 완료로 표시한다 | `mobile-sync.mjs`, `sync-client.mjs` |
-| 10~11 | 차량 폴링으로 결과 표시 → `이 결과 수락` (자동 수락 없음) | `SyncReceiverController` |
+| 10~11 | 차량 폴링으로 결과 수신 → 같은 digest를 자동 수신 확인(시뮬레이터 한정) → 부품 패널에 표시 | `SyncReceiverController`, `native-inspection-results.mjs` |
 | 12 | 수락과 같은 트랜잭션에서 `cs_inspection_records`에 저장 (`AVD_SIMULATOR`) | `postgres-store.mjs` |
 | 13 | 차량 `ACCEPTED`, 모바일 폴링으로 완료 표시, 3D에서 기록 선택 | `SyncReceiverActivity`, `mobile-sync.mjs` |
 
@@ -22,6 +22,11 @@
 
 - **세션 생성:** 3D의 `모바일로 점검하기` 한 번이 세션을 만든다. 이전에는 패널에서 `점검 요청 생성`을 한 번 더 눌렀다. 패널이 보일 때만 만들고, 같은 요청을 다시 열어도 새로 만들지 않는다. 수락은 계속 Native 버튼으로만 한다. 단독 `SyncReceiverActivity`는 전과 같이 버튼으로 만든다.
 - **Grant 시점:** 3D 화면은 시작할 때 grant를 받지 않는다. 2분 뒤 만료되어 나중의 요청이 거부됐기 때문이다. 이제 요청할 때 받고, 패널이 열린 동안 권한이 없으면 30초 간격으로 다시 시도한다(서버 제한 분당 4회). 단독 화면의 시작 시 갱신은 그대로다.
+
+- **QR 위치 (P9-UX):** 페이지는 빈 자리의 좌표만 보내고 Native가 그 위에 비트맵을 그린다. QR과 토큰은 WebView로 넘어가지 않는다. QR이 보이는 동안만 창이 `FLAG_SECURE`다. 기존 Native 패널은 `Debug 관리`에서만 열린다.
+- **자동 수신 확인 (P9-UX):** 시뮬레이터 자격으로 동작할 때만, 받은 결과의 digest를 검증하고 같은 digest로 서버 수락을 호출한다. 3회 실패하면 멈추고 `다시 확인`을 기다린다. proof에는 `AVD_SIMULATION_AUTO`가 남고 화면에는 "차량 소유자 승인 아님"으로 표시한다. 다른 자격에서는 Native 버튼의 수락을 계속 요구한다.
+- **표시 기록 (P9-UX):** 가장 최근의 유효한 모바일 결과를 표시한다. 다른 기록은 `이전 기록`에서 고른다.
+- **모바일 연결 (P9-UX):** 보이는 페이지에서만 자동으로 연결한다. 초대의 일회용 제한은 서버가 그대로 적용한다.
 
 인증, TLS, 서버 API, 스키마는 바꾸지 않았다.
 
@@ -47,6 +52,7 @@
 
 ## 알려진 한계
 
+- 페이지를 실제로 표시해 초대를 쓰는 미리보기 앱이 있으면 그 앱이 연결을 차지하고, 사용자에게는 새 QR 안내가 나온다.
 - 수락된 기록의 소유자는 `AVD_SIMULATOR`이고 `userId`와 `vehicleId`가 없다. 시뮬레이션 모드에서 History 조회는 계속 거부되므로 차량 앱의 기록은 이번 세션의 3D 결과로 표시된다. 저장 확인은 DB에서 한다.
 - 시뮬레이션 모드가 켜져 있으면 등록된 AVD는 인터넷 어디서든 proof로 세션을 만들 수 있다. proof가 없는 요청은 거부된다.
 - 실제 차량(OEM) 인증은 구현되지 않았다.

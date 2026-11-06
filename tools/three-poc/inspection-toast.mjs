@@ -5,8 +5,8 @@ export const TOAST_MS = 4000;
 /** Each message states only the step that was confirmed. None of them proves a QR, a server session or a connection. */
 export const MOBILE_REQUEST_TEXT = Object.freeze({
   SENDING: 'Native 점검 요청 전달 중입니다',
-  ACCEPTED: 'Native 수신 화면 요청이 접수됐습니다 · 세션 생성 전입니다',
-  ACCEPTED_ACTIVE_BINDING: 'Native 수신 화면 요청이 접수됐습니다 · 이미 연결된 점검 요청입니다',
+  ACCEPTED: '모바일 점검을 준비합니다 · QR이 표시되면 스캔하세요',
+  ACCEPTED_ACTIVE_BINDING: '이미 진행 중인 모바일 점검입니다',
   IN_FLIGHT: '이전 요청의 Native 응답을 기다리는 중입니다 · 새 요청을 보내지 않았습니다',
   REJECTED: '점검 요청을 시작할 수 없습니다',
   FAILED: 'Native 연결을 확인하지 못했습니다',

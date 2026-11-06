@@ -97,7 +97,7 @@ try {
   sync=await startMobileDevServer({port:0,authorizer:new LocalTestSessionCreationAuthorizer()});
   const receiver=new ReceiverClient({baseUrl:sync.url}),session=await receiver.create('ev-charge.port');
   await page.goto(sync.url+'/'+session.fragment);await step('intro');assert.equal(await page.evaluate(()=>location.hash),'');assert.equal(await page.locator('.task-links').count(),0);
-  await page.locator('#sync-claim').click();await page.waitForFunction(()=>document.querySelector('#sync-claim').disabled);
+  await page.waitForFunction(()=>document.querySelector('#sync-claim').disabled);
   await safe();await nav('#manual-start');await answerAll();await nav('#primary');await step('done');
   await page.waitForFunction(()=>!document.querySelector('#sync-send').disabled);assert.equal((await receiver.view()).result,null);
   let submits=0;page.on('request',r=>{if(r.url().endsWith('/v1/submissions')&&r.method()==='POST')submits++;});

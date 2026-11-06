@@ -60,7 +60,7 @@ test('a second confirm of the same record changes nothing', () => {
   assert.equal(once.tires[TIRE].completedAt, 1000);
 });
 
-test('a delivered candidate is not applied by a local record, and local and mobile stay separate after selecting', async () => {
+test('the newest verified mobile result is shown, and local and mobile stay separate', async () => {
   const { authority: { callbacks: c }, controller } = connected();
   const binding = { bindingId: 'b', localSessionId: c.localSessionId, generation: c.generation, syncSessionId: 's', taskId: TIRE, partId: TIRE, serverNow: 1000, expiresAt: 1e12 };
   assert.equal(c.onBinding(binding), 'BOUND');
@@ -68,10 +68,7 @@ test('a delivered candidate is not applied by a local record, and local and mobi
   assert.equal(await c.onAccepted({ bindingId: 'b', localSessionId: c.localSessionId, generation: c.generation, syncSessionId: 's', taskId: TIRE, inspectionId: result.inspectionId, resultDigest: await digestResult(result), result }), 'STAGED');
   const local = confirmed();
   const row = () => projectInspectionResults(local, controller.snapshot).find(r => r.partId === TIRE);
-  assert.equal(row().status, 'FINDINGS_REPORTED');
-  assert.equal(row().source, 'USER_REPORTED');
-  assert.deepEqual(controller.snapshot.selected, {});
-  assert.equal(controller.select(TIRE, result.inspectionId), true);
+  assert.equal(controller.snapshot.selected[TIRE], result.inspectionId);
   assert.equal(row().status, 'UNABLE');
   assert.equal(row().source, 'MOBILE');
   assert.equal(row().local.status, 'FINDINGS_REPORTED', 'local record kept beside it');

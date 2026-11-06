@@ -4,6 +4,8 @@ import com.google.gson.Gson
 import java.util.UUID
 
 internal data class NativeInspectionRequest(val taskId: String, val localSessionId: String, val generation: Long)
+/** A page command for the inline flow. Layout and fixed actions only: it cannot read a QR or a credential. */
+internal data class NativePanelCommand(val action: String, val slot: String = "NONE", val x: Int = 0, val y: Int = 0, val size: Int = 0)
 
 /** One current WebView/Activity owns this token-free vault. No static owner, Intent authority, or JS proof input. */
 internal class NativeInspectionBridge(
@@ -12,7 +14,8 @@ internal class NativeInspectionBridge(
     private val resetNative: () -> Unit,
     private val reopenNative: (NativeInspectionRequest) -> Unit = {},
     /** Lifecycle and anomaly lines only: sanitized stages and counters, never a session ID, task or body. */
-    private val diag: (String) -> Unit = {}
+    private val diag: (String) -> Unit = {},
+    private val panelCommand: (NativePanelCommand) -> Unit = {}
 ) {
     private val gson = Gson()
     private var active = true
@@ -24,6 +27,7 @@ internal class NativeInspectionBridge(
     private var armed = false
     private val entries = linkedMapOf<String, Entry>()
     private var notice: String? = null
+    private var receiver: Map<String, Any?>? = null // Status for the page. Never holds a QR, an invite or a credential.
     private data class Entry(val binding: Map<String, Any>, val clock: SyncServerClock,
         var delivered: Boolean = false, var terminal: String? = null,
         var result: SyncInspection? = null, var proof: Map<String, Any>? = null)
@@ -36,7 +40,9 @@ internal class NativeInspectionBridge(
             else -> null
         }
         private val identifier = Regex("[A-Za-z0-9._:-]{1,128}")
-        private val ops = setOf("open", "request", "poll", "verify", "close")
+        private val ops = setOf("open", "request", "poll", "verify", "close", "panel", "control")
+        private val controls = setOf("refresh", "cancel", "admin")
+        private val slots = setOf("NONE", "HIDDEN", "SHOWN")
         private const val SLOW_HANDLE_MS = 500L
     }
     @Synchronized fun handle(body: String): String {
@@ -95,6 +101,21 @@ internal class NativeInspectionBridge(
                         gson.toJson(mapOf("proof" to proof))
                     }
                     "close" -> { keys(); clear(); gson.toJson(mapOf("ok" to true)) }
+                    "panel" -> {
+                        keys("slot", "x", "y", "size")
+                        val slot = x["slot"] as? String ?: error("INVALID")
+                        val (left, top, size) = listOf("x", "y", "size").map { SyncHttpDecoder.number(x[it]) }
+                        require(slot in slots && listOf(left, top, size).all { it in 0..10_000L })
+                        panelCommand(NativePanelCommand("slot", slot, left.toInt(), top.toInt(), size.toInt()))
+                        gson.toJson(mapOf("ok" to true))
+                    }
+                    "control" -> {
+                        keys("action")
+                        val action = x["action"] as? String ?: error("INVALID")
+                        require(action in controls)
+                        panelCommand(NativePanelCommand(action))
+                        gson.toJson(mapOf("ok" to true))
+                    }
                     else -> error("INVALID")
                 }
             }
@@ -121,11 +142,13 @@ internal class NativeInspectionBridge(
             p.filterKeys { it in setOf("bindingId", "localSessionId", "generation", "syncSessionId", "taskId", "inspectionId", "resultDigest") } +
                 ("result" to gson.fromJson(e.result!!.canonicalJson(), Any::class.java))
         }
-        return gson.toJson(mapOf("bindings" to bindings, "accepted" to deliveries,
+        return gson.toJson(mapOf("receiver" to receiver, "bindings" to bindings, "accepted" to deliveries,
             "terminal" to entries.values.filter { it.delivered && it.terminal != null }.map {
                 mapOf("bindingId" to it.binding["bindingId"], "syncSessionId" to it.binding["syncSessionId"], "state" to it.terminal)
             }, "unavailable" to notice))
     }
+    /** Called only by the Native owner, never through handle(). */
+    @Synchronized fun receiverStatus(status: Map<String, Any?>?) { receiver = status }
     /** Called only by the Native controller callback, never through handle(). */
     @Synchronized fun state(state: SyncReceiverState) {
         val task = pendingTask ?: return
@@ -147,7 +170,7 @@ internal class NativeInspectionBridge(
         val e = entries.values.find { it.binding["syncSessionId"] == id && it.binding["taskId"] == task }
         if (state.phase == ReceiverPhase.ACCEPTED) {
             // Keep the first blocking cause (e.g. SERVER_CLOCK_UNAVAILABLE) so 3D shows why Accept cannot apply.
-            if (e == null || !live(e) || !state.explicitlyAccepted) { notice = notice ?: "ACCEPTED_NOT_BOUND"; return }
+            if (e == null || !live(e) || !(state.explicitlyAccepted || state.autoConfirmed)) { notice = notice ?: "ACCEPTED_NOT_BOUND"; return }
             val result = state.result ?: return
             val received = state.receivedAt ?: return
             val accepted = state.acceptedAt ?: return
@@ -162,6 +185,7 @@ internal class NativeInspectionBridge(
             e.result = result
             e.proof = e.binding.filterKeys { it != "partId" && it != "serverNow" && it != "expiresAt" } +
                 mapOf("version" to 1, "proofId" to UUID.randomUUID().toString(), "sessionState" to "ACCEPTED",
+                    "confirmation" to if (state.autoConfirmed) "AVD_SIMULATION_AUTO" else "NATIVE_EXPLICIT",
                     "inspectionId" to result.inspectionId, "resultDigest" to result.digest(), "receivedAt" to received, "acceptedAt" to accepted)
             pendingTask = null
         }
@@ -171,7 +195,7 @@ internal class NativeInspectionBridge(
         }
     }
     @Synchronized fun clear() {
-        local = null; generation = 0; pendingTask = null; armed = false; entries.clear(); notice = null; resetNative()
+        local = null; generation = 0; pendingTask = null; armed = false; entries.clear(); notice = null; receiver = null; resetNative()
     }
     @Synchronized fun isCurrent(request: NativeInspectionRequest): Boolean = active && local == request.localSessionId &&
         generation == request.generation && pendingTask == request.taskId

@@ -23,13 +23,15 @@ const browser = await chromium.launch({ channel: 'msedge', headless: true });
 const checks = [], errors = [];
 const pass = (name) => { checks.push(name); console.log(`PASS: ${name}`); };
 let context, page, secrets, urls, claimCount, submitCount;
-async function open(fragment = '') {
+async function open(fragment = '', prepare = null) {
   if (context) await context.close();
   context = await browser.newContext({ viewport: { width: 390, height: 844 } });
   page = await context.newPage(); page.setDefaultTimeout(15000);
   secrets = []; urls = []; claimCount = 0; submitCount = 0;
   page.on('pageerror', (e) => errors.push(e.message));
   page.on('request', (r) => { urls.push(r.url()); if (r.url().endsWith('/v1/claim')) claimCount++; if (r.url().endsWith('/v1/submissions')) submitCount++; });
+  page.on('response', async (r) => { if (r.url().endsWith('/v1/claim')) { const token = await r.json().then((x) => x.submitToken, () => null); if (token) secrets.push(token); } });
+  if (prepare) await prepare();
   await page.goto(server.url + '/' + fragment);
   await page.waitForFunction(() => window.__selfInspection);
 }
@@ -38,13 +40,9 @@ async function pair({ claim = true, prepare } = {}) {
   now += 61_000;
   const receiver = new ReceiverClient({ baseUrl: server.url }), session = await receiver.create();
   const invite = session.fragment.split('invite=')[1];
-  await open(session.fragment); secrets.push(invite);
+  await open(session.fragment, prepare); secrets.push(invite);
   assert.equal(new URL(page.url()).hash, '');
-  if (prepare) await prepare();
   if (claim) {
-    const response = page.waitForResponse((r) => r.url().endsWith('/v1/claim'));
-    await page.locator('#sync-claim').evaluate((b) => { b.click(); b.click(); });
-    const claimed = await (await response).json(); if (claimed.submitToken) secrets.push(claimed.submitToken);
     await page.waitForFunction(() => document.querySelector('#sync-claim').disabled && document.body.textContent.includes('연결됨'));
     assert.equal(claimCount, 1);
   }
@@ -89,7 +87,7 @@ try {
   await page.reload(); assert.equal(await page.locator('#sync-send').count(), 0);
   assert.equal(await page.evaluate(() => window.__selfInspection.state.record), null);
   pass('reload cannot restore tokens, claim or a transmitted success');
-  await open(paired.session.fragment); await page.click('#sync-claim');
+  await open(paired.session.fragment);
   await page.waitForFunction(() => document.body.textContent.includes('새 QR을 요청'));
   assert.equal(claimCount, 1); assert.equal(await page.locator('#sync-claim').isEnabled(), false);
   pass('used QR rejected with new-QR guidance');
@@ -102,15 +100,17 @@ try {
   await waitState('REJECTED_EXPIRED');
   pass('session expiry is displayed separately from cancellation');
 
-  paired = await pair({ claim: false }); await complete();
-  await page.waitForFunction(() => document.querySelector('#sync-claim').disabled && !document.querySelector('#sync-send').disabled);
-  await noLeak(); await paired.receiver.cancel();
-  pass('finishing the inspection before connecting claims once and enables send');
+  paired = await pair({ claim: false, prepare: () => page.addInitScript(() => Object.defineProperty(document, 'hidden', { configurable: true, get: () => true })) });
+  assert.equal(claimCount, 0);
+  await page.evaluate(() => { Object.defineProperty(document, 'hidden', { configurable: true, get: () => false }); document.dispatchEvent(new Event('visibilitychange')); });
+  await page.waitForFunction(() => document.querySelector('#sync-claim').disabled && document.body.textContent.includes('연결됨'));
+  assert.equal(claimCount, 1); await noLeak(); await paired.receiver.cancel();
+  pass('a page nobody is looking at keeps the invite and connects once when shown');
 
   paired = await pair({ claim: false, prepare: async () => {
     await page.route('**/v1/claim', async (route) => { await route.fetch(); await route.abort('failed'); });
   } });
-  await page.click('#sync-claim'); await page.waitForFunction(() => document.body.textContent.includes('새 QR'));
+  await page.waitForFunction(() => document.body.textContent.includes('새 QR'));
   assert.equal(claimCount, 1); assert.equal(await page.locator('#sync-claim').isEnabled(), false); await noLeak();
   pass('lost committed Claim response never re-claims; asks vehicle for new QR');
 
