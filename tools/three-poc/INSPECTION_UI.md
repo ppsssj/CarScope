@@ -55,6 +55,7 @@ GLB와 파생 자산은 저장소 밖에 둔다. QR origin은 코드에 넣지 �
 
 | 파일 | 역할 |
 | --- | --- |
+| `inspection-parts.mjs` | 19개 부품의 ID, 이름, 영역, 모델링 출처, 카메라 분류의 단일 목록. 화면 이름은 여기서 온다. [P10-1](../../docs/p10-1-part-registry.md) |
 | `inspection-flow.mjs` | 순수 상태 머신. 보닛/워셔액/QR, 타이어 상세/요약, 전체 `INSPECTION_SUMMARY` 및 닫힘/취소 전이. 점검 부위 목록과 보닛/카메라 목표 |
 | `inspection-product.mjs` | 전체 요약, 공통 세션 버튼, 브라우저/Android shell의 Back 의미. SDK나 저장소를 쓰지 않음 |
 | `tire-inspection.mjs` / `tire-inspection-view.mjs` | 기존 immutable USER_REPORTED reducer와 육안 입력/위치별 요약 |
@@ -67,7 +68,7 @@ GLB와 파생 자산은 저장소 밖에 둔다. QR origin은 코드에 넣지 �
 
 보닛과 카메라는 **목표 기반**으로 움직인다. 상태가 바뀌면 현재 자세에서 새 목표로 다시 출발하고, 애니메이션이 끝나면 `HOOD_OPENED`/`HOOD_CLOSED` 이벤트로 상태 머신에 알린다. 그래서 열리는 중 취소, 중복 클릭, 늦게 도착한 완료 이벤트가 화면과 상태를 어긋나게 만들지 않는다. 적용되지 않는 이벤트는 같은 상태를 반환하고 로그에 `ignored`로 남는다.
 
-새 점검 부위·부품은 `INSPECTION_AREAS`에 추가한다. `planned`는 준비 중으로 선택되지 않는다. 현재 보닛·워셔액·네 타이어를 선택할 수 있고, 냉각수·브레이크액·12V 배터리·퓨즈박스는 `preview`로 추정 형상만 탐색한다. 저전도 냉각수는 형상이 없는 예약 영역이다. preview 선택을 점검 완료로 기록하지 않는다.
+새 부품은 `inspection-parts.mjs`에 추가한다. `planned`는 준비 중으로 선택되지 않는다. 현재 보닛·워셔액·네 타이어를 선택할 수 있고, 냉각수·브레이크액·12V 배터리·퓨즈박스는 `preview`로 추정 형상만 탐색한다. 저전도 냉각수는 형상이 없는 예약 영역이다. preview 선택을 점검 완료로 기록하지 않는다.
 
 ## 형상과 동작의 근거
 

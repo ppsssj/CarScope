@@ -1,16 +1,17 @@
 // Frontend boundary contract. No network, Native bridge, credentials or mobile-code dependency.
-const target=(taskId,partId,label,area,keys)=>Object.freeze({taskId,partId,label,area,schemaVersion:taskId==='washer-fluid'?1:2,responseKeys:Object.freeze(keys)});
+import {partLabel} from './inspection-parts.mjs';
+const target=(taskId,partId,area,keys)=>Object.freeze({taskId,partId,label:partLabel(partId),area,schemaVersion:taskId==='washer-fluid'?1:2,responseKeys:Object.freeze(keys)});
 export const MOBILE_TARGETS=Object.freeze([
-  target('washer-fluid','washer-fluid-cap','워셔액','hood',[]),
-  ...['front-left','front-right','rear-left','rear-right'].map((side,i)=>target('tire.'+side,'tire.'+side,['앞 왼쪽 타이어','앞 오른쪽 타이어','뒤 왼쪽 타이어','뒤 오른쪽 타이어'][i],'tires',['damage','debris','wear'])),
-  target('ev-charge.port','ev-charge.port','EV 충전구','ev-charge',['flapDamage','debris','visibleDamage']),
-  target('brake-fluid','brake-fluid-reservoir','브레이크액','hood',['levelMarking','leakTrace','exteriorDamage']),
-  target('coolant-reservoir','coolant-reservoir','냉각수 리저버','hood',['levelMarking','leakTrace','exteriorDamage']),
-  target('lcw-coolant-reservoir','lcw-coolant-reservoir','저전도 냉각수 리저버','hood',['levelMarking','leakTrace','exteriorDamage']),
-  target('battery-12v','battery-12v','12V 보조 배터리','hood',['caseDamage','leakTrace','visibleCorrosion']),
-  target('fuse-box','fuse-box','모터룸 퓨즈박스','hood',['coverDamage','visibleContamination','heatDamage']),
-  ...['left','right'].map(side=>target('wiper.front.'+side,'wiper.front.'+side,`전면 ${side==='left'?'왼쪽':'오른쪽'} 와이퍼`,'wipers',['bladeDamage','visibleDebris','armDamage'])),
-  ...['low','high'].flatMap(beam=>['left','right'].map(side=>{const id=`light-${beam}-beam-${side}-0`;return target(id,id,`${side==='left'?'왼쪽':'오른쪽'} ${beam==='low'?'하향등':'상향등'}`,'lights',['lensDamage','obstruction','visibleMoisture']);})),
+  target('washer-fluid','washer-fluid-cap','hood',[]),
+  ...['front-left','front-right','rear-left','rear-right'].map(side=>target('tire.'+side,'tire.'+side,'tires',['damage','debris','wear'])),
+  target('ev-charge.port','ev-charge.port','ev-charge',['flapDamage','debris','visibleDamage']),
+  target('brake-fluid','brake-fluid-reservoir','hood',['levelMarking','leakTrace','exteriorDamage']),
+  target('coolant-reservoir','coolant-reservoir','hood',['levelMarking','leakTrace','exteriorDamage']),
+  target('lcw-coolant-reservoir','lcw-coolant-reservoir','hood',['levelMarking','leakTrace','exteriorDamage']),
+  target('battery-12v','battery-12v','hood',['caseDamage','leakTrace','visibleCorrosion']),
+  target('fuse-box','fuse-box','hood',['coverDamage','visibleContamination','heatDamage']),
+  ...['left','right'].map(side=>target('wiper.front.'+side,'wiper.front.'+side,'wipers',['bladeDamage','visibleDebris','armDamage'])),
+  ...['low','high'].flatMap(beam=>['left','right'].map(side=>{const id=`light-${beam}-beam-${side}-0`;return target(id,id,'lights',['lensDamage','obstruction','visibleMoisture']);})),
 ]);
 export const targetForTask=id=>MOBILE_TARGETS.find(t=>t.taskId===id);
 export const targetForPart=id=>MOBILE_TARGETS.find(t=>t.partId===id);

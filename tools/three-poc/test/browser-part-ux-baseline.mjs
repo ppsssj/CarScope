@@ -10,6 +10,7 @@ import {mkdir,readFile,writeFile} from 'node:fs/promises';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {PART_UX_ISSUES} from './part-ux-known-issues.mjs';
+import {partLabel} from '../inspection-parts.mjs';
 import {ALL_PARTS,BATTERY_PART,CHARGE_PARTS,FRAMING_BANDS,HOOD_PARTS,LIGHT_PARTS,MIN_TOUCH_PX,POSE_TOLERANCE_M,TIRE_PARTS,VIEWPORTS,WIPER_PARTS,classifyIssue,compareBaseline,distanceBetween,framesInsideVehicle,internalWords,spread,withinBand} from './part-ux-metrics.mjs';
 
 const require=createRequire(new URL('../../mobile-ar-poc/package.json',import.meta.url)),{chromium}=require('playwright');
@@ -72,7 +73,7 @@ const scanPart=(page,id,cells=15)=>page.evaluate(({id,cells})=>{
 const panelFacts=page=>page.evaluate(()=>{
   const panel=document.getElementById('panel'),label=document.getElementById('capLabel'),h2=panel.querySelector('h2'),toast=document.getElementById('toast');
   const css=h2&&getComputedStyle(h2),box=panel.getBoundingClientRect(),toastBox=toast.getBoundingClientRect();
-  return {text:panel.innerText,badge:panel.querySelector('.badge')?.textContent??null,
+  return {title:h2?.textContent.trim()??null,crumb:document.getElementById('crumb').textContent,text:panel.innerText,badge:panel.querySelector('.badge')?.textContent??null,
     backButtons:[...panel.querySelectorAll('[data-action="back"]')].map(b=>b.textContent.trim()),
     label:getComputedStyle(label).display!=='none'&&label.dataset.hidden===undefined,
     focusOutline:h2&&document.activeElement===h2?parseFloat(css.outlineWidth)>0&&css.outlineStyle!=='none':false,
@@ -129,7 +130,8 @@ async function measureViewport(browser,viewport){
     await t.settle();
     const scan=await scanPart(page,id),facts=await panelFacts(page),current=await t.state();
     await shot('preview-'+id);
-    const entry={selectable:true,state:current.name,...simplifyScan(scan),color:scan.color?.map(v=>Math.round(v))??null,selectionIntensity:scan.selectionIntensity,
+    const listName=await page.evaluate(id=>{const b=document.querySelector(`#panel button.item[data-id="${id}"]`);return b?.firstChild?.textContent.trim()??null;},id);
+    const entry={selectable:true,title:facts.title,crumb:facts.crumb,listName,state:current.name,...simplifyScan(scan),color:scan.color?.map(v=>Math.round(v))??null,selectionIntensity:scan.selectionIntensity,
       label:facts.label,badge:facts.badge,backButtons:facts.backButtons,focusOutline:facts.focusOutline,hasMobile:facts.hasMobile,noProcedureText:/아직 제공하지 않음/.test(facts.text),internalWords:internalWords(facts.text)};
     const before=await t.pose();
     await t.dispatch({type:'BACK'});await page.waitForTimeout(30);await t.settle();
@@ -151,9 +153,9 @@ async function measureViewport(browser,viewport){
   // ---- result route for the 17 result parts
   for(const id of RESULT_PARTS){
     await t.toOverview();await t.dispatch({type:'OPEN_RESULT',id});await t.until('PART_RESULT');await t.settle();await page.waitForTimeout(30);await t.settle();
-    const scan=await scanPart(page,id);
+    const scan=await scanPart(page,id),resultFacts=await panelFacts(page);
     if(['washer-fluid-cap','lcw-coolant-reservoir','coolant-reservoir'].includes(id))await shot('result-'+id);
-    const entry={...simplifyScan(scan),hood:round(await page.evaluate(()=>window.__inspect.hoodAngle),1)};
+    const entry={...simplifyScan(scan),title:resultFacts.title,crumb:resultFacts.crumb,hood:round(await page.evaluate(()=>window.__inspect.hoodAngle),1)};
     await t.dispatch({type:'BACK'});await page.waitForTimeout(30);await t.settle();await page.waitForTimeout(30);await t.settle();
     entry.backTo=(await t.state()).name;R.result[id]=entry;
   }
@@ -162,6 +164,7 @@ async function measureViewport(browser,viewport){
   const F=R.flows;
   await t.toOverview();await t.dispatch({type:'SELECT_AREA',id:'hood'});await t.until('COMPONENT_SELECTION');await t.settle();await shot('bay');
   F.bayLabel=(await panelFacts(page)).label;
+  F.hoodListNames=await page.evaluate(()=>Object.fromEntries([...document.querySelectorAll('#panel button.item[data-id]')].map(b=>[b.dataset.id,b.firstChild.textContent.trim()])));
   await t.dispatch({type:'OPEN_RESULT',id:'lcw-coolant-reservoir'});await t.until('PART_RESULT');await t.settle();await t.dispatch({type:'BACK'});await page.waitForTimeout(30);await t.settle();await page.waitForTimeout(30);await t.settle();
   F.resultBackFromList=(await t.state()).name;
 
@@ -298,6 +301,14 @@ function evaluateIssues(runs,paths,mobile){
     'P1-11':{met:anyView.lcwListClass?.preview===true,value:anyView.lcwListClass},
     'P1-12':{met:allPreview(p=>HOOD_PARTS.filter(id=>p[id]?.selectable).every(id=>!(p[id].noProcedureText&&p[id].hasMobile))),value:Object.fromEntries(HOOD_PARTS.filter(id=>anyView.preview[id]?.selectable).map(id=>[id,{noProcedureText:anyView.preview[id].noProcedureText,hasMobile:anyView.preview[id].hasMobile}]))},
     'P1-13':{met:views.every(v=>[...WIPER_PARTS,...LIGHT_PARTS,...CHARGE_PARTS,...HOOD_PARTS].filter(id=>runs[v].select3d[id]?.clickable).every(id=>Math.min(...runs[v].select3d[id].touchPx)>=MIN_TOUCH_PX)),value:Object.fromEntries(views.map(v=>[v,Object.fromEntries([...WIPER_PARTS,...LIGHT_PARTS,...CHARGE_PARTS,...HOOD_PARTS].map(id=>[id,runs[v].select3d[id]?.touchPx]))]))},
+    'P1-14':(()=>{
+      const wrong=views.flatMap(v=>[
+        ...ALL_PARTS.filter(id=>runs[v].preview[id]?.selectable).flatMap(id=>[['preview title',runs[v].preview[id].title],['preview list',runs[v].preview[id].listName]].filter(([,name])=>name!==null&&name!==partLabel(id)).map(([where,name])=>`${v} ${id} ${where}: ${name}`)),
+        ...RESULT_PARTS.filter(id=>runs[v].result[id].title!==partLabel(id)).map(id=>`${v} ${id} result title: ${runs[v].result[id].title}`),
+        ...Object.entries(runs[v].flows.hoodListNames).filter(([id,name])=>name!==partLabel(id)).map(([id,name])=>`${v} ${id} hood list: ${name}`),
+      ]);
+      return {met:wrong.length===0,value:{wrong:wrong.slice(0,20),parts:ALL_PARTS.length}};
+    })(),
     'P2-1':{met:views.every(v=>runs[v].geometry.idle.charge===runs[v].geometry.overview.charge&&runs[v].geometry.tires.charge===runs[v].geometry.overview.charge),value:Object.fromEntries(views.map(v=>[v,runs[v].geometry]))},
     'P2-2':{met:views.every(v=>runs[v].flows.backLabels.length<=1),value:anyView.flows.backLabels},
     'P2-3':{met:allPreview(p=>Object.values(p).every(x=>!x.internalWords?.length)),value:Object.fromEntries(ALL_PARTS.filter(id=>anyView.preview[id]?.internalWords?.length).map(id=>[id,anyView.preview[id].internalWords]))},
