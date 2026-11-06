@@ -4,8 +4,8 @@ import { TRANSPORT } from './sync-client.mjs';
 export const SYNC_TEXT = Object.freeze({
   INVITED: '차량에 연결하고 있어요',
   CLAIMING: '차량에 연결하고 있어요', CLAIMED: '차량과 연결됐어요',
-  NOT_SENT: '아직 보내지 않았어요', SENDING: '결과를 보내고 있어요', SENT: '결과를 보냈어요. 차량 확인을 기다리고 있어요.',
-  ACCEPTED: '차량에서 확인했어요. 점검 이력에 저장됐어요.', CANCELLED: '차량에서 점검을 취소했어요. 차량에서 QR을 다시 만들어 스캔해 주세요.',
+  NOT_SENT: '아직 보내지 않았어요', SENDING: '결과를 보내고 있어요', SENT: '결과를 보냈어요. 차량 앱이 받기를 기다리고 있어요.',
+  ACCEPTED: '차량 앱이 결과를 받아 점검 이력에 저장했어요. 차량 소유자의 승인이나 차량 안전 판정을 뜻하지 않아요.', CANCELLED: '차량에서 점검을 취소했어요. 차량에서 QR을 다시 만들어 스캔해 주세요.',
   FAILED_NETWORK: '보내지 못했어요. 인터넷 연결을 확인하고 다시 시도해 주세요.', FAILED_TIMEOUT: '응답이 늦어 보냈는지 확인하지 못했어요. 다시 시도해 주세요.',
   REJECTED_EXPIRED: '연결 시간이 지났어요. 차량에서 QR을 다시 만들어 스캔해 주세요.',
   REJECTED_CLOSED: '연결이 끝났어요. 차량에서 QR을 다시 만들어 스캔해 주세요.',

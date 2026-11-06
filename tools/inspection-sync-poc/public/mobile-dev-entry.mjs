@@ -20,12 +20,12 @@ if (entry.version === 2) {
   document.getElementById('handoff-status').after(connection);
   const transport = document.getElementById('done-sync'); transport.classList.remove('card', 'muted'); transport.setAttribute('role', 'status'); transport.setAttribute('aria-live', 'polite');
   const timeline = document.createElement('ol'); timeline.id = 'sync-timeline'; timeline.setAttribute('aria-label', '전송 진행 상태');
-  const stages = ['점검 완료', '결과 전송', '차량 확인'].map((text) => { const li = document.createElement('li'); li.textContent = text; timeline.append(li); return li; });
+  const stages = ['점검 완료', '결과 전송', '차량 앱 수신'].map((text) => { const li = document.createElement('li'); li.textContent = text; timeline.append(li); return li; });
   // What is happening to the result comes first; the answers it carries follow.
   const doneTitle = document.getElementById('done-title'); doneTitle.after(timeline, transport, refresh);
   document.querySelector('.actions').append(send);
   const debugSync = document.createElement('p'); debugSync.id = 'debug-sync'; document.getElementById('debug-area').append(debugSync);
-  const TITLE = { NOT_SENT: '결과를 차량으로 보내 주세요', SENDING: '결과를 보내고 있어요', SENT: '결과를 보냈어요', ACCEPTED: '차량에서 확인했어요', FAILED_NETWORK: '보내지 못했어요', FAILED_TIMEOUT: '보냈는지 확인하지 못했어요', RATE_LIMITED: '잠시 후 다시 시도해 주세요' };
+  const TITLE = { NOT_SENT: '결과를 차량으로 보내 주세요', SENDING: '결과를 보내고 있어요', SENT: '결과를 보냈어요', ACCEPTED: '차량 앱에 전달됐어요', FAILED_NETWORK: '보내지 못했어요', FAILED_TIMEOUT: '보냈는지 확인하지 못했어요', RATE_LIMITED: '잠시 후 다시 시도해 주세요' };
   const RETRY = new Set(['FAILED_NETWORK', 'FAILED_TIMEOUT', 'RATE_LIMITED']);
   const stageClasses = (s) => {
     if (s.display === 'ACCEPTED') return ['done', 'done', 'done'];

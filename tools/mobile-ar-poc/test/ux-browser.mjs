@@ -81,12 +81,16 @@ try {
       await page.locator('#sync-send').click();
       await page.waitForFunction(() => document.querySelector('#done-sync').dataset.syncState === 'SENT');
       assert.match(await page.locator('#done-title').innerText(), /보냈어요/);
-      assert.doesNotMatch(await page.locator('body').innerText(), /차량에서 확인했어요/, 'sending is not the vehicle confirming');
-      assert.equal(await page.locator('#sync-timeline li.current').innerText(), '차량 확인');
+      assert.doesNotMatch(await page.locator('body').innerText(), /차량 앱에 전달됐어요|저장했어요/, 'sending is not the vehicle app taking it');
+      assert.equal(await page.locator('#sync-timeline li.current').innerText(), '차량 앱 수신');
       const view = await receiver.view(); await receiver.accept(view.resultDigest);
       await page.waitForFunction(() => document.querySelector('#done-sync').dataset.syncState === 'ACCEPTED', null, { timeout: 8000 });
-      assert.match(await page.locator('#done-title').innerText(), /차량에서 확인했어요/);
+      assert.match(await page.locator('#done-title').innerText(), /차량 앱에 전달됐어요/);
       assert.equal(await page.locator('#sync-timeline li.done').count(), 3);
+      { const confirmed = await page.locator('body').innerText();
+        assert.match(await page.locator('#done-sync').innerText(), /차량 소유자의 승인이나 차량 안전 판정을 뜻하지 않아요/, 'the automatic receipt never reads as a person approving');
+        assert.match(confirmed, /정상·안전을 판정하지 않아요/);
+        for (const claim of [/승인했어요/, /소유자가 확인/, /차량에서 확인했어요/, /안전합니다/, /안전해요/, /정상입니다/, /주행해도/, /주행 가능합니다/]) assert.doesNotMatch(confirmed, claim, where); }
       await plainWords(page, `${where} confirmed`);
       assert.deepEqual(errors, [], where);
       assert.ok(!logs.some(line => /invite|token|bearer|submit/i.test(line)), `${where}: nothing about credentials in the console`);
@@ -99,6 +103,22 @@ try {
     await startManual(page); await waitQuestion(page, 0);
     await page.locator('input[value=UNABLE]').check(); await waitQuestion(page, 1);
     pass('a tapped answer moves on by itself');
+    { await page.locator('#back').click(); await waitQuestion(page, 0); await page.waitForTimeout(400);
+      const tapAndTime = (selector) => page.evaluate(async (sel) => { const input = document.querySelector(sel), label = input.closest('label'), state = () => window.__checklistInspection.state.index; const start = state(); label.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true })); input.click(); const t0 = performance.now(); const samples = []; while (state() === start && performance.now() - t0 < 3000) { samples.push(performance.now() - t0); await new Promise(r => setTimeout(r, 10)); } return { elapsed: performance.now() - t0, stayedAt100: samples.some(t => t >= 100) }; }, selector);
+      const timed = await tapAndTime('input[value=NOT_FOUND]');
+      assert.ok(timed.elapsed >= 300 && timed.elapsed < 1500, `moves on about 320ms after the tap, measured ${timed.elapsed}`);
+      assert.equal(timed.stayedAt100, true, 'the choice stays visible first');
+      await waitQuestion(page, 1); await page.locator('#back').click(); await waitQuestion(page, 0); await page.waitForTimeout(400);
+      const reTap = await page.evaluate(async () => { const pick = v => { const input = document.querySelector(`input[value=${v}]`); input.closest('label').dispatchEvent(new PointerEvent('pointerdown', { bubbles: true })); input.click(); }; const s = () => window.__checklistInspection.state; pick('FOUND'); await new Promise(r => setTimeout(r, 200)); pick('UNABLE'); const t0 = performance.now(); while (s().index === 0 && performance.now() - t0 < 3000) await new Promise(r => setTimeout(r, 10)); return { elapsed: performance.now() - t0, answer: s().record.responses.damage, index: s().index }; });
+      assert.ok(reTap.elapsed >= 300, `a second tap restarts the wait, measured ${reTap.elapsed}`);
+      assert.deepEqual([reTap.answer, reTap.index], ['UNABLE', 1], 'the last tap is the answer and only one question passes');
+      await page.locator('#back').click(); await waitQuestion(page, 0); await page.waitForTimeout(400);
+      await page.evaluate(() => { const input = document.querySelector('input[value=NOT_FOUND]'); input.closest('label').dispatchEvent(new PointerEvent('pointerdown', { bubbles: true })); input.click(); document.querySelector('#primary').click(); });
+      await page.waitForTimeout(600);
+      assert.equal((await S(page)).index, 1, 'the button during the wait moves one question, not two');
+      await page.locator('#back').click(); await waitQuestion(page, 0); await page.waitForTimeout(400);
+      await page.locator('input[value=UNABLE]').check(); await waitQuestion(page, 1); await page.waitForTimeout(400);
+      pass('320ms: the choice shows first, a second tap restarts the wait, and the button cannot skip a question'); }
     await page.locator('#back').click(); await waitQuestion(page, 0);
     assert.equal(await page.locator('input[value=UNABLE]').isChecked(), true, 'going back keeps the answer');
     assert.equal(await page.locator('.inspection-answers label.selected').getAttribute('data-tone'), 'unable');
@@ -111,11 +131,25 @@ try {
 
     const brake = await open({ task: 'brake-fluid' });
     await startManual(brake.page); await waitQuestion(brake.page, 0);
+    const layout = p => p.evaluate(() => { const box = s => document.querySelector(s).getBoundingClientRect(), footer = box('.actions').top, cards = [...document.querySelectorAll('.inspection-answers label')].map(l => l.getBoundingClientRect()); return { stopTop: box('#inspection-safety').top, questionTop: box('#question-title').top, lastAnswerBottom: cards.at(-1).bottom, firstAnswerTop: cards[0].top, footer }; });
+    { const before = await layout(brake.page);
+      assert.ok(before.lastAnswerBottom <= before.footer, 'every answer is on screen on a usual phone');
+      assert.ok(before.stopTop > before.lastAnswerBottom, 'the stop rule follows the answers'); }
+    const small = await open({ task: 'battery-12v', viewport: SMALL });
+    await startManual(small.page); await waitQuestion(small.page, 0);
+    { const place = await layout(small.page);
+      assert.ok(place.questionTop >= 0 && place.firstAnswerTop < place.footer, `the question and first answer show on 320x568: ${JSON.stringify(place)}`); }
     await brake.page.locator('input[value=FOUND]').check(); await brake.page.waitForTimeout(600);
     const found = await S(brake.page);
     assert.equal(found.index, 0, 'a finding stays on the question'); assert.equal(found.stopped, true);
     assert.equal(await brake.page.locator('#observation-stopped').isVisible(), true);
     assert.equal(await brake.page.locator('.inspection-answers label.selected').getAttribute('data-tone'), 'found');
+    assert.match(await brake.page.locator('#stop-rule').innerText(), /바로 물러나/, 'the stop rule is on screen, not behind a tap');
+    { const after = await layout(brake.page); assert.ok(after.stopTop < after.questionTop, 'once stopped, the message comes before the question'); }
+    assert.equal(await brake.page.locator('#safety-stop').isVisible(), false);
+    await brake.page.locator('#primary').click(); await waitQuestion(brake.page, 1);
+    assert.equal(await brake.page.locator('#observation-stopped').isVisible(), true, 'the stop stays for the following questions');
+    await brake.page.locator('input[value=UNABLE]').check(); await waitQuestion(brake.page, 2);
     pass('a finding on a part with a stop rule shows the stop message and waits');
   }
 

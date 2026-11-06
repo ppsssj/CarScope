@@ -166,10 +166,11 @@ video, #overlay { position: absolute; inset: 0; width: 100%; height: 100%; objec
 #choices button[data-status="OK"][aria-checked="true"] { border-color: var(--clear); background: var(--clear-soft); }
 #choices button[data-status="NEEDS_REFILL"][aria-checked="true"] { border-color: var(--found); background: var(--found-soft); }
 #choices button[data-status="UNSURE"][aria-checked="true"] { border-color: var(--unable); background: var(--unable-soft); }
-#inspection-safety { padding: 4px 14px 10px; margin: 0 0 10px; }
+#inspection-safety { padding: 4px 14px 10px; margin: 10px 0; }
 #inspection-safety summary { color: var(--warn); }
 #inspection-safety details { margin: 0; }
 #observation-stopped { color: var(--ink); font-weight: 600; }
+#stop-rule { font-size: .92rem; margin: 10px 0 0; }
 #safety-stop { width: 100%; margin-top: 4px; }
 
 /* Review and result */
