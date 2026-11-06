@@ -13,15 +13,14 @@ enrollment, QR 세션, G2~G10은 실행하지 않았다.
 
 ## 환경
 
-Windows 10, Node 22.16.0, Docker 29.8.1(Docker Desktop, WSL2). 서버와 클라이언트는 모두 `postgres:16`, `postgres@sha256:933463a6c8eba2b9f5cd414138738cd8d5519cd2c471214c222652f547a66a32`, 16.15. 포트는 `127.0.0.1`에만 공개했고 비밀번호는 실행마다 임의 생성했다. 코드 기준은 `main` `8e8c7e3` 위의 작업 트리다. PC에 PostgreSQL 클라이언트는 없어 `--docker-image`로 실행했다.
+Windows 10, Node 22.16.0, Docker 29.8.1(Docker Desktop, WSL2). 서버와 클라이언트는 모두 `postgres:16`, `postgres@sha256:933463a6c8eba2b9f5cd414138738cd8d5519cd2c471214c222652f547a66a32`, 16.15. 포트는 `127.0.0.1`에만 공개했고 비밀번호는 실행마다 임의 생성했다. PC에 PostgreSQL 클라이언트는 없어 `--docker-image`로 실행했다. 실행 대부분의 코드 기준은 `main` `8e8c7e3` 위의 작업 트리이고, 작업 중 PR #86(`7a8494c`)이 병합되어 rebase했다. PR #86과 겹치는 파일은 `docs/roadmap.md`뿐이며 `tools/inspection-sync-poc`를 바꾸지 않는다. rebase 후에는 첫 행의 테스트만 다시 실행했다.
 
 ## 새 로컬 실행 (2026-11-06)
 
 | 실행 | 결과 |
 |---|---|
-| `test/db-recovery.test.mjs` (DB 없음) | 14 PASS |
-| `test/db-recovery-postgres.test.mjs`, 실제 `pg_dump`·`pg_restore` | 34 PASS. 원격 경로 1건은 추가 전 실행이며, 추가 후에는 아래 회귀에서 skip |
-| `deployment-preflight regression` | `REGRESSION_SYNC_HISTORY` pass=52. `REGRESSION_POSTGRES` pass=96 skipped=1 → **NOT_RUN**. skip은 원격 경로 테스트(`PG_REMOTE_SIM_URL` 없음)다 |
+| `test/db-recovery*.test.mjs`, `7a8494c` 위로 rebase한 트리, 실제 `pg_dump`·`pg_restore` | 49 중 48 PASS / 1 SKIP / 0 FAIL. SKIP은 원격 경로 테스트이며 CI에서 실행한다 |
+| `deployment-preflight regression` (rebase 전) | `REGRESSION_SYNC_HISTORY` pass=52. `REGRESSION_POSTGRES` pass=96 skipped=1 → **NOT_RUN**. skip은 원격 경로 테스트(`PG_REMOTE_SIM_URL` 없음)다 |
 | `deployment-preflight database` (격리 DB) | FAIL 0, MANUAL 1 (`DB_LEAST_PRIVILEGE`: 일회용 DB의 superuser) |
 | `npm run check` | PASS |
 | `npm test` (`PG_TEST_URL` 없음) | 211 중 191 PASS / 20 SKIP / 0 FAIL. SKIP은 실제 PG 항목이며 PASS가 아니다 |
