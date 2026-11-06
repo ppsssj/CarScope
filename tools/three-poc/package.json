@@ -11,7 +11,8 @@
     "check:results": "node --check inspect.js && node --check android-native-inspection-adapter.mjs && node --check native-bridge-diagnostics.mjs && node --check mobile-result-contract.mjs && node --check native-inspection-results.mjs && node --check inspection-results.mjs && node --check inspection-results-view.mjs && node --check inspection-flow.mjs && node --check inspection-history-contract.mjs && node --check inspection-history-store.mjs && node --check inspection-history-view.mjs && node --check inspection-toast.mjs",
     "test:results-browser": "node test/browser-inspection-results.mjs",
     "test:history-browser": "node test/browser-inspection-history.mjs",
-    "test:toast-browser": "node test/browser-inspection-toast.mjs"
+    "test:toast-browser": "node test/browser-inspection-toast.mjs",
+    "test:consistency-browser": "node test/browser-inspection-consistency.mjs"
   },
   "dependencies": {
     "qrcode": "1.5.4",

@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 import {createAndroidNativeInspectionAdapter} from '../android-native-inspection-adapter.mjs';
 import {createNativeInspectionResults} from '../native-inspection-results.mjs';
 import {createBridgeDiagnostics,SLOW_RPC_MS} from '../native-bridge-diagnostics.mjs';
-import {mobileRequestToast} from '../inspection-toast.mjs';
+import {createMobileRequestNotifier,MOBILE_REQUEST_TEXT as TEXT} from '../inspection-toast.mjs';
 
 const SESSION='SECRET-LOCAL-SESSION-ID';
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
@@ -44,8 +44,8 @@ test('normal open and request stay connected and write no anomaly',async()=>{
   await harness(healthy,async({consumer,commands,ops,events})=>{
     assert.equal(consumer.startSession(SESSION),true);
     await until(()=>ops('poll').length>=2);
-    assert.equal(consumer.request('washer-fluid'),true);
-    await until(()=>ops('request').length===1);await sleep(300);
+    assert.equal(await consumer.request('washer-fluid'),'ACCEPTED');
+    await sleep(300);assert.equal(ops('request').length,1);
     assert.equal(commands[0].op,'open');
     assert.equal(consumer.snapshot.connection,'ADAPTER_CONNECTED');assert.equal(consumer.snapshot.notice,null);
     assert.equal(events('RPC_ANOMALY').length,0);assert.equal(events('CHANNEL_FAILED').length,0);
@@ -68,7 +68,7 @@ test('one poll timeout reproduces the observed state: closed, no polling, reques
     consumer.startSession(SESSION);await unavailable(consumer);
     const [failed]=events('CHANNEL_FAILED');assert.equal(failed.op,'poll');assert.equal(failed.code,'TIMEOUT');assert.equal(typeof failed.sinceLastOkMs,'number');assert.ok(failed.rpcCount>=3);
     await sleep(400);assert.equal(ops('poll').length,3,'polling stopped');
-    assert.equal(consumer.request('washer-fluid'),false);
+    assert.equal(await consumer.request('washer-fluid'),'CHANNEL_CLOSED');
     assert.equal(ops('request').length,0,'the request never left the page');
     assert.equal(consumer.snapshot.notice,'NATIVE_NOT_CONNECTED');
   });
@@ -103,7 +103,7 @@ test('Promise queue wait does not count toward the RPC limit and is recorded sep
     return c.op==='poll'?idle:{ok:true};
   },async({consumer,ops,events})=>{
     consumer.startSession(SESSION);await until(()=>ops('poll').length===1);await sleep(50);
-    const queued=performance.now();assert.equal(consumer.request('washer-fluid'),true);
+    const queued=performance.now();assert.equal(await consumer.request('washer-fluid'),'ACCEPTED');
     await until(()=>events('RPC_ANOMALY').some(l=>l.op==='request'));
     assert.ok(performance.now()-queued>=2000,'queue wait plus run exceeded 2000 ms in total');
     const request=events('RPC_ANOMALY').find(l=>l.op==='request');
@@ -115,7 +115,7 @@ test('Promise queue wait does not count toward the RPC limit and is recorded sep
 test('Native request REJECTED is a request failure: the channel stays open and nothing is re-sent',async()=>{
   await harness(c=>c.op==='request'?{error:'REJECTED'}:healthy(c),async({consumer,ops,events})=>{
     consumer.startSession(SESSION);await until(()=>ops('poll').length>=1);
-    assert.equal(consumer.request('washer-fluid'),true);await until(()=>consumer.snapshot.notice==='REQUEST_FAILED');
+    assert.equal(await consumer.request('washer-fluid'),'REJECTED');assert.equal(consumer.snapshot.notice,'REQUEST_REJECTED');
     const polled=ops('poll').length;await sleep(600);
     assert.equal(consumer.snapshot.connection,'ADAPTER_CONNECTED','not the observed UNAVAILABLE state');
     assert.ok(ops('poll').length>polled,'polling continues');assert.equal(ops('request').length,1,'no automatic re-send');
@@ -126,7 +126,7 @@ test('Native request REJECTED is a request failure: the channel stays open and n
 test('request timeout is a request failure and is not re-sent',async()=>{
   await harness((c,signal)=>c.op==='request'?hang(signal):healthy(c),async({consumer,ops,events})=>{
     consumer.startSession(SESSION);await until(()=>ops('poll').length>=1);
-    consumer.request('washer-fluid');await until(()=>consumer.snapshot.notice==='REQUEST_FAILED');await sleep(300);
+    assert.equal(await consumer.request('washer-fluid'),'FAILED');assert.equal(consumer.snapshot.notice,'REQUEST_FAILED');await sleep(300);
     assert.equal(consumer.snapshot.connection,'ADAPTER_CONNECTED');assert.equal(ops('request').length,1);
     assert.equal(events('RPC_ANOMALY').find(l=>l.op==='request').code,'TIMEOUT');
   });
@@ -138,19 +138,23 @@ const pendingNative=()=>{let pending=null;return c=>{
   if(pending===null||pending===c.taskId){pending=c.taskId;return {ok:true};}
   return {error:'REJECTED'};
 };};
-test('duplicate requests for one part reach Native in order and do not close the channel',async()=>{
+test('duplicate requests for one part: one is sent while waiting, the next reaches Native afterwards, and the channel stays open',async()=>{
   await harness(pendingNative(),async({consumer,ops})=>{
     consumer.startSession(SESSION);await until(()=>ops('poll').length>=1);
-    assert.equal(consumer.request('washer-fluid'),true);assert.equal(consumer.request('washer-fluid'),true);
-    await until(()=>ops('request').length===2);await sleep(50);
+    const first=consumer.request('washer-fluid');
+    assert.equal(await consumer.request('washer-fluid'),'IN_FLIGHT');assert.equal(await first,'ACCEPTED');
+    assert.equal(ops('request').length,1,'the click made while waiting sent nothing');
+    assert.equal(await consumer.request('washer-fluid'),'ACCEPTED');assert.equal(ops('request').length,2);await sleep(50);
     assert.equal(consumer.snapshot.notice,null);assert.equal(consumer.snapshot.connection,'ADAPTER_CONNECTED');
   });
 });
-test('simultaneous requests for different parts are serialized and only the second one fails',async()=>{
+test('simultaneous requests for different parts: the second is held back while waiting, and once sent only it is refused',async()=>{
   await harness(pendingNative(),async({consumer,ops})=>{
     consumer.startSession(SESSION);await until(()=>ops('poll').length>=1);
-    assert.equal(consumer.request('washer-fluid'),true);assert.equal(consumer.request('brake-fluid'),true);
-    await until(()=>consumer.snapshot.notice==='REQUEST_FAILED');
+    const first=consumer.request('washer-fluid');
+    assert.equal(await consumer.request('brake-fluid'),'IN_FLIGHT');assert.equal(await first,'ACCEPTED');
+    assert.equal(ops('request').length,1);
+    assert.equal(await consumer.request('brake-fluid'),'REJECTED');assert.equal(consumer.snapshot.notice,'REQUEST_REJECTED');
     assert.deepEqual(ops('request').map(c=>c.taskId),['washer-fluid','brake-fluid']);
     assert.equal(consumer.snapshot.connection,'ADAPTER_CONNECTED');
   });
@@ -199,7 +203,7 @@ test('generation change: requests after a restart carry only the new session and
     await until(()=>ops('poll').length>=1);
     consumer.startSession('second-session');assert.ok(consumer.snapshot.generation>first);
     await until(()=>ops('poll').some(c=>c.generation===consumer.snapshot.generation));
-    assert.equal(consumer.request('washer-fluid'),true);await until(()=>ops('request').length===1);
+    assert.equal(await consumer.request('washer-fluid'),'ACCEPTED');assert.equal(ops('request').length,1);
     assert.equal(ops('request')[0].generation,consumer.snapshot.generation);assert.equal(ops('request')[0].localSessionId,'second-session');
   });
 });
@@ -233,18 +237,44 @@ test('after UNAVAILABLE only a new session reconnects, with a higher generation 
     consumer.endSession();consumer.startSession('second-session');
     await until(()=>ops('poll').some(c=>c.localSessionId==='second-session'));
     assert.equal(consumer.snapshot.connection,'ADAPTER_CONNECTED');
-    assert.ok(ops('open')[1].generation>failedGeneration);assert.equal(consumer.request('washer-fluid'),true);
+    assert.ok(ops('open')[1].generation>failedGeneration);assert.equal(await consumer.request('washer-fluid'),'ACCEPTED');
     assert.equal(consumer.snapshot.records.length,0,'no result survives the restart');
     failing=true;await unavailable(consumer);
     assert.equal(events('CHANNEL_FAILED').at(-1).previousClose,'OK');
   });
 });
 
-test('failure guidance tells the user to reopen the screen; other refusals keep their own text',()=>{
-  assert.match(mobileRequestToast(false,'UNAVAILABLE'),/연결이 종료되었습니다/);
-  assert.match(mobileRequestToast(false,'UNAVAILABLE'),/닫고 새로 열어 주세요/);
-  for(const connection of ['INCOMPLETE_NATIVE','DISPOSED',undefined])assert.match(mobileRequestToast(false,connection),/시작할 수 없습니다/);
-  assert.match(mobileRequestToast(true,'UNAVAILABLE'),/세션 생성 전/);
+const clickOn=consumer=>{const shown=[];return {shown,click:createMobileRequestNotifier({request:id=>consumer.request(id),show:text=>shown.push(text),screen:()=>'part'})};};
+test('failure guidance tells the user to reopen the screen; other refusals keep their own text',async()=>{
+  await harness((c,signal)=>c.op==='poll'?hang(signal):healthy(c),async({consumer,ops,events})=>{
+    consumer.startSession(SESSION);await unavailable(consumer);
+    const {shown,click}=clickOn(consumer);
+    assert.equal(await click('washer-fluid'),'CHANNEL_CLOSED');
+    assert.match(shown.at(-1),/연결이 종료되었습니다/);assert.match(shown.at(-1),/닫고 새로 열어 주세요/);
+    assert.equal(ops('request').length,0);assert.equal(events('CHANNEL_FAILED')[0].code,'TIMEOUT','the diagnostic record is kept beside the guidance');
+  });
+  const never=createNativeInspectionResults();never.startSession(SESSION);
+  const disposed=createNativeInspectionResults();disposed.dispose();
+  for(const consumer of [never,disposed]){
+    const {shown,click}=clickOn(consumer);
+    assert.equal(await click('washer-fluid'),'NOT_CONNECTED');assert.match(shown.at(-1),/시작할 수 없습니다/);
+  }
+  assert.match(TEXT.ACCEPTED,/세션 생성 전/);
+});
+
+// Both PRs meet here: the toast follows the confirmed answer, and the anomaly record keeps the code the adapter saw.
+for(const [name,reply,outcome,text,code]of [
+  ['refusal',{error:'REJECTED'},'REJECTED',TEXT.REJECTED,'NATIVE_REJECTED'],
+  ['inactive bridge',{error:'UNAVAILABLE'},'FAILED',TEXT.FAILED,'NATIVE_UNAVAILABLE'],
+])test(`${name}: the toast and the diagnostic code each report it, and the channel stays open`,async()=>{
+  await harness(c=>c.op==='request'?reply:healthy(c),async({consumer,ops,events})=>{
+    consumer.startSession(SESSION);await until(()=>ops('poll').length>=1);
+    const {shown,click}=clickOn(consumer);
+    assert.equal(await click('washer-fluid'),outcome);
+    assert.deepEqual(shown,[TEXT.SENDING,text]);
+    assert.equal(events('RPC_ANOMALY').find(l=>l.op==='request').code,code);
+    assert.equal(consumer.snapshot.connection,'ADAPTER_CONNECTED');assert.equal(events('CHANNEL_FAILED').length,0);
+  });
 });
 
 test('diagnostic records hold no identifier, digest, proof, result or raw error text',async()=>{

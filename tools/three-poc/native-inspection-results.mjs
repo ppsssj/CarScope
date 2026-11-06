@@ -9,8 +9,11 @@ const proofKeys=['version','proofId','sessionState','bindingId','localSessionId'
  * Production inspect.js composes the fixed Android asset adapter; other origins remain disconnected.
  * Test adapters live under test/, are not packaged, and cannot reach a production page's closure.
  */
-export function createNativeInspectionResults({adapter=null,now=()=>performance.now(),hash=digestResult}={}){
-  let localSessionId=null,generation=0,closed=false,detach=null,connection='INCOMPLETE_NATIVE',notice=null;
+// Longer than the adapter's own bound (2 s per RPC, behind at most one RPC already queued), so it only catches an adapter that never answers.
+const REQUEST_TIMEOUT_MS=8000;
+const REQUEST_NOTICES=new Set(['NATIVE_NOT_CONNECTED','REQUEST_REJECTED','REQUEST_FAILED']);
+export function createNativeInspectionResults({adapter=null,now=()=>performance.now(),hash=digestResult,requestTimeoutMs=REQUEST_TIMEOUT_MS,setTimer=(fn,ms)=>setTimeout(fn,ms),clearTimer=id=>clearTimeout(id)}={}){
+  let localSessionId=null,generation=0,closed=false,detach=null,connection='INCOMPLETE_NATIVE',notice=null,pendingRequest=null;
   let bindings=new Map(),records=new Map(),selected=new Map();const listeners=new Set();
   const emit=()=>{for(const fn of listeners)fn();};
   const fail=code=>{notice=code;emit();return code;};
@@ -54,7 +57,7 @@ export function createNativeInspectionResults({adapter=null,now=()=>performance.
     const b=bindings.get(raw.bindingId);if(!b||b.syncSessionId!==raw.syncSessionId)return fail('INVALID_TERMINAL');
     b.state=raw.state;emit();return raw.state;
   }
-  function endSession(){generation++;localSessionId=null;bindings=new Map();records=new Map();selected=new Map();const stop=detach;detach=null;try{stop?.();}catch{}connection=closed?'DISPOSED':'INCOMPLETE_NATIVE';notice=null;emit();}
+  function endSession(){pendingRequest?.settle('STALE');generation++;localSessionId=null;bindings=new Map();records=new Map();selected=new Map();const stop=detach;detach=null;try{stop?.();}catch{}connection=closed?'DISPOSED':'INCOMPLETE_NATIVE';notice=null;emit();}
   return Object.freeze({
     startSession(session){endSession();if(closed||!identifier(session))return false;localSessionId=session;const epochId=generation;
       if(!adapter||typeof adapter.open!=='function'||typeof adapter.verifyAccepted!=='function'){connection='INCOMPLETE_NATIVE';emit();return false;}
@@ -64,8 +67,25 @@ export function createNativeInspectionResults({adapter=null,now=()=>performance.
       }catch{for(const b of bindings.values())b.state='CLOSED';connection='UNAVAILABLE';}emit();return connection==='ADAPTER_CONNECTED';
     },
     endSession,tick,
-    request(taskId){const t=targetForTask(taskId);if(!t||!localSessionId||connection!=='ADAPTER_CONNECTED'||typeof adapter?.requestTask!=='function'){fail('NATIVE_NOT_CONNECTED');return false;}
-      const session=localSessionId,epochId=generation;try{Promise.resolve(adapter.requestTask(copy({localSessionId:session,generation:epochId,taskId,partId:t.partId}))).catch(()=>{if(current(session,epochId))fail('REQUEST_FAILED');});return true;}catch{fail('REQUEST_FAILED');return false;}
+    /** Resolves, never rejects, with what was actually confirmed. ACCEPTED means Native took the request: no QR or server session is implied.
+     * NOT_CONNECTED: nothing was sent. CHANNEL_CLOSED: nothing was sent because this session's channel closed and only a new screen reopens it.
+     * IN_FLIGHT: an earlier request is unanswered, so nothing was sent and it is left alone.
+     * REJECTED: Native refused without a reason this page can name. FAILED: no usable answer. STALE: the session it belonged to has ended, or its channel closed while waiting. */
+    request(taskId){const t=targetForTask(taskId);if(!t||!localSessionId||connection!=='ADAPTER_CONNECTED'||typeof adapter?.requestTask!=='function'){fail('NATIVE_NOT_CONNECTED');return Promise.resolve(connection==='UNAVAILABLE'?'CHANNEL_CLOSED':'NOT_CONNECTED');}
+      if(pendingRequest)return Promise.resolve('IN_FLIGHT');
+      if(REQUEST_NOTICES.has(notice)){notice=null;emit();}
+      const session=localSessionId,epochId=generation;
+      return new Promise(resolve=>{
+        const mine={settle(outcome){if(pendingRequest!==mine)return;pendingRequest=null;clearTimer(mine.timer);resolve(outcome);}};pendingRequest=mine;
+        const answered=(outcome,code)=>{if(pendingRequest!==mine)return;if(!current(session,epochId)){mine.settle('STALE');return;}mine.settle(outcome);if(code)fail(code);};
+        mine.timer=setTimer(()=>answered('FAILED','REQUEST_FAILED'),requestTimeoutMs);
+        const refused=error=>answered(error?.nativeRejected===true?'REJECTED':'FAILED',error?.nativeRejected===true?'REQUEST_REJECTED':'REQUEST_FAILED');
+        try{Promise.resolve(adapter.requestTask(copy({localSessionId:session,generation:epochId,taskId,partId:t.partId}))).then(reply=>{
+          if(reply?.ok!==true){answered('FAILED','REQUEST_FAILED');return;}
+          // The bridge also answers ok when it only reopens its panel for a request that may already have a session.
+          answered([...bindings.values()].some(b=>b.taskId===taskId&&live(b))?'ACCEPTED_ACTIVE_BINDING':'ACCEPTED');
+        },refused);}catch(error){refused(error);}
+      });
     },
     select(taskId,inspectionId){tick();const t=targetForTask(taskId);if(!t||!localSessionId||closed)return false;
       if(inspectionId==='LOCAL'){selected.delete(taskId);emit();return true;}

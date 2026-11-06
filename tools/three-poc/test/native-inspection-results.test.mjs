@@ -49,7 +49,7 @@ for(const t of MOBILE_TARGETS)test(`${t.taskId}: strict boundary, unchanged dige
   assert.ok(Object.isFrozen(c.snapshot.records[0].result));assert.equal(c.select(t.taskId,'LOCAL'),true);assert.equal(resultCounts(projectInspectionResults(local,c.snapshot)).NOT_INSPECTED,17);c.dispose();
 });
 test('no adapter, ordinary JSON, unsupported schemas and invalid proof never create records',async()=>{
-  const c=createNativeInspectionResults();assert.equal(c.startSession('local'),false);assert.equal(c.snapshot.connection,'INCOMPLETE_NATIVE');assert.equal(c.receive,undefined);assert.equal(c.onAccepted,undefined);assert.equal(c.request('washer-fluid'),false);assert.equal(c.snapshot.records.length,0);c.dispose();
+  const c=createNativeInspectionResults();assert.equal(c.startSession('local'),false);assert.equal(c.snapshot.connection,'INCOMPLETE_NATIVE');assert.equal(c.receive,undefined);assert.equal(c.onAccepted,undefined);assert.equal(await c.request('washer-fluid'),'NOT_CONNECTED');assert.equal(c.snapshot.records.length,0);c.dispose();
   for(const patch of [{sessionState:'RESULT_SUBMITTED'},{inspectionId:'wrong'},{taskId:'brake-fluid'},{resultDigest:'sha256:'+'0'.repeat(64)},{syncSessionId:'other'},{generation:999},{acceptedAt:2001},{acceptedAt:1000},{trusted:true}]){
     const {authority:a,controller:c}=setup(),b=binding(a.callbacks,MOBILE_TARGETS[0]);a.callbacks.onBinding(b);a.patch(patch);await deliver(a.callbacks,b,wireResult());assert.equal(c.snapshot.records.length,0,JSON.stringify(patch));c.dispose();
   }
@@ -93,5 +93,5 @@ test('session change during asynchronous SHA-256 and terminal change during veri
 test('unavailable adapter revokes its callback capability, including fresh bindings and late verification',async()=>{
   const {authority:a,controller:c}=setup(),old=a.callbacks,b=binding(old,MOBILE_TARGETS[0]),r=wireResult();old.onBinding(b);
   let release;a.delay(()=>new Promise(resolve=>release=resolve));const pending=deliver(old,b,r);while(!release)await new Promise(resolve=>setTimeout(resolve,0));
-  old.onUnavailable();release();assert.equal(await pending,'OLD_SESSION');assert.equal(c.snapshot.connection,'UNAVAILABLE');assert.equal(old.onBinding(binding(old,MOBILE_TARGETS[0],'late')),'OLD_SESSION');assert.equal(await deliver(old,b,r),'OLD_SESSION');assert.equal(c.snapshot.records.length,0);assert.equal(c.request(r.taskId),false);c.dispose();
+  old.onUnavailable();release();assert.equal(await pending,'OLD_SESSION');assert.equal(c.snapshot.connection,'UNAVAILABLE');assert.equal(old.onBinding(binding(old,MOBILE_TARGETS[0],'late')),'OLD_SESSION');assert.equal(await deliver(old,b,r),'OLD_SESSION');assert.equal(c.snapshot.records.length,0);assert.equal(await c.request(r.taskId),'CHANNEL_CLOSED');c.dispose();
 });

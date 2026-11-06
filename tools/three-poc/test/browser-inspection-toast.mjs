@@ -14,7 +14,7 @@ if (!out || !path.isAbsolute(out) || !path.resolve(out).toLowerCase().startsWith
 await mkdir(out, { recursive: true });
 
 const summary = { scope: 'REAL_REFERENCE_GLB_PAGE_SYNTHETIC_ADAPTER_FOR_STARTED_PATH', avd: 'NOT_RUN', native: 'NOT_RUN', checks: [], errors: [] };
-const FAILED = 'Native 전달 경로 미완료', STARTED = 'Native 수신 화면을 요청했습니다 · 세션 생성 전입니다', HINT = '모델의 부위나 목록을 선택하세요';
+const FAILED = 'Native 전달 경로 미완료', STARTED = 'Native 수신 화면 요청이 접수됐습니다 · 세션 생성 전입니다', HINT = '모델의 부위나 목록을 선택하세요';
 const toast = (page) => page.evaluate(() => { const e = document.getElementById('toast'), r = e.getBoundingClientRect(); return { on: e.classList.contains('on'), text: e.textContent, fits: r.left >= 0 && r.right <= innerWidth }; });
 const settled = (page, name) => page.waitForFunction((n) => __inspect.state.name === n && !__inspect.busy, name, { timeout: 25000 });
 const until = (page, at) => page.waitForTimeout(Math.max(0, at - Date.now()));
@@ -82,7 +82,7 @@ try {
     });
     await partResult(p);
     assert.equal(await p.evaluate(() => __inspect.nativeResults().connection), 'ADAPTER_CONNECTED');
-    at = await request(p); now = await toast(p);
+    at = await request(p); await p.waitForFunction((text) => document.getElementById('toast').textContent === text, STARTED); now = await toast(p);
     assert.equal(now.on, true); assert.equal(now.text, STARTED); assert.equal(now.fits, true, `fits ${viewport.width}`);
     await p.screenshot({ path: path.join(out, `toast-started-${viewport.width}.png`) });
     await until(p, at + 4600); assert.equal((await toast(p)).on, false);

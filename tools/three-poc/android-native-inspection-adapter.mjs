@@ -2,7 +2,8 @@
 // requests carry identifiers, never QR/auth tokens or caller-supplied ACCEPTED results.
 import {createBridgeDiagnostics} from './native-bridge-diagnostics.mjs';
 const ORIGIN='https://carscope-inspection.invalid';
-const failure=diagCode=>Object.assign(Error(diagCode),{diagCode});
+// Only an explicit REJECTED is a refusal. UNAVAILABLE, a delay or a broken reply says nothing about the request.
+const failure=diagCode=>Object.assign(Error(diagCode),{diagCode,nativeRejected:diagCode==='NATIVE_REJECTED'});
 // Maps any thrown value to a code; the raw message may hold the request URL and is never kept.
 const classify=error=>error?.diagCode??(error?.name==='TimeoutError'?'TIMEOUT':error?.name==='AbortError'?'ABORTED':error instanceof SyntaxError?'BAD_JSON':'FETCH_FAILED');
 export function createAndroidNativeInspectionAdapter({diagnostics}={}){

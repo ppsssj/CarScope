@@ -20,8 +20,8 @@ import { inspectionStateMap } from './inspection-state-map.mjs';
 import {targetForPart,targetForTask} from './mobile-result-contract.mjs';
 import {createNativeInspectionResults} from './native-inspection-results.mjs';
 import {projectInspectionResults} from './inspection-results.mjs';
-import {partResultHtml,resultSummaryHtml} from './inspection-results-view.mjs';
-import {createToast,mobileRequestToast} from './inspection-toast.mjs';
+import {partResultHtml,refreshResultRegions,resultSummaryHtml} from './inspection-results-view.mjs';
+import {createToast,createMobileRequestNotifier} from './inspection-toast.mjs';
 import {createInspectionHistoryStore} from './inspection-history-store.mjs';
 import {EMPTY_HISTORY_FILTERS} from './inspection-history-contract.mjs';
 import {historyPanelHtml,historyListResultsHtml,historyDetailResultsHtml,historyFilterHtml,historyFilterSummaryText,historyEntryZoneHtml} from './inspection-history-view.mjs';
@@ -457,6 +457,7 @@ function panelHtml() {
 }
 
 const showToast = createToast($('toast'));
+const requestMobile = createMobileRequestNotifier({ request: (taskId) => mobileResults.request(taskId), show: showToast, screen: () => state });
 function render() {
   $("panel").innerHTML = panelHtml();
   $('home').inert = state.name !== STATES.IDLE;
@@ -503,7 +504,7 @@ $("panel").addEventListener("click", (e) => {
     if(filters){filters.outerHTML=historyFilterHtml(inspectionHistory.snapshot);$('panel').querySelector('.history-filters summary').focus({preventScroll:true});}
   }
   else if(a==='select-result'&&b.dataset.session===userInspection.sessionId)mobileResults.select(b.dataset.task,b.dataset.record);
-  else if(a==='request-mobile')showToast(mobileRequestToast(mobileResults.request(b.dataset.task),mobileResults.snapshot.connection));
+  else if(a==='request-mobile')void requestMobile(b.dataset.task);
   else if (a === 'confirm-tire' && state.name === STATES.TIRE_PREVIEW && b.dataset.id === state.component) {
     const next = updateTireInspection(userInspection, { type: 'CONFIRM', tireId: state.component, sessionId: b.dataset.session, at: Date.now() });
     if (next !== userInspection) { userInspection = next; renderGuide('confirm'); }
@@ -528,8 +529,7 @@ function renderGuide(focus) {
   if (!region) return;
   const scroll = $('panel').scrollTop;
   region.innerHTML = guideHtml(userInspection, state.component);
-  syncInspectionMap();
-  for(const button of $('panel').querySelectorAll('[data-action=tire]')){const row=inspectionMap.find(r=>r.partId===button.dataset.id);if(row)button.querySelector('.inspection-state').outerHTML=stateBadgeHtml(row);}
+  syncResultSurfaces();
   if (focus !== 'confirm') region.querySelector(`[data-check="${focus}"]:checked`)?.focus({ preventScroll: true });
   else { const message = region.querySelector('[role="status"]'); message.tabIndex = -1; message.focus({ preventScroll: true }); }
   $('panel').scrollTop = scroll;
@@ -632,13 +632,9 @@ function syncInspectionMap() {
     mesh.material.color.setHex(state.name===STATES.IDLE||!M.tires.has(row.partId)&&row.status==='NOT_INSPECTED'?resultBaseColors.get(mesh.material):row.color);
   }
 }
-mobileResults.subscribe(()=>{syncInspectionMap();if(!window.__inspectReady)return;const scroll=$('panel').scrollTop,focused=document.activeElement;
-  const region=$('mobilePartResults');if(region)region.innerHTML=partResultHtml(userInspection,mobileResults.snapshot,state.component);
-  const summary=$('allResults');if(summary)summary.innerHTML=resultSummaryHtml(userInspection,mobileResults.snapshot);
-  if(isHistoryState(state)){refreshHistory();return;}
-  if(focused?.dataset.record&&!document.contains(focused))$('panel').querySelector(`[data-record="${focused.dataset.record}"]`)?.focus({preventScroll:true});
-  $('panel').scrollTop=scroll;
-});
+// Local and mobile changes end here, so the 3D colors, card, summary and badges come from the same records at the same moment.
+function syncResultSurfaces(){syncInspectionMap();if(window.__inspectReady)refreshResultRegions($('panel'),{local:userInspection,mobile:mobileResults.snapshot,partId:state.component});}
+mobileResults.subscribe(()=>{syncResultSurfaces();if(window.__inspectReady&&isHistoryState(state))refreshHistory();});
 inspectionHistory.subscribe(refreshHistory);
 // Access can change while the screen is away, so paused or hidden pages keep no records (same fixed signals as SDK status).
 addEventListener('carscope-tire-inactive',()=>inspectionHistory.suspend());

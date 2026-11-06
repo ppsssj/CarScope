@@ -60,7 +60,8 @@ GLB와 파생 자산은 저장소 밖에 둔다. QR origin은 코드에 넣지 �
 | `tire-inspection.mjs` / `tire-inspection-view.mjs` | 기존 immutable USER_REPORTED reducer와 육안 입력/위치별 요약 |
 | `inspection-handoff.mjs` | 서버 측 어댑터. 검증은 QR-AR의 `tools/mobile-ar-poc/public/handoff.mjs`(`handoffURL`, `isLoopbackHost`)를 그대로 사용하며, 실패를 예외 대신 “비활성(configured: false)”으로 돌려준다. 브라우저 페이지는 이 모듈을 import하지 않는다 |
 | `inspect.js` | 상태를 화면에 반영: 보닛·카메라 tween, 강조, 워셔액 라벨, 패널, 클릭 판정 |
-| `inspection-toast.mjs` | `#toast`의 단일 소유자. 새 안내가 이전 안내와 타이머를 대체하고 4초 뒤 사라진다. 실제 페이지 검사는 `npm run test:toast-browser --prefix tools/three-poc` |
+| `inspection-toast.mjs` | `#toast`의 단일 소유자. 새 안내가 이전 안내와 타이머를 대체하고 4초 뒤 사라진다. 모바일 요청 문구는 확인된 단계만 말한다. 실제 페이지 검사는 `npm run test:toast-browser --prefix tools/three-poc` |
+| `inspection-results-view.mjs`의 `refreshResultRegions` | 결과 카드·전체 요약·목록 배지의 유일한 갱신 경로. 로컬과 모바일 변경이 같은 투영으로 이곳을 지난다. 검사는 `npm run test:consistency-browser --prefix tools/three-poc`. [P9-S2](../../docs/p9-s2-inspection-ui-consistency.md) |
 | `check-inspection.mjs` | headless Chrome 흐름 검사와 화면 캡처 (외부 폴더에 저장) |
 | `test/inspection-flow.test.mjs` | 상태 전이·중복 입력·취소·종료·QR 계약 단위 테스트 (CI 포함) |
 
