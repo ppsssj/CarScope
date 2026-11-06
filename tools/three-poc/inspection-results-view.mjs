@@ -55,5 +55,5 @@ export function partResultHtml(local,mobile,partId){
         return `<button type="button" class="secondary" data-action="select-result" data-task="${row.taskId}" data-record="${c.inspectionId}" data-session="${esc(local.sessionId)}" aria-pressed="${chosen}" ${!active&&!chosen?'disabled':''}>MOBILE / USER_REPORTED · ${esc(c.result.completedAt)} · ${esc(c.inspectionId)}${chosen?' · 선택됨':active?' · 수락된 후보':' · 연결 종료/만료, 새 적용 불가'}${chosen&&!active?' · 전달 연결 종료/만료, 이미 선택한 수락 기록 보존':''}</button>`;}).join('')}</fieldset>
     <p class="note">${row.local?'로컬 응답과 모바일 응답은 별도로 보존하며 수정·병합하지 않습니다.':'모바일 원문과 원본 시각을 보존합니다.'} 결과는 정상·안전·주행 가능 판정이 아닙니다.</p>
     <p class="note">${esc(connection[mobile?.connection]??connection.INCOMPLETE_NATIVE)}</p>
-    <button type="button" class="secondary" data-action="request-mobile" data-task="${row.taskId}">이 부품 모바일 점검 요청</button><p class="note">${mobile?.connection==='ADAPTER_CONNECTED'?'생성·인증·QR v2 연결과 명시적 수락은 Native 소유자의 정책으로 처리합니다.':'검증된 Native 전달 경로가 없는 현재 배포에서는 QR v2 요청·결과 수신을 시작할 수 없습니다.'}</p></section>`;
+    <button type="button" class="secondary" data-action="request-mobile" data-task="${row.taskId}">모바일로 점검하기</button><p class="note">${mobile?.connection==='ADAPTER_CONNECTED'?'생성·인증·QR v2 연결과 명시적 수락은 Native 소유자의 정책으로 처리합니다.':'검증된 Native 전달 경로가 없는 현재 배포에서는 QR v2 요청·결과 수신을 시작할 수 없습니다.'}</p></section>`;
 }

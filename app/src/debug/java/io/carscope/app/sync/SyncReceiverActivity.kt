@@ -31,6 +31,11 @@ open class SyncReceiverActivity : Activity() {
     private var stopped = true
     private var suppressBridgeState = false
     private var lockedTask: String? = null
+    private enum class CreationAuthority { NOT_REQUESTED, CHECKING, GRANTED, DENIED }
+    private var authority = CreationAuthority.NOT_REQUESTED
+    private var authorityRequestedAt = 0L
+    private var mobileRoot: String? = null
+    private var requestedTask: String? = null // A 3D request waiting for its short-lived creation grant.
     private var qrBitmap: Bitmap? = null
     private var shownQr: SyncQrPayload? = null
     private lateinit var task: Spinner
@@ -54,8 +59,44 @@ open class SyncReceiverActivity : Activity() {
         lockedTask = taskId
         task.setSelection(SyncTasks.all.indexOf(taskId))
         task.isEnabled = false
+        requestedTask = null
     }
-    internal fun resetReceiver() { lockedTask = null; owner?.reset() }
+    internal fun resetReceiver() { lockedTask = null; requestedTask = null; owner?.reset() }
+    /** The vehicle user chose "mobile" for this part: create its one session as soon as a grant allows it. Accept stays a separate Native tap. */
+    internal fun createWhenAuthorized(taskId: String) {
+        if (owner == null) return
+        require(taskId in SyncTasks.all)
+        requestedTask = taskId
+        if (transport?.creationAuthorized() == true) createRequested()
+        else if (authority != CreationAuthority.CHECKING) refreshAuthority()
+    }
+    private fun createRequested() {
+        val taskId = requestedTask ?: return
+        val controller = owner ?: return
+        val root = mobileRoot ?: return
+        if (!creationPanelVisible() || transport?.creationAuthorized() != true) return
+        requestedTask = null
+        controller.create(root, taskId)
+    }
+    private fun refreshAuthority() {
+        if (provisioning != null || simulatorProvisioning != null) {
+            authority = CreationAuthority.CHECKING; authorityRequestedAt = now()
+            val done: (Boolean) -> Unit = { granted ->
+                authority = if (granted) CreationAuthority.GRANTED else CreationAuthority.DENIED
+                owner?.let { render(it.state) }
+                createRequested()
+            }
+            provisioning?.refresh(done)
+            simulatorProvisioning?.refresh(done)
+        }
+        // Refresh invalidates the previous grant immediately: reflect this in the UI
+        // before asynchronous HTTPS can finish, never keep an enabled Create button.
+        owner?.let { render(it.state) }
+    }
+    /** The standalone screen asks at start. The 3D page asks only when a part is requested: its grant lasts two minutes. */
+    internal open fun provisionOnStart(): Boolean = true
+    /** True only while someone sees the panel of a 3D request. It alone allows an automatic grant retry or session. */
+    internal open fun creationPanelVisible(): Boolean = false
     internal open fun endpoint(): SyncEndpoint? = try {
         val file = File(filesDir, "sync-endpoint.json")
         if (!file.isFile || file.length() > 2048) null else {
@@ -108,6 +149,7 @@ open class SyncReceiverActivity : Activity() {
     override fun onStart() {
         super.onStart(); stopped = false; val current = ++generation
         val endpoint = endpoint()
+        authority = CreationAuthority.NOT_REQUESTED; authorityRequestedAt = 0L; requestedTask = null; mobileRoot = endpoint?.mobileRoot
         if (endpoint == null) {
             connection.text = "연결 설정 미완료 · 검증된 HTTPS 서비스/모바일 주소가 필요합니다."
             listOf(probe, create, accept, cancel, retry).forEach { it.isEnabled = false }; return
@@ -130,11 +172,7 @@ open class SyncReceiverActivity : Activity() {
             else "HTTPS 주소 설정됨 · 연결/TLS 미확인 · 생성 인증 기본 거부"
         probe.isEnabled = true
         probe.setOnClickListener {
-            provisioning?.refresh { render(controller.state) }
-            simulatorProvisioning?.refresh { render(controller.state) }
-            // Refresh invalidates the previous grant immediately: reflect this in the UI
-            // before asynchronous HTTPS can finish, never keep an enabled Create button.
-            render(controller.state)
+            refreshAuthority()
             probe.isEnabled = false; connection.text = "HTTPS 서비스 확인 중…"
             check = connectionTransport.checkConnection { reply ->
                 probe.isEnabled = true
@@ -142,16 +180,19 @@ open class SyncReceiverActivity : Activity() {
                     else "서비스 연결 실패 · ${failureMessage((reply as SyncReply.Failure).reason)}"
             }
         }
-        create.setOnClickListener { controller.create(endpoint.mobileRoot, lockedTask ?: SyncTasks.all[task.selectedItemPosition]) }
+        create.setOnClickListener { requestedTask = null; controller.create(endpoint.mobileRoot, lockedTask ?: SyncTasks.all[task.selectedItemPosition]) }
         accept.setOnClickListener { controller.accept() }; cancel.setOnClickListener { controller.cancel() }; retry.setOnClickListener { controller.retryPolling() }
         render(controller.state)
-        provisioning?.refresh { render(controller.state) }
-        simulatorProvisioning?.refresh { render(controller.state) }
+        if (provisionOnStart()) refreshAuthority()
         val tick = object : Runnable {
             override fun run() {
                 if (stopped || generation != current) return
                 controller.hideExpiredInvite(now())
-                render(controller.state) // Re-evaluate credential expiry; never performs provisioning I/O.
+                render(controller.state) // Re-evaluate credential expiry.
+                // Provisioning I/O only for an open 3D request panel, throttled below the server's 4 per minute.
+                if (creationPanelVisible() && controller.state.phase in CREATABLE && transport?.creationAuthorized() != true &&
+                    authority != CreationAuthority.CHECKING && now() - authorityRequestedAt >= AUTHORITY_RETRY_MS) refreshAuthority()
+                createRequested()
                 handler.postDelayed(this, 1000)
             }
         }; handler.post(tick)
@@ -161,14 +202,18 @@ open class SyncReceiverActivity : Activity() {
         if (!suppressBridgeState) onReceiverState(state)
         status.text = when (state.phase) {
             ReceiverPhase.IDLE -> if (transport?.creationAuthorized() == true) "IDLE · '점검 요청 생성'을 눌러 QR을 만드세요."
-                else "IDLE · 생성 권한 없음 또는 확인 중 · QR을 만들 수 없습니다."
-            ReceiverPhase.CREATING -> "CREATING · 서버에 점검 요청을 만드는 중"
+                else when (authority) {
+                    CreationAuthority.CHECKING -> "IDLE · 인증 대기 · 세션 생성 권한을 확인하는 중입니다."
+                    CreationAuthority.DENIED -> "IDLE · 인증 실패 · 생성 권한 없음. AVD 등록과 서버 설정을 확인하세요."
+                    else -> "IDLE · 생성 권한 없음 또는 확인 중 · QR을 만들 수 없습니다."
+                }
+            ReceiverPhase.CREATING -> "CREATING · QR 생성 중 · 서버에 점검 요청을 만드는 중"
             ReceiverPhase.WAITING -> if (state.phoneClaimed) "WAITING · 스마트폰 연결됨 · 사용자 점검 제출 대기"
                 else if (state.qr == null && state.inviteExpiresAt?.let { now() > it } == true)
                 "WAITING · QR 초대 만료 · 새 스캔 불가. 이미 연결된 점검은 계속 기다립니다. 새 QR이 필요하면 취소 후 다시 요청하세요."
-                else "WAITING · 스마트폰 연결 전 · QR 스캔 대기"
-            ReceiverPhase.RESULT_SUBMITTED -> "RESULT_SUBMITTED · 서버 수신 확인 · 사용자 수락 전"
-            ReceiverPhase.ACCEPTED -> "ACCEPTED · 사용자 보고 결과 수락 완료"
+                else "WAITING · QR 생성 완료 · 스마트폰 연결 전 · QR 스캔 대기"
+            ReceiverPhase.RESULT_SUBMITTED -> "RESULT_SUBMITTED · 결과 수신 · 서버 수신 확인 · 사용자 수락 전"
+            ReceiverPhase.ACCEPTED -> "ACCEPTED · 사용자 보고 결과 수락 완료 · 서버 점검 이력 저장 확인"
             ReceiverPhase.CANCELLED -> "CANCELLED · 서버 취소 확인"
             ReceiverPhase.EXPIRED -> "EXPIRED · 새 요청이 필요합니다."
             ReceiverPhase.FAILED -> "FAILED · 연결 또는 응답을 확인할 수 없습니다."
@@ -212,7 +257,7 @@ open class SyncReceiverActivity : Activity() {
                 reveal(image)
             } catch (_: Exception) { image.visibility = View.GONE; status.text = "FAILED · QR 표시 실패. 요청을 취소하고 다시 시작하세요." }
         }
-        create.isEnabled = transport?.creationAuthorized() == true && !state.busy && state.phase in listOf(ReceiverPhase.IDLE, ReceiverPhase.FAILED, ReceiverPhase.CANCELLED, ReceiverPhase.EXPIRED)
+        create.isEnabled = transport?.creationAuthorized() == true && !state.busy && state.phase in CREATABLE
         task.isEnabled = create.isEnabled && lockedTask == null
         if (state.canAccept && !accept.isEnabled) reveal(accept)
         accept.isEnabled = state.canAccept; cancel.isEnabled = state.canCancel; retry.isEnabled = state.retryAvailable && !state.busy
@@ -227,10 +272,15 @@ open class SyncReceiverActivity : Activity() {
         else -> failure.name
     }
     override fun onStop() {
+        requestedTask = null
         stopped = true; generation++; handler.removeCallbacksAndMessages(null); check?.cancel(); check = null
         owner?.close(); owner = null; transport?.close(); transport = null; simulatorProvisioning?.close(); simulatorProvisioning = null; provisioning?.close(); provisioning = null; clearQr()
         listOf(create, accept, cancel, retry, probe).forEach { it.isEnabled = false }
         super.onStop()
     }
     override fun onDestroy() { handler.removeCallbacksAndMessages(null); transport?.close(); simulatorProvisioning?.close(); provisioning?.close(); clearQr(); super.onDestroy() }
+    private companion object {
+        const val AUTHORITY_RETRY_MS = 30_000L
+        val CREATABLE = listOf(ReceiverPhase.IDLE, ReceiverPhase.FAILED, ReceiverPhase.CANCELLED, ReceiverPhase.EXPIRED)
+    }
 }

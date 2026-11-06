@@ -102,6 +102,11 @@ try {
   await waitState('REJECTED_EXPIRED');
   pass('session expiry is displayed separately from cancellation');
 
+  paired = await pair({ claim: false }); await complete();
+  await page.waitForFunction(() => document.querySelector('#sync-claim').disabled && !document.querySelector('#sync-send').disabled);
+  await noLeak(); await paired.receiver.cancel();
+  pass('finishing the inspection before connecting claims once and enables send');
+
   paired = await pair({ claim: false, prepare: async () => {
     await page.route('**/v1/claim', async (route) => { await route.fetch(); await route.abort('failed'); });
   } });
