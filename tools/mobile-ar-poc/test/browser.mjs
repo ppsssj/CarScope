@@ -68,10 +68,13 @@ try {
 
   // ---------- STEP 1: QR entry ----------
   await page.goto(root + '/' + HANDOFF);
-  await page.waitForFunction(() => document.getElementById('handoff-status').textContent.includes('QR 작업 수신'));
+  await page.waitForFunction(() => document.getElementById('handoff-status').textContent.includes('이 휴대폰에만 기록돼요'));
   assert.equal(await step(), 'intro');
   assert.equal(await primary().textContent(), '카메라로 점검 시작');
+  assert.equal(await page.locator('#guidance').isVisible(), false, 'help opens on request');
+  await page.locator('#manual').click();
   assert.equal(await page.locator('#guidance').isVisible(), true);
+  await page.locator('#guidance-close').click();
   assert.equal(await noOverflow(), true);
   await page.screenshot({ path: path.join(output, '01-intro.png'), fullPage: true });
   // QR shown for the PC side: decode the actual rendered server SVG.
@@ -89,7 +92,7 @@ try {
   await page.waitForFunction(() => document.getElementById('status').textContent.includes('파란색 후보 1개'));
   assert.equal(await step(), 'locate');
   assert.equal(await overlayPainted(), true);
-  assert.equal(await page.locator('#stage-chip').textContent(), '2/4 위치 찾기 · 주입구를 찾으면 화면을 탭하세요');
+  assert.equal(await page.locator('#stage-chip').textContent(), '주입구를 찾으면 화면을 탭해 주세요');
   assert.equal(await page.locator('#progress li.current').textContent(), '위치 찾기');
   assert.equal((await S()).record.aids.cameraUsed, true);
   assert.equal(await noOverflow(), true);
@@ -147,7 +150,7 @@ try {
   await primary().click();
   assert.equal(await step(), 'check');
   assert.equal(await page.locator('#stage').isVisible(), true);
-  assert.equal(await page.locator('#stage-chip').textContent(), '3/4 셀프 점검 · 아래 항목을 직접 확인하세요');
+  assert.equal(await page.locator('#stage-chip').textContent(), '아래 항목을 직접 확인해 주세요');
   assert.equal(await primary().isDisabled(), true);
   const boxes = page.locator('#checklist input');
   assert.equal(await boxes.count(), 3);
@@ -173,7 +176,7 @@ try {
   assert.equal((await S()).choice, 'NEEDS_REFILL', 'back keeps the choice');
   await primary().click();
   assert.equal(await step(), 'confirm');
-  assert.match(await page.locator('#confirm-summary').textContent(), /보충 필요/);
+  assert.match(await page.locator('#confirm-summary').textContent(), /보충이 필요해요/);
   await page.screenshot({ path: path.join(output, '06-confirm.png'), fullPage: true });
   await primary().dblclick(); // double tap on the final button: must neither duplicate nor skip the result
   assert.equal(await step(), 'done');
@@ -187,8 +190,8 @@ try {
   assert.equal(record.sync, 'NOT_SENT');
   assert.deepEqual(record.aids, { cameraUsed: true, locationMarked: true });
   assert.ok(!/vin|image|video|photo/i.test(Object.keys(record).join(',')));
-  assert.match(await page.locator('#done-summary').textContent(), /보충 필요.*SELF/);
-  assert.match(await page.locator('#done-sync').textContent(), /전송되거나 점검 이력에 저장되지 않았습니다/);
+  assert.match(await page.locator('#done-outcome').textContent(), /보충이 필요해요/);
+  assert.match(await page.locator('#done-sync').textContent(), /차량으로 보내거나 점검 이력에 저장하지 않았어요/);
   assert.equal(await page.locator('#cancel').isVisible(), false);
   assert.equal(await page.locator('#back').isVisible(), false);
   assert.equal(await noOverflow(), true);
@@ -228,7 +231,7 @@ try {
   await page.locator('#unsure-locate').click();
   assert.equal(await step(), 'confirm');
   assert.equal(await page.locator('#confirm-unsure').isVisible(), true);
-  assert.match(await page.locator('#confirm-summary').textContent(), /확인 불가.*확인하지 못함/);
+  assert.match(await page.locator('#confirm-summary').textContent(), /확인하기 어려워요.*확인하지 못했어요/);
   assert.equal(await tracksEnded(), true, 'camera stops on the confirm step');
   await page.screenshot({ path: path.join(output, '11-unsure-confirm.png'), fullPage: true });
   await page.locator('#back').click();
@@ -268,14 +271,14 @@ try {
   // ---------- camera lifecycle regressions ----------
   await primary().click();
   await page.waitForFunction(() => document.getElementById('status').textContent.includes('파란색 후보'));
-  await page.getByRole('button', { name: '수동 안내 보기' }).click();
+  await page.getByRole('button', { name: '도움말' }).click();
   assert.equal(await page.evaluate(() => document.activeElement.id), 'guidance');
   assert.equal(await tracksEnded(), true);
   pass('manual guide: focus moves to the guide and camera tracks stop');
   await page.locator('#start').click();
   await page.waitForFunction(() => document.getElementById('status').textContent.includes('파란색 후보'));
   await page.evaluate(() => Object.defineProperty(document.getElementById('video'), 'currentTime', { value: 1, configurable: true }));
-  await page.waitForFunction(() => document.getElementById('status').textContent.includes('영상 갱신이 멈췄습니다'));
+  await page.waitForFunction(() => document.getElementById('status').textContent.includes('영상 갱신이 멈춰'));
   assert.equal(await page.evaluate(() => document.getElementById('video').srcObject), null);
   await page.evaluate(() => { delete document.getElementById('video').currentTime; });
   pass('frozen frame time stops camera and removes stale proposals');
@@ -309,7 +312,7 @@ try {
   await page.goto(root + '/');
   await page.evaluate(() => Object.defineProperty(navigator, 'mediaDevices', { value: undefined, configurable: true }));
   await primary().click();
-  await page.waitForFunction(() => document.getElementById('status').textContent.includes('카메라를 쓸 수 없는 환경'));
+  await page.waitForFunction(() => document.getElementById('status').textContent.includes('카메라를 쓸 수 없어요'));
   await page.setViewportSize({ width: 1280, height: 900 });
   assert.equal(await noOverflow(), true);
   await page.screenshot({ path: path.join(output, '10-desktop-unsupported.png'), fullPage: true });

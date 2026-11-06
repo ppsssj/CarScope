@@ -48,6 +48,7 @@ try {
     await page.touchscreen.tap(p.x,p.y);await page.waitForFunction(()=>!!window.__chargeInspection.mark);
   };
   await open();assert.equal((await state()).taskId,'ev-charge.port');
+  await page.locator('#step-intro details.help summary').click();
   assert.match(await page.locator('#step-intro').innerText(),/현재 차량과 모델의 일치는 확인되지/);
   assert.equal(await page.locator('#primary').isDisabled(),true);await page.locator('#safety').check();assert.equal(await page.locator('#manual-start').isDisabled(),true);
   assert.equal(await page.evaluate(()=>testCamera.requests),0);await page.locator('#not-charging').check();await nav('#manual-start');

@@ -24,9 +24,13 @@ export function createChecklistFlow({matchesTask,checks,result,requiresNotChargi
       case 'STOP_OBSERVATION': return (requiresNotCharging || stopOnFinding) && ['locate','check'].includes(s.step)
         ? to({step:'check',mode:'manual',observationStopped:true}) : s;
       case 'NEXT': return s.step === 'check' && e.index === s.index && isAnswer(s.record.responses[checks[s.index].id])
-        ? to(s.index < checks.length-1 ? {index:s.index+1} : {step:'review'}) : s;
+        ? to(s.editing ? {step:'review',editing:false} : s.index < checks.length-1 ? {index:s.index+1} : {step:'review'}) : s;
+      // Changes one answer from the review and returns there. Answers are unconfirmed until CONFIRM.
+      case 'EDIT': return s.step === 'review' && Number.isInteger(e.index) && e.index >= 0 && e.index < checks.length
+        ? to({step:'check',index:e.index,editing:true}) : s;
       case 'CONFIRM': return s.step === 'review' ? to({step:'done',record:result.complete(s.record,ctx)}) : s;
       case 'BACK':
+        if (s.step === 'check' && s.editing) return to({step:'review',editing:false});
         if (s.step === 'review') return to({step:'check',index:checks.length-1});
         if (s.step === 'check' && s.index > 0) return to({index:s.index-1});
         if (s.step === 'check' && s.mode === 'camera') return to({step:'locate'});

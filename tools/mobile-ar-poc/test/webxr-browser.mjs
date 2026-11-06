@@ -313,6 +313,9 @@ try {
     await page.waitForFunction(() => !window.__webXrGuide.open);
     await page.waitForTimeout(150);
     assert.equal(await page.evaluate(() => scrollY), 0, 'the checklist starts at its top after AR');
+    // The checklist now fits a tall phone, so a short window is what makes this page scroll.
+    const fullSize = page.viewportSize();
+    await page.setViewportSize({ width: fullSize.width, height: 420 });
     await page.locator('#xr-entry-open').scrollIntoViewIfNeeded();
     const beforeLeave = await page.evaluate(() => scrollY);
     assert.ok(beforeLeave > 0, 'the page is long enough for this check to mean something');
@@ -321,6 +324,7 @@ try {
     await page.waitForFunction(() => !window.__webXrGuide.open);
     await page.waitForTimeout(150);
     assert.equal(await page.evaluate(() => scrollY), beforeLeave, 'leaving returns to where the user was');
+    await page.setViewportSize(fullSize);
 
     // Manual checklist -> guide -> user picks the 2D camera: answers stay, and only then does a camera run.
     await openGuide(page);

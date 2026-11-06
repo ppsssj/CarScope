@@ -47,7 +47,7 @@ try{
   for(const task of taskLinks()){
     await open(task);await start(true);await ready();await tap();
     assert.match(await page.locator('.part-location').textContent(),new RegExp(task.label));
-    if(task.id.startsWith('tire.'))assert.equal(await page.locator('.wheel-map [aria-current]').count(),1);
+    if(task.id.startsWith('tire.'))assert.equal(await page.locator('.part-location .wheel-map [aria-current]').count(),1);
     if(['coolant-reservoir','wiper.front.left','light-low-beam-left-0'].includes(task.id)){await page.evaluate(()=>scrollTo(0,0));await page.screenshot({path:path.join(output,task.id+'-camera.png'),fullPage:true});}
     await page.setViewportSize({width:844,height:390});await page.waitForFunction(()=>!document.querySelector('#stage').hasAttribute('data-marked'));
     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);

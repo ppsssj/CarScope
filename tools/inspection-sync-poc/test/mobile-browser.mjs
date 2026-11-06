@@ -43,7 +43,7 @@ async function pair({ claim = true, prepare } = {}) {
   await open(session.fragment, prepare); secrets.push(invite);
   assert.equal(new URL(page.url()).hash, '');
   if (claim) {
-    await page.waitForFunction(() => document.querySelector('#sync-claim').disabled && document.body.textContent.includes('연결됨'));
+    await page.waitForFunction(() => document.querySelector('#sync-claim').disabled && document.body.textContent.includes('연결됐어요'));
     assert.equal(claimCount, 1);
   }
   return { receiver, session, invite };
@@ -88,7 +88,7 @@ try {
   assert.equal(await page.evaluate(() => window.__selfInspection.state.record), null);
   pass('reload cannot restore tokens, claim or a transmitted success');
   await open(paired.session.fragment);
-  await page.waitForFunction(() => document.body.textContent.includes('새 QR을 요청'));
+  await page.waitForFunction(() => document.body.textContent.includes('QR을 다시'));
   assert.equal(claimCount, 1); assert.equal(await page.locator('#sync-claim').isEnabled(), false);
   pass('used QR rejected with new-QR guidance');
 
@@ -103,14 +103,14 @@ try {
   paired = await pair({ claim: false, prepare: () => page.addInitScript(() => Object.defineProperty(document, 'hidden', { configurable: true, get: () => true })) });
   assert.equal(claimCount, 0);
   await page.evaluate(() => { Object.defineProperty(document, 'hidden', { configurable: true, get: () => false }); document.dispatchEvent(new Event('visibilitychange')); });
-  await page.waitForFunction(() => document.querySelector('#sync-claim').disabled && document.body.textContent.includes('연결됨'));
+  await page.waitForFunction(() => document.querySelector('#sync-claim').disabled && document.body.textContent.includes('연결됐어요'));
   assert.equal(claimCount, 1); await noLeak(); await paired.receiver.cancel();
   pass('a page nobody is looking at keeps the invite and connects once when shown');
 
   paired = await pair({ claim: false, prepare: async () => {
     await page.route('**/v1/claim', async (route) => { await route.fetch(); await route.abort('failed'); });
   } });
-  await page.waitForFunction(() => document.body.textContent.includes('새 QR'));
+  await page.waitForFunction(() => document.body.textContent.includes('QR을 다시'));
   assert.equal(claimCount, 1); assert.equal(await page.locator('#sync-claim').isEnabled(), false); await noLeak();
   pass('lost committed Claim response never re-claims; asks vehicle for new QR');
 
@@ -154,7 +154,7 @@ try {
     await route.fulfill({ response, json: body });
   });
   await send(); await waitState('FAILED_NETWORK');
-  assert.ok(!(await page.locator('#done-sync').textContent()).includes('서버 수신 확인')); pass('2xx with wrong Digest is never SENT');
+  assert.ok(!(await page.locator('#done-sync').textContent()).includes('결과를 보냈어요')); pass('2xx with wrong Digest is never SENT');
 
   paired = await pair(); await complete(); await send(); await waitState('SENT');
   const submittedReceipt = (await paired.receiver.view()).resultDigest;
