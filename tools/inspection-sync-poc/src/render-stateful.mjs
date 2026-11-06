@@ -25,7 +25,8 @@ export async function startRenderStateful({ pool, publicOrigin, host = '127.0.0.
   if (historyAuthorizer !== undefined) throw new Error('AUTHORIZER_OVERRIDE_FORBIDDEN');
   if (historyAuthority && enableAvdSimulation) throw new Error('HISTORY_AUTHORITY_WITH_AVD_SIMULATION_FORBIDDEN');
   // Debug reads are a part of simulation, never of an owner authority: the guard above still applies to them.
-  // Code-only like historyAuthority. The CLI below never sets it, and no environment variable can.
+  // Code-only like historyAuthority. The default CLI below never sets it and no environment variable can:
+  // only the separate render-avd-history-demo.mjs entrypoint does.
   if (enableAvdHistoryRead && !enableAvdSimulation) throw new Error('AVD_HISTORY_READ_REQUIRES_SIMULATION');
   const historyRead = historyAuthority ? httpsHistoryAuthorizer(historyAuthority) : null;
   if (historyRead) assertHistoryAuthorizerDeployable(historyRead, { host });
@@ -121,9 +122,8 @@ export async function startRenderStateful({ pool, publicOrigin, host = '127.0.0.
   }
 }
 
-if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  let pool;
-  try {
+/** The one validation both entrypoints share. Throws before any database contact. */
+export function renderEnvironment() {
     if (process.env.RENDER !== 'true' || !process.env.RENDER_EXTERNAL_URL ||
         !process.env.DATABASE_URL || process.env.NODE_TLS_REJECT_UNAUTHORIZED === '0' ||
         ['SYNC_LOCAL_TEST_AUTH','SYNC_FIXTURE_TOKEN','SYNC_DEBUG_PAGE','SYNC_ALLOWED_ORIGIN']
@@ -134,21 +134,38 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     });
     const port = Number(process.env.PORT || 10000);
     if (!Number.isSafeInteger(port) || port < 1 || port > 65535) throw new Error('INVALID_PORT');
+    return { connection, expectedSchema, port, publicOrigin: process.env.RENDER_EXTERNAL_URL,
+      enableAvdSimulation: process.env.CARSCOPE_AVD_SIMULATOR_MODE === 'OPERATOR_APPROVED' };
+}
+
+export async function openRenderPool(connection) {
     const { Pool } = await import('pg');
-    pool = new Pool({ ...connection, max: 3,
+    const pool = new Pool({ ...connection, max: 3,
       connectionTimeoutMillis: 5000, idleTimeoutMillis: 10_000, allowExitOnIdle: false });
     // Prevent unhandled idle-connection failures from killing the process without a readiness report.
     pool.on('error', () => { /* Health checks fail closed if PostgreSQL is unavailable. */ });
-    const app = await startRenderStateful({
-      pool, publicOrigin: process.env.RENDER_EXTERNAL_URL, host: '0.0.0.0', port, expectedSchema,
-      enableAvdSimulation: process.env.CARSCOPE_AVD_SIMULATOR_MODE === 'OPERATOR_APPROVED',
-    });
-    console.log(process.env.CARSCOPE_AVD_SIMULATOR_MODE === 'OPERATOR_APPROVED'
-      ? 'CarScope AVD simulation registry ready; OEM vehicle ownership NOT verified'
-      : 'CarScope stateful PostgreSQL service ready; creation=DENIED');
+    return pool;
+}
+
+export function stopOnSignal(app) {
     for (const signal of ['SIGINT', 'SIGTERM']) {
       process.once(signal, () => app.stop().then(() => process.exit(0), () => process.exit(1)));
     }
+}
+
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  let pool;
+  try {
+    const { connection, publicOrigin, port, expectedSchema, enableAvdSimulation } = renderEnvironment();
+    pool = await openRenderPool(connection);
+    const app = await startRenderStateful({
+      pool, publicOrigin, host: '0.0.0.0', port, expectedSchema,
+      enableAvdSimulation,
+    });
+    console.log(enableAvdSimulation
+      ? 'CarScope AVD simulation registry ready; OEM vehicle ownership NOT verified'
+      : 'CarScope stateful PostgreSQL service ready; creation=DENIED');
+    stopOnSignal(app);
   } catch {
     if (pool) await pool.end().catch(() => {});
     console.error('RENDER_STATEFUL_CONFIGURATION_FAILED'); process.exitCode = 1;
