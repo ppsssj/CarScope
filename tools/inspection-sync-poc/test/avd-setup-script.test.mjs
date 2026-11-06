@@ -43,7 +43,8 @@ const args=process.argv.slice(2);const command=args.join(' ');
 const stdin=command.includes('cat >')?readFileSync(0,'utf8'):'';
 appendFileSync(${JSON.stringify(log)},JSON.stringify({command,stdin})+'\\n');
 if(command.includes('am get-current-user'))console.log('10');
-if(command.includes('stat -c'))console.log('600 102');
+// A real device printed only the mode for a quoted format, because PowerShell 5.1 had dropped the quotes.
+if(command.includes('stat -c %a:%s'))console.log('600:102');else if(command.includes('stat -c'))console.log('600');
 if(command.includes('head -c 1'))console.log('{');
 `);
     const adb = join(folder, 'adb.cmd');

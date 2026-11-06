@@ -61,13 +61,14 @@ function Set-PrivateFile([string]$User, [string]$Name, [string]$Content, [int]$M
     if ($LASTEXITCODE -ne 0) { throw "Writing $Name failed." }
   } finally { [Console]::InputEncoding = $consoleEncoding }
   $shape = Get-PrivateFileShape $User $Name
-  if ($shape -notmatch '^600 (\d+)$' -or [int]$Matches[1] -lt 1 -or [int]$Matches[1] -gt $MaxBytes) { throw "$Name has an unexpected mode or size: $shape" }
+  if ($shape -notmatch '^600:(\d+)$' -or [int]$Matches[1] -lt 1 -or [int]$Matches[1] -gt $MaxBytes) { throw "$Name has an unexpected mode or size: $shape" }
   $first = & $Adb -s $Serial shell "run-as $Package --user $User head -c 1 files/$Name"
   if ("$first".Trim() -ne '{') { throw "$Name does not start with a JSON object." }
 }
 
+# No space or quotes in the format: PowerShell 5.1 drops embedded quotes on the way to adb, which splits a quoted format.
 function Get-PrivateFileShape([string]$User, [string]$Name) {
-  $value = & $Adb -s $Serial shell "run-as $Package --user $User sh -c 'if [ -f files/$Name ]; then stat -c ""%a %s"" files/$Name; else echo missing; fi'"
+  $value = & $Adb -s $Serial shell "run-as $Package --user $User sh -c 'if [ -f files/$Name ]; then stat -c %a:%s files/$Name; else echo missing; fi'"
   return "$value".Trim()
 }
 
