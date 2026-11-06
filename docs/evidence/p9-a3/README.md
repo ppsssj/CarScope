@@ -8,6 +8,7 @@
 | `LOCAL_BACKUP_RESTORE_BLOCKED` | 해당 없음 | Docker Desktop이 꺼져 있어 실행해서 사용했다. 새로 설치한 소프트웨어는 없다. `postgres:16` 이미지는 내려받았다 |
 | `PRODUCTION_DB_NOT_RUN` | NOT_RUN | 운영 DB 연결, 백업, 읽기 전용 검사 모두 없음 |
 | `RENDER_DEPLOY_NOT_RUN` | NOT_RUN | 배포, 재시작, 환경변수 변경, 대시보드 확인 없음. 이번 작업에서 `/healthz`도 호출하지 않았다 |
+| `READY_FOR_G3_APPROVAL` | 도구 조건 충족 | 승인 자체가 아니다. [G 체크리스트](../../p9-a3-db-recovery-readiness.md#g-운영-g3-실행-전-승인-체크리스트)의 운영자 확인 항목은 모두 남아 있다 |
 
 enrollment, QR 세션, G2~G10은 실행하지 않았다.
 
@@ -92,6 +93,15 @@ Git 밖 복사본에 결함을 넣어 선택한 테스트의 검출 여부를 �
 
 ## CI
 
-실행 결과는 PR의 체크와 아래 기록을 따른다. `postgres-integration`은 PG16 합성 범위이며, 원격 경로는 자체 서명 인증서의 일회용 컨테이너다. Render·운영 DB·기기 결과가 아니다.
+`f7c01d3` PR 실행, 11개 job 전부 PASS.
+
+| job | 결과 | 범위 |
+|---|---|---|
+| [`postgres-integration`](https://github.com/ppsssj/CarScope/actions/runs/42173173009) | 기존 PG 스위트 PASS. 복구 테스트 49 중 48 PASS / 1 SKIP / 0 FAIL. 네이티브 `pg_dump`·`pg_restore` 16.15 | PG16 합성 데이터. SKIP은 얕은 체크아웃의 커밋 게이트 테스트이며 아래 job에서 실행 |
+| 같은 job의 원격 경로 테스트 | PASS | 자체 서명 인증서의 일회용 컨테이너. **Render에 대한 증거가 아니다** |
+| [`Preflight gates`](https://github.com/ppsssj/CarScope/actions/runs/42173173044) | `db-recovery.test.mjs` 14 PASS / 0 SKIP, 게이트 PASS | 네트워크·DB 없음 |
+| Sync Ubuntu/Windows, Kotlin decoder, geometry, core, identity, tire, 3D 결과, WebXR | PASS | 각 job 범위. 브라우저·AVD·실차 결과가 아니다 |
+
+GitGuardian은 첫 커밋 실행에서 PASS였고, `f7c01d3`의 체크 목록에는 나타나지 않았다.
 
 원본 산출물은 작업 PC `C:\CarScope-External\p9-a3\20261106T055107Z`에 있으며 Git에 포함하지 않는다. 내용은 합성 데이터다. DB URL과 비밀번호는 기록하지 않는다. 절차는 [P9-A3 문서](../../p9-a3-db-recovery-readiness.md)를 따른다.
