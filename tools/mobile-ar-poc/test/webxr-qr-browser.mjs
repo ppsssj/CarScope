@@ -147,17 +147,17 @@ try {
     pass('claimed QR v2 survives AR: no new session or claim, nothing sent by AR, and the same credentials submit and receive acceptance');
   }
 
-  { // AR before connecting: the single-use invite is still intact in memory.
+  { // AR before starting the inspection: the page has connected once, and AR and Back do not connect again.
     const flow = await pair(on), { page, log } = flow;
-    assert.equal(count(log, '/v1/claim'), 0);
+    await claim(flow);
+    assert.equal(count(log, '/v1/claim'), 1);
     await runAr(page);
-    assert.equal(count(log, '/v1/claim'), 0, 'AR does not claim');
+    assert.equal(count(log, '/v1/claim'), 1, 'AR does not claim');
     await page.goBack();
     await page.waitForFunction(() => !window.__webXrGuide.open);
     assert.equal(await page.evaluate(() => window.__env.currentSession.ended), true);
     assert.equal(new URL(page.url()).hash, '', 'Back does not bring the invite fragment back');
     await noLeak(flow);
-    await claim(flow);
     assert.equal(count(log, '/v1/claim'), 1);
     assert.equal(await page.evaluate(() => window.__selfInspection.state.step), 'intro', 'Back returned to where the user was');
     await page.locator('#manual-start').click();
@@ -165,8 +165,8 @@ try {
     await page.locator('#sync-send').click();
     await waitSync(page, 'SENT');
     await noLeak(flow);
-    await finish(flow, 'before claim');
-    pass('unclaimed invite survives AR and Back, then claims once and submits');
+    await finish(flow, 'before start');
+    pass('a connection made on opening survives AR and Back, claims once and submits');
   }
 
   { // The vehicle's decision still reaches the phone across AR.
