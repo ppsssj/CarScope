@@ -2,7 +2,7 @@
 // where the question is about what the code path is able to do (imports, environment reads, DDL statements).
 import { spawn, execFileSync } from 'node:child_process';
 import { createHash, randomBytes } from 'node:crypto';
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import net from 'node:net';
 import { dirname, resolve, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -24,6 +24,7 @@ export const SQL_FILES = Object.freeze({
   avd: 'src/avd-simulator-schema.sql',
 });
 const ENTRY = 'src/render-stateful.mjs';
+export const AVD_HISTORY_DEMO_ENTRY = 'src/render-avd-history-demo.mjs';
 /** The only variables the Render path may read. Anything else, e.g. a history switch, fails this gate. */
 export const ALLOWED_ENV = Object.freeze([
   'RENDER', 'RENDER_EXTERNAL_URL', 'DATABASE_URL', 'NODE_TLS_REJECT_UNAUTHORIZED', 'PORT',
@@ -107,6 +108,40 @@ export function bootstrapGate(root = TOOL_ROOT) {
   if (entry.indexOf(MAIN_MARKER) < 0 || /historyAuthorit|historyAuthorizer/.test(main)) return check('RENDER_BOOTSTRAP_DENY_DEFAULT', 'FAIL', 'CLI block passes a history authority');
   if (leaked.length) return check('RENDER_BOOTSTRAP_DENY_DEFAULT', 'FAIL', 'runtime imports: ' + leaked.join(', '));
   return check('RENDER_BOOTSTRAP_DENY_DEFAULT', 'PASS', `CLI passes no authority; ${closure.length} runtime modules, none from test/ or preflight/`);
+}
+
+/**
+ * Deploying code must never open the Debug AVD read path. Only the demonstration entrypoint may pass the option, it may
+ * read no variable of its own, and it adds nothing to the Render import closure. Starting it is an operator's Start Command.
+ */
+export function avdHistoryDemoGate(root = TOOL_ROOT) {
+  const problems = [];
+  const entry = readFileSync(resolve(root, ENTRY), 'utf8');
+  if (/enableAvdHistoryRead/.test(entry.slice(entry.indexOf(MAIN_MARKER)))) problems.push('default CLI passes the read option');
+  const library = entry.slice(0, entry.indexOf(MAIN_MARKER));
+  if (!/enableAvdHistoryRead = false/.test(library)) problems.push('read option is not off by default');
+  if (!/if \(historyAuthority && enableAvdSimulation\) throw new Error\('HISTORY_AUTHORITY_WITH_AVD_SIMULATION_FORBIDDEN'\)/.test(library)) problems.push('owner authority guard changed');
+  const passes = (source) => /enableAvdHistoryRead\s*:/.test(source);
+  for (const dir of ['src', 'bin']) {
+    for (const name of readdirSync(resolve(root, dir)).filter((x) => x.endsWith('.mjs'))) {
+      const file = dir + '/' + name;
+      if (file !== AVD_HISTORY_DEMO_ENTRY && passes(readFileSync(resolve(root, file), 'utf8'))) problems.push(file + ' passes the read option');
+    }
+  }
+  let demo;
+  try { demo = readFileSync(resolve(root, AVD_HISTORY_DEMO_ENTRY), 'utf8'); } catch { problems.push('demonstration entrypoint is missing'); }
+  if (demo) {
+    if (/\bprocess\.env\b|\benv\./.test(demo)) problems.push('demonstration entrypoint reads the environment');
+    if (!/if \(!enableAvdSimulation\) throw/.test(demo)) problems.push('demonstration entrypoint does not require simulator mode');
+    if (/historyAuthorit|historyAuthorizer/.test(demo)) problems.push('demonstration entrypoint passes a history authority');
+    const closure = importGraph(AVD_HISTORY_DEMO_ENTRY, root).filter((f) => f !== AVD_HISTORY_DEMO_ENTRY);
+    const base = new Set(importGraph(ENTRY, root));
+    problems.push(...closure.filter((f) => !base.has(f)).map((f) => 'demonstration entrypoint adds ' + f));
+  }
+  if (importGraph(ENTRY, root).includes(AVD_HISTORY_DEMO_ENTRY)) problems.push('default CLI imports the demonstration entrypoint');
+  return problems.length
+    ? check('AVD_HISTORY_DEMO_ENTRY_ONLY', 'FAIL', problems.join('; '))
+    : check('AVD_HISTORY_DEMO_ENTRY_ONLY', 'PASS', 'only the demonstration entrypoint opens the read path; no variable can, and the default CLI does not');
 }
 
 export function ddlGate(root = TOOL_ROOT) {
@@ -202,10 +237,10 @@ export function credentialSeparationGate(root = REPO_ROOT) {
   return problems.length ? check('TEST_PROD_CREDENTIAL_SEPARATION', 'FAIL', problems.join('; ')) : check('TEST_PROD_CREDENTIAL_SEPARATION', 'PASS', 'scopes distinct, AVD grants are creation-only, no secret-like file tracked');
 }
 
-function runEntry(env) {
+function runEntry(env, entry = ENTRY) {
   const ownPlatform = Object.fromEntries(['PATH', 'Path', 'SystemRoot', 'TEMP', 'TMP'].filter((k) => process.env[k]).map((k) => [k, process.env[k]]));
   return new Promise((done) => {
-    const child = spawn(process.execPath, [resolve(TOOL_ROOT, ENTRY)], { env: { ...ownPlatform, ...env }, stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true });
+    const child = spawn(process.execPath, [resolve(TOOL_ROOT, entry)], { env: { ...ownPlatform, ...env }, stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true });
     let output = '';
     child.stdout.on('data', (x) => (output += x));
     child.stderr.on('data', (x) => (output += x));
@@ -270,6 +305,33 @@ export async function cliRefusalGate() {
   }
 }
 
+/** The demonstration entrypoint inherits every refusal, and without simulator mode it also stops before the database. */
+export async function avdHistoryDemoRefusalGate() {
+  const secret = randomBytes(18).toString('hex');
+  const db = await countingDatabase();
+  try {
+    const url = `postgresql://preflight:${secret}@127.0.0.1:${db.port}/preflight`;
+    const valid = { RENDER: 'true', RENDER_EXTERNAL_URL: 'https://preflight.example', PORT: '1', DATABASE_URL: url };
+    const cases = {
+      NO_SIMULATOR_MODE: valid,
+      AVD_MODE_NOT_EXACT: { ...valid, CARSCOPE_AVD_SIMULATOR_MODE: 'ENABLED' },
+      TLS_VERIFY_DISABLED: { ...valid, CARSCOPE_AVD_SIMULATOR_MODE: 'OPERATOR_APPROVED', NODE_TLS_REJECT_UNAUTHORIZED: '0' },
+      ...Object.fromEntries(FORBIDDEN_RENDER_ENV.map((k) => [k, { ...valid, CARSCOPE_AVD_SIMULATOR_MODE: 'OPERATOR_APPROVED', [k]: '1' }])),
+    };
+    const wrong = [];
+    for (const [name, env] of Object.entries(cases)) {
+      const before = db.connections();
+      const r = await runEntry(env, AVD_HISTORY_DEMO_ENTRY);
+      if (r.code !== 1 || r.output !== 'RENDER_STATEFUL_CONFIGURATION_FAILED' || db.connections() !== before) wrong.push(name);
+    }
+    return wrong.length
+      ? check('AVD_HISTORY_DEMO_REFUSES_UNSAFE_CONFIG', 'FAIL', wrong.join(', '))
+      : check('AVD_HISTORY_DEMO_REFUSES_UNSAFE_CONFIG', 'PASS', `${Object.keys(cases).length} configurations exit 1 with one sanitized line and never reach the database`);
+  } finally {
+    await db.stop();
+  }
+}
+
 export function productionAuthGate() {
   return check('PRODUCTION_AUTH_BLOCKED', 'BLOCKED', 'no trusted issuer, ownership registry, revocation service or service credential; see docs/p8-a2-history-auth.md');
 }
@@ -284,6 +346,8 @@ export async function runStaticGates() {
     ['HISTORY_DENY_DEFAULT', () => denyDefaultGate()],
     ['RENDER_BOOTSTRAP_DENY_DEFAULT', () => bootstrapGate()],
     ['ENV_CANNOT_ENABLE_AUTH', () => environmentGate()],
+    ['AVD_HISTORY_DEMO_ENTRY_ONLY', () => avdHistoryDemoGate()],
+    ['AVD_HISTORY_DEMO_REFUSES_UNSAFE_CONFIG', () => avdHistoryDemoRefusalGate()],
     ['UNVERIFIED_AUTHORITY_BLOCKED', () => unverifiedAuthorityGate()],
     ['RENDER_CLI_REFUSES_UNSAFE_CONFIG', () => cliRefusalGate()],
     ['TEST_PROD_CREDENTIAL_SEPARATION', () => credentialSeparationGate()],

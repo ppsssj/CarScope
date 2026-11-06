@@ -6,7 +6,7 @@ PostgreSQL 경로에서 새로 명시적 Accept된 사용자 점검만 보존한
 
 **운영 Render 라우트는 DENY_DEFAULT(403)** 이다. 현재 설치된 issuer/차량 소유권 등록/폐기 확인 연동이 없으므로 실제 차량 소유자 조회를 활성화하지 않는다. QR receiverToken, 생성용 credential, AVD credential은 조회 권한이 아니다. 환경변수만으로 켜는 우회도 제공하지 않는다.
 
-별도 경로 `/simulator/inspection-records`는 이 계약의 소유자 조회가 아니다. 코드 옵션으로만 열리고 배포 CLI는 열지 않으며, 범위는 enrollment proof의 등록 하나이다. [P9-H1](../p9-h1-inspection-history-read.md).
+별도 경로 `/simulator/inspection-records`는 이 계약의 소유자 조회가 아니다. 기본 CLI는 열지 않고 별도 진입점의 Debug AVD 시연에서만 열리며, 범위는 enrollment proof의 등록 하나이다. [P9-H1](../p9-h1-inspection-history-read.md), [P9-H2](../p9-h2-avd-history-activation.md).
 
 내부 `HistoryService({store})`와 `VerifiedHistoryReadAuthorizer`가 조회 계약을 제공한다. 서버는 DB 조회 전후에 권한을 확인한다. DTO에는 credential, 원본 QR, VIN, 이미지, 위치, 내부 사용자/차량/등록 식별자를 반환하지 않는다. 클라이언트의 userId/vehicleId/헤더로 조회 범위를 지정할 수 없다.
 

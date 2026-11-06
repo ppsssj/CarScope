@@ -50,9 +50,12 @@ export async function probeDeployment({ origin, approveRateWindowWrites = false,
     return out;
   }
   out.push(check('RENDER_HEALTH', 'PASS', `UP mode=${body.mode} sessionCreation=${body.sessionCreation}`, { mode: body.mode }));
-  out.push(Object.hasOwn(body, 'historyRead')
-    ? check('RENDER_HISTORY_AUTHORITY', 'FAIL', 'health reports a configured history authority while production auth is blocked')
-    : check('RENDER_HISTORY_AUTHORITY', 'PASS', 'no history authority configured'));
+  // The demonstration entrypoint is visible, never silent: it needs a person to confirm it was meant to be running.
+  out.push(!Object.hasOwn(body, 'historyRead')
+    ? check('RENDER_HISTORY_AUTHORITY', 'PASS', 'no history authority configured')
+    : body.historyRead === 'AVD_REGISTRATION_ONLY' && body.mode === 'STATEFUL_AVD_SIMULATION'
+      ? check('RENDER_HISTORY_AUTHORITY', 'MANUAL', 'AVD history demonstration is running: enrollment-scoped reads, no vehicle ownership. Confirm the approved window, or restore the Start Command')
+      : check('RENDER_HISTORY_AUTHORITY', 'FAIL', 'health reports a configured history authority while production auth is blocked'));
   if (!approveRateWindowWrites) {
     out.push(check('RENDER_API_BOUNDARY', 'NOT_RUN', 'records 403 / session 401 probes write cs_rate_windows: pass --approve-rate-window-writes'));
     return out;
