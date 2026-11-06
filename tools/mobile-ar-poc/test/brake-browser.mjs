@@ -48,6 +48,7 @@ try {
     await page.touchscreen.tap(p.x,p.y);await page.waitForFunction(()=>!!window.__brakeInspection.mark);
   };
   await open();assert.equal((await state()).taskId,'brake-fluid');
+  await page.locator('#step-intro details.help summary').click();
   assert.match(await page.locator('#step-intro').innerText(),/차종·연식·운전석 방향/);
   assert.equal(await page.locator('#primary').isDisabled(),true);await page.locator('#safety').check();assert.equal(await page.locator('#manual-start').isDisabled(),false);
   assert.equal(await page.evaluate(()=>testCamera.requests),0);await nav('#manual-start');

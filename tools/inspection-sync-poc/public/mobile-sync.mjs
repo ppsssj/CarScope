@@ -2,17 +2,17 @@ import { checkEnvelope, PROTOCOL, PROTOCOL_VERSION, receiptMatches } from '../sr
 import { TRANSPORT } from './sync-client.mjs';
 
 export const SYNC_TEXT = Object.freeze({
-  INVITED: '차량 점검 요청을 받았습니다. 차량에 연결합니다.',
-  CLAIMING: '차량 요청에 연결 중…', CLAIMED: '연결됨 · 점검 완료 후 결과를 전송하세요.',
-  NOT_SENT: '전송 안 됨', SENDING: '전송 중…', SENT: '서버 수신 확인 · 차량 처리 대기',
-  ACCEPTED: '차량 수신 완료 · 점검 이력 저장 확인 · 사용자 보고 결과입니다.', CANCELLED: '차량 측에서 취소했습니다. 새 QR로 다시 연결하세요.',
-  FAILED_NETWORK: '네트워크 오류 · 연결을 확인하고 다시 시도하세요.', FAILED_TIMEOUT: '시간 초과 · 연결을 확인하고 다시 시도하세요.',
-  REJECTED_EXPIRED: '연결이 만료됐습니다. 차량에서 새 QR을 요청하세요.',
-  REJECTED_CLOSED: '연결이 종료됐습니다. 차량에서 새 QR을 요청하세요.',
-  REJECTED_CONFLICT: '이미 다른 결과가 제출됐습니다. 차량에서 새 QR을 요청하세요.',
-  REJECTED_INVALID: '결과 또는 서버 응답을 확인할 수 없습니다. 전송 완료가 아닙니다.',
-  REJECTED_UNAUTHORIZED: '연결 인증을 확인할 수 없습니다. 차량에서 새 QR을 요청하세요.',
-  RATE_LIMITED: '요청이 너무 많습니다. 잠시 후 다시 시도하세요.',
+  INVITED: '차량에 연결하고 있어요',
+  CLAIMING: '차량에 연결하고 있어요', CLAIMED: '차량과 연결됐어요',
+  NOT_SENT: '아직 보내지 않았어요', SENDING: '결과를 보내고 있어요', SENT: '결과를 보냈어요. 차량 확인을 기다리고 있어요.',
+  ACCEPTED: '차량에서 확인했어요. 점검 이력에 저장됐어요.', CANCELLED: '차량에서 점검을 취소했어요. 차량에서 QR을 다시 만들어 스캔해 주세요.',
+  FAILED_NETWORK: '보내지 못했어요. 인터넷 연결을 확인하고 다시 시도해 주세요.', FAILED_TIMEOUT: '응답이 늦어 보냈는지 확인하지 못했어요. 다시 시도해 주세요.',
+  REJECTED_EXPIRED: '연결 시간이 지났어요. 차량에서 QR을 다시 만들어 스캔해 주세요.',
+  REJECTED_CLOSED: '연결이 끝났어요. 차량에서 QR을 다시 만들어 스캔해 주세요.',
+  REJECTED_CONFLICT: '이 연결로 이미 다른 결과를 보냈어요. 차량에서 QR을 다시 만들어 스캔해 주세요.',
+  REJECTED_INVALID: '결과를 확인하지 못해 전송을 끝내지 못했어요. 차량에서 QR을 다시 만들어 주세요.',
+  REJECTED_UNAUTHORIZED: '이미 쓴 QR이거나 확인할 수 없는 QR이에요. 차량에서 QR을 다시 만들어 스캔해 주세요.',
+  RATE_LIMITED: '요청이 많아요. 잠시 후 다시 시도해 주세요.',
 });
 const STOP = new Set(['ACCEPTED', 'CANCELLED', 'REJECTED_EXPIRED', 'REJECTED_CLOSED', 'REJECTED_UNAUTHORIZED', 'REJECTED_CONFLICT', 'REJECTED_INVALID']);
 const RETRY = new Set(['FAILED_NETWORK', 'FAILED_TIMEOUT', 'RATE_LIMITED']);

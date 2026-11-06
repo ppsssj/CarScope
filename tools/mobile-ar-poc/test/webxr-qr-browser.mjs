@@ -46,7 +46,7 @@ async function pair(host, { taskId = 'washer-fluid', fake = {} } = {}) {
 const count = (log, suffix, method = 'POST') => log.requests.filter(r => r.method === method && r.url.endsWith(suffix)).length;
 const claim = async ({ page }) => {
   
-  await page.waitForFunction(() => document.querySelector('#sync-claim').disabled && document.body.textContent.includes('연결됨'));
+  await page.waitForFunction(() => document.querySelector('#sync-claim').disabled && document.body.textContent.includes('연결됐어요'));
 };
 const waitPhase = (page, name) => page.waitForFunction(value => window.__webXrGuide?.state?.phase === value, name);
 const settle = (page, n = 3) => page.evaluate(async steps => {
@@ -112,7 +112,7 @@ try {
     await leaveToChecklist(page);
     assert.equal(await page.evaluate(() => window.__sameDocument), true, 'no navigation: credentials stay in this page');
     assert.equal((await page.evaluate(() => window.__selfInspection.state.step)), 'check');
-    assert.match(await page.locator('body > main').textContent(), /연결됨/);
+    assert.match(await page.locator('body > main').textContent(), /연결됐어요/);
     assert.equal(await page.locator('#sync-send').isVisible(), false);
     await page.screenshot({ path: path.join(output, 'qr-v2-checklist.png') });
 
@@ -176,7 +176,7 @@ try {
     await receiver.cancel();
     await page.evaluate(() => document.querySelector('#xr-return').click());
     await page.waitForFunction(() => !window.__webXrGuide.open);
-    await page.waitForFunction(() => document.body.textContent.includes('차량 측에서 취소했습니다'));
+    await page.waitForFunction(() => document.body.textContent.includes('차량에서 점검을 취소'));
     await finish(flow, 'cancelled');
     pass('a vehicle cancel during AR is shown after returning; AR cannot hide it');
   }
