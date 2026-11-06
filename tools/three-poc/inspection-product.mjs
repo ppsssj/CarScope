@@ -2,6 +2,14 @@
 import { summaryHtml } from './tire-inspection-view.mjs';
 import {resultSummaryHtml} from './inspection-results-view.mjs';
 
+/** Same rule as the phone's bonnet check: look from outside, touch nothing. `manualHref` must already be escaped. */
+export const washerGuideHtml = manualHref => `<h3>점검 방법</h3><ol><li>평탄하고 안전한 곳에 세우고 P·주차 브레이크를 확인합니다.</li><li>전원을 끄고, 충전 중이 아닌지 확인합니다.</li><li>보닛을 단단히 고정하고 모터룸이 완전히 식은 뒤에 살펴봅니다.</li><li>사용설명서로 위치를 확인하고 워셔 기호가 표시된 캡을 찾습니다.</li><li>겉으로 보이는 모습만 눈으로 확인합니다. 보이지 않으면 확인하기 어렵다고 기록합니다.</li></ol>
+        <h3>주의</h3><ul><li>부품을 만지거나 캡·덮개를 열지 마세요. 직접 보충하지 마세요.</li><li>부족해 보이면 사용설명서나 제조사 서비스 안내를 따르세요. 냉각수나 부동액을 워셔액 대신 쓰지 않습니다.</li><li>캡 표기를 확인해 다른 리저버와 혼동하지 마세요.</li><li>이 화면의 위치와 형상은 추정입니다. 실제 차량의 표기와 사용설명서를 우선하세요.</li></ul>
+        <h3>출처</h3><p><a class="link" href="${manualHref}" target="_blank" rel="noopener noreferrer">Hyundai IONIQ 5 (2022, UK) 정비 설명서 9-14 워셔액</a></p><p class="note">설명서의 보충 절차는 이 점검에 포함되지 않습니다.</p>`;
+
+/** Light names stay short, so the screens say what the check covers. Same scope as the phone's lamp check. */
+export const LIGHT_SCOPE_TEXT = '꺼져 있는 전조등의 겉모습만 눈으로 확인합니다. 켜서 시험하거나 만지거나 분해하지 마세요.';
+
 export function productSummaryHtml(session,mobile) {
   return `<div class="eyebrow">차량 점검 · 이 화면의 기록</div><h2>전체 점검 요약</h2>
     <p class="note">기록 확정은 사용자가 응답을 확인한 뜻입니다. 차량의 정상·안전·주행 가능 판정이 아닙니다.</p>
