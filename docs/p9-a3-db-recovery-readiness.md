@@ -177,7 +177,7 @@ node bin/deployment-preflight.mjs render --deployed-commit <대시보드의 배�
 |---|---|---|---|
 | H1 | 사용자의 G4 승인 | 사람 | 이번 배포 커밋에 대한 승인 |
 | H2 | 현재 main과 배포 대상 구분 | `RENDER_TARGET_COMMIT` | PASS, 또는 MANUAL이면 뒤처진 이유를 설명할 수 있음. main 밖이면 FAIL |
-| H3 | 현재 배포 커밋 | `RENDER_COMMIT_MATCHES_MAIN` | 대시보드 Events에서 읽은 값 |
+| H3 | 현재 배포 커밋 | `RENDER_COMMIT_MATCHES_MAIN` | 대시보드 Events에서 읽은 값. P9-A4 포함 커밋을 배포하면 `DATABASE_URL` 호스트에 점이 없어야 한다([이유](p9-a4-supabase-migration.md#코드-수정)) |
 | H4 | DDL 변화 | `RENDER_TARGET_DDL_DELTA`, `DDL_ADDITIVE`, `STARTUP_APPLIES_DDL` | 차이나는 파일을 설명할 수 있음. 비가산 문장 없음 |
 | H5 | Auto-Deploy | `RENDER_AUTO_DEPLOY` | Settings > Build & Deploy에서 Off 직접 확인. 켜져 있으면 FAIL |
 | H6 | 환경변수 이름 | `RENDER_ENV_NAMES` | `DATABASE_URL`, `NODE_VERSION` 있음. `SYNC_*` 등 거부 변수 없음. **`CARSCOPE_AVD_SIMULATOR_MODE`를 함께 넣지 않는다** |

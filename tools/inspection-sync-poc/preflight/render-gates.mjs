@@ -46,6 +46,7 @@ export function environmentNamesGate(text) {
   if (names.some((x) => !/^[A-Z_][A-Z0-9_]*$/.test(x))) return check('RENDER_ENV_NAMES', 'FAIL', 'input must hold variable names only, one per line; a value may have been pasted');
   const missing = REQUIRED_ENV.filter((x) => !names.includes(x)), refused = names.filter((x) => REFUSED_ENV.includes(x));
   if (missing.length || refused.length) return check('RENDER_ENV_NAMES', 'FAIL', `missing [${missing}] refused [${refused}]`);
+  if (names.includes('CARSCOPE_DB_SCHEMA') !== names.includes('CARSCOPE_DB_CA_PEM_BASE64')) return check('RENDER_ENV_NAMES', 'FAIL', 'CARSCOPE_DB_SCHEMA and CARSCOPE_DB_CA_PEM_BASE64 are set together or not at all');
   const simulator = names.includes('CARSCOPE_AVD_SIMULATOR_MODE');
   return check('RENDER_ENV_NAMES', simulator ? 'MANUAL' : 'PASS', simulator ? 'simulator mode variable set: creation opens for operator-approved AVDs only, never OEM ownership' : 'required present, refused absent; values not inspected');
 }

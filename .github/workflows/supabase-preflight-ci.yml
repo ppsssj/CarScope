@@ -1,0 +1,41 @@
+name: Supabase migration preflight CI
+
+# Disposable Docker PostgreSQL 16 and 17 with synthetic rows only. No job can reach Supabase, Render or a device,
+# and a pass here says nothing about Supavisor, the Supabase certificate or the Data API.
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  pg-matrix:
+    name: PostgreSQL 16 and 17, private schema, TLS, restart, outage
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: tools/inspection-sync-poc
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '22.16.0'
+      - run: npm install --ignore-scripts --no-audit --no-fund --package-lock=false
+      - run: npm run check:preflight
+      - run: node --test test/supabase-preflight.test.mjs
+      - name: Matrix on disposable servers
+        run: npm run test:pg-matrix
+        env:
+          # The client container reaches a published port through the bridge gateway on Linux.
+          PG_MATRIX_BIND: 0.0.0.0

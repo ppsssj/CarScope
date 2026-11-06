@@ -3,8 +3,11 @@
 // only, never session or record contents.
 import { check, safeCode } from './report.mjs';
 import { schemaInventory } from './static-gates.mjs';
+import { assertPrivateSchemaName, decodeCaCertificate } from '../src/database-config.mjs';
 
 export const LOOPBACK_HOSTS = Object.freeze(['127.0.0.1', 'localhost', '::1', '[::1]']);
+export const VERIFIED_MAJORS = Object.freeze([16, 17]);
+const API_ROLES = Object.freeze(['anon', 'authenticated', 'service_role']);
 const HISTORY_COLUMNS = Object.freeze([
   'record_id', 'inspection_id', 'sync_session_id', 'task_id', 'part_id', 'schema_version', 'inspection_status', 'original_result',
   'result_digest', 'completed_at', 'received_at', 'accepted_at', 'authority_namespace', 'authority_issuer', 'user_id', 'vehicle_id',
@@ -38,8 +41,35 @@ async function metaVersion(client, table, present) {
   return r.rows.length === 1 ? Number(r.rows[0].version) : null;
 }
 
+/**
+ * What makes a schema private on a platform with a Data API. The Data API setting itself is outside PostgreSQL's view,
+ * so it stays a dashboard item in the checklist. Absent platform roles cannot be judged, which is never a pass.
+ */
+export async function privateSchemaChecks(client, schema) {
+  const out = [];
+  const current = (await client.query('SELECT current_schema() AS name')).rows[0]?.name;
+  out.push(check('DB_PRIVATE_SCHEMA', current === schema ? 'PASS' : 'FAIL', current === schema ? `search_path resolves to ${schema}` : 'search_path does not resolve to the expected schema: the server would refuse to start'));
+  const leaked = (await client.query("SELECT tablename FROM pg_tables WHERE schemaname='public' AND tablename LIKE 'cs\\_%'")).rows.map((r) => r.tablename);
+  out.push(check('DB_PUBLIC_HOLDS_NO_CARSCOPE', leaked.length ? 'FAIL' : 'PASS', leaked.length ? 'CarScope tables in public: ' + leaked.join(', ') : 'no CarScope table in public'));
+  // A privilege function raises an error on a schema that does not exist, which would hide every later check.
+  const exists = (await client.query('SELECT to_regnamespace($1) IS NOT NULL AS found', [schema])).rows[0].found;
+  const roles = (await client.query('SELECT rolname FROM pg_roles WHERE rolname = ANY($1)', [API_ROLES])).rows.map((r) => r.rolname);
+  const allowed = [];
+  for (const role of exists ? roles : []) {
+    const r = (await client.query(`SELECT has_schema_privilege($1,$2,'USAGE') OR has_schema_privilege($1,$2,'CREATE') AS schema_access,
+      EXISTS (SELECT 1 FROM pg_tables t WHERE t.schemaname=$2 AND has_table_privilege($1,format('%I.%I',t.schemaname,t.tablename),'SELECT,INSERT,UPDATE,DELETE')) AS table_access`, [role, schema])).rows[0];
+    if (r.schema_access || r.table_access) allowed.push(role);
+  }
+  const missing = API_ROLES.filter((r) => !roles.includes(r));
+  out.push(check('DB_API_ROLES_DENIED', !exists ? 'NOT_RUN' : allowed.length ? 'FAIL' : missing.length ? 'MANUAL' : 'PASS', !exists ? 'the schema does not exist yet' : allowed.length ? 'can reach the schema: ' + allowed.join(', ') : missing.length ? 'not on this server, so not judged: ' + missing.join(', ') : API_ROLES.join(', ') + ' cannot reach the schema'));
+  const attributes = (await client.query('SELECT rolsuper,rolcreaterole,rolcreatedb,rolreplication,rolbypassrls FROM pg_roles WHERE rolname=current_user')).rows[0] ?? {};
+  const excess = Object.entries(attributes).filter(([, on]) => on).map(([name]) => name);
+  out.push(check('DB_ROLE_ATTRIBUTES', excess.length ? 'FAIL' : 'PASS', excess.length ? 'role holds: ' + excess.join(', ') : 'no superuser, role, database, replication or RLS bypass attribute'));
+  return out;
+}
+
 /** @param pool a pg Pool/Client factory owned by the caller; connection details never enter a result. */
-export async function inspectDatabase(pool) {
+export async function inspectDatabase(pool, { expectedSchema = null, requireTls = false } = {}) {
   let client;
   try {
     client = await pool.connect();
@@ -56,7 +86,13 @@ export async function inspectDatabase(pool) {
     if (readOnly !== 'on') return out;
 
     const major = Math.floor(Number((await client.query("SELECT current_setting('server_version_num') AS v")).rows[0].v) / 10000);
-    out.push(check('DB_POSTGRES_VERSION', major === 16 ? 'PASS' : 'MANUAL', major === 16 ? 'PostgreSQL 16, the CI-verified major version' : `PostgreSQL ${major}: CI verified only 16`));
+    const verified = VERIFIED_MAJORS.includes(major);
+    out.push(check('DB_POSTGRES_VERSION', verified ? 'PASS' : 'MANUAL', verified ? `PostgreSQL ${major}, a CI-verified major version` : `PostgreSQL ${major}: CI verified only ${VERIFIED_MAJORS.join(' and ')}`));
+    if (expectedSchema !== null || requireTls) {
+      const tls = (await client.query('SELECT ssl FROM pg_stat_ssl WHERE pid=pg_backend_pid()')).rows[0]?.ssl === true;
+      out.push(check('DB_TLS_IN_USE', tls ? 'PASS' : requireTls ? 'FAIL' : 'MANUAL', tls ? 'this connection uses TLS' : 'this connection is not encrypted'));
+    }
+    if (expectedSchema !== null) out.push(...await privateSchemaChecks(client, expectedSchema));
 
     const inventory = schemaInventory();
     const names = Object.values(inventory).flatMap((x) => [...x.tables, ...x.indexes.map((i) => i.name)]);
@@ -108,7 +144,7 @@ export async function inspectDatabase(pool) {
 }
 
 /** CLI seam: the URL comes from a named variable and stays out of argv, output and errors. */
-export async function inspectDatabaseUrl({ url, allowRemoteReadOnly = false, env = process.env }) {
+export async function inspectDatabaseUrl({ url, allowRemoteReadOnly = false, env = process.env, expectedSchema = null, caPemBase64 = null }) {
   if (!url) return [check('DB_CONNECT', 'NOT_RUN', 'named environment variable is empty')];
   if (env.NODE_TLS_REJECT_UNAUTHORIZED === '0') return [check('DB_CONNECT', 'FAIL', 'NODE_TLS_REJECT_UNAUTHORIZED=0 is refused')];
   if (!isLoopbackUrl(url) && !allowRemoteReadOnly) return [check('DB_CONNECT', 'BLOCKED', 'non-loopback database needs the explicit --allow-remote-read-only approval')];
@@ -118,10 +154,20 @@ export async function inspectDatabaseUrl({ url, allowRemoteReadOnly = false, env
   } catch {
     return [check('DB_CONNECT', 'BLOCKED', 'pg driver is not installed')];
   }
-  const pool = new Pool({ connectionString: url, max: 1, connectionTimeoutMillis: 5000 });
+  let extra = {}, schema = null;
+  try {
+    schema = expectedSchema === null ? null : assertPrivateSchemaName(expectedSchema);
+    if (caPemBase64) {
+      if (new URL(url).search) throw new Error('DATABASE_URL_QUERY_REFUSED');
+      extra = { ssl: { ca: decodeCaCertificate(caPemBase64), rejectUnauthorized: true } };
+    }
+  } catch (error) {
+    return [check('DB_CONNECT', 'FAIL', safeCode(error))];
+  }
+  const pool = new Pool({ connectionString: url, max: 1, connectionTimeoutMillis: 5000, ...extra });
   pool.on('error', () => {});
   try {
-    return await inspectDatabase(pool);
+    return await inspectDatabase(pool, { expectedSchema: schema, requireTls: !isLoopbackUrl(url) && Boolean(caPemBase64) });
   } finally {
     await pool.end().catch(() => {});
   }

@@ -2,7 +2,7 @@
 // Deployment preflight. Read-only by construction: no deploy command, no Render API, no DDL, no environment change.
 //   static                                     code and contract gates; no network, no database
 //   compat  [--apk <path>]                     decoder/server matrix and APK generation
-//   database --url-env <NAME> [--allow-remote-read-only]   READ ONLY schema inspection
+//   database --url-env <NAME> [--allow-remote-read-only] [--expect-schema <schema>] [--ca-env <NAME>]   READ ONLY schema inspection
 //   probe   --origin <https> [--approve-rate-window-writes] /healthz, optionally refused /v1 probes
 //   render  [--deployed-commit <sha>] [--target-commit <sha>] [--auto-deploy off|on] [--env-names-file <path>] [--recovery-report <path>]
 //   regression                                 existing Sync/History suites; PG suites only on an isolated database
@@ -22,7 +22,7 @@ import { runRenderGates } from '../preflight/render-gates.mjs';
 const FLAGS = {
   static: { value: [], bool: [] },
   compat: { value: ['apk'], bool: [] },
-  database: { value: ['url-env'], bool: ['allow-remote-read-only'] },
+  database: { value: ['url-env', 'expect-schema', 'ca-env'], bool: ['allow-remote-read-only'] },
   probe: { value: ['origin'], bool: ['approve-rate-window-writes'] },
   render: { value: ['deployed-commit', 'target-commit', 'auto-deploy', 'env-names-file', 'recovery-report'], bool: [] },
   regression: { value: [], bool: [] },
@@ -47,6 +47,7 @@ export function parseArguments(argv) {
     } else throw new Error('INVALID_ARGUMENTS');
   }
   if (command === 'database' && !/^[A-Z_][A-Z0-9_]*$/.test(opts['url-env'] ?? '')) throw new Error('URL_ENV_NAME_REQUIRED');
+  if (opts['ca-env'] && !/^[A-Z_][A-Z0-9_]*$/.test(opts['ca-env'])) throw new Error('URL_ENV_NAME_REQUIRED');
   if (command === 'probe' && !opts.origin) throw new Error('ORIGIN_REQUIRED');
   return { command, opts };
 }
@@ -104,7 +105,7 @@ export async function runCommand({ command, opts }, env = process.env) {
   switch (command) {
     case 'static': return runStaticGates();
     case 'compat': return runCompatGates({ apk: opts.apk });
-    case 'database': return inspectDatabaseUrl({ url: env[opts['url-env']], allowRemoteReadOnly: opts['allow-remote-read-only'] === true, env });
+    case 'database': return inspectDatabaseUrl({ url: env[opts['url-env']], allowRemoteReadOnly: opts['allow-remote-read-only'] === true, env, expectedSchema: opts['expect-schema'] ?? null, caPemBase64: opts['ca-env'] ? env[opts['ca-env']] : null });
     case 'probe': return probeDeployment({ origin: opts.origin, approveRateWindowWrites: opts['approve-rate-window-writes'] === true });
     case 'render': return runRenderGates({
       deployedCommit: opts['deployed-commit'], targetCommit: opts['target-commit'], autoDeploy: opts['auto-deploy'],

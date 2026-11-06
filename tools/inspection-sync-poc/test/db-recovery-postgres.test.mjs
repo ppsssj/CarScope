@@ -125,7 +125,7 @@ test('full rehearsal: backup, inspect, restore, compare, then the application re
     const r = await inspectArchive({ archive: backup.out, client });
     assert.deepEqual(r.checks.map((c) => [c.id, c.status]), [['ARCHIVE_SHA256', 'PASS'], ['ARCHIVE_LIST', 'PASS']]);
     assert.equal(r.list.format, 'CUSTOM');
-    assert.equal(r.list.dumpedFromMajor, 16);
+    assert.equal(r.list.dumpedFromMajor, Number((await src.pool.query("SELECT current_setting('server_version_num')::int/10000 AS m")).rows[0].m));
     for (const table of ['cs_schema_meta', 'cs_sessions', 'cs_session_tokens', 'cs_rate_windows', 'cs_history_schema_meta', 'cs_inspection_records', 'cs_avd_auth_meta', 'cs_avd_registrations', 'cs_avd_creation_grants']) {
       assert.ok(r.list.tableData.includes('public.' + table), table);
     }

@@ -5,7 +5,9 @@
 //   backup  --source-url-env <NAME> --out <new file outside the repository> [--allow-remote-read-only --g3-approved-on <UTC YYYY-MM-DD>]
 //   inspect --archive <file>                                         SHA-256 and pg_restore --list; no database
 //   restore --archive <file> --target-url-env <NAME>                 loopback carscope_rehearsal_* only, empty target only, one transaction
-//   verify  --archive <file> --target-url-env <NAME> [--startup-ddl] compares with the manifest; --startup-ddl runs the migration on the copy
+//   verify  --archive <file> --target-url-env <NAME> [--startup-ddl] [--schema <schema>]  compares with the manifest; --startup-ddl runs the migration on the copy
+//   relocate --target-url-env <NAME> --schema <schema>               loopback rehearsal copy only: moves CarScope tables out of public
+//   compare --archive <file> --url-env <NAME> --schema <schema> [--ca-env <NAME>] [--allow-remote-read-only --approved-on <UTC YYYY-MM-DD>]  READ ONLY
 // Client selection: --pg-bin <directory> or --docker-image <image>; otherwise pg_dump and pg_restore from PATH.
 // Common: --json, --report <new file outside the repository>
 // There is no argument that widens the restore target. A database URL is read only from a named environment variable.
@@ -16,7 +18,7 @@ import { check, renderText, safeCode, summarize, assertOutsideRepository } from 
 import { REPO_ROOT } from '../preflight/static-gates.mjs';
 import {
   clientVersions, dockerClient, inspectArchive, nativeClient, openClient, parseConnection, recoveryVerdict,
-  runBackup, runRestore, runVerify, versionCompatibility,
+  runBackup, runCompare, runRelocate, runRestore, runVerify, versionCompatibility,
 } from '../preflight/recovery.mjs';
 
 const CLIENT_FLAGS = ['pg-bin', 'docker-image'];
@@ -26,10 +28,12 @@ const FLAGS = {
   backup: { value: ['source-url-env', 'out', 'g3-approved-on', ...CLIENT_FLAGS], bool: ['allow-remote-read-only'] },
   inspect: { value: ['archive', ...CLIENT_FLAGS], bool: [] },
   restore: { value: ['archive', 'target-url-env', ...CLIENT_FLAGS], bool: [] },
-  verify: { value: ['archive', 'target-url-env'], bool: ['startup-ddl'] },
+  verify: { value: ['archive', 'target-url-env', 'schema'], bool: ['startup-ddl'] },
+  relocate: { value: ['target-url-env', 'schema'], bool: [] },
+  compare: { value: ['archive', 'url-env', 'schema', 'ca-env', 'approved-on'], bool: ['allow-remote-read-only'] },
 };
 const COMMON = { value: ['report'], bool: ['json'] };
-const REQUIRED = { 'create-isolated': ['admin-url-env', 'name'], backup: ['source-url-env', 'out'], inspect: ['archive'], restore: ['archive', 'target-url-env'], verify: ['archive', 'target-url-env'], environment: [] };
+const REQUIRED = { 'create-isolated': ['admin-url-env', 'name'], backup: ['source-url-env', 'out'], inspect: ['archive'], restore: ['archive', 'target-url-env'], verify: ['archive', 'target-url-env'], environment: [], relocate: ['target-url-env', 'schema'], compare: ['archive', 'url-env', 'schema'] };
 const ENV_NAME = /^[A-Z_][A-Z0-9_]*$/;
 
 /** Pure parser. No flag can carry a database URL, and an unknown flag is an error. */
@@ -49,10 +53,10 @@ export function parseArguments(argv) {
     } else throw new Error('INVALID_ARGUMENTS');
   }
   for (const flag of REQUIRED[command]) if (!opts[flag]) throw new Error('REQUIRED_ARGUMENT_MISSING');
-  for (const flag of Object.keys(opts)) if (flag.endsWith('url-env') && !ENV_NAME.test(opts[flag])) throw new Error('URL_ENV_NAME_REQUIRED');
+  for (const flag of Object.keys(opts)) if (/(url|ca)-env$/.test(flag) && !ENV_NAME.test(opts[flag])) throw new Error('URL_ENV_NAME_REQUIRED');
   for (const flag of ['archive', 'out']) if (/^postgres(ql)?:/i.test(opts[flag] ?? '')) throw new Error('INVALID_ARGUMENTS');
   if (opts['pg-bin'] && opts['docker-image']) throw new Error('ONE_CLIENT_ONLY');
-  if (opts['g3-approved-on'] && !opts['allow-remote-read-only']) throw new Error('INVALID_ARGUMENTS');
+  if ((opts['g3-approved-on'] || opts['approved-on']) && !opts['allow-remote-read-only']) throw new Error('INVALID_ARGUMENTS');
   return { command, opts };
 }
 
@@ -96,7 +100,9 @@ export async function runCommand({ command, opts }, env = process.env) {
       return runBackup({ url: needUrl(env, opts['source-url-env']), out: opts.out, client: chooseClient(opts), allowRemoteReadOnly: opts['allow-remote-read-only'] === true, g3ApprovedOn: opts['g3-approved-on'], env });
     case 'inspect': return inspectArchive({ archive: opts.archive, client: chooseClient(opts) });
     case 'restore': return runRestore({ archive: opts.archive, url: needUrl(env, opts['target-url-env']), client: chooseClient(opts), env });
-    case 'verify': return runVerify({ archive: opts.archive, url: needUrl(env, opts['target-url-env']), startupDdl: opts['startup-ddl'] === true, env });
+    case 'verify': return runVerify({ archive: opts.archive, url: needUrl(env, opts['target-url-env']), startupDdl: opts['startup-ddl'] === true, schema: opts.schema ?? null, env });
+    case 'relocate': return runRelocate({ url: needUrl(env, opts['target-url-env']), schema: opts.schema, env });
+    case 'compare': return runCompare({ archive: opts.archive, url: needUrl(env, opts['url-env']), schema: opts.schema, caPemBase64: opts['ca-env'] ? needUrl(env, opts['ca-env']) : undefined, allowRemoteReadOnly: opts['allow-remote-read-only'] === true, approvedOn: opts['approved-on'], env });
     default: throw new Error('UNKNOWN_COMMAND');
   }
 }

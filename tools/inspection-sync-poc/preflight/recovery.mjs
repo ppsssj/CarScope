@@ -10,12 +10,12 @@ import { once } from 'node:events';
 import { createReadStream, createWriteStream, existsSync, renameSync, rmSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { basename, join } from 'node:path';
 import { check, safeCode, assertOutsideRepository } from './report.mjs';
-import { inspectDatabase, LOOPBACK_HOSTS } from './database.mjs';
+import { inspectDatabase, LOOPBACK_HOSTS, VERIFIED_MAJORS } from './database.mjs';
+import { assertPrivateSchemaName, decodeCaCertificate } from '../src/database-config.mjs';
 import { REPO_ROOT } from './static-gates.mjs';
 import { PostgreSQLSessionStore } from '../src/postgres-store.mjs';
 
 export const REHEARSAL_PREFIX = 'carscope_rehearsal_';
-export const SUPPORTED_MAJOR = 16;
 const REHEARSAL_NAME = /^carscope_rehearsal_[a-z0-9_]{1,40}$/;
 const SERVICE_VARIABLES = Object.freeze(['DATABASE_URL', 'PG_ADMIN_DATABASE_URL']);
 const SSL_MODES = Object.freeze(['require', 'verify-ca', 'verify-full']);
@@ -167,17 +167,20 @@ export async function clientVersions(client) {
 export function versionCompatibility(id, clientMajor, serverMajor) {
   if (clientMajor === null || serverMajor === null) return check(id, 'BLOCKED', `client=${clientMajor} server=${serverMajor}: version unknown`);
   if (clientMajor < serverMajor) return check(id, 'FAIL', `client ${clientMajor} is older than ${serverMajor}`);
-  if (clientMajor !== serverMajor || serverMajor !== SUPPORTED_MAJOR) return check(id, 'MANUAL', `client ${clientMajor}, server ${serverMajor}: CI verified only ${SUPPORTED_MAJOR}`);
-  return check(id, 'PASS', `client and server are PostgreSQL ${SUPPORTED_MAJOR}`);
+  if (clientMajor !== serverMajor || !VERIFIED_MAJORS.includes(serverMajor)) return check(id, 'MANUAL', `client ${clientMajor}, server ${serverMajor}: CI verified the matching pairs ${VERIFIED_MAJORS.join(' and ')}`);
+  return check(id, 'PASS', `client and server are PostgreSQL ${serverMajor}`);
 }
 
-export async function openClient(connection) {
+export async function openClient(connection, { searchPath, caPemBase64 } = {}) {
   let pg;
   try { ({ default: pg } = await import('pg')); } catch { throw new Error('PG_DRIVER_NOT_INSTALLED'); }
-  const ssl = connection.loopback ? undefined : { rejectUnauthorized: connection.sslmode !== 'require' };
+  const ssl = caPemBase64
+    ? { ca: decodeCaCertificate(caPemBase64), rejectUnauthorized: true }
+    : connection.loopback ? undefined : { rejectUnauthorized: connection.sslmode !== 'require' };
   const client = new pg.Client({
     host: connection.host, port: Number(connection.port), user: connection.user, password: connection.password,
     database: connection.database, ssl, connectionTimeoutMillis: 10_000, application_name: 'carscope-recovery',
+    ...(searchPath ? { options: '-c search_path=' + assertPrivateSchemaName(searchPath) } : {}),
   });
   client.on('error', () => {});
   await client.connect();
@@ -186,7 +189,7 @@ export async function openClient(connection) {
 
 const quote = (name) => '"' + name.replaceAll('"', '""') + '"';
 const USER_SCHEMA = "n.nspname NOT IN ('pg_catalog','information_schema') AND n.nspname NOT LIKE 'pg\\_%'";
-const STRUCTURE_QUERIES = Object.freeze({
+const structureQueries = (USER_SCHEMA) => ({
   schemas: `SELECT n.nspname AS name FROM pg_namespace n WHERE ${USER_SCHEMA} ORDER BY 1`,
   columns: `SELECT n.nspname||'.'||c.relname AS relation,a.attname AS name,format_type(a.atttypid,a.atttypmod) AS type,a.attnotnull AS "notNull",pg_get_expr(d.adbin,d.adrelid) AS "default"
     FROM pg_attribute a JOIN pg_class c ON c.oid=a.attrelid JOIN pg_namespace n ON n.oid=c.relnamespace LEFT JOIN pg_attrdef d ON d.adrelid=a.attrelid AND d.adnum=a.attnum
@@ -199,13 +202,16 @@ const STRUCTURE_QUERIES = Object.freeze({
   functions: `SELECT n.nspname||'.'||p.proname AS name,pg_get_function_identity_arguments(p.oid) AS arguments,md5(p.prosrc) AS body FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace WHERE ${USER_SCHEMA} ORDER BY 1,2`,
   extensions: `SELECT extname AS name FROM pg_extension ORDER BY 1`,
 });
+const STRUCTURE_KEYS = Object.freeze(Object.keys(structureQueries(USER_SCHEMA)));
 
 /**
  * Catalog facts and per-table counts and digests. Row contents never leave the database: the digest is a hash over
  * per-row hashes, ordered by hash, so it needs no collation and is independent of physical row order. Session settings
  * are fixed because a row's text form depends on them. Runs inside the caller's transaction.
  */
-export async function captureState(client) {
+export async function captureState(client, { schema } = {}) {
+  // Scoped to one schema on a platform whose managed schemas this role cannot and must not read.
+  const scope = schema ? `n.nspname='${assertPrivateSchemaName(schema)}'` : USER_SCHEMA;
   await client.query("SET LOCAL TimeZone='UTC'");
   await client.query("SET LOCAL DateStyle='ISO, YMD'");
   await client.query("SET LOCAL IntervalStyle='postgres'");
@@ -213,9 +219,11 @@ export async function captureState(client) {
   await client.query("SET LOCAL bytea_output='hex'");
   await client.query("SET LOCAL statement_timeout='120s'");
   await client.query("SET LOCAL lock_timeout='5s'");
+  // Catalog functions omit a schema that is on search_path. A fixed path makes definitions comparable between connections.
+  await client.query('SET LOCAL search_path=pg_catalog');
   const structure = {};
-  for (const [key, sql] of Object.entries(STRUCTURE_QUERIES)) structure[key] = (await client.query(sql)).rows;
-  const relations = (await client.query(`SELECT n.nspname AS schema,c.relname AS name FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE ${USER_SCHEMA} AND c.relkind IN ('r','p') ORDER BY 1,2`)).rows;
+  for (const [key, sql] of Object.entries(structureQueries(scope))) structure[key] = schema && key === 'extensions' ? [] : (await client.query(sql)).rows;
+  const relations = (await client.query(`SELECT n.nspname AS schema,c.relname AS name FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE ${scope} AND c.relkind IN ('r','p') ORDER BY 1,2`)).rows;
   const tables = [];
   for (const { schema, name } of relations) {
     const q = `${quote(schema)}.${quote(name)}`;
@@ -432,7 +440,7 @@ const key = (t) => `${t.schema}.${t.name}`;
 /** Names what differs. Digests and counts only, never a row. */
 export function compareState(manifest, state) {
   const checks = [];
-  const differing = Object.keys(STRUCTURE_QUERIES).filter((k) => JSON.stringify(manifest.structure?.[k]) !== JSON.stringify(state.structure[k]));
+  const differing = STRUCTURE_KEYS.filter((k) => JSON.stringify(manifest.structure?.[k]) !== JSON.stringify(state.structure[k]));
   checks.push(check('VERIFY_STRUCTURE', differing.length ? 'FAIL' : 'PASS', differing.length ? 'differs in: ' + differing.join(', ') : `columns, constraints, indexes, triggers and functions match (${state.structureDigest})`));
   const actual = new Map(state.tables.map((t) => [key(t), t]));
   const expected = new Map(manifest.tables.map((t) => [key(t), t]));
@@ -449,7 +457,7 @@ export function compareState(manifest, state) {
  * Compares a restored database with the manifest, then runs the existing schema inspection against it. With
  * startupDdl the real server migration runs on the rehearsal copy: that is what G4 will do to the service database.
  */
-export async function runVerify({ archive, url, startupDdl = false, env = process.env }) {
+export async function runVerify({ archive, url, startupDdl = false, schema = null, env = process.env }) {
   let connection, manifest;
   try {
     connection = assertRehearsalTarget(url, env);
@@ -460,7 +468,7 @@ export async function runVerify({ archive, url, startupDdl = false, env = proces
   const checks = [check('VERIFY_POLICY', 'PASS', 'loopback rehearsal database')];
   let db;
   try {
-    db = await openClient(connection);
+    db = await openClient(connection, { searchPath: schema ?? undefined });
   } catch (error) {
     return { checks: [...checks, check('VERIFY_CONNECT', 'BLOCKED', 'cannot connect: ' + safeCode(error))], manifest };
   }
@@ -477,7 +485,7 @@ export async function runVerify({ archive, url, startupDdl = false, env = proces
       if (checks.some((c) => c.status === 'FAIL')) {
         checks.push(check('VERIFY_STARTUP_DDL', 'NOT_RUN', 'earlier failure: the rehearsal copy was left untouched'));
       } else {
-        checks.push(...await rehearseStartupDdl(connection, state, capture));
+        checks.push(...await rehearseStartupDdl(connection, state, capture, schema));
       }
     } else {
       checks.push(check('VERIFY_STARTUP_DDL', 'NOT_RUN', 'pass --startup-ddl to run the server migration on this rehearsal copy'));
@@ -491,12 +499,12 @@ export async function runVerify({ archive, url, startupDdl = false, env = proces
   }
 }
 
-async function rehearseStartupDdl(connection, before, capture) {
+async function rehearseStartupDdl(connection, before, capture, schema) {
   const { default: { Pool } } = await import('pg');
-  const pool = new Pool({ host: connection.host, port: Number(connection.port), user: connection.user, password: connection.password, database: connection.database, max: 2, connectionTimeoutMillis: 10_000 });
+  const pool = new Pool({ host: connection.host, port: Number(connection.port), user: connection.user, password: connection.password, database: connection.database, max: 2, connectionTimeoutMillis: 10_000, ...(schema ? { options: '-c search_path=' + schema } : {}) });
   pool.on('error', () => {});
   try {
-    await PostgreSQLSessionStore.open({ pool });
+    await PostgreSQLSessionStore.open({ pool, expectedSchema: schema });
   } catch (error) {
     return [check('VERIFY_STARTUP_DDL', 'FAIL', 'server migration failed on the copy: ' + safeCode(error))];
   } finally {
@@ -508,6 +516,103 @@ async function rehearseStartupDdl(connection, before, capture) {
   const known = new Set(before.tables.map(key));
   const added = after.tables.map(key).filter((k) => !known.has(k));
   return [check('VERIFY_STARTUP_DDL', changed.length ? 'FAIL' : 'PASS', changed.length ? 'startup changed existing rows in: ' + changed.join(', ') : `server migration kept existing rows; added tables [${added}]`)];
+}
+
+/** One schema's part of a whole-database manifest, so it can be compared with a server that also holds other schemas. */
+export function scopeManifest(manifest, schema) {
+  const inSchema = (name) => name.startsWith(schema + '.');
+  const s = manifest.structure ?? {};
+  return {
+    ...manifest,
+    tables: manifest.tables.filter((t) => t.schema === schema),
+    structure: {
+      schemas: (s.schemas ?? []).filter((x) => x.name === schema), columns: (s.columns ?? []).filter((x) => inSchema(x.relation)),
+      constraints: (s.constraints ?? []).filter((x) => inSchema(x.relation)), indexes: (s.indexes ?? []).filter((x) => inSchema(x.name)),
+      sequences: (s.sequences ?? []).filter((x) => inSchema(x.name)), triggers: (s.triggers ?? []).filter((x) => inSchema(x.relation)),
+      functions: (s.functions ?? []).filter((x) => inSchema(x.name)), extensions: [],
+    },
+  };
+}
+
+/**
+ * Moves the CarScope tables of a rehearsal copy from public into a private schema, in one transaction, and proves that
+ * rows and definitions are unchanged. Only a rehearsal database qualifies; the archive of the result is what S3 restores.
+ */
+export async function runRelocate({ url, schema, env = process.env }) {
+  let connection, target;
+  try {
+    connection = assertRehearsalTarget(url, env);
+    target = assertPrivateSchemaName(schema);
+  } catch (error) {
+    return { checks: [check('RELOCATE_POLICY', 'FAIL', safeCode(error))] };
+  }
+  const checks = [check('RELOCATE_POLICY', 'PASS', 'loopback rehearsal database')];
+  let db;
+  try {
+    db = await openClient(connection);
+  } catch (error) {
+    return { checks: [...checks, check('RELOCATE_CONNECT', 'BLOCKED', 'cannot connect: ' + safeCode(error))] };
+  }
+  try {
+    await db.query('BEGIN');
+    const tables = (await db.query("SELECT tablename FROM pg_tables WHERE schemaname='public' ORDER BY 1")).rows.map((r) => r.tablename);
+    const foreign = tables.filter((t) => !/^cs_[a-z0-9_]+$/.test(t));
+    if (foreign.length || !tables.includes('cs_sessions')) throw Object.assign(new Error(), { code: foreign.length ? 'PUBLIC_HOLDS_OTHER_TABLES' : 'NO_CARSCOPE_TABLES' });
+    const before = await captureState(db);
+    await db.query('CREATE SCHEMA ' + target);
+    for (const table of tables) await db.query(`ALTER TABLE public.${table} SET SCHEMA ${target}`);
+    const after = await captureState(db);
+    const moved = (value) => JSON.stringify(value).replaceAll('public.', target + '.');
+    const sameStructure = STRUCTURE_KEYS.filter((k) => k !== 'schemas').every((k) => moved(before.structure[k]) === JSON.stringify(after.structure[k]));
+    const sameRows = JSON.stringify(before.tables.map((t) => [t.name, t.rows, t.digest])) === JSON.stringify(after.tables.map((t) => [t.name, t.rows, t.digest]));
+    if (!sameStructure || !sameRows || after.tables.some((t) => t.schema !== target)) throw Object.assign(new Error(), { code: 'RELOCATE_CHANGED_DATA' });
+    await db.query('COMMIT');
+    const rows = after.tables.reduce((n, t) => n + t.rows, 0);
+    checks.push(check('RELOCATE_APPLY', 'PASS', `${tables.length} tables, ${rows} rows moved to ${target}; rows and definitions unchanged`));
+    return { checks };
+  } catch (error) {
+    await db.query('ROLLBACK').catch(() => {});
+    checks.push(check('RELOCATE_APPLY', 'FAIL', 'nothing changed: ' + safeCode(error)));
+    return { checks };
+  } finally {
+    await db.end().catch(() => {});
+  }
+}
+
+/**
+ * Read-only comparison of one schema with a manifest. It may read a remote server under the same dated approval as a
+ * backup, and it has no statement that writes: this is how a separately approved restore is checked before cutover.
+ */
+export async function runCompare({ archive, url, schema, caPemBase64, allowRemoteReadOnly = false, approvedOn, now = Date.now, env = process.env }) {
+  let source, manifest, target;
+  try {
+    source = assertBackupSource(url, { allowRemoteReadOnly, g3ApprovedOn: approvedOn, now, env });
+    target = assertPrivateSchemaName(schema);
+    manifest = readManifest(archive);
+  } catch (error) {
+    return { checks: [check('COMPARE_POLICY', 'FAIL', safeCode(error))] };
+  }
+  const checks = [check('COMPARE_POLICY', source.scope === 'ISOLATED_LOOPBACK' ? 'PASS' : 'MANUAL', source.scope === 'ISOLATED_LOOPBACK' ? 'loopback server' : 'remote server under a dated approval, read only')];
+  let db;
+  try {
+    db = await openClient(source.connection, { caPemBase64 });
+  } catch (error) {
+    return { checks: [...checks, check('COMPARE_CONNECT', 'BLOCKED', 'cannot connect: ' + safeCode(error))] };
+  }
+  const pool = { connect: async () => ({ query: (...a) => db.query(...a), release: () => {} }) };
+  try {
+    await db.query('BEGIN TRANSACTION READ ONLY');
+    let state;
+    try { state = await captureState(db, { schema: target }); } finally { await db.query('ROLLBACK').catch(() => {}); }
+    checks.push(...compareState(scopeManifest(manifest, target), state));
+    checks.push(...(await inspectDatabase(pool, { expectedSchema: target, requireTls: !source.connection.loopback })).map((c) => ({ ...c, id: 'COMPARE_' + c.id })));
+    return { checks };
+  } catch (error) {
+    checks.push(check('COMPARE', 'FAIL', 'comparison failed: ' + safeCode(error)));
+    return { checks };
+  } finally {
+    await db.end().catch(() => {});
+  }
 }
 
 /** Base for every verdict: a skipped or failed check can never be reported as a completed rehearsal. */

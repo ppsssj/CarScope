@@ -5,6 +5,8 @@ It has no deploy, migration or environment command. [Gates, deployment order, DD
 
 P9-A3 adds a separate rehearsal CLI, `npm run recovery -- <environment|create-isolated|backup|inspect|restore|verify>`. It restores only into a loopback `carscope_rehearsal_*` database, and no argument widens that. [Runbook and G3/G4 checklists](../../docs/p9-a3-db-recovery-readiness.md).
 
+P9-A4 adds `relocate` (rehearsal copy only) and a read-only `compare` to that CLI, and `npm run test:pg-matrix`, which runs the PostgreSQL suites on disposable Docker servers for 16 and 17 with TLS. [Supabase analysis and cutover runbook](../../docs/p9-a4-supabase-migration.md).
+
 P5-A2 adds `ev-charge.port` with strict schema-v2 keys `flapDamage`, `debris`, `visibleDamage`.
 Washer v1, four tire v2 tasks, protocolVersion 1 and auth/TLS/session/receipt rules are preserved.
 [Charge result and Native follow-up](../../docs/contracts/charge-port-mobile-result-v2.md) ·

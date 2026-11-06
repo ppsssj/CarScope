@@ -22,19 +22,26 @@ const integer = value => {
 export class PostgreSQLSessionStore {
   kind = 'postgresql-shared';
   #pool;
-  constructor({ pool } = {}) {
+  #expectedSchema;
+  constructor({ pool, expectedSchema = null } = {}) {
     if (!pool || typeof pool.connect !== 'function' || typeof pool.query !== 'function' || typeof pool.end !== 'function') {
       throw new Error('POSTGRES_POOL_REQUIRED');
     }
     this.#pool = pool;
+    this.#expectedSchema = expectedSchema;
   }
-  static async open({ pool }) {
-    const store = new PostgreSQLSessionStore({ pool });
+  static async open({ pool, expectedSchema = null }) {
+    const store = new PostgreSQLSessionStore({ pool, expectedSchema });
     await store.initialize();
     return store;
   }
   async #transaction(fn) {
     const c = await this.#pool.connect();
+    // A pool removes its error listener from a checked-out client. A lost connection rejects the running query and also
+    // emits this event, which would otherwise be uncaught and end the process with every other request.
+    let lost = null;
+    const onLost = (error) => { lost = error; };
+    c.on('error', onLost);
     try {
       await c.query('BEGIN');
       const out = await fn(c);
@@ -43,10 +50,16 @@ export class PostgreSQLSessionStore {
     } catch (error) {
       try { await c.query('ROLLBACK'); } catch { /* Preserve the original failure, never fall back to memory. */ }
       throw error;
-    } finally { c.release(); }
+    } finally { c.removeListener('error', onLost); c.release(lost ?? undefined); }
   }
   async initialize() {
     return this.#transaction(async c => {
+      // Unqualified DDL lands wherever search_path points. On a platform that exposes `public`, the wrong path is a
+      // data exposure, so a configured schema is proved before the first statement can create anything.
+      if (this.#expectedSchema !== null) {
+        const at = await c.query('SELECT current_schema() AS name');
+        if (at.rows[0]?.name !== this.#expectedSchema) throw new Error('DATABASE_SCHEMA_MISMATCH');
+      }
       await c.query('SELECT pg_advisory_xact_lock(821801)');
       const schema = await readFile(new URL('./postgres-schema.sql', import.meta.url), 'utf8');
       await c.query(schema);
