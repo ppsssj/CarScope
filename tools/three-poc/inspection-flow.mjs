@@ -7,6 +7,7 @@ import { TIRES } from './inspection-tires.mjs';
 import { WIPER_PARTS, LIGHT_PARTS } from './visibility-parts.mjs';
 import {targetForPart} from './mobile-result-contract.mjs';
 import {isRecordId} from './inspection-history-contract.mjs';
+import {partListItem,partsInArea} from './inspection-parts.mjs';
 
 export const STATES = Object.freeze({
   IDLE: 'IDLE',
@@ -40,25 +41,13 @@ export const EVENTS = Object.freeze({
 export const INSPECTION_AREAS = Object.freeze([
   {
     id: 'hood', label: '보닛 · 전방 수납부', status: 'available',
-    components: [
-      { id: 'washer-fluid-cap', label: '워셔액', status: 'available' },
-      { id: 'coolant-reservoir', label: '냉각수 리저버', status: 'preview', location: '모델 전방 구획의 차량 우측 중간' },
-      { id: 'lcw-coolant-reservoir', label: '저전도 냉각수', status: 'planned' },
-      { id: 'brake-fluid-reservoir', label: '브레이크액 리저버', status: 'preview', location: '모델 전방 구획의 차량 좌측 뒤쪽' },
-      { id: 'battery-12v', label: '12V 보조 배터리', status: 'preview', location: '모델 전방 구획의 차량 좌측 앞쪽' },
-      { id: 'fuse-box', label: '퓨즈박스', status: 'preview', location: '모델 전방 구획의 차량 좌측 중간' },
-    ],
+    components: partsInArea('hood').map(partListItem),
   },
   { id: 'tires', label: '타이어 · 네 바퀴', status: 'available', components: TIRES },
-  { id: 'ev-battery', label: 'EV 배터리 · 하부 보기', status: 'available', components: [
-    { id: 'ev-battery.pack', label: '고전압 배터리 팩', status: 'preview' },
-  ] },
-  { id: 'ev-charge', label: 'EV 충전구', status: 'available', components: [
-    { id: 'ev-charge.port', label: '충전구 외곽', status: 'preview' },
-    { id: 'ev-charge.flap', label: '충전구 덮개', status: 'preview' },
-  ] },
-  { id: 'wipers', label: '전면 와이퍼', status: 'available', components: WIPER_PARTS.map((id,i)=>({id,label:i===0?'차량 좌측 전면 와이퍼':'차량 우측 전면 와이퍼',status:'preview'})) },
-  { id: 'lights', label: '전조등', status: 'available', components: LIGHT_PARTS.map(p=>({id:p.id,label:p.label,status:'preview'})) },
+  { id: 'ev-battery', label: 'EV 배터리 · 하부 보기', status: 'available', components: partsInArea('ev-battery').map(partListItem) },
+  { id: 'ev-charge', label: 'EV 충전구', status: 'available', components: partsInArea('ev-charge').map(partListItem) },
+  { id: 'wipers', label: '전면 와이퍼', status: 'available', components: partsInArea('wipers').map(partListItem) },
+  { id: 'lights', label: '전조등', status: 'available', components: partsInArea('lights').map(partListItem) },
 ]);
 
 export const HOOD_OPEN_DEG = 60; // axis A: P3-A1 simulation found no new mesh interference over 0–60°
