@@ -130,7 +130,7 @@ node bin/db-recovery.mjs inspect --archive $out\migration.dump --docker-image po
 |---|---|---|
 | `CREATEROLE` + DB 소유자 | **성공.** 역할 생성, search_path, 비밀번호, 임시 권한, 회수까지 동작 | PASS |
 | `CREATEROLE` + DB의 CREATE, **grant option 없음** | PostgreSQL은 오류가 아니라 경고 `no privileges were granted`만 낸다. **스크립트가 직접 확인해 중단하고 전체 롤백** | PASS. 수정 전에는 조용히 성공할 경로였다 |
-| `CREATEROLE`, DB 권한 없음 | 42501, 전체 롤백 | PASS |
+| `CREATEROLE`, PUBLIC 권한만 | 위와 같다. 모든 역할이 PUBLIC으로 `CONNECT`를 가져 42501이 아니라 **경고만** 나온다. 스크립트가 중단하고 전체 롤백 | PASS |
 | `CREATEROLE` 없음 | 42501, 전체 롤백 | PASS |
 
 `carscope_private`의 소유자가 `postgres`라는 사실은 `postgres`가 스키마를 만들 수 있음을 시사할 뿐, 그 권한을 **남에게 줄 수 있음**(grant option)을 뜻하지 않는다. DB 소유자가 누구인지는 **NOT_VERIFIED**이므로 먼저 읽기 전용으로 확인한다.

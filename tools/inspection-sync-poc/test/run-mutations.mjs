@@ -63,10 +63,10 @@ function run(suite, pattern) {
     cwd: TOOL, env: { ...process.env, PG_MATRIX_CONTAINER: '' }, encoding: 'utf8', timeout: 280_000, windowsHide: true, maxBuffer: 1 << 26,
   });
   const count = (name) => Number(new RegExp('^(?:# |\\u2139 )' + name + ' (\\d+)', 'm').exec(r.stdout)?.[1] ?? -1);
-  return { status: r.status, pass: count('pass'), fail: count('fail'), broken: /ERR_MODULE_NOT_FOUND|SyntaxError|ReferenceError/.test(r.stdout + r.stderr) };
+  return { status: r.status, timedOut: r.status === null, pass: count('pass'), fail: count('fail'), cancelled: count('cancelled'), broken: /ERR_MODULE_NOT_FOUND|SyntaxError|ReferenceError/.test(r.stdout + r.stderr) };
 }
 
-const tally = { KILLED: 0, SURVIVED: 0, EQUIVALENT: 0, INVALID: 0, NOT_APPLIED: 0 };
+const tally = { KILLED: 0, SURVIVED: 0, EQUIVALENT: 0, TIMEOUT: 0, INVALID: 0, NOT_APPLIED: 0 };
 const controls = new Map();
 try {
   for (const key of new Set(M.map((m) => m[4] + '|' + m[5]))) {
@@ -83,12 +83,13 @@ try {
     const r = run(suite, pattern);
     writeFileSync(path, original);
     const valid = control.status === 0 && control.pass > 0 && !r.broken;
-    const verdict = !valid ? 'INVALID' : r.status !== 0 ? 'KILLED' : equivalent ? 'EQUIVALENT' : 'SURVIVED';
+    // A kill needs a failed test. A run that hit the limit or only cancelled tests has not shown what caught the defect.
+    const verdict = !valid ? 'INVALID' : r.timedOut ? 'TIMEOUT' : r.status !== 0 ? (r.fail > 0 ? 'KILLED' : 'TIMEOUT') : equivalent ? 'EQUIVALENT' : 'SURVIVED';
     tally[verdict]++;
-    console.log(`${verdict.padEnd(10)} ${name} [${pattern}] pass=${r.pass} fail=${r.fail} control_pass=${control.pass}`);
+    console.log(`${verdict.padEnd(10)} ${name} [${pattern}] pass=${r.pass} fail=${r.fail} cancelled=${r.cancelled} control_pass=${control.pass}`);
   }
 } finally {
   rmSync(WORK, { recursive: true, force: true });
 }
 console.log(`TOTAL ${M.length} ${JSON.stringify(tally)}`);
-if (tally.SURVIVED || tally.INVALID || tally.NOT_APPLIED) process.exitCode = 1;
+if (tally.SURVIVED || tally.INVALID || tally.NOT_APPLIED || tally.TIMEOUT) process.exitCode = 1;

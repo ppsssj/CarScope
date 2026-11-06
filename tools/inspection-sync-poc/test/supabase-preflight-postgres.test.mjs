@@ -60,6 +60,7 @@ async function harness(t) {
     await Promise.allSettled(pools.map((p) => p.end()));
     for (const name of databases) await admin.query(`DROP DATABASE IF EXISTS ${name} WITH (FORCE)`).catch(() => {});
     for (const role of roles) await admin.query(`DROP ROLE IF EXISTS ${role}`).catch(() => {});
+    await admin.query('DROP ROLE IF EXISTS carscope_app'); // After its databases: a failure here would leak into the next test.
     await admin.end();
     rmSync(dir, { recursive: true, force: true });
   });
@@ -91,7 +92,6 @@ async function harness(t) {
     await p.owner.query(`ALTER ROLE carscope_app PASSWORD '${password}'`);
     return { password, url: urlAs('carscope_app', password, p.name) };
   };
-  t.after(async () => { await admin.query('DROP ROLE IF EXISTS carscope_app').catch(() => {}); });
   const stateOf = async (p, options) => {
     const c = await p.connect();
     try {
@@ -145,7 +145,9 @@ async function cli(t, env) {
   const closed = new Promise((resolve) => child.once('close', resolve));
   const stop = async () => { child.kill(); return closed; };
   t.after(stop);
-  return { port, closed, stop, output: () => output, alive: () => child.exitCode === null };
+  // A server that should have refused to start would keep running, so waiting for its exit needs a limit.
+  const exited = () => Promise.race([closed, sleep(40_000).then(() => 'STILL_RUNNING')]);
+  return { port, closed, exited, stop, output: () => output, alive: () => child.exitCode === null };
 }
 
 function edge(port, path, { method = 'GET', bearer, body } = {}) {
@@ -304,12 +306,12 @@ test('S2 premise: a non-superuser database owner with CREATEROLE can run the ope
   const h = await harness(t);
   const p = await h.platform();
   const premise = (await p.owner.query(sql('supabase-s2-premise-check.sql'))).rows[0];
-  assert.equal(premise.is_superuser, false);
-  assert.equal(premise.can_create_roles, true);
-  assert.equal(premise.database_owner, p.adminRole);
-  assert.equal(premise.can_grant_create_on_database, true);
-  assert.equal(premise.carscope_schema_absent, true);
-  assert.equal(premise.carscope_app_absent, true);
+  assert.equal(premise.is_superuser, false, 'is_superuser');
+  assert.equal(premise.can_create_roles, true, 'can_create_roles');
+  assert.equal(premise.database_owner, p.adminRole, 'database_owner');
+  assert.equal(premise.can_grant_create_on_database, true, 'can_grant_create_on_database');
+  assert.equal(premise.carscope_schema_absent, true, 'carscope_schema_absent');
+  assert.equal(premise.carscope_app_absent, true, 'carscope_app_absent');
   assert.equal(premise.server_major, Number(process.env.PG_MATRIX_MAJOR ?? premise.server_major));
   const before = await p.owner.query('SELECT count(*)::int AS n FROM pg_roles');
 
@@ -344,7 +346,7 @@ async function runBootstrapAs(url) {
 
 for (const [name, attributes, grant, expected] of [
   ['CREATEROLE and CREATE on the database, but no grant option: PostgreSQL only warns, so the script must raise', 'LOGIN CREATEROLE', 'CREATE', 'P0001'],
-  ['CREATEROLE but no right on the database at all', 'LOGIN CREATEROLE', null, '42501'],
+  ['CREATEROLE and only the PUBLIC rights on the database: also just a warning, so the script must raise', 'LOGIN CREATEROLE', null, 'P0001'],
   ['no CREATEROLE', 'LOGIN', 'CREATE', '42501'],
 ]) {
   test(`S2 premise not met, ${name}: stops and leaves nothing`, { skip, timeout: 60_000 }, async (t) => {
@@ -374,7 +376,7 @@ test('fail closed on the wrong search_path: nothing lands in public, and the gua
   const cs = async () => (await p.owner.query("SELECT tablename FROM pg_tables WHERE schemaname='public' AND tablename LIKE 'cs\\_%'")).rows.length;
 
   const refused = await cli(t, { DATABASE_URL: app.url, CARSCOPE_DB_SCHEMA: SCHEMA });
-  assert.equal(await refused.closed, 1);
+  assert.equal(await refused.exited(), 1);
   assert.equal(refused.output().trim(), 'RENDER_STATEFUL_CONFIGURATION_FAILED');
   assert.equal(await cs(), 0, 'the guard stopped the DDL');
 
@@ -513,7 +515,7 @@ test('TLS: a pinned CA verifies chain and hostname, and the server refuses this 
   ]) {
     await t.test(`${name}: exit 1 with one sanitized line`, async () => {
       const server = await boot(url, extra);
-      assert.equal(await server.closed, 1);
+      assert.equal(await server.exited(), 1);
       assert.equal(server.output().trim(), 'RENDER_STATEFUL_CONFIGURATION_FAILED');
     });
   }
@@ -546,7 +548,7 @@ test('outage: fail closed, no fallback, recovery without restart, data intact', 
     const during = await edge(server.port, `/v1/sessions/${x.created.sessionId}`, { bearer: x.created.receiverToken }).catch(() => null);
     assert.ok(during === null || during.status >= 500, 'no answer from anywhere else while the database is down');
     const cold = await cli(t, env);
-    assert.equal(await cold.closed, 1, 'a new instance refuses to start without its database');
+    assert.equal(await cold.exited(), 1, 'a new instance refuses to start without its database');
     assert.equal(cold.output().trim(), 'RENDER_STATEFUL_CONFIGURATION_FAILED');
   } finally {
     docker('start', container);
