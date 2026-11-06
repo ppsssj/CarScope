@@ -36,9 +36,10 @@ class InspectionSyncEntryTest {
         // No resume: this integration/layout test deliberately does not start the Pleos SDK lease.
         val b = Robolectric.buildActivity(InspectionActivity::class.java).create(); val a = b.get()
         val root = a.findViewById<ViewGroup>(android.R.id.content).getChildAt(0) as ViewGroup
-        assertEquals(2, root.childCount)
+        assertEquals("page, management panel, inline QR", 3, root.childCount)
         assertTrue(root.getChildAt(0) is android.webkit.WebView)
         assertEquals(View.GONE, root.getChildAt(1).visibility)
+        assertEquals(View.GONE, root.getChildAt(2).visibility)
         assertNotNull(root.findViewWithTag<Button>("close-panel"))
         b.destroy()
     }

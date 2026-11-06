@@ -39,6 +39,7 @@ export function createAndroidNativeInspectionAdapter({diagnostics}={}){
       const poll=async()=>{
         try{
           const value=await send('poll',{},next);if(!current())return;
+          next.onReceiver?.(value.receiver??null);
           if(value.unavailable){diag.failed('poll','NATIVE_NOTICE',{notice:value.unavailable});next.onUnavailable(value.unavailable);return;}
           for(const binding of value.bindings){
             if(performance.now()-startedAt.get(value)>2000)throw failure('DELAYED_BINDING');
@@ -60,6 +61,9 @@ export function createAndroidNativeInspectionAdapter({diagnostics}={}){
       send('open',{},next).then(()=>{if(current())poll();}).catch(error=>{if(current()){diag.failed('open',classify(error));next.onUnavailable();}});
       return()=>{stopped=true;clearTimeout(timer);if(context===next){context=null;owner++;}diag.sessionClosing();send('close',{},next).then(()=>diag.sessionClosed('OK')).catch(error=>diag.sessionClosed(classify(error)));};
     },
+    /** Layout and fixed actions only. The QR stays in Native and never passes through this page. */
+    panelSlot(slot){return send('panel',slot);},
+    control(action){return send('control',{action});},
     requestTask(request){
       if(!context||request.localSessionId!==context.localSessionId||request.generation!==context.generation)throw Error('Old session');
       return send('request',{taskId:request.taskId,partId:request.partId});

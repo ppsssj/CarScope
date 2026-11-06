@@ -55,7 +55,7 @@ test('a transition without a message clears the toast and leaves no timer behind
 
 test('request messages claim only the confirmed step', () => {
   const { SENDING, ACCEPTED, ACCEPTED_ACTIVE_BINDING, REJECTED, FAILED, IN_FLIGHT, NOT_CONNECTED, CHANNEL_CLOSED } = MOBILE_REQUEST_TEXT;
-  assert.match(ACCEPTED, /세션 생성 전/);
+  assert.match(ACCEPTED, /준비/);
   for (const text of Object.values(MOBILE_REQUEST_TEXT)) assert.doesNotMatch(text, /QR.*(생성|완료)|성공|연결됐|세션이 생성/, text);
   for (const text of [SENDING, REJECTED, FAILED, IN_FLIGHT, NOT_CONNECTED, CHANNEL_CLOSED]) assert.doesNotMatch(text, /접수/, text);
   for (const text of [REJECTED, FAILED, NOT_CONNECTED, IN_FLIGHT, CHANNEL_CLOSED]) assert.doesNotMatch(text, /다른 부품/, 'never names a cause the page cannot confirm');

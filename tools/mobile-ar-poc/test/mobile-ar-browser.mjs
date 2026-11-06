@@ -86,7 +86,7 @@ try{
     const receiver=new ReceiverClient({baseUrl:sync.url});const session=await receiver.create(task.id);
     await page.goto(sync.url+'/'+session.fragment);await page.waitForFunction(()=>!!(window.__checklistInspection??window.__selfInspection));
     assert.equal(await page.evaluate(()=>location.hash),'');assert.equal(await page.locator('.task-links').count(),0);
-    await page.locator('#sync-claim').click();await page.waitForFunction(()=>document.querySelector('#sync-claim').disabled);
+    await page.waitForFunction(()=>document.querySelector('#sync-claim').disabled);
     await start(false);
     if(task.id==='washer-fluid'){
       await next('#unsure-check');await next('#primary');

@@ -15,7 +15,7 @@ if (!out || !path.isAbsolute(out) || !path.resolve(out).toLowerCase().startsWith
 await mkdir(out, { recursive: true });
 
 const summary = { scope: url ? 'DOM_AND_REAL_REFERENCE_GLB_PAGE_SCRIPTED_ADAPTER' : 'DOM_ONLY_SCRIPTED_ADAPTER_NO_3D', avd: 'AVD_NOT_RUN', native: 'NOT_RUN', checks: [], failures: [], errors: [] };
-const TEXT = { SENDING: 'Native 점검 요청 전달 중입니다', ACCEPTED: 'Native 수신 화면 요청이 접수됐습니다 · 세션 생성 전입니다', REJECTED: '점검 요청을 시작할 수 없습니다', FAILED: 'Native 연결을 확인하지 못했습니다', IN_FLIGHT: '이전 요청의 Native 응답을 기다리는 중입니다 · 새 요청을 보내지 않았습니다' };
+const TEXT = { SENDING: 'Native 점검 요청 전달 중입니다', ACCEPTED: '모바일 점검을 준비합니다 · QR이 표시되면 스캔하세요', REJECTED: '점검 요청을 시작할 수 없습니다', FAILED: 'Native 연결을 확인하지 못했습니다', IN_FLIGHT: '이전 요청의 Native 응답을 기다리는 중입니다 · 새 요청을 보내지 않았습니다' };
 const FRONT_LEFT = 'tire.front-left', FRONT_RIGHT = 'tire.front-right';
 const REAL = 'createNativeInspectionResults({adapter:createAndroidNativeInspectionAdapter()})';
 
@@ -192,22 +192,42 @@ async function realPageSection() {
     await context.close();
   }
   { const { context, page } = await openPage();
-    await scenario('A5 a delivered mobile candidate is not selected by a local confirm; selection stays explicit and the card follows it', async () => {
+    await scenario('A5 the newest verified mobile result is shown, a local confirm stays separate, and an earlier record stays reachable', async () => {
       await toTire(page);
       const result = wireResult(FRONT_LEFT, 'UNABLE', '21111111-1111-4111-8111-111111111111');
       assert.equal((await fixture(page, '(f,[r,p])=>f.publish(r,p)', [result, FRONT_LEFT])).delivered, 'STAGED');
+      assert.equal(await page.evaluate(() => __inspect.nativeResults().selected[`tire.front-left`]), result.inspectionId);
       await answer(page);
       const seen = await confirmAndRead(page);
-      assert.equal(seen.after.card, 'FINDINGS_REPORTED', 'local record shown, candidate not applied');
-      assert.equal(await page.evaluate(() => __inspect.nativeResults().selected[`tire.front-left`] ?? null), null);
-      await page.locator(`[data-record="${result.inspectionId}"]`).click();
-      const chosen = await page.evaluate(id => ({ card: document.querySelector('#mobilePartResults [data-inspection-state]').dataset.inspectionState, list: document.querySelector(`button.item[data-id="${id}"] [data-inspection-state]`).dataset.inspectionState, local: document.querySelector('.inspection-record [data-inspection-state]').dataset.inspectionState, model: __inspect.resultMap().find(r => r.partId === id).status, focused: document.activeElement?.dataset.record }), FRONT_LEFT);
-      assert.deepEqual(chosen, { card: 'UNABLE', list: 'UNABLE', local: 'FINDINGS_REPORTED', model: 'UNABLE', focused: result.inspectionId });
+      assert.equal(seen.after.card, 'UNABLE', 'the mobile result is still the one shown');
+      const read = id => ({ card: document.querySelector('#mobilePartResults [data-inspection-state]').dataset.inspectionState, list: document.querySelector(`button.item[data-id="${id}"] [data-inspection-state]`).dataset.inspectionState, local: document.querySelector('.inspection-record [data-inspection-state]').dataset.inspectionState, model: __inspect.resultMap().find(r => r.partId === id).status });
+      assert.deepEqual(await page.evaluate(read, FRONT_LEFT), { card: 'UNABLE', list: 'UNABLE', local: 'FINDINGS_REPORTED', model: 'UNABLE' });
+      await page.locator('.record-history summary').click();
+      await page.locator('[data-action=select-result][data-record="LOCAL"]').click();
+      assert.deepEqual(await page.evaluate(read, FRONT_LEFT), { card: 'FINDINGS_REPORTED', list: 'FINDINGS_REPORTED', local: 'FINDINGS_REPORTED', model: 'FINDINGS_REPORTED' });
+      assert.equal(await page.evaluate(() => document.activeElement?.dataset.record), 'LOCAL', 'focus stays in the earlier-records area');
     });
     await context.close();
   }
   { const { context, page } = await openPage();
     await toResult(page, FRONT_LEFT);
+    await scenario('Q1 the part panel leaves room for the QR, reports where it is, and gives the room back', async () => {
+      await fixture(page, '(f,[t,at])=>f.receiver({taskId:t,phase:"QR_READY",canCancel:true,inviteExpiresAt:at})', [FRONT_LEFT, Date.now() + 600000]);
+      await page.waitForFunction(() => document.querySelector('#mobileQrSlot'));
+      const place = await page.evaluate(async () => { const f = await import('./test/native-results-browser-fixture.mjs'); const r = document.querySelector('#mobileQrSlot').getBoundingClientRect(), p = document.getElementById('panel').getBoundingClientRect(); return { last: f.panelSlots.at(-1), r: [r.left, r.top, r.width, r.height], inside: r.top >= p.top && r.bottom <= p.bottom && r.left >= p.left && r.right <= p.right, text: document.getElementById('mobilePartResults').innerHTML }; });
+      assert.equal(place.inside, true, 'revealed inside the panel');
+      assert.deepEqual([place.last.slot, place.last.x, place.last.y, place.last.size], ['SHOWN', Math.round(place.r[0]), Math.round(place.r[1]), Math.round(place.r[2])]);
+      assert.equal(Math.round(place.r[2]), Math.round(place.r[3]), 'square');
+      assert.ok(place.r[2] >= 120, 'large enough to scan');
+      assert.doesNotMatch(place.text, /invite=|#v=2|data:image/);
+      await page.screenshot({ path: path.join(out, 'inline-qr-slot.png') });
+      await page.locator('[data-action=mobile-cancel]').click();
+      assert.deepEqual(await fixture(page, 'f=>f.controls.slice()'), ['cancel']);
+      await fixture(page, '(f,[t])=>f.receiver({taskId:t,phase:"CONNECTED"})', [FRONT_LEFT]);
+      await page.waitForFunction(() => !document.querySelector('#mobileQrSlot'));
+      assert.equal((await fixture(page, 'f=>f.panelSlots.at(-1)')).slot, 'NONE');
+      await fixture(page, '(f,[t])=>f.receiver({taskId:t,phase:"CANCELLED"})', [FRONT_LEFT]);
+    });
     await scenario('B1 Native takes the request: sending, then received, and no claim of a created session', async () => {
       const held = 'window.__held=f.deferredReply();f.setRequestReply(window.__held.reply)';
       await fixture(page, `f=>{${held}}`);

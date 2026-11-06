@@ -117,7 +117,7 @@ type InspectionHistory = {
 
 - 함수는 reject하지 않는다. `EMPTY`만 "기록 없음"이고, 다른 실패를 기록 없음으로 표시하면 안 된다.
 - `status: "OK"`를 정상 판정으로 표시하지 않는다. `reportState`(`NO_FINDINGS_REPORTED`)를 쓴다.
-- `authorityNamespace`가 `AVD_SIMULATOR`면 시뮬레이터 기록임을 표시하고 차량 소유자의 기록이라고 쓰지 않는다.
+- `authorityNamespace`가 `AVD_SIMULATOR`면 시뮬레이터 기록임을 표시하고 차량 소유자의 기록이라고 쓰지 않는다. P9-UX부터 이 기록의 `acceptedAt`은 시뮬레이터의 자동 수신 확인 시각일 수 있으므로 소유자의 승인 시각으로 표시하지 않는다.
 - 현재 세션 결과나 SDK 상태와 합치지 않는다. 이 모듈은 어느 쪽도 읽거나 쓰지 않는다.
 
 기존 P8 기록 화면은 `VERIFIED_NATIVE` provider만 받으므로 이 provider를 연결해도 `UNAVAILABLE`이다. 시뮬레이터 기록은 이 클라이언트로 읽는다.

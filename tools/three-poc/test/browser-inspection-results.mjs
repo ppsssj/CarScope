@@ -19,10 +19,10 @@ try{
     const context=await browser.newContext({viewport,reducedMotion:'reduce'}),page=await context.newPage();page.on('pageerror',e=>summary.errors.push(e.message));
     await page.goto(root);await page.waitForFunction(()=>!!window.fixtureTest);
     for(const {target:t,result:r}of fixtures)assert.equal((await page.evaluate(async({t,r})=>window.fixtureTest.publish(r,t.partId),{t,r})).delivered,'STAGED');
-    assert.equal(await page.evaluate(()=>fixtureTest.rows().filter(r=>r.status==='NOT_INSPECTED').length),17);
-    for(const {target:t,result:r}of fixtures){await page.locator(`[data-action=result-detail][data-id="${t.partId}"]`).click();await page.locator(`[data-record="${r.inspectionId}"]`).click();assert.match(await page.locator('.part-results').textContent(),/MOBILE/);assert.match(await page.locator('.part-results').textContent(),/2026-11-04T01:02:03.000Z/);await page.locator('[data-back]').click();}
+    assert.equal(await page.evaluate(()=>fixtureTest.rows().filter(r=>r.status==='NOT_INSPECTED').length),0,'each newest verified result is shown');
+    for(const {target:t,result:r}of fixtures){await page.locator(`[data-action=result-detail][data-id="${t.partId}"]`).click();assert.match(await page.locator('.part-results').textContent(),/MOBILE/);assert.match(await page.locator('.part-results').textContent(),/2026-11-04T01:02:03.000Z/);await page.locator('[data-back]').click();}
     assert.equal(await page.evaluate(()=>fixtureTest.rows().filter(r=>r.source==='MOBILE').length),17);assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
-    await page.screenshot({path:path.join(out,`dom-${viewport.width}.png`),fullPage:true});summary.checks.push(`PASS ${viewport.width} DOM: 17 staged/explicit selections, statuses, original time, provenance, no overflow`);await context.close();
+    await page.screenshot({path:path.join(out,`dom-${viewport.width}.png`),fullPage:true});summary.checks.push(`PASS ${viewport.width} DOM: 17 received results shown, statuses, original time, provenance, no overflow`);await context.close();
   }
   if(process.env.CARSCOPE_3D_TEST_URL){
     const context=await browser.newContext({viewport:{width:1440,height:960},reducedMotion:'reduce'}),page=await context.newPage();page.setDefaultTimeout(25000);page.on('pageerror',e=>summary.errors.push(e.message));
@@ -40,17 +40,17 @@ try{
     for(const key of ['damage','debris','wear'])await page.locator(`input[data-check=${key}][value=FOUND]`).check();await page.locator('[data-action=confirm-tire]').click();
     const localBefore=await page.evaluate(()=>JSON.stringify(__inspect.userInspection()));
     for(const {target:t,result:r}of fixtures)assert.equal((await page.evaluate(async({t,r})=>{const f=await import('./test/native-results-browser-fixture.mjs');return f.publish(r,t.partId);},{t,r})).delivered,'STAGED');
-    assert.equal(await page.evaluate(()=>__inspect.resultMap().filter(r=>r.source==='MOBILE').length),0);assert.equal(await page.evaluate(()=>JSON.stringify(__inspect.userInspection())),localBefore);
+    assert.equal(await page.evaluate(()=>__inspect.resultMap().filter(r=>r.source==='MOBILE').length),17);assert.equal(await page.evaluate(()=>JSON.stringify(__inspect.userInspection())),localBefore);
     await page.locator('[data-action=product-summary]').click();await page.waitForFunction(()=>__inspect.state.name==='INSPECTION_SUMMARY'&&!__inspect.busy);
     for(const {target:t,result:r}of fixtures.slice(0,16)){
       await page.locator(`[data-action=result-detail][data-id="${t.partId}"]`).click();await page.waitForFunction(()=>__inspect.state.name==='PART_RESULT'&&!__inspect.busy);
       if(t.taskId==='lcw-coolant-reservoir')assert.match(await page.locator('#panel').textContent(),/형상이 없거나/);
       const geometryCount=await page.evaluate(()=>__inspect.renderInfo.geometries);
-      await page.locator(`[data-record="${r.inspectionId}"]`).click();assert.equal(await page.evaluate(id=>__inspect.resultMap().find(r=>r.taskId===id).source,t.taskId),'MOBILE');
+      assert.equal(await page.evaluate(id=>__inspect.resultMap().find(r=>r.taskId===id).source,t.taskId),'MOBILE');
       assert.equal(await page.evaluate(()=>__inspect.renderInfo.geometries),geometryCount,'selection of a report creates no geometry');
       await page.locator('[data-action=back]').click();await page.waitForFunction(()=>__inspect.state.name==='INSPECTION_SUMMARY'&&!__inspect.busy);
     }
-    assert.equal(await page.evaluate(()=>__inspect.resultMap().filter(r=>r.source==='MOBILE').length),16);assert.equal(await page.evaluate(()=>__inspect.resultMap().find(r=>r.taskId==='light-high-beam-right-0').status),'NOT_INSPECTED');
+    assert.equal(await page.evaluate(()=>__inspect.resultMap().filter(r=>r.source==='MOBILE').length),17);
     assert.equal(await page.evaluate(()=>__inspect.componentInfo().some(c=>c.id==='lcw-coolant-reservoir')),false);
     assert.equal(await page.evaluate(()=>__inspect.resultPaint().every(p=>{const row=__inspect.resultMap().find(r=>r.partId===p.partId);return row.status==='NOT_INSPECTED'||p.colors.every(c=>c===row.color);})),true,'all existing selected parts use the report color');
     assert.equal(await page.evaluate(()=>JSON.stringify(__inspect.userInspection())),localBefore);assert.equal(await page.evaluate(()=>JSON.stringify([__inspect.tireStatus(),__inspect.componentStatus(),__inspect.visibilityStatus()])),sdkBefore);

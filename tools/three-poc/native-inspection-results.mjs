@@ -3,7 +3,7 @@ const freeze=value=>{if(value&&typeof value==='object'){Object.values(value).for
 const copy=value=>freeze(JSON.parse(JSON.stringify(value)));
 const bindingKeys=['bindingId','localSessionId','generation','syncSessionId','taskId','partId','serverNow','expiresAt'];
 const deliveryKeys=['bindingId','localSessionId','generation','syncSessionId','taskId','inspectionId','resultDigest','result'];
-const proofKeys=['version','proofId','sessionState','bindingId','localSessionId','generation','syncSessionId','taskId','inspectionId','resultDigest','receivedAt','acceptedAt'];
+const proofKeys=['version','proofId','sessionState','confirmation','bindingId','localSessionId','generation','syncSessionId','taskId','inspectionId','resultDigest','receivedAt','acceptedAt'];
 
 /** Trusted composition only: adapter.open/verifyAccepted are never selected by URL, JSON or globals.
  * Production inspect.js composes the fixed Android asset adapter; other origins remain disconnected.
@@ -12,8 +12,18 @@ const proofKeys=['version','proofId','sessionState','bindingId','localSessionId'
 // Longer than the adapter's own bound (2 s per RPC, behind at most one RPC already queued), so it only catches an adapter that never answers.
 const REQUEST_TIMEOUT_MS=8000;
 const REQUEST_NOTICES=new Set(['NATIVE_NOT_CONNECTED','REQUEST_REJECTED','REQUEST_FAILED']);
+const CONFIRMATIONS=new Set(['NATIVE_EXPLICIT','AVD_SIMULATION_AUTO']);
+const RECEIVER_PHASES=new Set(['NOT_CONFIGURED','AUTH_WAITING','AUTH_FAILED','CREATING','QR_READY','QR_EXPIRED','CONNECTED','RESULT_RECEIVED','COMPLETED','CANCELLED','EXPIRED','FAILED','CLOSED']);
+const receiverKeys=new Set(['taskId','phase','failure','retryAvailable','canCancel','inviteExpiresAt']);
+// Native omits null fields. An unknown field or value is dropped whole: this page shows status and never holds a QR.
+function receiverStatus(raw){
+  if(!raw||typeof raw!=='object'||Object.keys(raw).some(k=>!receiverKeys.has(k))||!targetForTask(raw.taskId)||!RECEIVER_PHASES.has(raw.phase))return null;
+  const failure=raw.failure??null,inviteExpiresAt=raw.inviteExpiresAt??null;
+  if(failure!==null&&!/^[A-Z_]{1,32}$/.test(failure)||inviteExpiresAt!==null&&!epoch(inviteExpiresAt))return null;
+  return {taskId:raw.taskId,phase:raw.phase,failure,retryAvailable:raw.retryAvailable===true,canCancel:raw.canCancel===true,inviteExpiresAt};
+}
 export function createNativeInspectionResults({adapter=null,now=()=>performance.now(),hash=digestResult,requestTimeoutMs=REQUEST_TIMEOUT_MS,setTimer=(fn,ms)=>setTimeout(fn,ms),clearTimer=id=>clearTimeout(id)}={}){
-  let localSessionId=null,generation=0,closed=false,detach=null,connection='INCOMPLETE_NATIVE',notice=null,pendingRequest=null;
+  let localSessionId=null,generation=0,closed=false,detach=null,connection='INCOMPLETE_NATIVE',notice=null,pendingRequest=null,receiver=null;
   let bindings=new Map(),records=new Map(),selected=new Map();const listeners=new Set();
   const emit=()=>{for(const fn of listeners)fn();};
   const fail=code=>{notice=code;emit();return code;};
@@ -44,11 +54,13 @@ export function createNativeInspectionResults({adapter=null,now=()=>performance.
       proof=copy(await adapter.verifyAccepted(d,copyBinding(b)));
     }catch{return current(session,epochId)?fail('VERIFICATION_FAILED'):'OLD_SESSION';}
     if(!current(session,epochId)||bindings.get(b.bindingId)!==b||!live(b))return 'OLD_SESSION';
-    if(!exact(proof,proofKeys)||proof.version!==1||proof.sessionState!=='ACCEPTED'||!identifier(proof.proofId)||!matches(proof,b)||proof.inspectionId!==d.inspectionId||proof.resultDigest!==digest||!epoch(proof.receivedAt)||!epoch(proof.acceptedAt)||proof.receivedAt<b.serverNow||proof.acceptedAt<proof.receivedAt||proof.acceptedAt>b.expiresAt)return fail('INVALID_ACCEPTED_PROOF');
+    if(!exact(proof,proofKeys)||proof.version!==1||proof.sessionState!=='ACCEPTED'||!CONFIRMATIONS.has(proof.confirmation)||!identifier(proof.proofId)||!matches(proof,b)||proof.inspectionId!==d.inspectionId||proof.resultDigest!==digest||!epoch(proof.receivedAt)||!epoch(proof.acceptedAt)||proof.receivedAt<b.serverNow||proof.acceptedAt<proof.receivedAt||proof.acceptedAt>b.expiresAt)return fail('INVALID_ACCEPTED_PROOF');
     const old=records.get(d.inspectionId);
     if(old)return old.taskId===d.taskId&&old.resultDigest===digest?'DUPLICATE':fail('RESULT_CONFLICT');
     if(records.size>=100)return fail('CAPACITY');
-    records.set(d.inspectionId,copy({inspectionId:d.inspectionId,taskId:d.taskId,partId:b.partId,resultDigest:digest,result:d.result,proof,localSessionId:session,generation:epochId,bindingId:b.bindingId,syncSessionId:b.syncSessionId}));notice=null;emit();return 'STAGED';
+    records.set(d.inspectionId,copy({inspectionId:d.inspectionId,taskId:d.taskId,partId:b.partId,resultDigest:digest,result:d.result,proof,localSessionId:session,generation:epochId,bindingId:b.bindingId,syncSessionId:b.syncSessionId}));
+    // The newest verified result is the one shown. Earlier records stay in the records list.
+    selected.set(d.taskId,d.inspectionId);notice=null;emit();return 'STAGED';
   }
   function copyBinding(b){return copy(Object.fromEntries(bindingKeys.map(k=>[k,b[k]])));}
   function terminal(raw,session,epochId){
@@ -57,12 +69,12 @@ export function createNativeInspectionResults({adapter=null,now=()=>performance.
     const b=bindings.get(raw.bindingId);if(!b||b.syncSessionId!==raw.syncSessionId)return fail('INVALID_TERMINAL');
     b.state=raw.state;emit();return raw.state;
   }
-  function endSession(){pendingRequest?.settle('STALE');generation++;localSessionId=null;bindings=new Map();records=new Map();selected=new Map();const stop=detach;detach=null;try{stop?.();}catch{}connection=closed?'DISPOSED':'INCOMPLETE_NATIVE';notice=null;emit();}
+  function endSession(){pendingRequest?.settle('STALE');generation++;localSessionId=null;receiver=null;bindings=new Map();records=new Map();selected=new Map();const stop=detach;detach=null;try{stop?.();}catch{}connection=closed?'DISPOSED':'INCOMPLETE_NATIVE';notice=null;emit();}
   return Object.freeze({
     startSession(session){endSession();if(closed||!identifier(session))return false;localSessionId=session;const epochId=generation;
       if(!adapter||typeof adapter.open!=='function'||typeof adapter.verifyAccepted!=='function'){connection='INCOMPLETE_NATIVE';emit();return false;}
       connection='ADAPTER_CONNECTED';
-      try{const stop=adapter.open(Object.freeze({localSessionId:session,generation:epochId,onBinding:r=>onBinding(r,session,epochId),onAccepted:r=>onAccepted(r,session,epochId),onTerminal:r=>terminal(r,session,epochId),onUnavailable:reason=>{if(current(session,epochId)){notice=['SERVER_CLOCK_UNAVAILABLE','BINDING_DELIVERY_TIMEOUT'].includes(reason)?reason:null;for(const b of bindings.values())b.state='CLOSED';connection='UNAVAILABLE';emit();}}}));
+      try{const stop=adapter.open(Object.freeze({localSessionId:session,generation:epochId,onBinding:r=>onBinding(r,session,epochId),onAccepted:r=>onAccepted(r,session,epochId),onTerminal:r=>terminal(r,session,epochId),onReceiver:r=>{if(!current(session,epochId))return;const next=receiverStatus(r);if(JSON.stringify(next)!==JSON.stringify(receiver)){receiver=next;emit();}},onUnavailable:reason=>{if(current(session,epochId)){notice=['SERVER_CLOCK_UNAVAILABLE','BINDING_DELIVERY_TIMEOUT'].includes(reason)?reason:null;for(const b of bindings.values())b.state='CLOSED';connection='UNAVAILABLE';emit();}}}));
         if(typeof stop!=='function')throw Error('Unsubscribe required');detach=stop;
       }catch{for(const b of bindings.values())b.state='CLOSED';connection='UNAVAILABLE';}emit();return connection==='ADAPTER_CONNECTED';
     },
@@ -87,6 +99,9 @@ export function createNativeInspectionResults({adapter=null,now=()=>performance.
         },refused);}catch(error){refused(error);}
       });
     },
+    /** Forwards to Native and never rejects: a lost command changes nothing here, and the next poll reports the actual state. */
+    panelSlot(slot){if(connection==='ADAPTER_CONNECTED')Promise.resolve(adapter?.panelSlot?.(slot)).catch(()=>{});},
+    control(action){if(connection==='ADAPTER_CONNECTED')Promise.resolve(adapter?.control?.(action)).catch(()=>{});},
     select(taskId,inspectionId){tick();const t=targetForTask(taskId);if(!t||!localSessionId||closed)return false;
       if(inspectionId==='LOCAL'){selected.delete(taskId);emit();return true;}
       const r=records.get(inspectionId);if(!r||r.taskId!==taskId||r.localSessionId!==localSessionId||r.generation!==generation)return false;
@@ -94,7 +109,7 @@ export function createNativeInspectionResults({adapter=null,now=()=>performance.
       if(!live(bindings.get(r.bindingId))){fail('INACTIVE_BINDING');return false;}
       selected.set(taskId,inspectionId);emit();return true;
     },
-    get snapshot(){return copy({localSessionId,generation,connection,notice,records:[...records.values()],selected:Object.fromEntries(selected),bindings:[...bindings.values()].map(b=>({...copyBinding(b),state:live(b)?'ACTIVE':b.state==='ACTIVE'?'EXPIRED':b.state}))});},
+    get snapshot(){return copy({localSessionId,generation,connection,notice,receiver,records:[...records.values()],selected:Object.fromEntries(selected),bindings:[...bindings.values()].map(b=>({...copyBinding(b),state:live(b)?'ACTIVE':b.state==='ACTIVE'?'EXPIRED':b.state}))});},
     subscribe(fn){listeners.add(fn);return()=>listeners.delete(fn);},
     dispose(){closed=true;endSession();listeners.clear();}
   });

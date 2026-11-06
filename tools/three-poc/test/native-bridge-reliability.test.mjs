@@ -259,7 +259,7 @@ test('failure guidance tells the user to reopen the screen; other refusals keep 
     const {shown,click}=clickOn(consumer);
     assert.equal(await click('washer-fluid'),'NOT_CONNECTED');assert.match(shown.at(-1),/시작할 수 없습니다/);
   }
-  assert.match(TEXT.ACCEPTED,/세션 생성 전/);
+  assert.match(TEXT.ACCEPTED,/준비/);
 });
 
 // Both PRs meet here: the toast follows the confirmed answer, and the anomaly record keeps the code the adapter saw.

@@ -8,7 +8,8 @@ internal data class SyncReceiverState(
     val inviteExpiresAt: Long? = null, val expiresAt: Long? = null,
     val syncSessionId: String? = null, val clock: SyncServerClock? = null,
     val receivedAt: Long? = null, val acceptedAt: Long? = null, val explicitlyAccepted: Boolean = false,
-    val phoneClaimed: Boolean = false // Display only: the server saw the invite claimed. Grants nothing.
+    val phoneClaimed: Boolean = false, // Display only: the server saw the invite claimed. Grants nothing.
+    val autoConfirmed: Boolean = false // The approved simulator confirmed the exact digest. Never a vehicle owner's approval.
 ) {
     val canAccept: Boolean get() = phase == ReceiverPhase.RESULT_SUBMITTED && !busy && result != null && digest != null
     val canCancel: Boolean get() = phase in listOf(ReceiverPhase.WAITING, ReceiverPhase.RESULT_SUBMITTED) && !busy
@@ -19,6 +20,8 @@ internal data class SyncReceiverState(
 /** Owner must call close on Activity onStop/onDestroy. Recreated owners start with fresh memory and new QR. */
 internal class SyncReceiverController(
     private val client: SyncReceiverClient, private val scheduler: SyncReceiverScheduler,
+    /** Only the operator-approved simulator answers true. Every other path keeps the explicit Accept. */
+    private val autoConfirm: () -> Boolean = { false },
     private val onState: (SyncReceiverState) -> Unit
 ) {
     var state = SyncReceiverState(); private set
@@ -27,6 +30,8 @@ internal class SyncReceiverController(
     private var request: SyncCancellation? = null
     private var errors = 0
     private var pending = false
+    private var autoAttempts = 0
+    private var autoDigest: String? = null
     private fun publish(next: SyncReceiverState) { state = next; onState(state) }
     private fun stopTimer() { timer?.cancel(); timer = null }
     private fun schedule() {
@@ -39,7 +44,7 @@ internal class SyncReceiverController(
         if (pending || state.phase !in listOf(ReceiverPhase.IDLE, ReceiverPhase.FAILED, ReceiverPhase.CANCELLED, ReceiverPhase.EXPIRED)) return
         try { requireHttpsMobileRoot(mobileRoot) } catch (_: Exception) { publish(SyncReceiverState(phase = ReceiverPhase.FAILED, failure = SyncFailure.INVALID)); return }
         val owner = ++generation
-        stopTimer(); request?.cancel(); pending = true; errors = 0
+        stopTimer(); request?.cancel(); pending = true; errors = 0; autoAttempts = 0; autoDigest = null
         publish(SyncReceiverState(phase = ReceiverPhase.CREATING, busy = true))
         if (owner != generation) return
         request = client.create(mobileRoot, taskId) { reply -> synchronized(this) {
@@ -55,10 +60,10 @@ internal class SyncReceiverController(
         if (pending || state.phase !in listOf(ReceiverPhase.WAITING, ReceiverPhase.RESULT_SUBMITTED)) return
         perform(null)
     }
-    @Synchronized fun retryPolling() { errors = 0; poll() }
+    @Synchronized fun retryPolling() { errors = 0; autoAttempts = 0; poll() }
     @Synchronized fun accept() { if (state.canAccept && !pending) perform(true) }
     @Synchronized fun cancel() { if (state.canCancel && !pending) perform(false) }
-    private fun perform(decision: Boolean?) {
+    private fun perform(decision: Boolean?, automatic: Boolean = false) {
         val owner = generation; val shownDigest = state.digest
         stopTimer(); pending = true; publish(state.copy(busy = true, failure = null, retryAvailable = false))
         if (owner != generation) return
@@ -92,9 +97,14 @@ internal class SyncReceiverController(
                             }
                             publish(SyncReceiverState(phase = phase, qr = if (v.sessionState == SyncSessionState.CREATED) state.qr else null,
                                 result = v.result ?: state.result.takeIf { phase == ReceiverPhase.ACCEPTED }, digest = v.resultDigest, expiresAt = v.expiresAt, inviteExpiresAt = state.inviteExpiresAt, syncSessionId = v.sessionId, clock = state.clock,
-                                receivedAt = v.receivedAt, acceptedAt = v.acceptedAt, explicitlyAccepted = decision == true && phase == ReceiverPhase.ACCEPTED,
-                                phoneClaimed = v.sessionState == SyncSessionState.CLAIMED))
-                            if (phase in listOf(ReceiverPhase.ACCEPTED, ReceiverPhase.CANCELLED, ReceiverPhase.EXPIRED)) client.forget() else schedule()
+                                receivedAt = v.receivedAt, acceptedAt = v.acceptedAt, explicitlyAccepted = decision == true && !automatic && phase == ReceiverPhase.ACCEPTED,
+                                phoneClaimed = v.sessionState == SyncSessionState.CLAIMED,
+                                // A poll may be the first to see an accept whose response was lost, so it counts only for the digest sent.
+                                autoConfirmed = phase == ReceiverPhase.ACCEPTED && (automatic || decision == null && autoDigest != null && v.resultDigest == autoDigest)))
+                            if (phase in listOf(ReceiverPhase.ACCEPTED, ReceiverPhase.CANCELLED, ReceiverPhase.EXPIRED)) client.forget()
+                            else if (phase == ReceiverPhase.RESULT_SUBMITTED && state.canAccept && autoAttempts < AUTO_ATTEMPTS && autoConfirm()) {
+                                autoAttempts++; autoDigest = state.digest; perform(true, automatic = true)
+                            } else schedule()
                         }
                     }
                 }
@@ -110,4 +120,5 @@ internal class SyncReceiverController(
     @Synchronized fun hideExpiredInvite(now: Long) {
         if (state.qr != null && state.inviteExpiresAt?.let { now > it } == true) publish(state.copy(qr = null))
     }
+    private companion object { const val AUTO_ATTEMPTS = 3 }
 }

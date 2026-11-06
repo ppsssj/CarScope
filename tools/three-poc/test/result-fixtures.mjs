@@ -9,7 +9,7 @@ export function wireResult(taskId='washer-fluid',value='UNABLE',id='11111111-111
 export function testAuthority(){let callbacks=null,proofPatch={},detached=0,delay=null,requestReply=()=>({ok:true});const requests=[];
   return {requests,reply(fn){requestReply=fn;},get callbacks(){return callbacks;},get detached(){return detached;},patch(p){proofPatch=p;},delay(fn){delay=fn;},
     adapter:{open(c){callbacks=c;return()=>{detached++;};},requestTask(request){requests.push(request);return requestReply(request);},async verifyAccepted(d){
-      if(delay)await delay();return {version:1,proofId:'synthetic-proof',sessionState:'ACCEPTED',bindingId:d.bindingId,localSessionId:d.localSessionId,generation:d.generation,syncSessionId:d.syncSessionId,taskId:d.taskId,inspectionId:d.inspectionId,resultDigest:d.resultDigest,receivedAt:1001,acceptedAt:1002,...proofPatch};
+      if(delay)await delay();return {version:1,proofId:'synthetic-proof',sessionState:'ACCEPTED',confirmation:'NATIVE_EXPLICIT',bindingId:d.bindingId,localSessionId:d.localSessionId,generation:d.generation,syncSessionId:d.syncSessionId,taskId:d.taskId,inspectionId:d.inspectionId,resultDigest:d.resultDigest,receivedAt:1001,acceptedAt:1002,...proofPatch};
     }}
   };
 }

@@ -1,5 +1,9 @@
 # 로드맵 및 진입 조건
 
+## P9-UX — 부품 패널 안의 모바일 점검
+
+Native 수신 패널을 기본 흐름에서 빼고, QR·상태·결과를 3D의 부품 패널에 넣었다. QR은 Native가 페이지의 빈 자리 위에 그려 WebView로 넘어가지 않는다. 시뮬레이터 자격에서만 같은 digest로 자동 수신 확인하며 차량 소유자의 승인으로 표시하지 않는다. **AVD·실기기 실행은 NOT_RUN이다.** [규칙](p9-i1-vehicle-mobile-flow.md#이번에-바꾼-규칙).
+
 ## P9-H1 — 점검 이력 조회
 
 부품별 최근 점검, 이력 목록, 상세 조회를 API, JS 모듈(`inspection-history-client.mjs`), Debug Native 채널로 구현했다. AVD 기록은 사용자·차량 ID가 없어 범위를 기록을 만든 등록으로 제한한다. **배포 CLI는 이 경로를 열지 않으며, 환경변수 금지 정책 때문에 켜려면 정책 승인과 별도 PR이 필요하다. `/v1/inspection-records`는 계속 기본 거부다.** 등록은 최대 24시간이라 만료되면 기록을 읽을 수 없다. AVD와 실기기는 `NOT_RUN`이다. [설계](p9-h1-inspection-history-read.md), [증거 인덱스](evidence/p9-h1/README.md).

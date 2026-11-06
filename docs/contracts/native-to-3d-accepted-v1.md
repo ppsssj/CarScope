@@ -56,7 +56,7 @@ task/part 매핑은 `mobile-result-contract.mjs`의 정확한 17개이며 [P7-B 
 
 ```js
 {
-  version: 1, proofId, sessionState: 'ACCEPTED',
+  version: 1, proofId, sessionState: 'ACCEPTED', confirmation,
   bindingId, localSessionId, generation, syncSessionId, taskId,
   inspectionId, resultDigest, receivedAt, acceptedAt
 }
@@ -64,12 +64,14 @@ task/part 매핑은 `mobile-result-contract.mjs`의 정확한 17개이며 [P7-B 
 
 모든 binding 식별자·task·inspectionId·digest가 일치하고 `serverNow <= receivedAt <= acceptedAt <= expiresAt`여야 한다. 원본 `startedAt/completedAt`은 별도의 폰 시각이며 서버 시각으로 교체하거나 서버 시각과 대소 비교해 정렬하지 않는다. proof의 `proofId`는 Native가 관리하는 검증 근거 식별자이며 토큰이 아니다. digest만 또는 RESULT_SUBMITTED 영수증만으로 ACCEPTED proof를 만들 수 없다. 실제 검증 증거가 없으면 verifier는 reject/null로 응답하며 후보가 생성되지 않는다.
 
-해시·Native 검증 await 전후에 현재 local session/generation과 live binding을 다시 확인한다. 동일 inspectionId/task/digest는 첫 proof와 시각을 보존하는 no-op, 같은 ID의 다른 task/내용은 conflict다. 다른 Sync 세션에서 같은 결과가 와도 원본 proof를 덮어쓰지 않는다. 다른 inspectionId는 별도 후보이며 최신 시각이라고 자동 선택하지 않는다.
+해시·Native 검증 await 전후에 현재 local session/generation과 live binding을 다시 확인한다. 동일 inspectionId/task/digest는 첫 proof와 시각을 보존하는 no-op, 같은 ID의 다른 task/내용은 conflict다. 다른 Sync 세션에서 같은 결과가 와도 원본 proof를 덮어쓰지 않는다. 다른 inspectionId는 별도 기록이다. P9-UX부터 검증을 통과한 가장 최근 수신 결과를 표시하고 이전 기록은 보존한다.
+
+`confirmation`은 누가 수락했는지를 나타낸다. `NATIVE_EXPLICIT`은 Native 버튼의 수락이고, `AVD_SIMULATION_AUTO`는 운영자 승인 AVD 시뮬레이터가 같은 digest를 자동으로 수신 확인한 것이다. 후자는 차량 소유자의 승인이 아니며 다른 값은 거부한다. 서버 기록에는 이 구분을 저장하는 열이 없다. `AVD_SIMULATOR` 네임스페이스와 비어 있는 `user_id`·`vehicle_id`가 소유자 승인이 아님을 나타내며, 그 네임스페이스의 `accepted_at`은 자동 수신 확인 시각이다.
 
 ## 종료·표시·사용자 선택
 
 - `onTerminal({bindingId,syncSessionId,state})`는 `CANCELLED|EXPIRED|CLOSED`만 허용한다. onUnavailable/중지/소유권 상실도 새 적용을 차단한다. 만료 경계는 기존 정책대로 `now > deadline`이며 주기적으로 검사하고 수신/선택 시에도 다시 검사한다.
-- 수신 후보는 3D 색·완료 수를 바꾸지 않는다. `consumer.select(taskId,inspectionId)`를 해당 부품의 UI 버튼에서 사용자가 직접 호출한 뒤에만 표시한다. `LOCAL` 선택은 기존 타이어 기록 또는 미점검으로 돌아가며 모바일 원문을 삭제·병합하지 않는다.
+- P9-UX부터 검증된 ACCEPTED 결과는 수신과 함께 표시된다(C1의 직접 선택 규칙을 대체). 다른 기록은 부품 패널의 `이전 기록`에서 `consumer.select(taskId,inspectionId)`로 고른다. `LOCAL` 선택은 기존 타이어 기록 또는 미점검으로 돌아가며 모바일 원문을 삭제·병합하지 않는다.
 - 후보가 만료/취소된 뒤에는 새로 선택할 수 없다. **이미 선택한 검증된 ACCEPTED 보고**는 전송 세션 만료 후에도 페이지 종료까지 보존하며 “연결 종료/만료, 수락 기록 보존”을 표시한다. 전송 만료를 사용자 UNABLE이나 SDK STALE로 변환하지 않는다.
 - 홈/점검 종료/재생성/dispose는 local session/generation, binding, 후보, 선택, 중복 index를 비운다. unsubscribe 후 도착한 이전 callback과 같은 local ID를 재사용한 이전 generation도 거부한다. 저장/복원·자동 재적용은 없다.
 - 메모리 상한은 binding/기록 각 100개다. 초과 시 CAPACITY로 거부하며 기존 기록을 퇴출하거나 다른 부품에 적용하지 않는다. 서버 rate limit/TTL은 바꾸지 않는다.

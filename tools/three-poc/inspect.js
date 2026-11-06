@@ -231,7 +231,18 @@ let userInspection = createTireInspection(crypto.randomUUID());
 // The reviewed Android asset adapter is the only composition; it returns null on any other origin.
 // Never obtain an adapter from a window property, query, postMessage or JSON.
 const mobileResults=createNativeInspectionResults({adapter:createAndroidNativeInspectionAdapter()});
-const mobileExpiryTimer=setInterval(()=>{if(state.name!==STATES.IDLE)mobileResults.tick();},1000);
+const mobileExpiryTimer=setInterval(()=>{if(state.name!==STATES.IDLE)mobileResults.tick();syncQrSlot();},1000);
+// Tells Native where the part panel left room for the QR. Native draws it there, so the code never reaches this page.
+let lastQrSlot='',qrSlotRevealed=false;
+function syncQrSlot(){
+  const panel=$('panel'),slot=panel?.querySelector('#mobileQrSlot');let next={slot:'NONE',x:0,y:0,size:0};
+  if(slot){
+    if(!qrSlotRevealed){qrSlotRevealed=true;slot.scrollIntoView({block:'nearest'});}
+    const r=slot.getBoundingClientRect(),p=panel.getBoundingClientRect();
+    next=r.width>0&&r.top>=p.top&&r.bottom<=p.bottom&&r.left>=p.left&&r.right<=p.right?{slot:'SHOWN',x:Math.round(r.left),y:Math.round(r.top),size:Math.round(r.width)}:{slot:'HIDDEN',x:0,y:0,size:0};
+  }else qrSlotRevealed=false;
+  const key=JSON.stringify(next);if(key!==lastQrSlot){lastQrSlot=key;mobileResults.panelSlot(next);}
+}
 // No verified History read provider exists yet (issuer BLOCKED), so this page shows UNAVAILABLE and sends
 // nothing. Compose a reviewed Native provider here only; never from a window property, query, postMessage or JSON.
 const inspectionHistory=createInspectionHistoryStore({provider:null});
@@ -405,7 +416,7 @@ function panelContents() {
         <h3>출처</h3><p><a class="link" href="${esc(SERVICE_MANUAL)}" target="_blank" rel="noopener noreferrer">Hyundai IONIQ 5 (2022, UK) 정비 설명서 9-14 워셔액</a></p>
         <div class="actions">${handoff.configured
           ? `<button type="button" class="primary" data-action="handoff">스마트폰으로 이어서 보기</button>`
-          : `<p class="note">스마트폰 연결이 준비되지 않았습니다. 현재는 이 화면의 안내를 확인할 수 있습니다.</p>`}
+          : mobileResults.snapshot.connection==='ADAPTER_CONNECTED'?'':`<p class="note">스마트폰 연결이 준비되지 않았습니다. 현재는 이 화면의 안내를 확인할 수 있습니다.</p>`}
           <button type="button" class="secondary" data-action="back">점검 항목으로</button></div>`;
     case S.MOBILE_HANDOFF_READY:
       return `<div class="eyebrow">보닛 · 워셔액</div><h2>스마트폰으로 이어서 보기</h2><p>스마트폰 카메라로 QR을 스캔하면 워셔액 점검 보조 화면이 열립니다.</p>
@@ -460,6 +471,7 @@ const showToast = createToast($('toast'));
 const requestMobile = createMobileRequestNotifier({ request: (taskId) => mobileResults.request(taskId), show: showToast, screen: () => state });
 function render() {
   $("panel").innerHTML = panelHtml();
+  syncQrSlot();
   $('home').inert = state.name !== STATES.IDLE;
   $('panel').inert = state.name === STATES.IDLE;
   $("crumb").textContent = state.name === STATES.INSPECTION_SUMMARY ? '차량 점검 › 전체 요약' : state.area === 'tires' ? `차량 점검 › 타이어${state.component ? ' › ' + detachedTireInfo(state.component).label : ''}` : state.name === STATES.COMPONENT_PREVIEW ? `차량 점검 › 보닛 › ${areaOf(state).components.find(c => c.id === state.component).label}` : crumbs[state.name];
@@ -505,6 +517,9 @@ $("panel").addEventListener("click", (e) => {
   }
   else if(a==='select-result'&&b.dataset.session===userInspection.sessionId)mobileResults.select(b.dataset.task,b.dataset.record);
   else if(a==='request-mobile')void requestMobile(b.dataset.task);
+  else if(a==='mobile-refresh')mobileResults.control('refresh');
+  else if(a==='mobile-cancel')mobileResults.control('cancel');
+  else if(a==='mobile-admin')mobileResults.control('admin');
   else if (a === 'confirm-tire' && state.name === STATES.TIRE_PREVIEW && b.dataset.id === state.component) {
     const next = updateTireInspection(userInspection, { type: 'CONFIRM', tireId: state.component, sessionId: b.dataset.session, at: Date.now() });
     if (next !== userInspection) { userInspection = next; renderGuide('confirm'); }
@@ -633,7 +648,7 @@ function syncInspectionMap() {
   }
 }
 // Local and mobile changes end here, so the 3D colors, card, summary and badges come from the same records at the same moment.
-function syncResultSurfaces(){syncInspectionMap();if(window.__inspectReady)refreshResultRegions($('panel'),{local:userInspection,mobile:mobileResults.snapshot,partId:state.component});}
+function syncResultSurfaces(){syncInspectionMap();if(window.__inspectReady)refreshResultRegions($('panel'),{local:userInspection,mobile:mobileResults.snapshot,partId:state.component});syncQrSlot();}
 mobileResults.subscribe(()=>{syncResultSurfaces();if(window.__inspectReady&&isHistoryState(state))refreshHistory();});
 inspectionHistory.subscribe(refreshHistory);
 // Access can change while the screen is away, so paused or hidden pages keep no records (same fixed signals as SDK status).

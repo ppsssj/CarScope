@@ -31,15 +31,14 @@ test('all 17 result details use the existing component camera and explicit list-
   }
   assert.equal(transition(overview,{type:'OPEN_RESULT',id:'ev-charge.flap'}),overview);
 });
-for(const t of MOBILE_TARGETS)test(`${t.taskId}: strict boundary, unchanged digest, staged then explicit selection, provenance and independent counts`,async()=>{
+for(const t of MOBILE_TARGETS)test(`${t.taskId}: strict boundary, unchanged digest, newest verified result shown, provenance and independent counts`,async()=>{
   if(t.schemaVersion===2)for(const a of ['FOUND','UNABLE','NOT_FOUND'])for(const b of ['FOUND','UNABLE','NOT_FOUND'])for(const c of ['FOUND','UNABLE','NOT_FOUND']){const actual=wireResult(t.taskId,[a,b,c]);assert.equal(validateMobileResult(actual),true);assert.equal(await digestResult(actual),await resultDigest(actual));}
   const {authority:a,controller:c}=setup(),local=createTireInspection('local'),b=binding(a.callbacks,t);assert.equal(a.callbacks.onBinding(b),'BOUND');
   for(const value of ['FOUND','UNABLE','NOT_FOUND']){
     const id=['FOUND','UNABLE','NOT_FOUND'].indexOf(value)+1,r=wireResult(t.taskId,value,`${id}1111111-1111-4111-8111-111111111111`);
     assert.equal(validateMobileResult(r),true);assert.equal(await digestResult(r),await resultDigest(r));
     assert.equal(await deliver(a.callbacks,b,r),'STAGED');
-    if(value==='FOUND')assert.equal(resultCounts(projectInspectionResults(local,c.snapshot)).NOT_INSPECTED,17,'receipt never auto-applies');
-    assert.equal(c.select(t.taskId,r.inspectionId),true);const rows=projectInspectionResults(local,c.snapshot),mapped=rows.find(row=>row.taskId===t.taskId);
+    assert.equal(c.snapshot.selected[t.taskId],r.inspectionId,'the newest verified result is shown');const rows=projectInspectionResults(local,c.snapshot),mapped=rows.find(row=>row.taskId===t.taskId);
     assert.equal(mapped.status,mobileReportState(r));assert.equal(mapped.source,'MOBILE');assert.equal(mapped.confirmation,'USER_REPORTED');assert.equal(mapped.completedAt,r.completedAt);
     assert.deepEqual(mapped.original,r);assert.equal(mapped.proof.sessionState,'ACCEPTED');assert.equal(mapped.syncSessionId,b.syncSessionId);assert.equal(mapped.bindingId,b.bindingId);
     assert.equal(rows.filter(row=>row.status!=='NOT_INSPECTED').length,1);assert.equal(Object.values(resultCounts(rows)).reduce((n,v)=>n+v),17);
@@ -68,7 +67,8 @@ test('monotonic expiry, terminal states, end/recreation, delayed callbacks and h
   for(const terminal of ['EXPIRED','CANCELLED','CLOSED']){
     const {authority:a,controller:c,clock}=setup(),b=binding(a.callbacks,MOBILE_TARGETS[0]),r=wireResult();a.callbacks.onBinding(b);await deliver(a.callbacks,b,r);
     if(terminal==='EXPIRED'){clock(1001);c.tick();}else a.callbacks.onTerminal({bindingId:b.bindingId,syncSessionId:b.syncSessionId,state:terminal});
-    assert.equal(c.select(r.taskId,r.inspectionId),false);assert.equal(c.snapshot.selected[r.taskId],undefined);c.dispose();
+    assert.equal(c.snapshot.selected[r.taskId],r.inspectionId,'a shown result stays after its transport ends');
+    assert.equal(c.select(r.taskId,'LOCAL'),true);assert.equal(c.select(r.taskId,r.inspectionId),false,'but cannot be applied again');assert.equal(c.snapshot.selected[r.taskId],undefined);c.dispose();
   }
   const {authority:a,controller:c,clock}=setup(),b=binding(a.callbacks,MOBILE_TARGETS[0]),r=wireResult();a.callbacks.onBinding(b);await deliver(a.callbacks,b,r);c.select(r.taskId,r.inspectionId);clock(1001);c.tick();assert.equal(projectInspectionResults(createTireInspection('local'),c.snapshot)[0].status,'UNABLE','applied accepted report remains after transport expiry');
   const old=a.callbacks;c.endSession();c.startSession('local');assert.equal(old.onBinding(b),'OLD_SESSION');assert.equal(await deliver(old,b,r),'OLD_SESSION');assert.equal(c.snapshot.records.length,0);

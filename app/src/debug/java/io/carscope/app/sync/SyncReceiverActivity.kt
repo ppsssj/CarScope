@@ -93,6 +93,24 @@ open class SyncReceiverActivity : Activity() {
         // before asynchronous HTTPS can finish, never keep an enabled Create button.
         owner?.let { render(it.state) }
     }
+    internal val receiverState: SyncReceiverState? get() = owner?.state
+    internal val requestedReceiverTask: String? get() = lockedTask
+    /** One word for the page: whether this request has its creation grant yet. */
+    internal val creationAuthorityStatus: String get() = when {
+        owner == null -> "NOT_CONFIGURED"
+        transport?.creationAuthorized() == true -> "GRANTED"
+        authority == CreationAuthority.CHECKING -> "CHECKING"
+        authority == CreationAuthority.DENIED -> "DENIED"
+        requestedTask != null && provisioning == null && simulatorProvisioning == null -> "NOT_CONFIGURED"
+        else -> "CHECKING"
+    }
+    internal val usesAvdSimulator: Boolean get() = simulatorProvisioning != null
+    internal fun retryReceiver() { owner?.retryPolling() }
+    internal fun cancelReceiver() { owner?.cancel() }
+    /** Whether a valid received result is confirmed without a tap. Off unless a subclass opts in. */
+    internal open fun autoConfirmReceivedResult(): Boolean = false
+    /** Native-only copy of the QR. The bitmap is recycled after null is delivered here. */
+    internal open fun onQrBitmap(bitmap: Bitmap?) {}
     /** The standalone screen asks at start. The 3D page asks only when a part is requested: its grant lasts two minutes. */
     internal open fun provisionOnStart(): Boolean = true
     /** True only while someone sees the panel of a 3D request. It alone allows an automatic grant retry or session. */
@@ -167,7 +185,7 @@ open class SyncReceiverActivity : Activity() {
             val runnable = Runnable { if (!stopped && generation == current) action() }; handler.postDelayed(runnable, delay)
             SyncCancellation { handler.removeCallbacks(runnable) }
         }
-        val controller = SyncReceiverController(SyncReceiverClient(connectionTransport, ::now), scheduler) { render(it) }
+        val controller = SyncReceiverController(SyncReceiverClient(connectionTransport, ::now), scheduler, ::autoConfirmReceivedResult) { render(it) }
         owner = controller
         connection.text = if (simulatorProvisioning != null)
             "HTTPS 주소 설정됨 · AVD 등록 검증 대기 · 차량 인증과는 별개입니다."
@@ -256,6 +274,7 @@ open class SyncReceiverActivity : Activity() {
             clearQr(); val payload = state.qr
             if (payload != null) try {
                 qrBitmap = SyncQrRenderer.bitmap(payload); image.setImageBitmap(qrBitmap); image.visibility = View.VISIBLE; shownQr = payload
+                onQrBitmap(qrBitmap)
                 reveal(image)
             } catch (_: Exception) { image.visibility = View.GONE; status.text = "FAILED · QR 표시 실패. 요청을 취소하고 다시 시작하세요." }
         }
@@ -266,7 +285,7 @@ open class SyncReceiverActivity : Activity() {
     }
     /** A narrower panel scrolls: bring a new QR or Accept button into view without moving focus or acting on it. */
     private fun reveal(view: View) { view.post { view.requestRectangleOnScreen(Rect(0, 0, view.width, view.height)) } }
-    private fun clearQr() { image.setImageDrawable(null); image.visibility = View.GONE; qrBitmap?.recycle(); qrBitmap = null; shownQr = null }
+    private fun clearQr() { onQrBitmap(null); image.setImageDrawable(null); image.visibility = View.GONE; qrBitmap?.recycle(); qrBitmap = null; shownQr = null }
     private fun failureMessage(failure: SyncFailure): String = when (failure) {
         SyncFailure.NETWORK -> "NETWORK · 네트워크 또는 인증서 연결을 확인하세요."
         SyncFailure.TIMEOUT -> "TIMEOUT · 응답 시간이 초과됐습니다. 처리 성공을 확인하지 못했습니다."

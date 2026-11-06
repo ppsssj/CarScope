@@ -2,10 +2,10 @@ import { checkEnvelope, PROTOCOL, PROTOCOL_VERSION, receiptMatches } from '../sr
 import { TRANSPORT } from './sync-client.mjs';
 
 export const SYNC_TEXT = Object.freeze({
-  INVITED: '차량 점검 요청을 받았습니다. 연결 후 점검 결과를 전송할 수 있습니다.',
+  INVITED: '차량 점검 요청을 받았습니다. 차량에 연결합니다.',
   CLAIMING: '차량 요청에 연결 중…', CLAIMED: '연결됨 · 점검 완료 후 결과를 전송하세요.',
-  NOT_SENT: '전송 안 됨', SENDING: '전송 중…', SENT: '서버 수신 확인 · 차량 수락 전',
-  ACCEPTED: '차량 측 수락 완료 · 점검 이력 저장 확인 · 사용자 보고 결과입니다.', CANCELLED: '차량 측에서 취소했습니다. 새 QR로 다시 연결하세요.',
+  NOT_SENT: '전송 안 됨', SENDING: '전송 중…', SENT: '서버 수신 확인 · 차량 처리 대기',
+  ACCEPTED: '차량 수신 완료 · 점검 이력 저장 확인 · 사용자 보고 결과입니다.', CANCELLED: '차량 측에서 취소했습니다. 새 QR로 다시 연결하세요.',
   FAILED_NETWORK: '네트워크 오류 · 연결을 확인하고 다시 시도하세요.', FAILED_TIMEOUT: '시간 초과 · 연결을 확인하고 다시 시도하세요.',
   REJECTED_EXPIRED: '연결이 만료됐습니다. 차량에서 새 QR을 요청하세요.',
   REJECTED_CLOSED: '연결이 종료됐습니다. 차량에서 새 QR을 요청하세요.',
