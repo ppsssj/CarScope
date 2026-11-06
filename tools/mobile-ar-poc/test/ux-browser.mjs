@@ -17,6 +17,8 @@ const pass = text => result.checks.push(`PASS: ${text}`);
 const JARGON = /session|sync|digest|proof|binding|native|authority|endpoint|payload|schema|USER_REPORTED|\bSELF\b|QR v2|토큰|세션|바인딩/i;
 let browser, sync, now = Date.now();
 const contexts = [];
+// A finished scenario's pages keep polling, and a slow runner should not pay for them.
+const closeContexts = () => Promise.all(contexts.splice(0).map(context => context.close().catch(() => {})));
 const SMALL = { width: 320, height: 568 }, PHONE = { width: 390, height: 844 };
 async function open({ task, viewport = PHONE, prepare } = {}) {
   const context = await browser.newContext({ viewport, deviceScaleFactor: 2, isMobile: true, hasTouch: true, reducedMotion: 'reduce' }); contexts.push(context);
@@ -26,8 +28,8 @@ async function open({ task, viewport = PHONE, prepare } = {}) {
   if (prepare) await prepare(page);
   now += 61_000; // Each scenario gets its own rate window; the limits themselves stay as they are.
   const receiver = new ReceiverClient({ baseUrl: sync.url }), session = await receiver.create(task);
-  await page.goto(sync.url + '/' + session.fragment);
-  await page.waitForFunction(() => window.__checklistInspection || window.__selfInspection);
+  await page.goto(sync.url + '/' + session.fragment, { timeout: 30000 });
+  await page.waitForFunction(() => window.__checklistInspection || window.__selfInspection, null, { timeout: 30000 });
   return { page, receiver, session, errors, logs };
 }
 const S = page => page.evaluate(() => { const s = (window.__checklistInspection ?? window.__selfInspection).state; return { step: s.step, index: s.index, responses: s.record?.responses ?? null, stopped: s.observationStopped ?? null, status: s.record?.status ?? null }; });
@@ -95,10 +97,12 @@ try {
       await plainWords(page, `${where} confirmed`);
       assert.deepEqual(errors, [], where);
       assert.ok(!logs.some(line => /invite|token|bearer|submit/i.test(line)), `${where}: nothing about credentials in the console`);
+      await closeContexts();
     }
     pass('tire, charge, bonnet, wiper and lamp finish with plain words, no overflow, 44px targets and the main action on screen at 320, 344, 360, 667 landscape and 884 wide');
   }
 
+  await closeContexts();
   { // Answering: a tap moves on, a key does not, and a finding that asks to stop stays on screen.
     const { page } = await open({ task: 'tire.front-left' });
     await startManual(page); await waitQuestion(page, 0);
@@ -154,6 +158,7 @@ try {
     pass('a finding on a part with a stop rule shows the stop message and waits');
   }
 
+  await closeContexts();
   { // Review: change one answer and come back. The result keeps the stored values.
     const { page, receiver } = await open({ task: 'tire.front-left' });
     await startManual(page);
@@ -180,6 +185,7 @@ try {
     pass('changing an answer returns to the review, keeps stored values, and a double tap sends once');
   }
 
+  await closeContexts();
   { // Failure is plain, retry sends the same result, and a dead connection asks for a new QR.
     let failing = true;
     const { page, receiver } = await open({ task: 'tire.front-left', prepare: p => p.route('**/v1/submissions', route => failing ? route.abort('failed') : route.continue()) });
@@ -214,6 +220,7 @@ try {
     pass('a vehicle cancel reaches the phone as a clear message');
   }
 
+  await closeContexts();
   { // Details stay reachable, and every part keeps its own full text one tap away.
     for (const { id } of taskLinks().filter(t => t.id !== 'washer-fluid')) {
       const { page } = await open({ task: id });
@@ -221,7 +228,7 @@ try {
       const help = await page.locator('#step-intro details.help').innerText();
       assert.ok(help.length > 120, id);
       assert.match(help, /확인|하지 마세요|않습니다/, id);
-      await page.context().close();
+      await closeContexts();
     }
     pass('every part keeps its full position, limitation and safety text under 자세한 안내');
     const { page } = await open({ task: 'tire.front-left' });
@@ -237,6 +244,7 @@ try {
     pass('the Debug area keeps the raw record and state, and no credential');
   }
 
+  await closeContexts();
   { // Washer keeps its own steps: checklist, then a result choice.
     const { page } = await open();
     await page.waitForFunction(() => window.__selfInspection);
@@ -265,6 +273,7 @@ try {
     pass('washer: help opens and returns focus, the stored status is unchanged, and the choice can be changed');
   }
 
+  await closeContexts();
   { // Finding the part: the instruction comes first and the camera stays on screen.
     const init = p => p.addInitScript(() => { const canvas = document.createElement('canvas'); canvas.width = 640; canvas.height = 480; const c = canvas.getContext('2d'); setInterval(() => { c.fillStyle = '#66727c'; c.fillRect(0, 0, 640, 480); }, 60); Object.defineProperty(navigator, 'mediaDevices', { configurable: true, value: { getUserMedia: async () => canvas.captureStream(10) } }); });
     const { page } = await open({ task: 'brake-fluid', viewport: { width: 360, height: 640 }, prepare: init });
@@ -276,6 +285,7 @@ try {
     pass('the find step reads instruction, camera, then help, with the camera in the upper half of a 640px screen');
   }
 
+  await closeContexts();
   { // Direct visit: nothing connects and nothing claims to.
     const context = await browser.newContext({ viewport: PHONE, isMobile: true, hasTouch: true }); contexts.push(context);
     const page = await context.newPage(); await page.goto(sync.url + '/'); await page.waitForFunction(() => window.__selfInspection);
