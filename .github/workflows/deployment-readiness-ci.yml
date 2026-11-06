@@ -33,6 +33,10 @@ jobs:
           node-version: '22.16.0'
       - run: npm install --ignore-scripts --no-audit --no-fund --package-lock=false
       - run: npm run check:preflight
+      - name: Recovery boundaries and commit gates (full history, so nothing here may skip)
+        run: node --test test/db-recovery.test.mjs
+        env:
+          REQUIRE_ORIGIN_MAIN: '1'
       - run: node bin/deployment-preflight.mjs static
       - run: node bin/deployment-preflight.mjs compat
       - run: node bin/deployment-preflight.mjs render

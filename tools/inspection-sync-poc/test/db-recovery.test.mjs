@@ -243,8 +243,13 @@ test('Render gates: a synthetic rehearsal, a failed report or an old backup cann
 });
 
 test('target commit gates separate the deploy target from origin/main and from the deployed commit', (t) => {
-  const main = spawnSync('git', ['rev-parse', 'origin/main'], { encoding: 'utf8' }).stdout.trim();
-  if (!main) return t.skip('origin/main unavailable: NOT_RUN');
+  // Without --verify, a missing ref exits 128 yet still prints its own name to stdout. A shallow checkout has no origin/main.
+  const resolved = spawnSync('git', ['rev-parse', '--verify', '--quiet', 'origin/main'], { encoding: 'utf8' });
+  const main = resolved.status === 0 ? resolved.stdout.trim() : '';
+  if (!main) {
+    assert.notEqual(process.env.REQUIRE_ORIGIN_MAIN, '1', 'this job promises full history');
+    return t.skip('origin/main unavailable: NOT_RUN');
+  }
   const at = (id, checks) => checks.find((c) => c.id === id);
   assert.equal(targetCommitGates({})[0].status, 'NOT_VERIFIED');
   assert.equal(targetCommitGates({ targetCommit: 'not-hex' })[0].status, 'FAIL');
