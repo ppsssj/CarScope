@@ -41,7 +41,7 @@ jobs:
       - name: Install PostgreSQL driver for the integration test
         run: npm install --ignore-scripts --no-audit --no-fund --package-lock=false
       - name: Verify PostgreSQL SessionStore against actual PostgreSQL 16
-        run: node --test test/postgres-store.test.mjs && node --test test/avd-simulator.test.mjs && node --test test/avd-simulator-admin.test.mjs && node --test test/history-postgres.test.mjs && node --test test/history-auth-postgres.test.mjs && node --test test/deployment-postgres.test.mjs && node bin/deployment-preflight.mjs database --url-env PG_TEST_URL
+        run: node --test test/postgres-store.test.mjs && node --test test/avd-simulator.test.mjs && node --test test/avd-simulator-admin.test.mjs && node --test test/history-postgres.test.mjs && node --test test/history-auth-postgres.test.mjs && node --test test/avd-history-postgres.test.mjs && node --test test/deployment-postgres.test.mjs && node bin/deployment-preflight.mjs database --url-env PG_TEST_URL
         env:
           PG_TEST_URL: postgresql://carscope_ci:local_test_only@127.0.0.1:5432/carscope_ci
       # Disposable stand-in for the remote branch: TLS with a self-signed certificate under a non-loopback name.

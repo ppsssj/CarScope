@@ -58,8 +58,8 @@ export function parseTestSummary(output) {
   return { pass: value('pass'), fail: value('fail'), skipped: value('skipped'), cancelled: value('cancelled') };
 }
 
-const PLAIN_SUITES = ['test/service.test.mjs', 'test/server.test.mjs', 'test/security.test.mjs', 'test/auth-contract.test.mjs', 'test/history.test.mjs', 'test/history-auth.test.mjs', 'test/render-preflight.test.mjs'];
-const PG_SUITES = ['test/postgres-store.test.mjs', 'test/avd-simulator.test.mjs', 'test/avd-simulator-admin.test.mjs', 'test/history-postgres.test.mjs', 'test/history-auth-postgres.test.mjs', 'test/deployment-postgres.test.mjs', 'test/db-recovery-postgres.test.mjs'];
+const PLAIN_SUITES = ['test/service.test.mjs', 'test/server.test.mjs', 'test/security.test.mjs', 'test/auth-contract.test.mjs', 'test/history.test.mjs', 'test/history-auth.test.mjs', 'test/avd-history.test.mjs', 'test/render-preflight.test.mjs'];
+const PG_SUITES = ['test/postgres-store.test.mjs', 'test/avd-simulator.test.mjs', 'test/avd-simulator-admin.test.mjs', 'test/history-postgres.test.mjs', 'test/history-auth-postgres.test.mjs', 'test/avd-history-postgres.test.mjs', 'test/deployment-postgres.test.mjs', 'test/db-recovery-postgres.test.mjs'];
 
 /** The suite gets only the isolated test URL: service variables are removed from its environment. */
 function runSuite(id, files, url) {

@@ -1,5 +1,9 @@
 # 로드맵 및 진입 조건
 
+## P9-H1 — 점검 이력 조회
+
+부품별 최근 점검, 이력 목록, 상세 조회를 API, JS 모듈(`inspection-history-client.mjs`), Debug Native 채널로 구현했다. AVD 기록은 사용자·차량 ID가 없어 범위를 기록을 만든 등록으로 제한한다. **배포 CLI는 이 경로를 열지 않으며, 환경변수 금지 정책 때문에 켜려면 정책 승인과 별도 PR이 필요하다. `/v1/inspection-records`는 계속 기본 거부다.** 등록은 최대 24시간이라 만료되면 기록을 읽을 수 없다. AVD와 실기기는 `NOT_RUN`이다. [설계](p9-h1-inspection-history-read.md), [증거 인덱스](evidence/p9-h1/README.md).
+
 ## P9-I1 — 차량 앱 ↔ 모바일 웹 ↔ 서버 흐름 통합
 
 Launcher 진입, `모바일로 점검하기`의 세션 자동 생성, 요청 시점의 grant 갱신, 인증·QR 상태 표시, 모바일 자동 연결, 운영자 설치 스크립트를 연결했다. 서버 API, 인증, 스키마는 바꾸지 않았다. **AVD·실기기·운영 실행은 NOT_RUN이고 Render 모드 변경은 운영자 승인으로 남아 있다.** [흐름과 운영자 절차](p9-i1-vehicle-mobile-flow.md).

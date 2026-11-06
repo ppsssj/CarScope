@@ -3,6 +3,7 @@
 // operator-issued enrollment proof for a short-lived simulator creation credential.
 import { randomBytes, randomUUID, createHash } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
+import { AVD_SIMULATOR_ISSUER, historyAuthority } from './history.mjs';
 
 export const AVD_MODE = 'OPERATOR_APPROVED_AVD_SIMULATION';
 export const AVD_AUDIENCE = 'carscope-avd-simulator';
@@ -108,7 +109,23 @@ export class AvdSimulatorCredentialStore {
       const r=await this.#pool.query({text:`SELECT r.id FROM cs_avd_creation_grants g JOIN cs_avd_registrations r ON r.id=g.registration_id
         WHERE g.token_hash=$1 AND g.revoked_at IS NULL AND g.issued_at<=$2 AND g.expires_at>$2 AND r.revoked_at IS NULL AND r.expires_at>$2 LIMIT 1`,values:[HASH(token),at],query_timeout:1500});
       if(r.rows.length!==1)return null;
-      return {authorityNamespace:'AVD_SIMULATOR',authorityIssuer:'carscope:avd-simulator',userId:null,vehicleId:null,deviceId:null,registrationId:r.rows[0].id,bindingVerifiedAt:at};
+      return {authorityNamespace:'AVD_SIMULATOR',authorityIssuer:AVD_SIMULATOR_ISSUER,userId:null,vehicleId:null,deviceId:null,registrationId:r.rows[0].id,bindingVerifiedAt:at};
+    }catch{return null;}
+  }
+  /**
+   * The read principal for /simulator/inspection-records. Only the enrollment proof resolves here: a creation
+   * grant, which is a different secret in a different table, does not. A holder of the proof can already create
+   * sessions for this registration, so reading what that registration created adds no reach to other records.
+   * Fails closed once the registration is revoked or expired, however old the records are.
+   */
+  async resolveHistoryReader({token,secure,now=Date.now}={}) {
+    if(secure!==true||typeof token!=='string'||!TOKEN.test(token))return null;
+    const at=now();
+    if(!finiteMs(at))return null;
+    try{
+      const r=await this.#pool.query({text:'SELECT id FROM cs_avd_registrations WHERE enrollment_hash=$1 AND revoked_at IS NULL AND expires_at>$2 LIMIT 1',values:[HASH(token),at],query_timeout:1500});
+      if(r.rows.length!==1)return null;
+      return historyAuthority({authorityNamespace:'AVD_SIMULATOR',authorityIssuer:AVD_SIMULATOR_ISSUER,userId:null,vehicleId:null,deviceId:null,registrationId:r.rows[0].id,bindingVerifiedAt:at});
     }catch{return null;}
   }
   async prune({ now = Date.now } = {}) {

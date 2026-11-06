@@ -90,7 +90,7 @@ open class InspectionActivity : SyncReceiverActivity() {
             { line -> Log.i(TAG, "CARSCOPE_NATIVE_BRIDGE $line") })
         tireStatus = TireUiChannel(TireProcessOwner.get(applicationContext))
         componentStatus = ComponentUiChannel(ComponentProcessOwner.get(applicationContext))
-        screen = DebugWebScreen(this, TAG, HOST, ROOT, mapOf("external/ioniq5.glb" to File(filesDir, DebugWebScreen.MODEL_PATH)), tireStatus::readJson, componentStatus::readJson, componentStatus::readChargePortJson, componentStatus::readVisibilityJson, bridge::handle)
+        screen = DebugWebScreen(this, TAG, HOST, ROOT, mapOf("external/ioniq5.glb" to File(filesDir, DebugWebScreen.MODEL_PATH)), tireStatus::readJson, componentStatus::readJson, componentStatus::readChargePortJson, componentStatus::readVisibilityJson, bridge::handle, newAvdHistoryChannel()::handle)
         inspectionPanel = screen.create(intent.getStringExtra("query").orEmpty())
         webFocusability = inspectionPanel.descendantFocusability
         setContentView(FrameLayout(this).apply {

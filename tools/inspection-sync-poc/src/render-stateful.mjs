@@ -9,13 +9,14 @@ import { ProductionSessionCreationAuthorizer } from './creation-authorizer.mjs';
 import { assertHistoryAuthorizerDeployable } from './history-authorizer.mjs';
 import { httpsHistoryAuthorizer } from './https-history-authority.mjs';
 import { AvdSimulatorCredentialStore } from './avd-simulator-credentials.mjs';
-import { serveAvdSimulatorProvision } from './avd-simulator-http.mjs';
+import { serveAvdSimulatorHistory, serveAvdSimulatorProvision, isAvdHistoryPath, isAvdHistoryQueryPath } from './avd-simulator-http.mjs';
+import { AvdSimulatorHistoryService } from './history.mjs';
 import { DEFAULT_RATES } from './rate-limit.mjs';
 import { MOBILE_HEADERS, serveMobilePage } from './mobile-page.mjs';
 import { httpsOrigin } from '../bin/host-readiness.mjs';
 import { databasePoolOptions } from './database-config.mjs';
 
-export async function startRenderStateful({ pool, publicOrigin, host = '127.0.0.1', port = 0, sweepMs = 30_000, enableAvdSimulation = false, historyAuthority, historyAuthorizer, expectedSchema = null } = {}) {
+export async function startRenderStateful({ pool, publicOrigin, host = '127.0.0.1', port = 0, sweepMs = 30_000, enableAvdSimulation = false, enableAvdHistoryRead = false, historyAuthority, historyAuthorizer, expectedSchema = null } = {}) {
   const origin = httpsOrigin(publicOrigin);
   if (!Number.isSafeInteger(port) || port < 0 || port > 65535 ||
       !Number.isSafeInteger(sweepMs) || sweepMs < 1000) throw new Error('INVALID_RENDER_STATEFUL_CONFIG');
@@ -23,6 +24,9 @@ export async function startRenderStateful({ pool, publicOrigin, host = '127.0.0.
   // No arbitrary authorizer object, and a simulated registry never shares a process with vehicle-owner reads.
   if (historyAuthorizer !== undefined) throw new Error('AUTHORIZER_OVERRIDE_FORBIDDEN');
   if (historyAuthority && enableAvdSimulation) throw new Error('HISTORY_AUTHORITY_WITH_AVD_SIMULATION_FORBIDDEN');
+  // Debug reads are a part of simulation, never of an owner authority: the guard above still applies to them.
+  // Code-only like historyAuthority. The CLI below never sets it, and no environment variable can.
+  if (enableAvdHistoryRead && !enableAvdSimulation) throw new Error('AVD_HISTORY_READ_REQUIRES_SIMULATION');
   const historyRead = historyAuthority ? httpsHistoryAuthorizer(historyAuthority) : null;
   if (historyRead) assertHistoryAuthorizerDeployable(historyRead, { host });
   // Startup must prove PostgreSQL availability and complete schema initialization before listening.
@@ -36,6 +40,10 @@ export async function startRenderStateful({ pool, publicOrigin, host = '127.0.0.
     const limiter = new PostgreSQLRateLimiter({ store, rates: {
       ...DEFAULT_RATES, 'avd-provision': { limit: 4, windowMs: 60_000 },
     }});
+    const avdHistory = enableAvdHistoryRead ? new AvdSimulatorHistoryService({ store }) : null;
+    const edgeSecure = req => req.headers.host === new URL(origin).host &&
+      req.headers['x-forwarded-proto'] === 'https' &&
+      (!req.headers.origin || req.headers.origin === origin);
     const api = createSyncHandler({
       service, limiter, tls: true, log: () => {},
       authorizer: simStore || new ProductionSessionCreationAuthorizer(),
@@ -43,9 +51,7 @@ export async function startRenderStateful({ pool, publicOrigin, host = '127.0.0.
       // Render-managed TLS is terminated at the ingress; this callback is opt-in only for the
       // explicitly enabled AVD simulation mode or a reviewed history authority. The outer request
       // handler rejects unverified Host / Origin / X-Forwarded-Proto first.
-      trustedEdgeSecure: simStore || historyRead ? req => req.headers.host === new URL(origin).host &&
-        req.headers['x-forwarded-proto'] === 'https' &&
-        (!req.headers.origin || req.headers.origin === origin) : null,
+      trustedEdgeSecure: simStore || historyRead ? edgeSecure : null,
     });
     server = http.createServer(async (req, res) => {
       const headers = { ...MOBILE_HEADERS, 'Strict-Transport-Security': 'max-age=31536000' };
@@ -58,7 +64,8 @@ export async function startRenderStateful({ pool, publicOrigin, host = '127.0.0.
             res.end(JSON.stringify({status:'UP',
               mode: simStore ? 'STATEFUL_AVD_SIMULATION' : 'STATEFUL_DENY_DEFAULT',
               sessionCreation: simStore ? 'OPERATOR_APPROVED_AVD_ONLY' : 'DENIED',
-              ...(historyRead ? { historyRead: 'AUTHORITY_ADAPTER_CONFIGURED' } : {})}));
+              ...(historyRead ? { historyRead: 'AUTHORITY_ADAPTER_CONFIGURED' } : {}),
+              ...(avdHistory ? { historyRead: 'AVD_REGISTRATION_ONLY' } : {})}));
           } catch {
             res.writeHead(503, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
             res.end('{"status":"UNAVAILABLE"}');
@@ -73,12 +80,15 @@ export async function startRenderStateful({ pool, publicOrigin, host = '127.0.0.
           res.writeHead(403, headers); res.end(); return;
         }
         if (!req.url?.startsWith('/') || req.url.startsWith('//') ||
-            req.url.includes('\\') || req.url.includes('#') || (req.url.includes('?') && new URL(req.url,origin).pathname!=='/v1/inspection-records')) {
+            req.url.includes('\\') || req.url.includes('#') || (req.url.includes('?') && new URL(req.url,origin).pathname!=='/v1/inspection-records' && !(avdHistory && isAvdHistoryQueryPath(new URL(req.url,origin).pathname)))) {
           res.writeHead(400, headers); res.end(); return;
         }
         if (req.url === '/simulator/provision') {
           if (!simStore) { res.writeHead(404,headers); res.end(); return; }
           await serveAvdSimulatorProvision(req,res,{credentialStore:simStore,limiter,publicOrigin:origin}); return;
+        }
+        if (avdHistory && isAvdHistoryPath(new URL(req.url,origin).pathname)) {
+          await serveAvdSimulatorHistory(req,res,{credentialStore:simStore,history:avdHistory,limiter,secure:edgeSecure(req),publicOrigin:origin}); return;
         }
         if (req.url.startsWith('/v1/')) { await api(req, res); return; }
         await serveMobilePage(req, res, { tls: true });

@@ -113,6 +113,8 @@ open class SyncReceiverActivity : Activity() {
         return RefreshingAvdSimulatorCredentialSource(endpoint,
             HttpsAvdSimulatorGrantExchange(endpoint, enrollment, dispatcher, ::now), ::now)
     }
+    /** The enrollment is read per request, so an expired or removed file closes History at once. */
+    internal fun newAvdHistoryChannel() = AvdHistoryChannel({ endpoint()?.let { AvdSimulatorPolicy.readEnrollment(filesDir, it, now()) } })
     internal open fun credentialProvider(): SessionCreationCredentialProvider =
         provisioning?.provider() ?: simulatorProvisioning?.provider() ?: DenyByDefaultCredentialProvider()
     internal open fun now(): Long = System.currentTimeMillis()
