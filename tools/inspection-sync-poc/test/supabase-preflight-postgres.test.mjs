@@ -79,7 +79,8 @@ async function harness(t) {
       CREATE SCHEMA storage; CREATE TABLE storage.objects (id INT); INSERT INTO storage.objects VALUES (1);
       GRANT USAGE ON SCHEMA public TO anon, authenticated, service_role;
       ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO anon, authenticated, service_role;
-      CREATE TABLE public.other_app (id INT); INSERT INTO public.other_app VALUES (1);`);
+      CREATE TABLE public.other_app (id INT); INSERT INTO public.other_app VALUES (1);
+      CREATE SCHEMA carscope_private;`); // Empty and unused, as on the real project. It must stay exactly that.
     return { ...db, adminRole, adminPassword, owner };
   };
   /** Runs supabase-bootstrap.sql as the platform admin. The role name is fixed by that file, so one test at a time holds it. */
@@ -290,7 +291,79 @@ test('private schema: migration archive, API roles shut out, managed schemas unt
     assert.ok(managedBefore === null || managedBefore.tables.length >= 3);
     assert.deepEqual((await p.owner.query('SELECT (SELECT count(*)::int FROM auth.users) a,(SELECT count(*)::int FROM storage.objects) b,(SELECT count(*)::int FROM public.other_app) c')).rows[0], { a: 1, b: 1, c: 1 });
   });
+
+  await t.test('the existing empty carscope_private schema is neither used nor changed', async () => {
+    const row = (await p.owner.query(`SELECT pg_get_userbyid(n.nspowner) AS owner, (SELECT count(*)::int FROM pg_class c WHERE c.relnamespace=n.oid) AS objects FROM pg_namespace n WHERE n.nspname='carscope_private'`)).rows[0];
+    assert.deepEqual(row, { owner: p.adminRole, objects: 0 });
+    for (const role of ['carscope_app', 'anon', 'authenticated', 'service_role']) assert.equal((await p.owner.query("SELECT has_schema_privilege($1,'carscope_private','USAGE') AS ok", [role])).rows[0].ok, false, role);
+    await assert.rejects(() => appPool.query('CREATE TABLE carscope_private.intruder (id INT)'), { code: '42501' });
+  });
 });
+
+test('S2 premise: a non-superuser database owner with CREATEROLE can run the operator SQL, and the check says so', { skip, timeout: 120_000 }, async (t) => {
+  const h = await harness(t);
+  const p = await h.platform();
+  const premise = (await p.owner.query(sql('supabase-s2-premise-check.sql'))).rows[0];
+  assert.equal(premise.is_superuser, false);
+  assert.equal(premise.can_create_roles, true);
+  assert.equal(premise.database_owner, p.adminRole);
+  assert.equal(premise.can_grant_create_on_database, true);
+  assert.equal(premise.carscope_schema_absent, true);
+  assert.equal(premise.carscope_app_absent, true);
+  assert.equal(premise.server_major, Number(process.env.PG_MATRIX_MAJOR ?? premise.server_major));
+  const before = await p.owner.query('SELECT count(*)::int AS n FROM pg_roles');
+
+  const app = await h.bootstrap(p); // Includes setting the password, as \password does.
+  const role = (await p.owner.query("SELECT rolsuper,rolcreaterole,rolcreatedb,rolreplication,rolbypassrls,rolcanlogin,rolconnlimit,rolconfig FROM pg_roles WHERE rolname='carscope_app'")).rows[0];
+  assert.deepEqual(role, { rolsuper: false, rolcreaterole: false, rolcreatedb: false, rolreplication: false, rolbypassrls: false, rolcanlogin: true, rolconnlimit: 10, rolconfig: ['search_path=carscope'] });
+  assert.equal((await p.owner.query('SELECT count(*)::int AS n FROM pg_roles')).rows[0].n, before.rows[0].n + 1);
+  assert.equal((await p.owner.query(sql('supabase-s2-premise-check.sql'))).rows[0].carscope_app_absent, false, 'the check notices a second run');
+  const { archive } = await h.migrationArchive();
+  await h.restoreAsApp(p, app, archive); // Restore as the role, then the admin revokes what it granted.
+  assert.equal((await p.owner.query("SELECT has_database_privilege('carscope_app',current_database(),'CREATE') AS ok")).rows[0].ok, false);
+  assert.equal((await p.owner.query("SELECT pg_get_userbyid(nspowner) AS owner FROM pg_namespace WHERE nspname='carscope'")).rows[0].owner, 'carscope_app');
+});
+
+/** One connection, because a failed script leaves its transaction open, and psql with ON_ERROR_STOP would just exit. */
+async function runBootstrapAs(url) {
+  const { default: pg } = await import('pg');
+  const c = new pg.Client({ connectionString: url });
+  c.on('error', () => {});
+  const notices = [];
+  c.on('notice', (n) => notices.push(n.message));
+  await c.connect();
+  try {
+    await c.query(sql('supabase-bootstrap.sql'));
+    return { error: null, notices };
+  } catch (error) {
+    return { error, notices };
+  } finally {
+    await c.end().catch(() => {});
+  }
+}
+
+for (const [name, attributes, grant, expected] of [
+  ['CREATEROLE and CREATE on the database, but no grant option: PostgreSQL only warns, so the script must raise', 'LOGIN CREATEROLE', 'CREATE', 'P0001'],
+  ['CREATEROLE but no right on the database at all', 'LOGIN CREATEROLE', null, '42501'],
+  ['no CREATEROLE', 'LOGIN', 'CREATE', '42501'],
+]) {
+  test(`S2 premise not met, ${name}: stops and leaves nothing`, { skip, timeout: 60_000 }, async (t) => {
+    const h = await harness(t);
+    await h.admin.query('DROP ROLE IF EXISTS carscope_app').catch(() => {});
+    const db = await h.database('premise');
+    const adminRole = 'cs_premise_' + randomBytes(4).toString('hex'), password = randomBytes(18).toString('hex');
+    await h.admin.query(`CREATE ROLE ${adminRole} ${attributes} PASSWORD '${password}'`);
+    t.after(async () => { await h.admin.query(`DROP OWNED BY ${adminRole} CASCADE`).catch(() => {}); await h.admin.query(`DROP ROLE IF EXISTS ${adminRole}`).catch(() => {}); });
+    if (grant) await h.admin.query(`GRANT ${grant} ON DATABASE ${db.name} TO ${adminRole}`);
+    const url = h.urlAs(adminRole, password, db.name);
+    const r = await runBootstrapAs(url);
+    assert.equal(r.error?.code, expected);
+    assert.equal((await h.admin.query("SELECT count(*)::int AS n FROM pg_roles WHERE rolname='carscope_app'")).rows[0].n, 0, 'the role creation rolled back');
+    const premise = (await h.pool(url).query(sql('supabase-s2-premise-check.sql'))).rows[0];
+    assert.equal(premise.can_grant_create_on_database, false, 'the check reports this before anything runs');
+    assert.equal(premise.is_superuser, false);
+  });
+}
 
 test('fail closed on the wrong search_path: nothing lands in public, and the guard is what stops it', { skip, timeout: 120_000 }, async (t) => {
   const h = await harness(t);

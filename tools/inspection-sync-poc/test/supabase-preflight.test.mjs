@@ -107,8 +107,14 @@ test('a manifest scoped to one schema drops every other schema and the global ex
 
 test('operator SQL grants the API roles nothing, holds no password, and creates a role with no platform powers', () => {
   const read = (file) => readFileSync(new URL('../preflight/' + file, import.meta.url), 'utf8');
-  const bootstrap = read('supabase-bootstrap.sql'), post = read('supabase-post-restore.sql');
+  const bootstrap = read('supabase-bootstrap.sql'), post = read('supabase-post-restore.sql'), premise = read('supabase-s2-premise-check.sql');
   const statements = (text) => text.split(/\r?\n/).filter((l) => !l.trim().startsWith('--')).join('\n');
+  for (const text of [bootstrap, post, premise]) {
+    assert.equal(text.includes('carscope_private'), false, 'the existing empty schema is neither reused nor removed');
+    assert.equal(/\bDROP\b/i.test(text), false);
+  }
+  assert.match(statements(premise).trim(), /^SELECT\b/);
+  assert.equal(/\b(INSERT|UPDATE|DELETE|CREATE ROLE|CREATE SCHEMA|ALTER|GRANT|REVOKE|BEGIN|COMMIT)\b/.test(statements(premise).replace(/'[^']*'/g, "''")), false, 'the premise check only reads');
   for (const sql of [statements(bootstrap), statements(post)]) {
     assert.equal(/\b(anon|authenticated|service_role)\b/i.test(sql), false);
     assert.equal(/\bPASSWORD\b/i.test(sql), false);

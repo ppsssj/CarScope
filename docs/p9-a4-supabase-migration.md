@@ -1,13 +1,15 @@
 # P9-A4 Supabase PostgreSQL 이전 사전 검증
 
-Render PostgreSQL을 독립된 Supabase 프로젝트로 옮기기 위한 호환성 분석, 코드 수정, 격리 테스트, 이전 절차다. Render Web Service의 Node.js API, QR v2, enrollment, 차량 연동 구조는 그대로 둔다. **Supabase 프로젝트 생성·연결, Render 운영 DB 접근, 배포, 환경변수 변경, 데이터 이전은 하지 않았다.** 기존 AICS_Web 프로젝트에는 접근하지 않는다. 실행 근거는 [증거 인덱스](evidence/p9-a4/README.md)에 있다.
+Render PostgreSQL을 독립된 Supabase 프로젝트로 옮기기 위한 호환성 분석, 코드 수정, 격리 테스트, 이전 절차다. Render Web Service의 Node.js API, QR v2, enrollment, 차량 연동 구조는 그대로 둔다. **프로젝트는 사용자가 별도로 만들었다. 이 작업은 Supabase에 연결하거나 SQL을 실행하지 않았고, Render 운영 DB 접근, 배포, 환경변수 변경, 데이터 이전도 하지 않았다.** 기존 AICS_Web 프로젝트에는 접근하지 않는다. 실행 근거는 [증거 인덱스](evidence/p9-a4/README.md)에 있다.
 
 ## 판정
 
 | 표식 | 상태 | 범위 |
 |---|---|---|
 | `SUPABASE_PREFLIGHT_LOCAL_PASS` | [증거](evidence/p9-a4/README.md) 참조 | Docker PostgreSQL 16·17, 합성 데이터. `platform`은 문서를 본뜬 로컬 대역이며 Supabase가 아니다 |
-| `SUPABASE_CONNECTION_NOT_RUN` | NOT_RUN | 프로젝트 없음. 실제 인증서, Supavisor, Data API는 관찰하지 않았다 |
+| `SUPABASE_CONNECTION_NOT_RUN` | NOT_RUN | 프로젝트는 있으나(S1, 사용자 보고) 이 작업은 연결하지 않았다. 실제 인증서, Supavisor, Data API는 관찰하지 않았다 |
+| `S2_ROLE_NOT_CREATED` | NOT_RUN | `carscope_app` 없음. 운영 Supabase에 SQL을 실행하지 않았다 |
+| Render Auto-Deploy, 운영 `DATABASE_URL` 호스트 형식 | **NOT_VERIFIED** | 대시보드 확인 전까지 유지. 병합과 배포의 전제다 |
 | `SUPABASE_DATA_MIGRATION_NOT_RUN` | NOT_RUN | S3 별도 승인 |
 | `PRODUCTION_DB_NOT_RUN`, `RENDER_DEPLOY_NOT_RUN` | NOT_RUN | G3·G4 그대로 |
 
@@ -17,7 +19,7 @@ Supabase 사실은 2026-11-06에 읽은 공식 문서 기준이다. 문서에 �
 
 | 항목 | 현재 코드 | 판정 |
 |---|---|---|
-| PostgreSQL 16·17 | DDL과 쿼리에 버전 의존 기능이 없다 | 두 버전 실행. 16→17 복원은 행과 구조 일치. 신규 프로젝트 기본 버전은 NOT_STATED이므로 생성 때 확인한다 |
+| PostgreSQL 16·17 | DDL과 쿼리에 버전 의존 기능이 없다 | 두 버전 실행. 16→17 복원은 행과 구조 일치. 대상 프로젝트는 17.11(사용자 보고)이고 시험 이미지와 같다. Render 원본 버전은 NOT_VERIFIED |
 | JSONB, UUID, CHECK, INDEX, FK | 내장 타입과 함수만 쓰고 확장이 필요 없다 | 복원 후 CHECK·FK·PK 동작 확인(P9-A3), 두 버전 실행 |
 | 자동 DDL | `render-stateful`이 시작할 때 적용. 이름에 스키마를 붙이지 않는다 | search_path가 틀리면 `public`에 생성된다. **수정:** 예상 스키마를 먼저 확인 |
 | 연결 Pool | `max: 3`, 이름 있는 prepared statement 없음, `pg_advisory_xact_lock`은 트랜잭션 범위 | Session Pooler에서 문제될 기능을 쓰지 않는다(코드 분석). 실제 Supavisor는 NOT_RUN |
@@ -72,7 +74,7 @@ Supabase 사실은 2026-11-06에 읽은 공식 문서 기준이다. 문서에 �
 | 준비 | 이 PR 병합, 전환 코드 배포(G4 절차), 신규 APK 확인 | Render 배포 | G4 |
 | G3 | Render 백업과 격리 복원 리허설 | 운영 DB 읽기 | G3 |
 | S0 | 로컬 사본을 `carscope` 스키마로 이동, 2차 아카이브 생성 | 로컬 | G3 범위의 데이터이므로 같은 보관 규칙 |
-| S1 | CarScope 전용 Supabase 프로젝트 생성, SSL 강제, Data API 확인 | **새 프로젝트**. 비용·리전 결정 | S1 |
+| S1 | 프로젝트 생성 **완료(사용자 보고)**. SSL 강제와 Data API 확인은 남아 있다 | 운영 프로젝트 설정 | 남은 항목만 승인 |
 | S2 | 역할 생성, 읽기 전용 검사 | 새 프로젝트 쓰기 | S2 |
 | S3 | **데이터 이전:** 2차 아카이브 복원, 비교 | 새 프로젝트에 운영 데이터 복사 | S3 |
 | S4 | Render `DATABASE_URL` 전환, 상태 확인 | **운영 전환** | S4 |
@@ -82,7 +84,7 @@ G3에서 만든 백업은 쓰기가 계속되면 낡는다. 지금 운영은 `DE
 
 ### S0. 로컬 스키마 이동 (로컬 전용)
 
-[P9-A3 B와 G](p9-a3-db-recovery-readiness.md#g-운영-g3-실행-전-승인-체크리스트)로 `$out\g3.dump`를 격리 DB `carscope_rehearsal_g3_target`에 복원·검증한 터미널에서 실행한다. Render DB가 16이면 클라이언트도 16으로 받는다. **17 클라이언트로 만든 아카이브는 16 클라이언트가 읽지 못한다.**
+[P9-A3 B와 G](p9-a3-db-recovery-readiness.md#g-운영-g3-실행-전-승인-체크리스트)로 `$out\g3.dump`를 격리 DB `carscope_rehearsal_g3_target`에 복원·검증한 터미널에서 실행한다. 클라이언트 메이저는 Render 서버 이상이어야 한다. 대상이 17이므로 S3의 복원 클라이언트는 17을 쓴다. 16으로 만든 아카이브를 17이 복원하는 경로는 시험했다. 반대로 **17 클라이언트로 만든 아카이브는 16 클라이언트가 읽지 못한다.**
 
 ```powershell
 node bin/db-recovery.mjs relocate --target-url-env CARSCOPE_REHEARSAL_TARGET --schema carscope
@@ -92,28 +94,73 @@ node bin/db-recovery.mjs inspect --archive $out\migration.dump --docker-image po
 
 합격: `RELOCATE_APPLY` PASS(`rows and definitions unchanged`), `ARCHIVE_*` PASS. `public`에 다른 테이블이 있으면 멈춘다. 마지막 줄의 `PRODUCTION_DB_NOT_RUN`은 loopback을 읽었다는 뜻일 뿐이다. **이 파일에는 운영 데이터가 들어 있다.**
 
-### S1. 프로젝트 생성 체크리스트
+### S1. 프로젝트 (생성 완료, 일부 항목 미확인)
 
-- [ ] 사용자 승인. **AICS_Web과 다른 프로젝트**이고 조직·이름을 두 번 확인했다
-- [ ] 리전은 Render 서비스와 가깝게. 플랜과 비용 확인. Free 플랜의 일시 중지 조건은 NOT_VERIFIED이므로 확인한다
-- [ ] 메이저 버전 기록. 16 또는 17이 아니면 멈춘다(`DB_POSTGRES_VERSION` MANUAL)
-- [ ] 기본 버전이 Render보다 낮지 않다. 새 서버로만 복원할 수 있다
-- [ ] Settings에서 **SSL 강제 켜기.** 문서상 재부팅이 있으나 빈 프로젝트이므로 영향 없다
+**프로젝트는 이미 있다.** 아래 값은 사용자가 대시보드에서 확인해 알려 준 것이며, 이 작업은 프로젝트에 연결하지 않았다. 저장소가 공개라 전체 ref와 조직 이름은 적지 않는다. S2 전에 대시보드와 대조한다.
+
+| 항목 | 값 | 출처 |
+|---|---|---|
+| 프로젝트 ref | `kapd…mxdt` | 사용자 보고 |
+| PostgreSQL | 17.11. 매트릭스의 `postgres:17`과 같은 버전 | 사용자 보고 |
+| 리전 | Tokyo | 사용자 보고 |
+| `carscope` 스키마, `carscope_app` 역할 | 없음 | 사용자 보고 |
+| `carscope_private` 스키마 | 있음. 객체 0개, 소유자 `postgres`. `anon`, `authenticated`, `service_role` 접근 차단 | 사용자 보고 |
+
+**운영 스키마는 `carscope`다. 기존 `carscope_private`는 쓰지 않고 그대로 둔다.** 재사용하거나 지우는 SQL을 만들지 않는다. `carscope_private`를 `CARSCOPE_DB_SCHEMA`에 넣지 않는다. 격리 테스트는 같은 이름의 빈 스키마가 전체 이전 뒤에도 소유자와 객체 0개 그대로이고 앱 역할이 접근하지 못함을 확인한다.
+
+남은 확인 (전부 NOT_VERIFIED):
+
+- [ ] **AICS_Web과 다른 프로젝트**이고 조직과 ref를 두 번 확인했다
+- [ ] 플랜과 비용, Free 플랜이면 일시 중지 조건
+- [ ] Settings에서 **SSL 강제 켜기.** 문서상 재부팅이 있으나 객체가 없는 지금이 영향이 작다. **운영 변경이므로 승인 후 실행**
 - [ ] Server root certificate를 내려받아 `C:\CarScope-External\p9-a4\`에 둔다
-- [ ] Data API Exposed schemas에 `carscope`가 **없다.** `public`만 있어도 CarScope 테이블은 없다
+- [ ] Data API Exposed schemas에 `carscope`가 **없다**
+- [ ] Render DB 메이저 버전이 17 이하다. 새 서버로만 복원할 수 있다. Render 버전은 G3의 `database`로 확인한다
 - [ ] 비밀번호와 연결 문자열을 Git·채팅·로그에 넣지 않는다
 
 ### S2. 역할 생성
 
-Session Pooler 주소는 Connect 화면에서 복사한다. 문서상 주소를 리전으로 조합할 수 없다.
+**아직 실행하지 않았다. `carscope_app`은 없다.** 관리 역할이 superuser라고 가정하지 않는다. 문서는 `postgres`가 관리자 권한이라고만 하고 superuser 여부와 `CREATEROLE`은 NOT_STATED다.
+
+#### 권한 전제
+
+`supabase-bootstrap.sql`이 요구하는 것은 superuser가 아니라 다음 두 가지다. PostgreSQL 16·17에서 비 superuser 관리 역할로 시험했다(로컬 대역).
+
+| 관리 역할의 상태 | 결과 | 시험 |
+|---|---|---|
+| `CREATEROLE` + DB 소유자 | **성공.** 역할 생성, search_path, 비밀번호, 임시 권한, 회수까지 동작 | PASS |
+| `CREATEROLE` + DB의 CREATE, **grant option 없음** | PostgreSQL은 오류가 아니라 경고 `no privileges were granted`만 낸다. **스크립트가 직접 확인해 중단하고 전체 롤백** | PASS. 수정 전에는 조용히 성공할 경로였다 |
+| `CREATEROLE`, DB 권한 없음 | 42501, 전체 롤백 | PASS |
+| `CREATEROLE` 없음 | 42501, 전체 롤백 | PASS |
+
+`carscope_private`의 소유자가 `postgres`라는 사실은 `postgres`가 스키마를 만들 수 있음을 시사할 뿐, 그 권한을 **남에게 줄 수 있음**(grant option)을 뜻하지 않는다. DB 소유자가 누구인지는 **NOT_VERIFIED**이므로 먼저 읽기 전용으로 확인한다.
 
 ```powershell
-# 관리자 연결. psql이 없으면 --docker-image와 같은 postgres 이미지를 쓴다
-psql "sslmode=verify-full sslrootcert=C:\CarScope-External\p9-a4\prod-ca.crt host=<pooler host> port=5432 dbname=postgres user=postgres.<ref>" -v ON_ERROR_STOP=1 -f tools\inspection-sync-poc\preflight\supabase-bootstrap.sql
-# 같은 연결에서 \password carscope_app
+# 관리자 연결. S2 승인 후. 읽기만 한다. psql이 없으면 postgres:17 이미지를 쓴다
+psql "sslmode=verify-full sslrootcert=C:\CarScope-External\p9-a4\prod-ca.crt host=<pooler host> port=5432 dbname=postgres user=postgres.<ref>" -f tools\inspection-sync-poc\preflight\supabase-s2-premise-check.sql
 ```
 
-실패하면 멈춘다. 문서는 `postgres`가 관리자 권한이라고만 하고 superuser 여부와 `CREATEROLE`은 NOT_STATED다.
+| 열 | 합격 | 아니면 |
+|---|---|---|
+| `can_create_roles` | `t` | **멈춘다** |
+| `can_grant_create_on_database` | `t` | **멈춘다.** 아래 대안 참조 |
+| `server_major` | `17` | 멈춘다. 예상과 다른 프로젝트일 수 있다 |
+| `carscope_schema_absent`, `carscope_app_absent` | `t` | 멈춘다. 이미 실행됐거나 다른 프로젝트다 |
+| `connection_uses_tls` | `t` | 멈춘다 |
+| `is_superuser`, `database_owner` | 기록만 | 합격 조건이 아니다 |
+
+**전제가 맞지 않을 때:** 권한을 넓히거나 플랫폼 역할을 변경하지 않는다. 대안은 관리 역할이 `CREATE SCHEMA carscope AUTHORIZATION carscope_app`으로 스키마를 먼저 만들고 복원 목록에서 스키마 항목을 빼는 것이다(DB 권한을 앱 역할에 주지 않는다). **이 대안은 구현·시험하지 않았다(NOT_RUN).** 별도로 검증한 뒤 쓴다.
+
+Supabase에서만 확인되는 것(NOT_VERIFIED): 플랫폼의 이벤트 트리거가 새 역할과 스키마에 관여하는지, 새 역할이 Shared Pooler(`carscope_app.<ref>`)로 바로 인증되는지.
+
+#### 실행
+
+전제가 모두 맞으면 S2 승인 후 실행한다. 단일 트랜잭션이므로 실패하면 남는 것이 없다.
+
+```powershell
+psql "<위와 같은 관리자 연결>" -v ON_ERROR_STOP=1 -f tools\inspection-sync-poc\preflight\supabase-bootstrap.sql
+# 같은 연결에서 \password carscope_app
+```
 
 ### S3. 데이터 이전 (별도 승인)
 
@@ -122,7 +169,7 @@ psql "sslmode=verify-full sslrootcert=C:\CarScope-External\p9-a4\prod-ca.crt hos
 - [ ] 사용자의 S3 승인, 이번 아카이브 SHA-256 기록
 - [ ] 최신 G3 리허설 `G3_REHEARSAL_VERIFIED`
 - [ ] 대상 프로젝트 ref를 대시보드와 대조
-- [ ] 대상에 `carscope` 스키마가 없다
+- [ ] 대상에 `carscope` 스키마가 없다. `carscope_private`는 건드리지 않는다
 
 ```powershell
 $secure = Read-Host -AsSecureString
@@ -162,8 +209,8 @@ Remove-Item Env:CARSCOPE_S3_TARGET; Remove-Variable secure
 ### 전환 전
 
 - [ ] 사용자의 S4 승인, 시간대 결정
-- [ ] 이 PR이 포함된 커밋이 Render에 배포되어 `/healthz`가 정상. **먼저 확인:** 지금 `DATABASE_URL` 호스트에 점이 없다(대시보드에서 값을 보지 않고 Internal URL인지만 확인). 점이 있으면 이 코드는 시작을 거부하므로 전환 코드 배포를 멈춘다
-- [ ] Auto-Deploy Off
+- [ ] 이 PR이 포함된 커밋이 Render에 배포되어 `/healthz`가 정상. **먼저 확인 (현재 NOT_VERIFIED):** 지금 `DATABASE_URL` 호스트에 점이 없다(대시보드에서 값을 보지 않고 Internal URL인지만 확인). 점이 있으면 이 코드는 시작을 거부하므로 전환 코드 배포를 멈춘다
+- [ ] Auto-Deploy Off (**현재 NOT_VERIFIED**)
 - [ ] S3 비교 PASS, 최신 아카이브 SHA 기록
 - [ ] 현재 Render `DATABASE_URL`을 비밀 저장소에 보관. **롤백에 필요하다**
 - [ ] Render Free DB면 만료일까지 롤백할 시간이 남았다
@@ -219,5 +266,6 @@ node bin/deployment-preflight.mjs render --deployed-commit <SHA> --target-commit
 - **CA 회전:** `CARSCOPE_DB_CA_PEM_BASE64`가 낡으면 재시작 때 시작이 거부된다. 회전 일정은 NOT_STATED다.
 - **Render 호스트 형식 가정:** Internal URL에 점이 없다는 것은 [P6-D2](p6-d2-postgres-store.md) 운영 절차와 일반적 형식에서 추정했고 운영 값을 보지 않았다.
 - **로컬 대역의 한계:** `platform`은 역할과 기본 권한만 본뜬다. 실제 이벤트 트리거, 기본 권한, 플랫폼 확장은 다를 수 있다.
+- **S2 전제:** 실제 관리 역할의 `CREATEROLE`과 DB grant option을 확인하지 못했다. 맞지 않으면 S2는 실패로 끝나고 대안은 미검증이다.
 - **최소 권한 부족:** 런타임 역할이 자기 스키마의 DDL을 실행할 수 있다. migration을 시작 경로에서 분리하는 것은 별도 과제다.
 - **재해 대비:** 이전 후 Supabase 플랜의 백업 범위는 확인하지 않았다.
