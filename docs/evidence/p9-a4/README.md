@@ -5,9 +5,11 @@
 | 표식 | 상태 | 근거와 범위 |
 |---|---|---|
 | `SUPABASE_PREFLIGHT_LOCAL_PASS` | PASS (범위 한정) | Docker PostgreSQL 16.15·17.11, 합성 데이터, 로컬 대역. Supabase의 동작을 증명하지 않는다 |
-| `MUTATION_CHECK_INCOMPLETE` | **미완료** | 30건 중 2건 실행. 아래 참조 |
-| `SUPABASE_CONNECTION_NOT_RUN` | NOT_RUN | 프로젝트 없음. 인증서, Supavisor, Data API 미관찰 |
-| `SUPABASE_DATA_MIGRATION_NOT_RUN` | NOT_RUN | S1~S4 미실행. AICS_Web 접근 없음 |
+| 변형 검사 | **CI에서 완주** | 32건: 31 KILLED, 1 예상 동등 변형. 아래 참조 |
+| `S2_ROLE_NOT_CREATED` | NOT_RUN | `carscope_app` 없음. 운영 Supabase에 SQL을 실행하지 않았다 |
+| Render Auto-Deploy, 운영 `DATABASE_URL` 호스트 형식 | **NOT_VERIFIED** | 사용자 확인 전까지 유지 |
+| `SUPABASE_CONNECTION_NOT_RUN` | NOT_RUN | 프로젝트는 사용자가 만들었다(S1). 이 작업은 연결하지 않았다. 인증서, Supavisor, Data API 미관찰 |
+| `SUPABASE_DATA_MIGRATION_NOT_RUN` | NOT_RUN | S2~S4 미실행. AICS_Web 접근 없음 |
 | `PRODUCTION_DB_NOT_RUN` | NOT_RUN | Render 운영 DB 접근·백업 없음 |
 | `RENDER_DEPLOY_NOT_RUN` | NOT_RUN | 배포, 환경변수 변경, 대시보드 확인 없음. `/healthz`도 호출하지 않았다 |
 
@@ -39,8 +41,7 @@ Windows 10, Node 22.16.0, Docker 29.8.1. `postgres:16` `sha256:933463a6…a66a32
 
 | 실행 | 결과 |
 |---|---|
-| 매트릭스 (음성 테스트 추가 전 최종) | PG 16·17 회귀 `REGRESSION_POSTGRES` pass=96 skipped=1 → **NOT_RUN** 표기(skip은 원격 경로, 별도 CI job). 신규 스위트 각 19 PASS / 1 SKIP. 16→17 복원 1 PASS |
-| 음성 테스트 추가 후, PG 17만 | `supabase-preflight*` 36 중 35 PASS / 1 SKIP(교차 버전) / 0 FAIL. **PG 16과 교차 버전의 재실행은 CI에 맡겼다** |
+| 매트릭스 | 최종 수치는 CI 절과 PR 체크를 따른다. 로컬은 메모리 제한으로 영향받은 테스트만 컨테이너 1개로 실행했다 |
 | `npm test` (`PG_TEST_URL` 없음) | 230 중 200 PASS / 30 SKIP / 0 FAIL. SKIP은 실제 PG 항목이다 |
 | `npm run check` | PASS |
 | S0 CLI (로컬, 합성) | `relocate` 9 tables, 35 rows `unchanged`. 2차 아카이브 26601 bytes. `inspect` PASS, `compare`의 구조·행 수·다이제스트 PASS |
@@ -48,15 +49,34 @@ Windows 10, Node 22.16.0, Docker 29.8.1. `postgres:16` `sha256:933463a6…a66a32
 | S2·S3 SQL | 로컬 대역에서 비 superuser 관리자로 실행. **실제 Supabase에서는 NOT_RUN** |
 | `verify-full`이 쓰는 CA 경로의 Pooler 검증 | NOT_RUN |
 
-## 변형 검사: 미완료
+## 변형 검사
 
-대조군과 로드 실패 분리를 넣어 실행했으나 **시스템 메모리 부족으로 중단되었고 재시작하지 않았다.**
+`test/run-mutations.mjs`가 CI의 일회용 PostgreSQL 17에서 결함을 하나씩 넣어 순차 실행한다. 선택한 조건만 대상이며 완전성의 증명이 아니다.
 
-- 대조군 15개 패턴 OK.
-- 30건 중 **2건 실행, 2 KILLED** (평문 허용, TLS 검증 끄기).
-- **28건 NOT_RUN.** 테스트가 나머지 결함을 잡는다는 근거가 아직 없다.
+| 실행 | 결과 |
+|---|---|
+| 로컬 1차 | 메모리 부족으로 시스템이 중단. 30건 중 2건 실행 후 재시작하지 않았다. 이후 격리 CI로 옮겼다 |
+| CI 1차 (`54c83bc`) | 무효 처리. 새 S2 테스트 2건의 대조군이 실패했고, `pass=-1`, `pass=0 fail=0`처럼 시간 초과·취소가 KILLED로 집계됐다 |
+| [CI 유효 실행 (`676f778`)](https://github.com/ppsssj/CarScope/actions/runs/42194984214) | 대조군 16개 패턴 OK. **32건: 31 KILLED, 1 EQUIVALENT**, SURVIVED·TIMEOUT·INVALID·NOT_APPLIED 0. 전부 assertion 실패로 잡혔다 |
 
-스크립트는 Git 밖에 있다. 재개 여부는 사용자가 정한다.
+KILLED는 이제 실패한 테스트가 있어야 하며, 시간 초과는 TIMEOUT으로 따로 세어 job을 실패시킨다. 동등 변형은 `relocate`의 행 비교 제거다. `ALTER TABLE SET SCHEMA`는 행을 바꿀 수 없어 테스트로 도달할 수 없다. 이 비교는 방어 코드로 남겼으며 **동작이 검증된 것은 아니다.**
+
+PG 16에서는 변형 검사를 실행하지 않았다. P9-A3의 38건은 이번에 다시 실행하지 않았다.
+
+## S2 권한 전제
+
+**운영 Supabase에 연결하거나 SQL을 실행하지 않았다.** 비 superuser 관리 역할을 로컬 PostgreSQL 16·17에서 시험했다. 실제 관리 역할의 속성은 NOT_VERIFIED다.
+
+| 관리 역할 | 결과 |
+|---|---|
+| `CREATEROLE` + DB 소유자 | 성공. 역할 속성, search_path, 비밀번호, 복원, 회수, 스키마 소유자 확인 |
+| `CREATEROLE` + DB CREATE, grant option 없음 | PostgreSQL은 경고만 낸다. 스크립트가 P0001로 중단, 역할 롤백 |
+| `CREATEROLE` + PUBLIC 권한만 | 같은 경고. P0001로 중단, 역할 롤백 |
+| `CREATEROLE` 없음 | 42501, 롤백 |
+
+`supabase-s2-premise-check.sql`은 SELECT 하나이며 위 경우를 미리 구분한다. 변형 검사가 grant 확인 제거와 전제 검사의 grant option 누락을 모두 잡았다. **대안 경로(관리 역할이 스키마를 먼저 생성)는 NOT_RUN이다.**
+
+`carscope_private`는 로컬 대역에 같은 이름의 빈 스키마를 두어 시험했다. 전체 이전 뒤에도 소유자와 객체 0개가 그대로이고 앱·API 역할이 접근하지 못한다. 운영자 SQL 어디에도 이 이름과 `DROP`이 없음을 테스트가 고정한다.
 
 ## 개발 중 찾은 결함
 
@@ -68,17 +88,14 @@ Windows 10, Node 22.16.0, Docker 29.8.1. `postgres:16` `sha256:933463a6…a66a32
 | 스키마가 없으면 게이트 전체 중단 | 대조군 테스트 | 부재를 FAIL·NOT_RUN으로 보고 |
 | P9-A3 테스트의 16 하드코딩 | PG 17 실행 | 서버 버전과 비교 |
 | 매트릭스의 임의 포트가 재시작 때 바뀌어 복구 실패처럼 보임 | 실행 | 고정 포트. 제품 결함 아님 |
+| `GRANT`가 grant option 없이 경고만 내어 S2가 성공한 것처럼 보임 | 권한 전제 점검 | 스크립트가 직접 확인 후 롤백. 복원 단계에서야 드러났을 문제 |
+| 시험 정리가 실패를 삼켜 역할과 DB가 다음 테스트로 남음. DB 중단 뒤 프로세스가 끝나지 않음 | CI 시간 초과, 로컬 재현 | 새 연결로 정리. 제품 결함 아님 |
+| 변형 검사가 시간 초과를 KILLED로 집계 | 결과 검토 | TIMEOUT 분리, 종료 대기에 시한 |
 
 ## CI
 
-`a56936e` PR 실행, 13개 job 전부 PASS. `pg-matrix`는 Docker PostgreSQL 16·17 합성 범위이고 `PG_MATRIX_BIND=0.0.0.0`으로 Linux 게이트웨이를 사용한다. Supabase·Render·기기 결과가 아니다.
+최종 결과는 [PR #88](https://github.com/ppsssj/CarScope/pull/88) 체크를 따른다. `pg-matrix`와 `mutation-check`는 Docker PostgreSQL 합성 범위이고 `PG_MATRIX_BIND=0.0.0.0`으로 Linux 게이트웨이를 사용한다. Supabase·Render·기기 결과가 아니다.
 
-| job | 결과 |
-|---|---|
-| [`pg-matrix`](https://github.com/ppsssj/CarScope/actions/runs/42185639725) | PG 16·17 신규 스위트 각 27 중 26 PASS / 1 SKIP(교차 버전, 다음 단계에서 실행). 16→17 복원 1 PASS. 음성 테스트 포함 전체 실행이다 |
-| 같은 job의 회귀 | 16·17 모두 `REGRESSION_SYNC_HISTORY` pass=52, `REGRESSION_POSTGRES` pass=96 skipped=1 → **NOT_RUN** 표기. skip은 원격 경로 테스트로, `postgres-integration` job이 PG 16에서만 실행한다. **원격 경로의 PG 17 실행은 없다** |
-| `postgres-integration`, preflight, decoder, Sync Ubuntu/Windows, geometry, core, identity, tire, 3D 결과, WebXR, GitGuardian | PASS. 각 job 범위 |
-
-위 "PG 16과 교차 버전의 재실행"은 이 job으로 완료되었다. Linux Docker의 `--docker-image` 경로도 여기서 실행됐다.
+`REGRESSION_POSTGRES`는 16·17 모두 pass=96 skipped=1로 **NOT_RUN** 표기다. skip은 원격 경로 테스트로, `postgres-integration` job이 PG 16에서만 실행한다. **원격 경로의 PG 17 실행은 없다.**
 
 원본 로그와 합성 산출물은 작업 PC `C:\CarScope-External\p9-a4\20261106T080729Z`에 있으며 Git에 포함하지 않는다. DB URL과 비밀번호는 기록하지 않는다.

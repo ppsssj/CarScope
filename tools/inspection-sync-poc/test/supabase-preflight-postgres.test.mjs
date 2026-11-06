@@ -57,12 +57,20 @@ async function harness(t) {
   };
   const urlAs = (role, password, databaseName) => { const u = new URL(rehearsalUrl(uri, databaseName)); u.username = role; u.password = password; return u.href; };
   t.after(async () => {
+    // A fresh connection: the outage test stops the server, which ends the one this harness has been using.
     await Promise.allSettled(pools.map((p) => p.end()));
-    for (const name of databases) await admin.query(`DROP DATABASE IF EXISTS ${name} WITH (FORCE)`).catch(() => {});
-    for (const role of roles) await admin.query(`DROP ROLE IF EXISTS ${role}`).catch(() => {});
-    await admin.query('DROP ROLE IF EXISTS carscope_app'); // After its databases: a failure here would leak into the next test.
-    await admin.end();
-    rmSync(dir, { recursive: true, force: true });
+    await Promise.race([admin.end().catch(() => {}), sleep(2000)]);
+    const cleaner = new pg.Client({ connectionString: uri, connectionTimeoutMillis: 10_000 });
+    cleaner.on('error', () => {});
+    try {
+      await cleaner.connect();
+      for (const name of databases) await cleaner.query(`DROP DATABASE IF EXISTS ${name} WITH (FORCE)`);
+      for (const role of roles) await cleaner.query(`DROP ROLE IF EXISTS ${role}`);
+      await cleaner.query('DROP ROLE IF EXISTS carscope_app'); // After its databases, or it would leak into the next test.
+    } finally {
+      await Promise.race([cleaner.end().catch(() => {}), sleep(2000)]);
+      rmSync(dir, { recursive: true, force: true });
+    }
   });
   /**
    * A database laid out as the documentation describes: a non-superuser admin owning it, the three API roles, managed
