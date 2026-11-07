@@ -33,7 +33,7 @@ function openZoom(src, image) {
 }
 
 const vehicleName = ({ make, model, year }) => `${year} ${make} ${model}`;
-const notice = image => (image.kind === IMAGE_KIND.PHOTO ? `${vehicleName(image.vehicle)} 사진이에요. 내 차와 다를 수 있어요.` : '실제 사진이 아니에요.');
+const notice = image => (image.kind === IMAGE_KIND.PHOTO ? `${vehicleName(image.vehicle)} 사진이에요. 내 차와 다를 수 있어요.` : '설명용 그림이며 실제 차량과 위치·형태가 다를 수 있습니다.');
 
 function figure(image) {
   const box = el('figure', 'part-guide-figure'), frame = el('button', 'part-guide-frame'), picture = el('img'), state = el('p', 'part-guide-state fine', '그림을 불러오는 중이에요…'), caption = el('figcaption');
@@ -59,9 +59,8 @@ export function renderPartGuide(guide) {
   body.append(el('p', 'part-guide-role', `${guide.role} ${guide.taskId ? '찾아볼 곳' : '있는 곳'}: ${guide.area}.`));
   const pictures = [guide.overviewImage, guide.detailImage].map(usableImage).filter(Boolean).map(figure);
   for (const picture of pictures) figures.append(picture.box);
-  const hasPhoto = [guide.overviewImage, guide.detailImage].some(image => usableImage(image)?.kind === IMAGE_KIND.PHOTO);
-  if (!hasPhoto) body.append(el('p', 'card muted part-guide-no-photo', pictures.length ? '아직 실제 사진이 없어 설명용 그림으로 보여 드려요.' : '아직 준비된 사진이나 그림이 없어요. 아래 설명과 차량 설명서로 찾아 주세요.'));
   if (pictures.length) body.append(figures);
+  else body.append(el('p', 'card muted part-guide-no-picture', '아직 준비된 그림이 없어요. 아래 설명과 차량 설명서로 찾아 주세요.'));
   body.append(list('이렇게 구별해요', guide.identifyingFeatures), list('꼭 지켜 주세요', guide.safetyNotes), el('p', 'fine part-guide-applies', guide.vehicleApplicability.text));
   if (guide.manualReference) {
     const manual = el('p', 'fine part-guide-manual'), link = el('a', null, guide.manualReference.label);

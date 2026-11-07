@@ -25,7 +25,7 @@ test('all 19 registry parts have a guide, tied to the registry by id and task, a
     const part = partById(guide.partId);
     assert.equal(guide.taskId, part.taskId, guide.partId);
     assert.deepEqual(guideProblems(guide), [], guide.partId);
-    assert.equal(guide.photoStatus, 'PHOTO_NEEDED', guide.partId);
+    assert.equal(guide.photoStatus, 'SCHEMATIC_ONLY', guide.partId);
     if (guide.taskId) assert.equal(guideForTask(guide.taskId), guide);
   }
   assert.equal(guideForTask(null), null, 'a part with no task is not found by accident');
@@ -46,6 +46,13 @@ test('titles follow the registry names, and every related link leads to an infor
   for (const guide of Object.values(PART_GUIDES)) {
     if (guide.partId !== 'washer-fluid-cap') assert.equal(guide.title, partById(guide.partId).label, guide.partId);
     for (const id of guide.relatedInfo ?? []) assert.ok(infoGuides().some(info => info.partId === id), id);
+  }
+});
+
+test('drawings are the final form: nothing in the guide words mentions a photo, in any of the 19', () => {
+  for (const guide of Object.values(PART_GUIDES)) {
+    const { overviewImage: o, detailImage: d } = guide;
+    assert.doesNotMatch([guide.title, guide.role, guide.area, ...guide.identifyingFeatures, ...guide.safetyNotes, guide.vehicleApplicability.text, o.alt, o.caption, d.alt, d.caption, guide.manualReference?.applicability ?? ''].join(' '), /사진/, guide.partId);
   }
 });
 
