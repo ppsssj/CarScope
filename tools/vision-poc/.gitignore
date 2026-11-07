@@ -1,0 +1,11 @@
+node_modules/
+data/
+models/
+*.tflite
+*.task
+*.jpg
+*.jpeg
+*.png
+*.webp
+*.heic
+__pycache__/
