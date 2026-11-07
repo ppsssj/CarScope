@@ -15,7 +15,7 @@ test('happy path reaches the mobile handoff with the hood open and the washer cl
   for (const ev of [START, HOOD, OPENED, WASHER, QR]) { st = transition(st, ev, { handoffConfigured: true }); names.push(st.name); }
   assert.deepEqual(names, [S.INSPECTION_OVERVIEW, S.HOOD_OPENING, S.COMPONENT_SELECTION, S.WASHER_SELECTED, S.MOBILE_HANDOFF_READY]);
   assert.equal(hoodTarget(st), HOOD_OPEN_DEG);
-  assert.equal(cameraGoal(st), 'washer');
+  assert.equal(cameraGoal(st), 'washer-fluid-cap');
   assert.equal(st.component, 'washer-fluid-cap');
 });
 

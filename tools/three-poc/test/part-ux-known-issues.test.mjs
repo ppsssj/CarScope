@@ -21,7 +21,7 @@ test('the baseline covers 19 parts on the four agreed screens',()=>{
 test('every known issue is identifiable, owned by a later PR and honest about how it is checked',()=>{
   assert.equal(new Set(PART_UX_ISSUES.map(x=>x.id)).size,PART_UX_ISSUES.length);
   assert.equal(PART_UX_ISSUES.filter(x=>x.severity==='P0').length,4);
-  assert.equal(PART_UX_ISSUES.filter(x=>x.severity==='P1').length,14);
+  assert.equal(PART_UX_ISSUES.filter(x=>x.severity==='P1').length,15);
   assert.equal(PART_UX_ISSUES.filter(x=>x.severity==='P2').length,9);
   for(const x of PART_UX_ISSUES){
     assert.match(x.id,/^P[012]-\d+$/);
