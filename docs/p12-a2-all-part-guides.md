@@ -1,6 +1,6 @@
 # P12-A2 19개 부품 시각 안내
 
-[P12-A](p12-a-part-photo-guide.md)의 화면을 `INSPECTION_PARTS` 19개 전체로 넓혔다. 부품마다 위치 그림과 상세 그림이 있고, 모바일 점검이 있는 17개는 점검 화면에, 점검이 없는 2개는 별도 정보 페이지에 나타난다. **그림 38장은 모두 CarScope가 그린 설명용 그림이고 실제 사진은 0장이다.** 결과는 [증거 인덱스](evidence/p12-a2/README.md)에 있다.
+[P12-A](p12-a-part-photo-guide.md)의 화면을 `INSPECTION_PARTS` 19개 전체로 넓혔다. 부품마다 위치 그림과 상세 그림이 있고, 모바일 점검이 있는 17개는 점검 화면에, 점검이 없는 2개는 별도 정보 페이지에 나타난다. **그림 38장은 모두 CarScope가 그린 설명용 그림이고 이것이 최종 방식이다([P12-A3](p12-a3-schematic-only.md)).** 결과는 [증거 인덱스](evidence/p12-a2/README.md)에 있다.
 
 ## 그림
 
@@ -54,20 +54,20 @@
 
 ## 부품별 지원 현황
 
-| 부품 ID | 작업 | 연결 위치 | 3D 근거 | 위치 표시 | 실제 사진 | 설명서 링크 |
+| 부품 ID | 작업 | 연결 위치 | 3D 근거 | 위치 표시 | 안내 방식 | 설명서 링크 |
 |---|---|---|---|---|---|---|
-| `washer-fluid-cap` | `washer-fluid` | 점검 화면 | ESTIMATED | 구역 예시 | 필요 | 있음 |
-| `coolant-reservoir` | 같은 ID | 점검 화면 | ESTIMATED | 구역 예시 | 필요 | 있음 |
-| `lcw-coolant-reservoir` | 같은 ID | 점검 화면 | NONE | 구역 예시(점선) | 필요 | 있음 |
-| `brake-fluid-reservoir` | `brake-fluid` | 점검 화면 | ESTIMATED | 구역 예시 | 필요 | 있음 |
-| `battery-12v` | 같은 ID | 점검 화면 | ESTIMATED | 구역 예시 | 필요 | 있음 |
-| `fuse-box` | 같은 ID | 점검 화면 | ESTIMATED | 구역 예시 | 필요 | 있음 |
-| `tire.front-left`, `tire.front-right`, `tire.rear-left`, `tire.rear-right` | 같은 ID | 점검 화면 | GLB_ORIGINAL | 해당 바퀴 | 필요 | 있음 |
-| `ev-charge.port` | 같은 ID | 점검 화면 | ESTIMATED | 참고 예시 | 필요 | 없음 |
-| `ev-charge.flap` | 없음 | **정보 페이지** | ESTIMATED | 충전구와 같은 자리 | 필요 | 없음 |
-| `ev-battery.pack` | 없음 | **정보 페이지** | ESTIMATED | 바닥 아래 | 필요 | 없음 |
-| `wiper.front.left`, `wiper.front.right` | 같은 ID | 점검 화면 | ESTIMATED | 해당 쪽 | 필요 | 있음 |
-| 전조등 4개 (`light-*`) | 같은 ID | 점검 화면 | GLB_MARKER | 해당 모서리 | 필요 | 있음 |
+| `washer-fluid-cap` | `washer-fluid` | 점검 화면 | ESTIMATED | 구역 예시 | `SCHEMATIC_ONLY` | 있음 |
+| `coolant-reservoir` | 같은 ID | 점검 화면 | ESTIMATED | 구역 예시 | `SCHEMATIC_ONLY` | 있음 |
+| `lcw-coolant-reservoir` | 같은 ID | 점검 화면 | NONE | 구역 예시(점선) | `SCHEMATIC_ONLY` | 있음 |
+| `brake-fluid-reservoir` | `brake-fluid` | 점검 화면 | ESTIMATED | 구역 예시 | `SCHEMATIC_ONLY` | 있음 |
+| `battery-12v` | 같은 ID | 점검 화면 | ESTIMATED | 구역 예시 | `SCHEMATIC_ONLY` | 있음 |
+| `fuse-box` | 같은 ID | 점검 화면 | ESTIMATED | 구역 예시 | `SCHEMATIC_ONLY` | 있음 |
+| `tire.front-left`, `tire.front-right`, `tire.rear-left`, `tire.rear-right` | 같은 ID | 점검 화면 | GLB_ORIGINAL | 해당 바퀴 | `SCHEMATIC_ONLY` | 있음 |
+| `ev-charge.port` | 같은 ID | 점검 화면 | ESTIMATED | 참고 예시 | `SCHEMATIC_ONLY` | 없음 |
+| `ev-charge.flap` | 없음 | **정보 페이지** | ESTIMATED | 충전구와 같은 자리 | `SCHEMATIC_ONLY` | 없음 |
+| `ev-battery.pack` | 없음 | **정보 페이지** | ESTIMATED | 바닥 아래 | `SCHEMATIC_ONLY` | 없음 |
+| `wiper.front.left`, `wiper.front.right` | 같은 ID | 점검 화면 | ESTIMATED | 해당 쪽 | `SCHEMATIC_ONLY` | 있음 |
+| 전조등 4개 (`light-*`) | 같은 ID | 점검 화면 | GLB_MARKER | 해당 모서리 | `SCHEMATIC_ONLY` | 있음 |
 
 ## 호스트와 보안
 
@@ -88,6 +88,6 @@ npm run guide:gallery
 
 ## 알려진 제약
 
-- 실제 사진이 없다. 그림은 위치와 표시의 개념을 설명할 뿐 실제 부품을 찾을 수 있다고 보장하지 않는다.
+- 그림은 위치와 표시의 개념을 설명할 뿐 실제 부품을 찾을 수 있다고 보장하지 않는다.
 - 안내 문구는 저장소 규칙과 대조했지만 정비·안전 전문가의 검토를 거치지 않았다.
 - Z Flip8, 실제 폴더블, 실제 Render는 `NOT_RUN`이다. 화면 크기는 viewport 시뮬레이션이다.

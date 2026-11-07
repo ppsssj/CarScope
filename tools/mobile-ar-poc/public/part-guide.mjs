@@ -25,7 +25,7 @@ function ensureDialog() {
 }
 function openZoom(src, image) {
   ensureDialog();
-  zoomImage.src = src; zoomImage.alt = image.alt; zoomCaption.textContent = `${image.caption} ${notice(image)}`;
+  zoomImage.src = src; zoomImage.alt = image.alt; zoomCaption.textContent = image.kind === IMAGE_KIND.PHOTO ? `${image.caption} ${photoNotice(image)}` : image.caption;
   dialog.showModal();
   history.scrollRestoration = 'manual';
   history.pushState({ carscopePartGuideZoom: true }, '');
@@ -33,13 +33,16 @@ function openZoom(src, image) {
 }
 
 const vehicleName = ({ make, model, year }) => `${year} ${make} ${model}`;
-const notice = image => (image.kind === IMAGE_KIND.PHOTO ? `${vehicleName(image.vehicle)} 사진이에요. 내 차와 다를 수 있어요.` : '실제 사진이 아니에요.');
+const photoNotice = image => `${vehicleName(image.vehicle)} 사진이에요. 내 차와 다를 수 있어요.`;
+const SCHEMATIC_NOTE = '설명용 그림이며 실제 차량과 위치·형태가 다를 수 있습니다.';
 
 function figure(image) {
   const box = el('figure', 'part-guide-figure'), frame = el('button', 'part-guide-frame'), picture = el('img'), state = el('p', 'part-guide-state fine', '그림을 불러오는 중이에요…'), caption = el('figcaption');
   frame.type = 'button'; frame.disabled = true; frame.setAttribute('aria-label', `${image.caption} 크게 보기`);
   picture.alt = image.alt;
-  caption.append(el('span', 'part-guide-badge', image.kind === IMAGE_KIND.PHOTO ? '실제 사진' : '설명용 그림'), el('span', null, image.caption), el('span', 'fine part-guide-credit', `${notice(image)} 출처: ${image.imageSource}`));
+  // A photo must say which car it shows and whose it is. A drawing has only its description; the guide ends with the note about drawings.
+  if (image.kind === IMAGE_KIND.PHOTO) caption.append(el('span', 'part-guide-badge', '실제 사진'), el('span', null, image.caption), el('span', 'fine part-guide-credit', `${photoNotice(image)} 출처: ${image.imageSource}`));
+  else caption.append(el('span', null, image.caption));
   frame.append(picture, state); box.append(frame, caption);
   const src = new URL(`./${image.file}`, import.meta.url).href;
   picture.addEventListener('load', () => { state.remove(); frame.disabled = false; box.dataset.image = 'loaded'; });
@@ -57,11 +60,10 @@ function figure(image) {
 export function renderPartGuide(guide) {
   const body = el('div', 'part-guide-body'), figures = el('div', 'part-guide-figures');
   body.append(el('p', 'part-guide-role', `${guide.role} ${guide.taskId ? '찾아볼 곳' : '있는 곳'}: ${guide.area}.`));
-  const pictures = [guide.overviewImage, guide.detailImage].map(usableImage).filter(Boolean).map(figure);
+  const shown = [guide.overviewImage, guide.detailImage].map(usableImage).filter(Boolean), pictures = shown.map(figure);
   for (const picture of pictures) figures.append(picture.box);
-  const hasPhoto = [guide.overviewImage, guide.detailImage].some(image => usableImage(image)?.kind === IMAGE_KIND.PHOTO);
-  if (!hasPhoto) body.append(el('p', 'card muted part-guide-no-photo', pictures.length ? '아직 실제 사진이 없어 설명용 그림으로 보여 드려요.' : '아직 준비된 사진이나 그림이 없어요. 아래 설명과 차량 설명서로 찾아 주세요.'));
   if (pictures.length) body.append(figures);
+  else body.append(el('p', 'card muted part-guide-no-picture', '아직 준비된 그림이 없어요. 아래 설명과 차량 설명서로 찾아 주세요.'));
   body.append(list('이렇게 구별해요', guide.identifyingFeatures), list('꼭 지켜 주세요', guide.safetyNotes), el('p', 'fine part-guide-applies', guide.vehicleApplicability.text));
   if (guide.manualReference) {
     const manual = el('p', 'fine part-guide-manual'), link = el('a', null, guide.manualReference.label);
@@ -76,6 +78,7 @@ export function renderPartGuide(guide) {
     for (const partId of guide.relatedInfo) { const link = el('a', null, PART_GUIDES[partId].title); link.href = new URL(`./part-info.html#${partId}`, import.meta.url).href; link.target = '_blank'; link.rel = 'noopener noreferrer'; related.append(link); }
     body.append(related);
   }
+  if (shown.some(image => image.kind === IMAGE_KIND.SCHEMATIC)) body.append(el('p', 'fine part-guide-schematic-note', SCHEMATIC_NOTE));
   return { body, load: () => pictures.forEach(picture => picture.load()) };
 }
 

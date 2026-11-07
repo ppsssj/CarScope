@@ -51,6 +51,17 @@ const introGuide = page => page.locator('#step-intro details.part-guide');
 const locationGuide = page => page.locator('details.part-location');
 const state = page => page.evaluate(() => { const s = window.__selfInspection.state; return { step: s.step, mode: s.mode, checks: s.checks, id: s.record?.inspectionId ?? null, aids: s.record?.aids ?? null }; });
 const loaded = (page, scope) => page.waitForFunction(selector => { const f = [...document.querySelectorAll(`${selector} figure`)]; return f.length === 2 && f.every(x => x.dataset.image === 'loaded'); }, scope);
+// One guide on screen: each drawing has only its own description, and the note comes once, last.
+async function drawingsOnly(guide, label) {
+  assert.equal(await guide.locator('.part-guide-badge, .part-guide-credit').count(), 0, `${label}: no badge or source line`);
+  const text = await guide.innerText();
+  assert.ok(!text.includes('출처'), `${label}: no source line`);
+  assert.equal(text.split('설명용 그림이며 실제 차량과 위치·형태가 다를 수 있습니다').length, 2, `${label}: the note appears exactly once`);
+  assert.equal(await guide.locator('.part-guide-body > :last-child').evaluate(node => node.classList.contains('part-guide-schematic-note')), true, `${label}: the note closes the guide`);
+  const captions = await guide.locator('figcaption').allTextContents();
+  assert.equal(captions.length, 2, label);
+  assert.ok(captions[0] !== captions[1] && captions.every(caption => caption.length > 8 && !caption.includes('설명용 그림이며 실제 차량과 위치·형태가 다를 수 있습니다')), `${label}: each drawing keeps its own description: ${captions}`);
+}
 const connected = page => page.waitForFunction(() => document.querySelector('#sync-claim').disabled && document.body.textContent.includes('연결됐어요'));
 const zoomOpen = page => page.evaluate(() => Boolean(document.getElementById('part-guide-zoom')?.open));
 async function noLeak({ page, log }) {
@@ -79,9 +90,10 @@ try {
     await loaded(page, '#step-intro .part-guide');
     assert.equal(pictures(log).length, 2);
     const text = await introGuide(page).innerText();
-    for (const words of ['앞유리를 닦는 워셔액', '보닛 안쪽', '설명용 그림', '실제 사진이 아니에요', '아직 실제 사진이 없어', '앞유리·분사 모양', '색만 보고 고르지', '고전압 케이블', '내 차 설명서를 먼저 확인']) assert.ok(text.includes(words), words);
+    for (const words of ['앞유리를 닦는 워셔액', '보닛 안쪽', '설명용 그림', '설명용 그림이며 실제 차량과 위치·형태가 다를 수 있습니다', '앞유리·분사 모양', '색만 보고 고르지', '고전압 케이블', '내 차 설명서를 먼저 확인']) assert.ok(text.includes(words), words);
     assert.deepEqual(await page.locator('#step-intro .part-guide img').evaluateAll(images => images.map(i => [i.alt.length > 10, i.naturalWidth > 0])), [[true, true], [true, true]]);
     assert.equal(await page.evaluate(() => window.__media), 0, 'no camera');
+    await drawingsOnly(introGuide(page), 'washer');
     assert.deepEqual((await state(page)).step, 'intro', 'reading it starts nothing');
     await shot(page, 'intro-open', true);
     const link = page.locator('#step-intro .part-guide-manual a');
@@ -89,7 +101,7 @@ try {
     assert.equal(await link.getAttribute('rel'), 'noopener noreferrer');
     assert.deepEqual(log.problems, []);
     await closeAll();
-    pass('first step: one closed row and no request until opened; then role, area, drawings marked as not photos, alt text, what tells it apart, safety and applicability, with no camera');
+    pass('first step: one closed row and no request until opened; then role, area, drawings with their own descriptions, alt text, what tells it apart, safety and applicability, with no camera');
   }
 
   { // Sizes the phone and its folded and open forms take. A viewport is not the device.
@@ -121,7 +133,7 @@ try {
     const length = await page.evaluate(() => history.length);
     await frame.click();
     assert.equal(await zoomOpen(page), true);
-    assert.match(await page.locator('.part-guide-zoom-caption').textContent(), /실제 사진이 아니에요/);
+    assert.equal(await page.locator('.part-guide-zoom-caption').textContent(), await page.locator('#step-intro figcaption').first().textContent(), 'the enlarged view repeats only the drawing\'s own description');
     assert.ok((await page.locator('.part-guide-zoom-view img').getAttribute('alt')).length > 10);
     await shot(page, 'zoom');
     await page.locator('#part-guide-zoom-toggle').click();
@@ -195,6 +207,7 @@ try {
     assert.equal(await locationGuide(page).isVisible(), true);
     await page.locator('details.part-location > summary').click();
     await loaded(page, 'details.part-location');
+    await drawingsOnly(locationGuide(page), 'washer location help');
     await shot(page, 'check-open', true);
     await page.locator('details.part-location .part-guide-frame').nth(1).click();
     await page.goBack();
@@ -297,7 +310,10 @@ try {
       const chipClear = await page.locator('#step-intro .part-guide-frame').evaluateAll(frames => frames.every(frame => frame.querySelector('img').getBoundingClientRect().bottom <= frame.getBoundingClientRect().bottom - 28));
       assert.equal(chipClear, true, `${id}: the enlarge label does not cover the drawing`);
       const text = await introGuide(page).innerText();
-      for (const words of ['설명용 그림', '실제 사진이 아니에요', '이렇게 구별해요', '꼭 지켜 주세요']) assert.ok(text.includes(words), `${id}: ${words}`);
+      for (const words of ['설명용 그림', '설명용 그림이며 실제 차량과 위치·형태가 다를 수 있습니다', '이렇게 구별해요', '꼭 지켜 주세요']) assert.ok(text.includes(words), `${id}: ${words}`);
+      assert.ok(!text.includes('사진'), `${id}: no word about photos on screen`);
+      assert.equal(await page.locator('.part-guide-no-picture').count(), 0, id);
+      await drawingsOnly(introGuide(page), id);
       assert.equal(await fits(page), true, id);
       assert.equal(await page.evaluate(() => window.__media), 0, id);
       read.push(id);
@@ -388,6 +404,8 @@ try {
       const text = await infoPage.locator('main').innerText();
       for (const part of words) assert.ok(text.includes(part), `${id}: ${part}`);
       assert.ok(!text.includes('찾아볼 곳:'), `${id}: nothing sends a person to look for it`);
+      assert.ok(!text.includes('사진'), `${id}: no word about photos on screen`);
+      await drawingsOnly(infoPage.locator('main'), id);
       assert.ok(text.includes('있는 곳:'), id);
       assert.equal(requests.some(url => url.includes('/v1/')), false, 'no session or result request');
       assert.equal(await infoPage.evaluate(() => Boolean(window.__selfInspection || window.__checklistInspection)), false, 'no inspection runs here');
@@ -435,11 +453,12 @@ try {
     assert.match(rendered.valid.text, /2024 Make Model 사진이에요\. 내 차와 다를 수 있어요\./);
     assert.match(rendered.valid.text, /실제 사진/);
     assert.match(rendered.valid.text, /소유자 서면 허가/);
-    assert.doesNotMatch(rendered.valid.text, /아직 실제 사진이 없어/);
+    assert.ok(!rendered.valid.text.includes('설명용 그림이며 실제 차량과 위치·형태가 다를 수 있습니다'), 'the note about drawings is not said of a photo');
     assert.deepEqual([rendered.unverified.images, rendered.unverified.figures], [0, 0], 'a photo with no right to use it or no known vehicle is not shown');
-    assert.match(rendered.unverified.text, /아직 준비된 사진이나 그림이 없어요/);
+    assert.match(rendered.unverified.text, /아직 준비된 그림이 없어요/);
     assert.deepEqual([rendered.none.images, rendered.none.figures], [0, 0]);
-    assert.match(rendered.none.text, /아직 준비된 사진이나 그림이 없어요/);
+    assert.match(rendered.none.text, /아직 준비된 그림이 없어요/);
+    assert.ok(!rendered.none.text.includes('설명용 그림이며 실제 차량과 위치·형태가 다를 수 있습니다'), 'no drawing, no note about drawings');
     assert.match(rendered.none.text, /앞유리·분사 모양/, 'the words remain');
     await closeAll();
     pass('the same screen labels a real photo with its vehicle and source, refuses one without them, and with no picture at all still gives its words');
