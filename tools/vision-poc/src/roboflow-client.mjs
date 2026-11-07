@@ -1,7 +1,7 @@
 // P12-C: one call per image to a Roboflow-compatible endpoint: the hosted API, or a self-hosted server on this machine.
 // The key is only ever sent as a header and never appears in a URL, a log line or a result file.
 export const HOSTED_API_URL = 'https://serverless.roboflow.com';
-// Low on purpose: the evaluator applies thresholds later, so no second paid run. A fraction: if an endpoint reads it as a percentage, the result only gets wider.
+// Low on purpose: the evaluator applies thresholds later, so no second paid run. A fraction: the hosted API answered with scores down to 0.052.
 export const REQUEST_CONFIDENCE = 0.05;
 
 export const CALL_STATUS = Object.freeze({

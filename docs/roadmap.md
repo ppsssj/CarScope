@@ -2,7 +2,7 @@
 
 ## P12-C — 기존 학습 모델 재사용 검증
 
-공개 모델 `engine-bay-parts/1`용 클래스 어댑터와 `DATASET_GATE`와 분리된 예비 평가 경로를 `tools/vision-poc`에 추가했다. **API 키가 없어 모델을 한 번도 실행하지 못했으며(`BLOCKED_API_KEY_REQUIRED`) 모델 성능은 `NOT_MEASURED`다. 라이선스는 아키텍처 확인 전까지 미확정이다.** 권리를 확인한 실제 사진 12장으로 색상 규칙만 예비 측정했다. 운영 코드는 바꾸지 않았다. [판정과 실행 명령](p12-c-existing-model.md), [증거 인덱스](evidence/p12-c/README.md).
+공개 모델 `engine-bay-parts/1`을 호스팅 API로 실제 추론해 권리를 확인한 사진 12장으로 예비 평가했다. `Windshield Wiper Fluid`는 Precision 0.88, Recall 0.64, mAP@0.5 0.64(공식 지표 아님)로 색상 규칙(0.42, 0.45)보다 오탐이 적고 캡 자체를 잡는다. **`yolov8n`(AGPL 계열)이고 데이터 원출처가 미확인이라 연구 기준으로만 재사용하며 제품 탑재는 불가다. 정식 평가는 `DATASET_REQUIRED`, Z Flip8은 `NOT_MEASURED`다.** 운영 코드는 바꾸지 않았다. [판정](p12-c-existing-model.md), [증거 인덱스](evidence/p12-c/README.md).
 
 ## P12-A — 모바일 부품 안내
 
