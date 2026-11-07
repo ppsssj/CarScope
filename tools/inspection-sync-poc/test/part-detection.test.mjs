@@ -104,6 +104,9 @@ test('the panel: consent first, one attempt at a time, a late answer dropped, an
   assert.equal(reduceDetection(s, { type: 'SELECT_PART', partId: 'fuse-box' }), s, 'the same part changes nothing');
   const late = reduceDetection(switched, { type: 'ANSWER', attempt, candidates: [{}] });
   assert.equal(late.candidates.length, 0, 'an answer for the earlier part cannot land');
+  const record = { modelId: DETECTION_MODEL_ID, modelClass: 'Fuse Box' };
+  assert.equal(reduceDetection(s, { type: 'ANSWER', attempt, candidates: [{ score: 0.9, box: [0, 0, 1, 1] }], detection: record }).detection, record, 'kept with its boxes');
+  assert.equal(reduceDetection(reduceDetection(s, { type: 'ANSWER', attempt, candidates: [{}], detection: record }), { type: 'AGAIN' }).detection, null);
   const again = reduceDetection(shown, { type: 'AGAIN' });
   assert.deepEqual([again.phase, again.consented, again.candidates.length], [PHASE.CONSENT, false, 0], 'each photo has its own consent');
   assert.equal(reduceDetection(s, { type: 'ANSWER', attempt, candidates: [] }).phase, PHASE.NONE_FOUND);
@@ -186,7 +189,9 @@ test('the answer holds only this part\'s candidates, and no provider field', asy
   const { token } = await session();
   const r = await post('fuse-box', token);
   const body = await r.json();
-  assert.deepEqual(Object.keys(body), ['partId', 'status', 'candidates']);
+  assert.deepEqual(Object.keys(body), ['partId', 'status', 'candidates', 'detection']);
+  assert.deepEqual(Object.keys(body.detection), ['modelId', 'modelClass', 'coordinates', 'image', 'inferredAt']);
+  assert.equal(body.detection.modelClass, 'Fuse Box');
   assert.equal(body.status, 'EXPERIMENTAL');
   assert.equal(body.candidates.length, 1);
   assert.deepEqual(Object.keys(body.candidates[0]), ['score', 'box']);

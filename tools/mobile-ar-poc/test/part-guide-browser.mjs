@@ -34,13 +34,24 @@ async function open({ host = plain, task = 'washer-fluid', viewport = { width: 3
   page.on('pageerror', error => log.problems.push(error.message));
   page.on('console', message => { if (message.type() === 'error' && !/net::ERR_NO_BUFFER_SPACE/.test(message.text())) log.problems.push(message.text()); }); // The page retries that code itself: page-start-guard.js.
   page.on('request', request => log.requests.push({ url: request.url(), method: request.method(), body: request.postData() ?? '' }));
+  const done = new Set(), failed = [];
+  page.on('requestfinished', request => done.add(request));
+  page.on('requestfailed', request => { done.add(request); failed.push(`${new URL(request.url()).pathname} ${request.failure()?.errorText}`); });
+  const seen = []; page.on('request', request => seen.push(request));
   if (prepare) await prepare(page);
   const receiver = new ReceiverClient({ baseUrl: host.url });
   let fragment = local;
   if (qr) { const session = await receiver.create(task); fragment = session.fragment; log.secrets.push(session.fragment.split('invite=')[1]); }
   page.on('response', async response => { if (response.url().endsWith('/v1/claim') && response.ok()) { const body = await response.json().catch(() => null); if (body?.submitToken) log.secrets.push(body.submitToken); } });
-  await page.goto(`${host.url}/${fragment}`);
-  await page.waitForFunction(() => window.__selfInspection || window.__checklistInspection);
+  const started = Date.now();
+  // Same limits as before. A start that does not finish says what it was waiting for, by path only: no invite in the message.
+  try {
+    await page.goto(`${host.url}/${fragment}`);
+    await page.waitForFunction(() => window.__selfInspection || window.__checklistInspection);
+  } catch (error) {
+    const pending = seen.filter(request => !done.has(request)).map(request => new URL(request.url()).pathname);
+    throw new Error(`page start: ${error.name} after ${Date.now() - started}ms, requested ${seen.length}, pending ${JSON.stringify(pending)}, failed ${JSON.stringify(failed)}, problems ${JSON.stringify(log.problems)}`);
+  }
   return { context, page, log, receiver };
 }
 const posted = (log, suffix) => log.requests.filter(r => r.method === 'POST' && r.url.endsWith(suffix)).length;

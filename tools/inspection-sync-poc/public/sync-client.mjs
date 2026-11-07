@@ -142,7 +142,7 @@ export class SyncClient {
       if (res.status === 401 || res.status === 403 || res.status === 404 || res.status === 409 || res.status === 410) return { ok: false, code: 'NOT_CONNECTED' };
       const json = res.ok ? await res.json() : null;
       if (!Array.isArray(json?.candidates)) return { ok: false, code: 'UNAVAILABLE' };
-      return { ok: true, candidates: json.candidates };
+      return { ok: true, candidates: json.candidates, detection: json.detection ?? null };
     } catch { return { ok: false, code: 'UNAVAILABLE' }; } finally { clearTimeout(timer); this.#controllers.delete(ctrl); }
   }
 
