@@ -122,7 +122,12 @@ try {
     const reason = await page.evaluate(() => window.__webXrGuide.capability.reason);
     assert.equal(reason, hasXr ? 'AR_NOT_SUPPORTED' : 'NO_WEBXR_API');
     assert.equal(await page.locator('#xr-entry-open').isVisible(), false, 'no entry on an unsupported device');
-    assert.match(await page.locator('#xr-entry-unavailable').textContent(), /쓸 수 없습니다.*2D 카메라나 카메라 없는 점검/);
+    assert.match(await page.locator('#xr-entry-unavailable').textContent(), /쓸 수 없어요.*일반 카메라나 카메라 없는 점검/);
+    assert.equal(await page.locator('#xr-method-camera').isVisible(), false, 'nothing to choose between without AR');
+    assert.equal(await page.locator('#xr-methods-title').isVisible(), false);
+    assert.equal(await page.evaluate(() => document.body.dataset.xrMethods), undefined);
+    assert.equal(await page.locator('#primary').isVisible(), true, "the page's own button stays");
+    assert.equal(await page.locator('#primary').textContent(), '카메라로 점검 시작');
     assert.equal(requests.some(r => r.url.includes('three')), false, 'unsupported devices do not download Three.js');
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
     await shot(page, 'unsupported');
@@ -137,16 +142,26 @@ try {
     const session = await openPage({ fake: {} });
     const { page, requests } = session;
     await guideReady(page);
-    assert.equal(await page.locator('#xr-entry-open').textContent(), '3D AR로 위치 찾기 · 실험');
-    assert.equal(await page.locator('#primary').isVisible(), true, '2D method still offered');
-    assert.equal(await page.locator('#manual-start').isVisible(), true, 'manual method still offered');
+    // The method choice: three rows, in this order, all on one screen of a phone, with no bottom button competing.
+    assert.equal(await page.locator('#xr-methods-title').textContent(), '점검 방법을 골라 주세요');
+    assert.equal(await page.locator('#xr-entry-open strong').textContent(), '3D AR로 위치 찾기 · 실험');
+    assert.equal(await page.locator('#xr-method-camera strong').textContent(), '일반 카메라로 찾기');
+    assert.equal(await page.locator('#manual-start').textContent(), '카메라 없이 점검하기');
+    assert.equal(await page.locator('#primary').isVisible(), false, 'the camera row replaces the bottom button on this step');
+    const rows = await page.evaluate(() => ['xr-entry-open', 'xr-method-camera', 'manual-start'].map(id => { const r = document.getElementById(id).getBoundingClientRect(); return { top: r.top, bottom: r.bottom, height: r.height }; }));
+    assert.ok(rows[0].bottom <= rows[1].top && rows[1].bottom <= rows[2].top, 'rows are in order');
+    assert.ok(rows.every(row => row.height >= 48 && row.bottom <= 844), `every method fits the first screen at 390x844: ${JSON.stringify(rows)}`);
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
     assert.equal(requests.some(r => r.url.includes('three')), false, 'Three.js waits until the user opens the guide');
     await shot(page, 'entry-intro');
     const before = await inspection(page);
     await page.locator('#xr-entry-open').click();
     await waitPhase(page, 'READY');
     assert.equal(await page.locator('main >> nth=0').isVisible(), false, 'inspection page is hidden, not removed');
-    assert.match(await page.locator('#xr-guide-page .notice').textContent(), /부품을 인식하지 않습니다.*AI가 위치를 찾아 주는 기능이 아니며/);
+    assert.match(await page.locator('#xr-guide-page .notice').textContent(), /부품을 인식하지 않아요.*AI가 위치를 찾아 주는 기능이 아니고/);
+    assert.equal(await page.locator('#xr-start').isVisible(), true);
+    const startBox = await page.locator('#xr-start').boundingBox();
+    assert.ok(startBox.y + startBox.height <= 844 && startBox.height >= 48, 'AR start is under the thumb without scrolling');
     assert.equal(await page.locator('#xr-support-ar').textContent(), '지원');
     assert.deepEqual(await inspection(page), before, 'opening the guide does not start an attempt');
     await shot(page, 'ready');
@@ -173,8 +188,8 @@ try {
     assert.equal(await page.evaluate(() => window.__env.tap(195, 200)), true);
     await settle(page, 3);
     await waitPhase(page, 'PLACED');
-    assert.equal(await page.locator('#xr-status').textContent(), '내가 지정한 위치');
-    assert.match(await page.locator('#xr-hint').textContent(), /부품 인식 결과가 아닙니다/);
+    assert.equal(await page.locator('#xr-status').textContent(), '공간에 고정됨 · 내가 지정한 위치');
+    assert.match(await page.locator('#xr-hint').textContent(), /부품을 인식한 결과가 아니에요/);
     await shot(page, 'placed');
 
     // World-fixed proof: phone motion must shift the marker on screen by the projected amount.
@@ -347,8 +362,11 @@ try {
     const session = await openPage({ fake: {} });
     const { page } = session;
     await guideReady(page);
-    await page.locator('#primary').click();
+    await page.locator('#xr-method-camera').click();
     await page.waitForFunction(() => window.__media.liveTracks() > 0 && !document.getElementById('stop').disabled);
+    assert.equal(await page.evaluate(() => document.body.dataset.xrMethods), undefined, 'the choice ends with the first step');
+    assert.equal(await page.locator('#primary').isVisible(), true, 'the bottom button is back on the next step');
+    assert.equal(await page.locator('#xr-method-camera').isVisible(), false);
     await page.waitForFunction(() => document.getElementById('video').videoWidth > 0);
     const attempt = (await inspection(page)).inspectionId;
     await shot(page, 'entry-locate');
@@ -398,7 +416,7 @@ try {
     const late = await openPage({ fake: {} });
     await guideReady(late.page);
     await late.page.evaluate(() => { window.__media.holdCamera = true; });
-    await late.page.locator('#primary').click();
+    await late.page.locator('#xr-method-camera').click();
     await late.page.waitForFunction(() => window.__media.release);
     await late.page.locator('#xr-entry-open').click();
     await waitPhase(late.page, 'READY');
@@ -466,6 +484,18 @@ try {
     await page.evaluate(() => { window.dispatchEvent(new PageTransitionEvent('pagehide')); });
     await page.waitForFunction(() => !window.__webXrGuide.open);
     assert.equal(await page.evaluate(() => window.__env.currentSession.ended), true);
+
+    // Reopening at once, before the history step of closing has landed: Back still only closes the guide.
+    await guideReady(page);
+    await openGuide(page);
+    await page.evaluate(() => { document.getElementById('xr-leave').click(); document.getElementById('xr-entry-open').click(); });
+    await waitPhase(page, 'READY');
+    await page.waitForTimeout(100);
+    assert.equal(await page.evaluate(() => window.__webXrGuide.open), true, 'closing did not close the reopened guide');
+    await page.goBack();
+    await page.waitForFunction(() => !window.__webXrGuide.open);
+    assert.equal(await page.evaluate(() => window.__sameDocument), true, 'Back stayed in the document');
+    assert.deepEqual(await inspection(page), before);
 
     // Repeated cycles keep working and leak nothing.
     const startCount = await page.evaluate(() => window.__env.sessions.length);

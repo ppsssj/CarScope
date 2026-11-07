@@ -105,7 +105,7 @@ export function recoveryReportGates(text, { now = Date.now } = {}) {
 export function manualRenderGates() {
   return [
     check('RENDER_DEPLOYMENT', 'NOT_RUN', 'this tool has no deploy command'),
-    check('RENDER_START_COMMAND', 'NOT_VERIFIED', 'check Settings > Start Command: it must name src/render-stateful.mjs unless an AVD history demonstration was approved'),
+    check('RENDER_START_COMMAND', 'NOT_VERIFIED', 'check Settings > Start Command: it must name src/render-stateful.mjs unless an AVD history demonstration or the WebXR guide experiment (src/render-webxr-experiment.mjs) was approved'),
   ];
 }
 

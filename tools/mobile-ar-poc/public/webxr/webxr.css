@@ -2,18 +2,28 @@
    the guide is open. In AR the guide's own page is hidden too and the camera shows through the overlay. */
 body.xr-guide-open > :not(#xr-guide) { display: none !important; }
 #xr-guide[hidden], #xr-guide-page[hidden] { display: none; }
+#xr-guide { flex: 1; display: flex; flex-direction: column; }
+#xr-guide-page { flex: 1; display: flex; flex-direction: column; }
 #xr-guide-title:focus { outline: none; }
 #xr-entry { margin: 12px 0; }
 #xr-entry[hidden] { display: none; }
-#xr-entry-open { display: block; width: 100%; min-height: 48px; font-weight: 700; }
 #xr-entry .fine { margin: 6px 0 0; }
-.xr-start { display: block; width: 100%; margin: 14px 0; }
+
+/* Method choice on the first step: the same rows as the result choices. No row is filled, so none is pushed on the person. */
+body[data-xr-methods] > .actions { display: none; }
+#xr-entry .safety-title { margin-top: 0; }
+.xr-method { display: flex; flex-direction: column; gap: 2px; width: 100%; margin: 8px 0; padding: 12px 16px; text-align: left; border: 2px solid var(--line); background: var(--card); border-radius: var(--radius); }
+.xr-method strong { font-size: 1.05rem; }
+.xr-method span { font-size: .86rem; color: var(--muted); }
+body[data-xr-methods] #manual-start { margin: 8px 0; padding: 12px 16px; text-align: left; font-size: 1.05rem; font-weight: 700; color: var(--ink); border: 2px solid var(--line); background: var(--card); border-radius: var(--radius); }
+
+.xr-steps { margin: 12px 0; padding-left: 22px; }
 .xr-choices { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 12px 0 4px; }
 .xr-choices[hidden] { display: none; }
 .xr-choices button { min-height: 48px; font-weight: 600; }
 #xr-leave { min-height: 48px; }
 
-.xr-support { margin: 12px 0 4px; border: 1px solid var(--line); border-radius: 10px; background: var(--card); }
+.xr-support { margin: 12px 0 4px; font-size: .92rem; border: 1px solid var(--line); border-radius: 10px; background: var(--card); }
 .xr-support div { display: flex; justify-content: space-between; gap: 12px; padding: 10px 14px; }
 .xr-support div + div { border-top: 1px solid var(--line); }
 .xr-support dt { color: var(--muted); }
@@ -32,8 +42,10 @@ body.in-xr, html:has(body.in-xr) { background: transparent; }
 #xr-notice { color: var(--warn); font-weight: 600; }
 .xr-actions { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 8px; margin-top: 8px; }
 .xr-actions button { min-width: 0; }
-.xr-start, .xr-actions button.primary { background: var(--brand); border-color: var(--brand); color: var(--brand-ink); font-weight: 700; }
+.xr-actions button.primary { background: var(--brand); border-color: var(--brand); color: var(--brand-ink); font-weight: 700; }
 .xr-actions button.primary:disabled { background: var(--card-2); border-color: var(--line); color: var(--muted); }
+/* Once the arrow stands, going back to the checklist is the next thing to do. */
+#xr-guide[data-phase="PLACED"] #xr-return { background: var(--brand); border-color: var(--brand); color: var(--brand-ink); font-weight: 700; }
 /* Landscape: one row of controls, so the panel does not cover the area being aimed at. */
 @media (orientation: landscape) and (max-height: 500px) {
   .xr-top { padding-top: 6px; padding-bottom: 0; }

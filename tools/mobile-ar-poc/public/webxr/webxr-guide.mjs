@@ -10,47 +10,57 @@ const SUPPORT = { true: '지원', false: '미지원' };
 const PANEL_ACTIONS = new Set(['UNSUPPORTED', 'ENDED', 'FAILED']);
 
 const GUIDE_HTML = `<div id="xr-guide-page">
-  <header class="bar"><div class="bar-row"><p class="brand">CarScope <span>3D AR 위치 안내 · 실험</span></p></div></header>
+  <header class="bar"><div class="bar-row"><p class="brand">CarScope <span>3D AR로 위치 찾기 · 실험</span></p></div></header>
   <main>
-    <h1 id="xr-guide-title" tabindex="-1">워셔액 주입구에 3D 표시 남기기</h1>
-    <p>주입구를 직접 찾아 3D 화살표를 남겨 두면, 휴대폰을 움직여도 표시가 실제 공간의 그 자리에 머물도록 시도합니다.</p>
-    <p class="notice"><strong>부품을 인식하지 않습니다.</strong> AI가 위치를 찾아 주는 기능이 아니며 위치는 직접 지정합니다. 표시 위치의 오차를 측정하지 않았습니다. 이 안내는 점검 결과를 바꾸거나 전송하지 않으며, 진행 중인 점검은 그대로 유지됩니다.</p>
-    <p id="xr-checking" role="status">3D 표시 모듈을 불러오는 중…</p>
-    <button id="xr-start" type="button" class="primary xr-start" hidden>AR 시작</button>
     <section id="xr-fallback" class="card warn" hidden aria-labelledby="xr-fallback-title">
-      <h2 id="xr-fallback-title">3D AR을 사용할 수 없습니다</h2>
+      <h2 id="xr-fallback-title">3D AR을 쓸 수 없어요</h2>
       <p id="xr-fallback-reason" role="alert"></p>
-      <p>2D 카메라 안내나 체크리스트로 점검을 계속할 수 있습니다.</p>
+      <p>일반 카메라나 체크리스트로 이어서 점검할 수 있어요. 지금까지의 점검과 차량 연결은 그대로예요.</p>
     </section>
     <section id="xr-ended" class="card" hidden aria-labelledby="xr-ended-title">
-      <h2 id="xr-ended-title">3D AR을 종료했습니다</h2>
-      <p>세션이 끝나면 3D 표시는 사라집니다. 저장되지 않으므로 다시 시작하면 위치를 새로 지정해야 합니다. 다음 방법을 직접 선택하세요.</p>
+      <h2 id="xr-ended-title">3D AR을 마쳤어요</h2>
+      <p>3D 표시는 저장되지 않아 사라졌어요. 다시 시작하면 위치를 새로 지정해야 해요. 지금까지의 점검과 차량 연결은 그대로예요.</p>
     </section>
     <div id="xr-choices" class="xr-choices" hidden>
       <button id="xr-to-checklist" type="button">체크리스트로</button>
-      <button id="xr-to-camera" type="button">2D 카메라로</button>
+      <button id="xr-to-camera" type="button">일반 카메라로</button>
     </div>
-    <button id="xr-leave" type="button" class="link-button">이전 점검 화면으로 돌아가기</button>
-    <dl class="xr-support" aria-label="이 기기의 지원 상태">
-      <div><dt>카메라 AR</dt><dd id="xr-support-ar">확인 중</dd></div>
-      <div><dt>표면 찾기 (Hit Test)</dt><dd id="xr-support-hit">확인 중</dd></div>
-      <div><dt>공간 앵커 (Anchor)</dt><dd id="xr-support-anchor">확인 중</dd></div>
-    </dl>
-    <p class="fine">브라우저가 제공하는 기능 기준입니다. 세션을 시작할 때 기기가 거부할 수 있습니다.</p>
-    <h2>시작 전에</h2>
-    <ul class="tight">
-      <li>안전한 곳에 정차하고 차량 전원을 끈 뒤, 차량 설명서에 따라 보닛을 여세요.</li>
+    <div id="xr-intro">
+      <h1 id="xr-guide-title" tabindex="-1">3D 화살표로 위치 표시하기</h1>
+      <p class="lead">주입구를 직접 찾아 탭하면, 휴대폰을 움직여도 화살표가 그 자리에 머물도록 시도해요.</p>
+      <ol class="xr-steps">
+        <li>AR 카메라를 켜고 주입구 근처를 비춰요.</li>
+        <li>흰 원이 표면에 나타나면 주입구에 맞추고 탭해요.</li>
+        <li>휴대폰을 움직여 화살표가 제자리에 있는지 봐요.</li>
+        <li>체크리스트로 돌아가 직접 확인해요.</li>
+      </ol>
+      <p class="notice"><strong>부품을 인식하지 않아요.</strong> AI가 위치를 찾아 주는 기능이 아니고 위치는 직접 지정해요. 표시 오차는 측정하지 않았어요. 점검 결과를 바꾸거나 보내지 않고, 진행 중인 점검과 차량 연결은 그대로 유지돼요.</p>
+      <p id="xr-checking" role="status">3D 표시 모듈을 불러오는 중이에요…</p>
+    </div>
+    <p class="safety-title">시작 전에 확인해 주세요</p>
+    <ul class="safety-points">
+      <li>안전한 곳에 세우고 전원을 끈 뒤, 설명서에 따라 보닛을 열어 주세요.</li>
       <li>움직이는 부품, 뜨거운 부품, 주황색 고전압 케이블에 손대지 마세요.</li>
-      <li>휴대폰을 펼친 상태로 사용하세요. 카메라 영상은 AR 추적에만 쓰이며 이 화면이 저장·업로드하지 않습니다.</li>
+      <li>휴대폰을 펼친 채로 써 주세요. 카메라 영상은 AR 추적에만 쓰이고 저장·업로드하지 않아요.</li>
     </ul>
-    <h2>워셔액 주입구 찾기</h2>
-    <p id="xr-position"></p>
     <details>
-      <summary>표시한 뒤 직접 확인할 항목</summary>
-      <ol id="xr-check-items" class="tight"></ol>
-      <p class="fine">3D 표시를 남겨도 이 항목이 확인된 것으로 기록되지 않습니다. 체크리스트에서 직접 확인하고 표시하세요.</p>
+      <summary>워셔액 주입구 위치와 확인할 항목</summary>
+      <p id="xr-position"></p>
+      <ol id="xr-check-items"></ol>
+      <p>3D 표시를 남겨도 이 항목이 확인된 것으로 기록되지 않아요. 체크리스트에서 직접 확인하고 표시해 주세요.</p>
     </details>
+    <details>
+      <summary>이 기기의 AR 지원 상태</summary>
+      <dl class="xr-support" aria-label="이 기기의 지원 상태">
+        <div><dt>카메라 AR</dt><dd id="xr-support-ar">확인 중</dd></div>
+        <div><dt>표면 찾기 (Hit Test)</dt><dd id="xr-support-hit">확인 중</dd></div>
+        <div><dt>공간 앵커 (Anchor)</dt><dd id="xr-support-anchor">확인 중</dd></div>
+      </dl>
+      <p>브라우저가 제공하는 기능 기준이에요. 시작할 때 기기가 거부할 수 있어요.</p>
+    </details>
+    <button id="xr-leave" type="button" class="link-button">점검 화면으로 돌아가기</button>
   </main>
+  <footer id="xr-footer" class="actions" hidden><button id="xr-start" type="button" class="primary" hidden>AR 시작</button></footer>
 </div>
 <div id="xr-overlay" hidden>
   <div class="xr-top"><p id="xr-status" role="status" aria-live="polite" data-tone="muted"></p></div>
@@ -70,8 +80,10 @@ const GUIDE_HTML = `<div id="xr-guide-page">
   </div>
 </div>`;
 
-const ENTRY_HTML = `<button id="xr-entry-open" type="button" hidden>3D AR로 위치 찾기 · 실험</button>
-<p id="xr-entry-help" class="fine" hidden>2D 표시는 공간에 고정되지 않지만, 이 실험 기능은 직접 지정한 위치에 3D 화살표가 머물도록 시도합니다. AI가 부품을 찾아 주지 않으며 점검 결과에 기록되지 않습니다.</p>
+// On the first step this is the method choice: the rows sit with the page's own "카메라 없이 점검하기", which follows them.
+const ENTRY_HTML = `<p id="xr-methods-title" class="safety-title" hidden>점검 방법을 골라 주세요</p>
+<button id="xr-entry-open" type="button" class="xr-method" hidden><strong>3D AR로 위치 찾기 · 실험</strong><span>직접 고른 자리에 3D 화살표를 남겨요. 부품을 찾아 주지는 않아요.</span></button>
+<button id="xr-method-camera" type="button" class="xr-method" hidden><strong>일반 카메라로 찾기</strong><span>카메라 화면을 탭해 위치를 표시해요. 표시는 공간에 고정되지 않아요.</span></button>
 <p id="xr-entry-unavailable" class="fine" role="status" hidden></p>`;
 
 /**
@@ -113,16 +125,22 @@ export async function mountWebXrGuide({ task, canOffer, anchorFor, onOpen, onClo
   function refresh() {
     const offer = canOffer();
     entry.hidden = !offer;
+    delete document.body.dataset.xrMethods;
     if (!offer) return;
     const anchor = anchorFor();
     if (anchor && entry.nextElementSibling !== anchor) anchor.before(entry);
-    const available = capability?.canStart === true;
+    const available = capability?.canStart === true, firstStep = anchor?.id === 'manual-start';
     $('xr-entry-open').hidden = !available;
-    $('xr-entry-help').hidden = !available;
+    // Three methods side by side replace the page's bottom button, whose job the camera row takes over on this step only.
+    // Without AR nothing is chosen between, so the page keeps its own layout and its own button.
+    const methods = available && firstStep;
+    if (methods) document.body.dataset.xrMethods = 'true';
+    $('xr-methods-title').hidden = !methods;
+    $('xr-method-camera').hidden = !methods;
     // Unavailable: the page's own 2D and manual methods are all that is offered, so one quiet line on the first step.
-    const unavailable = Boolean(capability) && !available && anchor?.id === 'manual-start';
+    const unavailable = Boolean(capability) && !available && firstStep;
     $('xr-entry-unavailable').hidden = !unavailable;
-    $('xr-entry-unavailable').textContent = unavailable ? `3D AR 위치 안내를 쓸 수 없습니다. ${reasonText(capability.reason)} 2D 카메라나 카메라 없는 점검을 사용하세요.` : '';
+    $('xr-entry-unavailable').textContent = unavailable ? `3D AR을 쓸 수 없어요. ${reasonText(capability.reason)} 일반 카메라나 카메라 없는 점검을 이용해 주세요.` : '';
   }
 
   function render(state) {
@@ -139,7 +157,9 @@ export async function mountWebXrGuide({ task, canOffer, anchorFor, onOpen, onClo
     }
     const stopped = state.phase === 'UNSUPPORTED' || state.phase === 'FAILED';
     $('xr-start').hidden = !['READY', 'ENDED', 'FAILED'].includes(state.phase);
+    $('xr-footer').hidden = $('xr-start').hidden;
     $('xr-start').textContent = state.phase === 'READY' ? 'AR 시작' : 'AR 다시 시작';
+    $('xr-intro').hidden = PANEL_ACTIONS.has(state.phase); // After a stop, what happened and what to do next come first.
     $('xr-checking').hidden = state.phase !== 'CHECKING';
     $('xr-fallback').hidden = !stopped;
     $('xr-fallback-reason').textContent = stopped ? reasonText(state.reason) : '';
@@ -211,6 +231,8 @@ export async function mountWebXrGuide({ task, canOffer, anchorFor, onOpen, onClo
   // Taps on the controls must not also place a marker in the scene behind them.
   $('xr-controls').addEventListener('beforexrselect', event => event.preventDefault());
   $('xr-entry-open').addEventListener('click', open);
+  // Runs in the tap, as the page's own start button does, so the 2D camera's permission prompt still has its user gesture.
+  $('xr-method-camera').addEventListener('click', () => { if (!controller && canOffer()) { onCamera(); refresh(); } });
   $('xr-start').addEventListener('click', () => { void controller?.start(); });
   $('xr-leave').addEventListener('click', () => close(null));
   $('xr-to-checklist').addEventListener('click', () => close('checklist'));

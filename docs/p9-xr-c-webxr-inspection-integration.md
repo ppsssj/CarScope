@@ -8,7 +8,7 @@ P9-XR-B의 공간 고정 마커를 워셔액 점검 화면에 선택 기능으�
 - `WEBXR_SYNTHETIC_VERIFIED`: 실제 Chrome, 실제 동기화 HTTP와 가짜 XR 런타임으로 검증.
 - `NOT_RUN_DEFERRED_TO_E2E`: Z Flip8과 실제 QR E2E는 사용자 결정으로 최종 통합 단계로 연기. PASS로 기록하지 않는다.
 
-**미리 알아 둘 제약:** 운영 Native QR이 여는 Render에서는 이 기능이 나타나지 않는다. [E2E 전 필요한 작업](#최종-e2e-전에-필요한-작업)을 본다.
+**미리 알아 둘 제약:** 운영 Native QR이 여는 Render에서는 이 기능이 나타나지 않는다. [P11-XR](p11-xr-webxr-render-entry.md)이 화면을 P11로 통합하고 Render 진입점을 준비했으며, 활성화는 승인 대상이다. 아래의 화면 구성과 Render 항목은 P11-XR이 대체한다.
 
 ## 사용자 흐름
 
@@ -94,10 +94,7 @@ npm run test:browser:webxr
 절차는 [P9 E2E 체크리스트 I장](p9-e2e-checklist.md#i-webxr-3d-ar-안내-p9-xr-c)에 있다.
 
 1. **개발 QR 경로로 먼저 시험.** 공개 배포 없이 USB 포트 전달로 가능하다. 실제 QR v2 프로토콜을 쓰지만 세션은 로컬 시험용이며 Native와 Render를 거치지 않는다.
-2. **Native QR → Render 경로는 후속 작업이 필요하다.** 지금은 기능이 나타나지 않는다. 다음이 모두 필요하며 각각 사용자 승인 대상이다.
-   - `render-stateful.mjs`에 플래그 연결, `ALLOWED_ENV` 추가, 관련 테스트 변경.
-   - Render Build Command에 `three` 설치 추가. 현재 빌드는 `tools/inspection-sync-poc`만 설치한다.
-   - 플래그 설정과 재배포. 켜진 동안 운영 QR을 여는 모든 지원 기기에 버튼이 보인다.
+2. **Native QR → Render 경로:** P11-XR이 환경변수 없는 별도 진입점으로 준비했다. 활성화 조건은 [승인 항목](p11-xr-webxr-render-entry.md#활성화-전-승인-항목)을 본다.
 
 ## 실기기 미검증 항목
 
@@ -112,4 +109,3 @@ npm run test:browser:webxr
 
 - 체크리스트로 돌아가면 3D 표시가 사라진다. 앵커는 세션 안에서만 유효하다. 다시 보려면 AR을 다시 시작해 지정한다.
 - 3D AR은 탭이 두 번 필요하다(안내 열기, AR 시작). Three.js를 미리 받아 두어야 `requestSession`의 사용자 동작을 소모하지 않기 때문이다.
-- 안내 항목이 늘어나 390×844의 시작 단계에서 "카메라 없이 점검하기"가 스크롤 아래로 내려간다.

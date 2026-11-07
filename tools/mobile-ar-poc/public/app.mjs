@@ -190,8 +190,8 @@ if (handoff.valid && document.body.dataset.webxrGuide === 'enabled') {
       task: { position: WASHER_TASK.position, items: CHECK_ITEMS },
       canOffer: () => state.step in GUIDE_STEPS,
       anchorFor: () => $(GUIDE_STEPS[state.step]),
-      onOpen: () => { guideOpen = true; stop('3D AR 안내를 위해 2D 카메라를 중지했습니다.'); },
-      onClose: () => { guideOpen = false; stop('3D AR 안내를 마쳤습니다. 2D 카메라는 직접 시작하세요.'); },
+      onOpen: () => { guideOpen = true; stop('3D AR을 쓰는 동안 일반 카메라를 껐어요.'); },
+      onClose: () => { guideOpen = false; stop('3D AR을 마쳤어요. 일반 카메라는 직접 켜 주세요.'); },
       onChecklist: () => {
         if (state.step === 'intro') dispatch({ type: 'START', camera: false });
         else if (state.step === 'locate') dispatch({ type: 'TO_CHECK', manual: true });

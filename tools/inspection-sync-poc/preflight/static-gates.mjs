@@ -25,6 +25,8 @@ export const SQL_FILES = Object.freeze({
 });
 const ENTRY = 'src/render-stateful.mjs';
 export const AVD_HISTORY_DEMO_ENTRY = 'src/render-avd-history-demo.mjs';
+export const WEBXR_EXPERIMENT_ENTRY = 'src/render-webxr-experiment.mjs';
+const WEBXR_DEVELOPMENT_HOSTS = ['src/mobile-dev-server.mjs', 'src/https-mobile-service.mjs'];
 /** The only variables the Render path may read. Anything else, e.g. a history switch, fails this gate. */
 export const ALLOWED_ENV = Object.freeze([
   'RENDER', 'RENDER_EXTERNAL_URL', 'DATABASE_URL', 'NODE_TLS_REJECT_UNAUTHORIZED', 'PORT',
@@ -142,6 +144,40 @@ export function avdHistoryDemoGate(root = TOOL_ROOT) {
   return problems.length
     ? check('AVD_HISTORY_DEMO_ENTRY_ONLY', 'FAIL', problems.join('; '))
     : check('AVD_HISTORY_DEMO_ENTRY_ONLY', 'PASS', 'only the demonstration entrypoint opens the read path; no variable can, and the default CLI does not');
+}
+
+/**
+ * Deploying code must never turn the WebXR guide on. Only the experiment entrypoint may pass the option on the Render path,
+ * it may read no variable and open nothing else, and the switch of the development hosts stays outside the Render closure.
+ */
+export function webxrExperimentGate(root = TOOL_ROOT) {
+  const problems = [];
+  const entry = readFileSync(resolve(root, ENTRY), 'utf8');
+  if (/webxrGuide/.test(entry.slice(entry.indexOf(MAIN_MARKER)))) problems.push('default CLI passes the guide option');
+  if (!/webxrGuide = false/.test(entry.slice(0, entry.indexOf(MAIN_MARKER)))) problems.push('guide option is not off by default');
+  if (/webxr/i.test(readFileSync(resolve(root, 'src/render-preflight.mjs'), 'utf8'))) problems.push('render-preflight.mjs knows the guide');
+  const base = importGraph(ENTRY, root);
+  if (base.some((file) => file.endsWith('webxr-flag.mjs'))) problems.push('the variable switch is inside the Render closure');
+  for (const host of WEBXR_DEVELOPMENT_HOSTS) if (base.includes(host)) problems.push('Render imports the development host ' + host);
+  for (const dir of ['src', 'bin']) {
+    for (const name of readdirSync(resolve(root, dir)).filter((x) => x.endsWith('.mjs'))) {
+      const file = dir + '/' + name;
+      if (file !== WEBXR_EXPERIMENT_ENTRY && !WEBXR_DEVELOPMENT_HOSTS.includes(file) && /webxrGuide\s*:/.test(readFileSync(resolve(root, file), 'utf8'))) problems.push(file + ' passes the guide option');
+    }
+  }
+  let experiment;
+  try { experiment = readFileSync(resolve(root, WEBXR_EXPERIMENT_ENTRY), 'utf8'); } catch { problems.push('experiment entrypoint is missing'); }
+  if (experiment) {
+    if (/\bprocess\.env\b|\benv\./.test(experiment)) problems.push('experiment entrypoint reads the environment');
+    if (/historyAuthorit|historyAuthorizer|enableAvdHistoryRead/.test(experiment)) problems.push('experiment entrypoint opens a history path');
+    if (!/assertWebXrGuideFiles\(\)/.test(experiment)) problems.push('experiment entrypoint does not check its files');
+    const known = new Set(base);
+    problems.push(...importGraph(WEBXR_EXPERIMENT_ENTRY, root).filter((f) => f !== WEBXR_EXPERIMENT_ENTRY && !known.has(f)).map((f) => 'experiment entrypoint adds ' + f));
+  }
+  if (base.includes(WEBXR_EXPERIMENT_ENTRY)) problems.push('default CLI imports the experiment entrypoint');
+  return problems.length
+    ? check('WEBXR_EXPERIMENT_ENTRY_ONLY', 'FAIL', problems.join('; '))
+    : check('WEBXR_EXPERIMENT_ENTRY_ONLY', 'PASS', 'only the experiment entrypoint turns on the guide; no variable can, and the default CLI does not');
 }
 
 export function ddlGate(root = TOOL_ROOT) {
@@ -348,6 +384,7 @@ export async function runStaticGates() {
     ['ENV_CANNOT_ENABLE_AUTH', () => environmentGate()],
     ['AVD_HISTORY_DEMO_ENTRY_ONLY', () => avdHistoryDemoGate()],
     ['AVD_HISTORY_DEMO_REFUSES_UNSAFE_CONFIG', () => avdHistoryDemoRefusalGate()],
+    ['WEBXR_EXPERIMENT_ENTRY_ONLY', () => webxrExperimentGate()],
     ['UNVERIFIED_AUTHORITY_BLOCKED', () => unverifiedAuthorityGate()],
     ['RENDER_CLI_REFUSES_UNSAFE_CONFIG', () => cliRefusalGate()],
     ['TEST_PROD_CREDENTIAL_SEPARATION', () => credentialSeparationGate()],

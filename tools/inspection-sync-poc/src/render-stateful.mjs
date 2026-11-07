@@ -16,7 +16,7 @@ import { MOBILE_HEADERS, serveMobilePage } from './mobile-page.mjs';
 import { httpsOrigin } from '../bin/host-readiness.mjs';
 import { databasePoolOptions } from './database-config.mjs';
 
-export async function startRenderStateful({ pool, publicOrigin, host = '127.0.0.1', port = 0, sweepMs = 30_000, enableAvdSimulation = false, enableAvdHistoryRead = false, historyAuthority, historyAuthorizer, expectedSchema = null } = {}) {
+export async function startRenderStateful({ pool, publicOrigin, host = '127.0.0.1', port = 0, sweepMs = 30_000, enableAvdSimulation = false, enableAvdHistoryRead = false, historyAuthority, historyAuthorizer, expectedSchema = null, webxrGuide = false } = {}) {
   const origin = httpsOrigin(publicOrigin);
   if (!Number.isSafeInteger(port) || port < 0 || port > 65535 ||
       !Number.isSafeInteger(sweepMs) || sweepMs < 1000) throw new Error('INVALID_RENDER_STATEFUL_CONFIG');
@@ -28,6 +28,9 @@ export async function startRenderStateful({ pool, publicOrigin, host = '127.0.0.
   // Code-only like historyAuthority. The default CLI below never sets it and no environment variable can:
   // only the separate render-avd-history-demo.mjs entrypoint does.
   if (enableAvdHistoryRead && !enableAvdSimulation) throw new Error('AVD_HISTORY_READ_REQUIRES_SIMULATION');
+  // Code-only as well: page assets and one permission of the page, nothing about sessions or results. Only
+  // render-webxr-experiment.mjs sets it, so the default CLI and every environment variable leave the guide off.
+  if (typeof webxrGuide !== 'boolean') throw new Error('INVALID_RENDER_STATEFUL_CONFIG');
   const historyRead = historyAuthority ? httpsHistoryAuthorizer(historyAuthority) : null;
   if (historyRead) assertHistoryAuthorizerDeployable(historyRead, { host });
   // Startup must prove PostgreSQL availability and complete schema initialization before listening.
@@ -66,7 +69,8 @@ export async function startRenderStateful({ pool, publicOrigin, host = '127.0.0.
               mode: simStore ? 'STATEFUL_AVD_SIMULATION' : 'STATEFUL_DENY_DEFAULT',
               sessionCreation: simStore ? 'OPERATOR_APPROVED_AVD_ONLY' : 'DENIED',
               ...(historyRead ? { historyRead: 'AUTHORITY_ADAPTER_CONFIGURED' } : {}),
-              ...(avdHistory ? { historyRead: 'AVD_REGISTRATION_ONLY' } : {})}));
+              ...(avdHistory ? { historyRead: 'AVD_REGISTRATION_ONLY' } : {}),
+              ...(webxrGuide ? { mobileGuide: 'WEBXR_EXPERIMENT' } : {})}));
           } catch {
             res.writeHead(503, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
             res.end('{"status":"UNAVAILABLE"}');
@@ -92,7 +96,7 @@ export async function startRenderStateful({ pool, publicOrigin, host = '127.0.0.
           await serveAvdSimulatorHistory(req,res,{credentialStore:simStore,history:avdHistory,limiter,secure:edgeSecure(req),publicOrigin:origin}); return;
         }
         if (req.url.startsWith('/v1/')) { await api(req, res); return; }
-        await serveMobilePage(req, res, { tls: true });
+        await serveMobilePage(req, res, { tls: true, webxrGuide });
       } catch {
         if (!res.headersSent) res.writeHead(500, headers);
         res.end();

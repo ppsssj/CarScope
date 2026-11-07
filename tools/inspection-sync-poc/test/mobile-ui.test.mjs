@@ -12,7 +12,7 @@ import { buildInviteFragment, PROTOCOL, PROTOCOL_VERSION, receiptMatches, result
 import { completeInspection, startInspection } from '../../mobile-ar-poc/public/inspection-result.mjs';
 import { MOBILE_HEADERS } from '../src/mobile-page.mjs';
 import { webxrGuideEnabled } from '../../mobile-ar-poc/webxr-flag.mjs';
-import { ALLOWED_ENV, environmentGate, importGraph } from '../preflight/static-gates.mjs';
+import { ALLOWED_ENV, environmentGate, importGraph, webxrExperimentGate } from '../preflight/static-gates.mjs';
 
 const done = () => completeInspection(startInspection(), 'NEEDS_REFILL');
 const env = (result) => ({ protocol: PROTOCOL, protocolVersion: PROTOCOL_VERSION, result });
@@ -147,7 +147,7 @@ test('mobile dev boundary: default creation denied, strict same-origin CSP, stat
   assert.match(await readFile(new URL('../../mobile-ar-poc/public/index.html', import.meta.url), 'utf8'), /src="\/app-entry.mjs"/);
 });
 
-test('WebXR guide: QR v2 host serves it only when told to, and the Render path cannot be told', async (t) => {
+test('WebXR guide: QR v2 host serves it only when told to, and no variable can tell the Render path', async (t) => {
   const off = await startMobileDevServer(); t.after(() => off.stop());
   const on = await startMobileDevServer({ webxrGuide: true }); t.after(() => on.stop());
   const guide = '/mobile-ar-poc/public/webxr/webxr-guide.mjs';
@@ -168,9 +168,8 @@ test('WebXR guide: QR v2 host serves it only when told to, and the Render path c
   // The session API is the same in both modes: the flag touches page assets only.
   assert.equal((await fetch(on.url + '/v1/sessions', { method: 'POST' })).status, 403);
 
-  for (const file of ['../src/render-stateful.mjs', '../src/render-preflight.mjs']) {
-    assert.doesNotMatch(await readFile(new URL(file, import.meta.url), 'utf8'), /webxr/i, file);
-  }
+  // Only the separate entrypoint and its Start Command turn it on: webxr-render-activation.test.mjs.
+  assert.equal(webxrExperimentGate().status, 'PASS');
   assert.ok(!ALLOWED_ENV.includes('CARSCOPE_WEBXR_GUIDE'));
   assert.equal(environmentGate().status, 'PASS');
   assert.ok(!importGraph().some((file) => file.endsWith('webxr-flag.mjs')), 'the switch is outside the Render import closure');

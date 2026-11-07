@@ -72,44 +72,47 @@ export function reduce(state, event) {
 }
 
 const REASONS = Object.freeze({
-  INSECURE_CONTEXT: 'HTTPS 또는 localhost에서 열어야 AR을 사용할 수 있습니다.',
-  NO_WEBXR_API: '이 브라우저는 WebXR을 제공하지 않습니다.',
-  AR_NOT_SUPPORTED: '이 기기나 브라우저는 카메라 AR 세션을 지원하지 않습니다.',
-  HIT_TEST_NOT_SUPPORTED: '이 브라우저는 실제 표면 찾기(Hit Test)를 지원하지 않아 위치를 지정할 수 없습니다.',
-  POLICY_BLOCKED: '이 페이지의 권한 정책이 AR 사용을 막고 있습니다.',
-  PROBE_FAILED: 'AR 지원 여부를 확인하지 못했습니다.',
-  ASSET_LOAD_FAILED: '3D 표시 모듈을 불러오지 못했습니다.',
-  PERMISSION_DENIED: '카메라 또는 AR 권한이 허용되지 않았습니다.',
-  SESSION_NOT_SUPPORTED: '이 기기에서 필요한 AR 기능으로 세션을 시작할 수 없습니다.',
-  SESSION_BUSY: '이미 실행 중인 AR 세션이 있습니다. 잠시 뒤 다시 시도하세요.',
-  SESSION_ERROR: 'AR 세션을 시작하지 못했습니다.',
-  SESSION_SETUP_FAILED: 'AR 세션 준비 중 오류가 발생해 세션을 종료했습니다.',
-  FRAME_ERROR: 'AR 화면 처리 중 오류가 발생해 세션을 종료했습니다.',
+  INSECURE_CONTEXT: 'HTTPS 또는 localhost에서 열어야 AR을 쓸 수 있어요.',
+  NO_WEBXR_API: '이 브라우저는 WebXR을 제공하지 않아요.',
+  AR_NOT_SUPPORTED: '이 기기나 브라우저는 카메라 AR을 지원하지 않아요.',
+  HIT_TEST_NOT_SUPPORTED: '이 브라우저는 실제 표면 찾기를 지원하지 않아 위치를 지정할 수 없어요.',
+  POLICY_BLOCKED: '이 페이지의 권한 정책이 AR 사용을 막고 있어요.',
+  PROBE_FAILED: 'AR 지원 여부를 확인하지 못했어요.',
+  ASSET_LOAD_FAILED: '3D 표시 모듈을 불러오지 못했어요.',
+  PERMISSION_DENIED: '카메라 또는 AR 권한이 허용되지 않았어요.',
+  SESSION_NOT_SUPPORTED: '이 기기에서 필요한 AR 기능으로 시작할 수 없어요.',
+  SESSION_BUSY: '이미 실행 중인 AR이 있어요. 잠시 뒤 다시 시도해 주세요.',
+  SESSION_ERROR: 'AR을 시작하지 못했어요.',
+  SESSION_SETUP_FAILED: 'AR을 준비하다 오류가 나서 종료했어요.',
+  FRAME_ERROR: 'AR 화면을 처리하다 오류가 나서 종료했어요.',
 });
 const NOTICES = Object.freeze({
-  ANCHORS_UNAVAILABLE: '공간 앵커를 쓸 수 없어 표면 좌표로만 표시합니다. 이동하면 더 어긋날 수 있습니다.',
-  NO_SURFACE: '표면을 놓쳤습니다. 표면 표시가 보일 때 다시 지정하세요.',
-  ANCHOR_FAILED: '공간 앵커를 만들지 못했습니다. 다시 지정하세요.',
-  REFERENCE_RESET: '기기가 공간 좌표를 다시 잡아 표시를 지웠습니다. 위치를 다시 지정하세요.',
+  ANCHORS_UNAVAILABLE: '공간 앵커를 쓸 수 없어 표면 좌표로만 표시해요. 움직이면 더 어긋날 수 있어요.',
+  NO_SURFACE: '표면을 놓쳤어요. 흰 원이 보일 때 다시 지정해 주세요.',
+  ANCHOR_FAILED: '공간 앵커를 만들지 못했어요. 다시 지정해 주세요.',
+  REFERENCE_RESET: '기기가 공간 좌표를 다시 잡아 표시를 지웠어요. 위치를 다시 지정해 주세요.',
 });
 export const reasonText = code => REASONS[code] ?? REASONS.SESSION_ERROR;
 export const noticeText = code => (code ? NOTICES[code] ?? null : null);
 
+const NOT_RECOGNIZED = '부품을 인식한 결과가 아니에요.', MARKER_GOES = '체크리스트로 가면 표시는 사라져요.';
 /** Status for the AR overlay. It describes tracking only and never claims the part was recognized. */
 export function statusCopy(state) {
-  if (state.visibility !== 'visible') return { tone: 'warn', title: 'AR 일시 중지', hint: '화면으로 돌아오면 추적 상태를 다시 확인하세요.' };
-  if (state.tracking === 'LOST') return { tone: 'warn', title: '추적 끊김', hint: '표시를 믿지 마세요. 밝은 곳에서 휴대폰을 천천히 움직이세요.' };
-  if (state.tracking === 'LIMITED') return { tone: 'warn', title: '추적 불안정', hint: '위치 이동을 추적하지 못합니다. 표시를 믿지 말고 천천히 움직이세요.' };
+  if (state.visibility !== 'visible') return { tone: 'warn', title: 'AR 일시 중지', hint: '화면으로 돌아오면 추적 상태를 다시 확인해 주세요.' };
+  if (state.tracking === 'LOST') return { tone: 'warn', title: '추적 끊김', hint: '지금 표시를 믿지 마세요. 밝은 곳에서 휴대폰을 천천히 움직여 주세요.' };
+  if (state.tracking === 'LIMITED') return { tone: 'warn', title: '추적 불안정', hint: '위치 이동을 추적하지 못해요. 표시를 믿지 말고 천천히 움직여 주세요.' };
   switch (state.phase) {
     case 'AIMING':
     case 'REPOSITIONING':
-      if (!state.surface) return { tone: 'muted', title: '표면 찾는 중', hint: '주입구 근처를 천천히 비추세요. 표면이 잡히지 않으면 체크리스트로 돌아가 직접 확인하세요.' };
-      return { tone: 'ok', title: '표면 찾음', hint: '흰 원을 주입구 근처에 맞추고 화면을 탭하세요. 부품을 인식하지 않습니다.' };
+      if (!state.surface) return { tone: 'muted', title: '표면 찾는 중', hint: '주입구 근처를 천천히 비춰 주세요. 표면이 잡히지 않으면 체크리스트로 돌아가 직접 확인해 주세요.' };
+      return { tone: 'ok', title: '표면 찾음', hint: '흰 원을 주입구 근처에 맞추고 화면을 탭해 주세요. 부품을 인식하지 않아요.' };
     case 'PLACING':
-      return { tone: 'muted', title: '표시 고정 중', hint: '잠시 기다리세요.' };
+      return { tone: 'muted', title: '표시 고정 중', hint: '잠시만 기다려 주세요.' };
     case 'PLACED':
-      if (!state.markerVisible) return { tone: 'warn', title: '표시 추적 중단', hint: '표시를 가렸습니다. 돌아오지 않으면 위치를 다시 지정하세요.' };
-      return { tone: 'ok', title: '내가 지정한 위치', hint: '부품 인식 결과가 아닙니다. 캡의 앞유리·분사 모양 표시를 직접 확인하세요.' };
+      if (!state.markerVisible) return { tone: 'warn', title: '표시 추적 중단', hint: '표시를 가렸어요. 돌아오지 않으면 위치를 다시 지정해 주세요.' };
+      // The tracker's own state, in the words of what it does: an anchor is held in space, a stored hit pose is not.
+      if (state.markerMode === 'HIT_POSE') return { tone: 'warn', title: '표면에 표시됨 · 공간 고정 안 됨', hint: `움직이면 어긋날 수 있어요. ${NOT_RECOGNIZED} ${MARKER_GOES}` };
+      return { tone: 'ok', title: '공간에 고정됨 · 내가 지정한 위치', hint: `휴대폰을 움직여도 화살표가 제자리에 있는지 봐 주세요. ${NOT_RECOGNIZED} ${MARKER_GOES}` };
     default:
       return { tone: 'muted', title: 'AR 준비 중', hint: '' };
   }
