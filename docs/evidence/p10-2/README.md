@@ -18,6 +18,7 @@
 | 2회차 | 갱신한 기준선 | PASS, 차이 0 | `run2-compare/` |
 | 3회차, 임시 변이 (**실패해야 정상**) | 갱신한 기준선 | FAIL: P0-2·P1-1 `REGRESSION`, 차이 193건 | `run3-mutation-must-fail/` |
 | 4회차, 끝점 수정 후 최종 | 갱신한 기준선 | PASS, 차이 0 | `run4-final-compare/` |
+| 5회차, main `15ddef2`(PR #97) 병합 후 | 같은 기준선 (갱신 안 함) | PASS, 차이 0. 상태 일관성 PASS 18 (워셔액·전조등 S1·S2 포함) | `run5-merge-97-compare/`, `run5-merge-97-consistency/` |
 
 ## 수정 전후
 
