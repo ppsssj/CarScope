@@ -4,6 +4,10 @@
 
 공개 모델 `engine-bay-parts/1`을 호스팅 API로 실제 추론해 권리를 확인한 사진 12장으로 예비 평가했다. `Windshield Wiper Fluid`는 Precision 0.88, Recall 0.64, mAP@0.5 0.64(공식 지표 아님)로 색상 규칙(0.42, 0.45)보다 오탐이 적고 캡 자체를 잡는다. **`yolov8n`(AGPL 계열)이고 데이터 원출처가 미확인이라 연구 기준으로만 재사용하며 제품 탑재는 불가다. 정식 평가는 `DATASET_REQUIRED`, Z Flip8은 `NOT_MEASURED`다.** 운영 코드는 바꾸지 않았다. [판정](p12-c-existing-model.md), [증거 인덱스](evidence/p12-c/README.md).
 
+## P12-A2 — 19개 부품 시각 안내
+
+모바일 부품 안내를 레지스트리 19개 전체로 넓혔다. 점검이 있는 17개는 점검 화면에, 점검이 없는 2개는 별도 정보 페이지에 연결했고 작업 ID나 결과를 새로 만들지 않았다. 그림 38장은 공통 생성기로 만든 설명용 그림이며 보닛 부품의 위치는 참고 배치 예시다. **실제 사진은 0장이고 19개 모두 `PHOTO_NEEDED`다. Z Flip8과 Render 운영 확인은 NOT_RUN이다.** [설계와 지원 현황](p12-a2-all-part-guides.md), [증거 인덱스](evidence/p12-a2/README.md).
+
 ## P12-A — 모바일 부품 안내
 
 워셔액 주입구의 역할, 찾아볼 영역, 구별 특징, 안전 안내와 확대 가능한 그림을 점검 시작과 위치 찾기·체크리스트 화면에 접힌 형태로 넣었다. 부품 ID 기준 데이터라 다른 부품도 같은 화면을 쓴다. **실제 사진은 없고 직접 그린 설명용 그림 2장으로 대체했으며 `PHOTO_NEEDED`다. Z Flip8과 Render 운영 확인은 NOT_RUN이다.** [설계와 필요한 사진](p12-a-part-photo-guide.md), [증거 인덱스](evidence/p12-a/README.md).

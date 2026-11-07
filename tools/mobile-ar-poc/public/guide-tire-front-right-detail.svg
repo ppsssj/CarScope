@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" role="img" aria-label="옆에서 본 타이어 그림. 옆면과 바닥 면이 강조되어 있고, 작은 차 그림에 앞 오른쪽 위치가 표시되어 있습니다.">
+<rect width="400" height="300" fill="#1e2228"/>
+<circle cx="150" cy="150" r="112" fill="#14171b" stroke="#5f6772" stroke-width="4"/><circle cx="150" cy="150" r="62" fill="#2a2f37" stroke="#5f6772" stroke-width="3"/>
+<circle cx="150" cy="150" r="16" fill="#5f6772"/><g stroke="#5f6772" stroke-width="7"><path d="M150 96 V134"/><path d="M150 166 V204"/><path d="M96 150 H134"/><path d="M166 150 H204"/></g>
+<path d="M150 38 A112 112 0 0 1 262 150" fill="none" stroke="#3ec6e0" stroke-width="8"/><path d="M150 62 A88 88 0 0 1 238 150" fill="none" stroke="#3ec6e0" stroke-width="3" stroke-dasharray="6 6"/>
+<text x="330" y="62" fill="#e8eaed" font-family="system-ui,sans-serif" font-size="14" font-weight="700" text-anchor="middle">옆면과</text><text x="330" y="82" fill="#e8eaed" font-family="system-ui,sans-serif" font-size="14" font-weight="700" text-anchor="middle">보이는 바닥 면</text>
+<rect x="292" y="124" width="76" height="118" rx="20" fill="#2a2f37" stroke="#5f6772" stroke-width="2"/><rect x="284" y="140" width="10" height="20" rx="3" fill="#3a404a"/><rect x="366" y="140" width="10" height="20" rx="3" fill="#3ec6e0"/><rect x="284" y="204" width="10" height="20" rx="3" fill="#3a404a"/><rect x="366" y="204" width="10" height="20" rx="3" fill="#3a404a"/>
+<text x="330" y="112" fill="#a6adb7" font-family="system-ui,sans-serif" font-size="12" font-weight="400" text-anchor="middle">앞</text><text x="330" y="268" fill="#e8eaed" font-family="system-ui,sans-serif" font-size="14" font-weight="700" text-anchor="middle">앞 오른쪽</text>
+<text x="14" y="290" fill="#a6adb7" font-family="system-ui,sans-serif" font-size="12" font-weight="400" text-anchor="start">설명용 그림</text>
+</svg>
