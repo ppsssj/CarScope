@@ -268,6 +268,28 @@ async function realPageSection() {
       await page.evaluate(() => window.__held.resolve({ ok: true }));
       await page.waitForFunction(text => document.getElementById('toast').textContent === text, TEXT.ACCEPTED, { timeout: 3000 });
     });
+    await scenario('S1 the washer guide on the real page asks to look without touching', async () => {
+      const { context, page } = await openPage();
+      try {
+        await page.locator('[data-action=area][data-id=hood]').click(); await settled(page, 'COMPONENT_SELECTION');
+        await page.locator('[data-action=component][data-id="washer-fluid-cap"]').first().click(); await settled(page, 'WASHER_SELECTED');
+        const text = await page.locator('#panel').innerText();
+        assert.match(text, /부품을 만지거나 캡·덮개를 열지 마세요/);
+        assert.match(text, /직접 보충하지 마세요/);
+        assert.doesNotMatch(text, /캡을 열어|보충하고 캡을 닫/);
+      } finally { await context.close(); }
+    });
+    await scenario('S2 the light detail and result screens say only the exterior is checked', async () => {
+      const { context, page } = await openPage();
+      try {
+        await page.locator('[data-action=area][data-id=lights]').click(); await settled(page, 'VISIBILITY_PREVIEW');
+        assert.match(await page.locator('#panel').innerText(), /겉모습만 눈으로 확인/);
+        await page.evaluate(() => __inspect.dispatch({ type: 'OPEN_RESULT', id: 'light-low-beam-left-0' })); await settled(page, 'PART_RESULT');
+        const text = await page.locator('#panel').innerText();
+        assert.match(text, /겉모습만 눈으로 확인/);
+        assert.equal(await page.locator('#panel h2').innerText(), '왼쪽 하향등');
+      } finally { await context.close(); }
+    });
     await scenario('B5 Back while waiting: a late success shows nothing on the next screen', async () => {
       await fixture(page, 'f=>{window.__held=f.deferredReply();f.setRequestReply(window.__held.reply);}');
       await clickRequest(page);
