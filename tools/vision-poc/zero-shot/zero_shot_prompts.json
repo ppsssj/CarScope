@@ -1,0 +1,8 @@
+{
+  "note": "Fixed before any zero-shot result was seen. contrast is the reported mode: a box counts as the target only if its label names the washer. single and generic are diagnostics.",
+  "modes": {
+    "contrast": ["windshield washer fluid cap", "radiator coolant cap", "brake fluid cap", "engine oil cap"],
+    "single": ["windshield washer fluid cap"],
+    "generic": ["cap"]
+  }
+}
