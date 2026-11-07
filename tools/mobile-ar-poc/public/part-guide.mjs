@@ -1,7 +1,7 @@
 // P12-A: the part guide on the inspection page. One closed row on the first step, and inside the location help after it.
 // It reads and changes no inspection state, and needs no camera or AR. Pictures are requested only when the row is opened.
 // A picture that is absent, refused by part-guides.mjs or fails to load becomes a sentence, never an empty frame or a broken icon.
-import { guideForTask, IMAGE_KIND, usableImage } from './part-guides.mjs';
+import { guideForTask, IMAGE_KIND, PART_GUIDES, usableImage } from './part-guides.mjs';
 
 const el = (tag, className, text) => { const node = document.createElement(tag); if (className) node.className = className; if (text != null) node.textContent = text; return node; };
 const list = (title, items) => { const box = el('div', 'part-guide-block'), ul = el('ul'); box.append(el('p', 'safety-title', title), ul); for (const item of items) ul.append(el('li', null, item)); return box; };
@@ -56,7 +56,7 @@ function figure(image) {
 /** The guide's content. `load` asks for its pictures, and is called on opening so a closed row costs no network. */
 export function renderPartGuide(guide) {
   const body = el('div', 'part-guide-body'), figures = el('div', 'part-guide-figures');
-  body.append(el('p', 'part-guide-role', `${guide.role} 찾아볼 곳: ${guide.area}.`));
+  body.append(el('p', 'part-guide-role', `${guide.role} ${guide.taskId ? '찾아볼 곳' : '있는 곳'}: ${guide.area}.`));
   const pictures = [guide.overviewImage, guide.detailImage].map(usableImage).filter(Boolean).map(figure);
   for (const picture of pictures) figures.append(picture.box);
   const hasPhoto = [guide.overviewImage, guide.detailImage].some(image => usableImage(image)?.kind === IMAGE_KIND.PHOTO);
@@ -68,6 +68,13 @@ export function renderPartGuide(guide) {
     // A new tab: leaving this one would discard the connection and the answers.
     link.href = guide.manualReference.url; link.target = '_blank'; link.rel = 'noopener noreferrer';
     manual.append(link, ` ${guide.manualReference.applicability}`); body.append(manual);
+  }
+  if (guide.relatedInfo?.length) {
+    // A new tab here too: it is a separate page, and this one holds the answers and the connection.
+    const related = el('p', 'fine part-guide-related');
+    related.append('함께 알아 두기: ');
+    for (const partId of guide.relatedInfo) { const link = el('a', null, PART_GUIDES[partId].title); link.href = new URL(`./part-info.html#${partId}`, import.meta.url).href; link.target = '_blank'; link.rel = 'noopener noreferrer'; related.append(link); }
+    body.append(related);
   }
   return { body, load: () => pictures.forEach(picture => picture.load()) };
 }

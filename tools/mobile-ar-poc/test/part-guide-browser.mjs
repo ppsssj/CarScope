@@ -7,6 +7,7 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { startMobileDevServer } from '../../inspection-sync-poc/src/mobile-dev-server.mjs';
 import { LocalTestSessionCreationAuthorizer } from '../../inspection-sync-poc/src/creation-authorizer.mjs';
 import { ReceiverClient } from '../../inspection-sync-poc/bin/receiver.mjs';
+import { taskLinks } from '../public/inspection-tasks.mjs';
 
 const base = process.env.POC_EVIDENCE_DIR;
 if (!base || !path.resolve(base).toLowerCase().startsWith('c:\\carscope-external\\')) throw Error('Set external POC_EVIDENCE_DIR');
@@ -23,7 +24,7 @@ const flagged = await startMobileDevServer({ now: () => now, authorizer, webxrGu
 const contexts = [];
 const closeAll = () => Promise.all(contexts.splice(0).map(context => context.close().catch(() => {})));
 
-async function open({ host = plain, task = 'washer-fluid', viewport = { width: 390, height: 844 }, prepare, fake, qr = true } = {}) {
+async function open({ host = plain, task = 'washer-fluid', viewport = { width: 390, height: 844 }, prepare, fake, qr = true, local = '#v=1&task=washer-fluid' } = {}) {
   now += 61_000; // Each scenario gets its own rate window; the limits stay as they are.
   const context = await browser.newContext({ viewport, deviceScaleFactor: 2, isMobile: true, hasTouch: true, reducedMotion: 'reduce' }); contexts.push(context);
   await context.addInitScript(`window.__media=0;if(navigator.mediaDevices){const g=navigator.mediaDevices.getUserMedia?.bind(navigator.mediaDevices);navigator.mediaDevices.getUserMedia=c=>{window.__media++;return g(c);};}`);
@@ -35,7 +36,7 @@ async function open({ host = plain, task = 'washer-fluid', viewport = { width: 3
   page.on('request', request => log.requests.push({ url: request.url(), method: request.method(), body: request.postData() ?? '' }));
   if (prepare) await prepare(page);
   const receiver = new ReceiverClient({ baseUrl: host.url });
-  let fragment = '#v=1&task=washer-fluid';
+  let fragment = local;
   if (qr) { const session = await receiver.create(task); fragment = session.fragment; log.secrets.push(session.fragment.split('invite=')[1]); }
   page.on('response', async response => { if (response.url().endsWith('/v1/claim') && response.ok()) { const body = await response.json().catch(() => null); if (body?.submitToken) log.secrets.push(body.submitToken); } });
   await page.goto(`${host.url}/${fragment}`);
@@ -43,7 +44,7 @@ async function open({ host = plain, task = 'washer-fluid', viewport = { width: 3
   return { context, page, log, receiver };
 }
 const posted = (log, suffix) => log.requests.filter(r => r.method === 'POST' && r.url.endsWith(suffix)).length;
-const pictures = log => log.requests.filter(r => /guide-washer-.*\.svg$/.test(r.url));
+const pictures = log => log.requests.filter(r => /\/guide-[a-z0-9-]+\.svg$/.test(r.url));
 const fits = page => page.evaluate(() => document.documentElement.scrollWidth <= innerWidth);
 const shot = (page, name, fullPage = false) => page.screenshot({ path: path.join(output, `${name}.png`), fullPage });
 const introGuide = page => page.locator('#step-intro details.part-guide');
@@ -78,7 +79,7 @@ try {
     await loaded(page, '#step-intro .part-guide');
     assert.equal(pictures(log).length, 2);
     const text = await introGuide(page).innerText();
-    for (const words of ['앞유리를 닦는 워셔액', '보닛 안쪽', '설명용 그림', '실제 사진이 아니에요', '아직 실제 사진이 없어', '앞유리·분사 모양', '색만 보고 고르지', '고전압 케이블', '내 차 설명서로 확인']) assert.ok(text.includes(words), words);
+    for (const words of ['앞유리를 닦는 워셔액', '보닛 안쪽', '설명용 그림', '실제 사진이 아니에요', '아직 실제 사진이 없어', '앞유리·분사 모양', '색만 보고 고르지', '고전압 케이블', '내 차 설명서를 먼저 확인']) assert.ok(text.includes(words), words);
     assert.deepEqual(await page.locator('#step-intro .part-guide img').evaluateAll(images => images.map(i => [i.alt.length > 10, i.naturalWidth > 0])), [[true, true], [true, true]]);
     assert.equal(await page.evaluate(() => window.__media), 0, 'no camera');
     assert.deepEqual((await state(page)).step, 'intro', 'reading it starts nothing');
@@ -151,7 +152,7 @@ try {
   }
 
   { // A picture that cannot load: a sentence with what it shows, and the inspection goes on.
-    const { page, log } = await open({ prepare: p => p.route('**/guide-washer-*.svg', route => route.abort()) });
+    const { page, log } = await open({ prepare: p => p.route('**/guide-*.svg', route => route.abort()) });
     await page.locator('#step-intro details.part-guide summary').click();
     await page.waitForFunction(() => [...document.querySelectorAll('#step-intro .part-guide figure')].every(f => f.dataset.image === 'failed'));
     assert.equal(await page.locator('#step-intro .part-guide img').count(), 0, 'no broken image');
@@ -170,7 +171,7 @@ try {
     // Slow: the row says so, the frame holds its place, and the inspection does not wait for it.
     let release;
     const held = new Promise(resolve => { release = resolve; });
-    const slow = await open({ prepare: p => p.route('**/guide-washer-*.svg', async route => { await held; await route.continue(); }) });
+    const slow = await open({ prepare: p => p.route('**/guide-*.svg', async route => { await held; await route.continue(); }) });
     await slow.page.locator('#step-intro details.part-guide summary').click();
     await slow.page.locator('.part-guide-state').first().waitFor();
     assert.match(await slow.page.locator('.part-guide-state').first().textContent(), /불러오는 중/);
@@ -281,19 +282,142 @@ try {
     pass('WebXR entry, exit and Back keep the answers, the attempt, the connection and the open guide, and each Back closes only what is on top');
   }
 
-  { // The same screen for other parts, and what may not be shown.
-    const tire = await open({ task: 'tire.front-left' });
-    assert.equal(await tire.page.locator('.part-guide').count(), 0, 'a part with no guide gets no empty card');
-    assert.equal(await tire.page.locator('.part-guide-body').count(), 0);
-    assert.deepEqual(pictures(tire.log), []);
+  { // Every part with an inspection, on its real page: each gets its own two drawings and its own words, and nothing loads before opening.
+    const areas = new Set(), details = new Set(), read = [];
+    for (const { id, href } of taskLinks()) {
+      const { page, log } = await open({ qr: false, local: href });
+      await page.locator('#step-intro details.part-guide').waitFor();
+      assert.equal(pictures(log).length, 0, `${id}: closed row asks for nothing`);
+      await page.locator('#step-intro details.part-guide summary').click();
+      await loaded(page, '#step-intro .part-guide');
+      const seen = await page.locator('#step-intro .part-guide img').evaluateAll(images => images.map(i => ({ src: new URL(i.src).pathname.split('/').pop(), alt: i.alt, width: i.naturalWidth })));
+      assert.equal(seen.length, 2, id);
+      assert.ok(seen.every(image => image.width > 0 && image.alt.length > 15), id);
+      areas.add(seen[0].src); details.add(seen[1].src);
+      const chipClear = await page.locator('#step-intro .part-guide-frame').evaluateAll(frames => frames.every(frame => frame.querySelector('img').getBoundingClientRect().bottom <= frame.getBoundingClientRect().bottom - 28));
+      assert.equal(chipClear, true, `${id}: the enlarge label does not cover the drawing`);
+      const text = await introGuide(page).innerText();
+      for (const words of ['설명용 그림', '실제 사진이 아니에요', '이렇게 구별해요', '꼭 지켜 주세요']) assert.ok(text.includes(words), `${id}: ${words}`);
+      assert.equal(await fits(page), true, id);
+      assert.equal(await page.evaluate(() => window.__media), 0, id);
+      read.push(id);
+      await closeAll();
+    }
+    assert.equal(read.length, 17);
+    assert.equal(areas.size, 17, 'each part has its own location drawing');
+    assert.equal(details.size, 17, 'each part has its own close-up');
+    pass('all 17 inspection parts open their own two drawings and words on their own page, load nothing until opened, and need no camera');
+  }
+
+  { // Left and right, on screen: the bright wheel is really on the named side.
+    for (const [href, side] of [['#task=tire.front-left', 'left'], ['#task=tire.rear-right', 'right']]) {
+      const { page } = await open({ qr: false, local: href });
+      await page.locator('#step-intro details.part-guide summary').click();
+      await loaded(page, '#step-intro .part-guide');
+      assert.equal(await page.locator('#step-intro .part-guide img').first().evaluate(i => i.getAttribute('src').includes('tire-')), true);
+      assert.match(await page.locator('#step-intro .part-guide-figure').first().innerText(), side === 'left' ? /왼쪽/ : /오른쪽/);
+      await closeAll();
+    }
+    pass('tires name the side they draw');
+  }
+
+  { // QR on a checklist part: answers, connection and result survive the guide.
+    const session = await open({ task: 'tire.front-left' }), { page, log, receiver } = session;
+    await connected(page);
+    await page.locator('#step-intro details.part-guide summary').click();
+    await loaded(page, '#step-intro .part-guide');
+    await page.locator('#safety').check();
+    await page.locator('#manual-start').click();
+    await page.waitForFunction(() => window.__checklistInspection.state.step === 'check');
+    await page.locator('input[value=NOT_FOUND]').check();
+    await page.waitForFunction(() => window.__checklistInspection.state.index === 1);
+    const before = await page.evaluate(() => JSON.stringify(window.__checklistInspection.state.record));
+    await page.locator('details.part-location > summary').click();
+    await loaded(page, 'details.part-location');
+    await shot(page, 'tire-check-open', true);
+    await page.locator('details.part-location .part-guide-frame').first().click();
+    assert.equal(await zoomOpen(page), true);
+    await page.goBack();
+    await page.waitForFunction(() => !document.getElementById('part-guide-zoom').open);
+    assert.equal(await page.evaluate(() => JSON.stringify(window.__checklistInspection.state.record)), before, 'the guide changes no answer');
+    for (const index of [1, 2]) { await page.waitForFunction(i => window.__checklistInspection.state.index === i, index); await page.locator('input[value=NOT_FOUND]').check(); }
+    await page.waitForFunction(() => window.__checklistInspection.state.step === 'review');
+    await page.locator('#primary').click();
+    await page.waitForFunction(() => window.__checklistInspection.state.step === 'done');
+    await page.locator('#sync-send').click();
+    await page.waitForFunction(() => document.getElementById('done-sync').dataset.syncState === 'SENT');
+    const view = await receiver.view();
+    assert.equal(view.result.taskId, 'tire.front-left');
+    assert.equal(posted(log, '/v1/claim'), 1);
+    assert.equal(posted(log, '/v1/submissions'), 1);
+    await noLeak(session);
+    assert.deepEqual(log.problems, []);
+    await closeAll();
+    pass('on a QR checklist part the guide changes no answer, Back closes only the picture, and the same connection sends');
+  }
+
+  { // The two parts with no inspection: a page of their own, reached without leaving an inspection, and no task or result anywhere.
+    const session = await open({ task: 'ev-charge.port' }), { page, log, context } = session;
+    await connected(page);
+    await page.evaluate(() => { window.__sameDocument = true; });
+    await page.locator('#step-intro details.part-guide summary').click();
+    await loaded(page, '#step-intro .part-guide');
+    const links = page.locator('#step-intro .part-guide-related a');
+    assert.deepEqual(await links.allTextContents(), ['EV 충전구 덮개', '고전압 배터리 팩']);
+    assert.equal(await links.first().getAttribute('target'), '_blank');
+    assert.equal(await links.first().getAttribute('rel'), 'noopener noreferrer');
+    const [info] = await Promise.all([context.waitForEvent('page'), links.nth(1).click()]);
+    await info.waitForFunction(() => document.body.dataset.partInfo === 'ev-battery.pack');
+    await info.waitForFunction(() => { const f = [...document.querySelectorAll('figure')]; return f.length === 2 && f.every(x => x.dataset.image === 'loaded'); });
+    assert.equal(await page.evaluate(() => window.__sameDocument), true, 'the inspection tab stayed where it was');
+    assert.equal(posted(log, '/v1/claim'), 1);
+    assert.match(await page.locator('body > main').textContent(), /연결됐어요/);
+    await info.close();
     await closeAll();
 
+    for (const [id, words] of [['ev-battery.pack', ['점검 항목이 아니에요', '차 아래로 들어가거나', '주황색', '설명용 그림']], ['ev-charge.flap', ['점검 항목이 아니에요', '억지로 열거나', '충전구와 같은']]]) {
+      const context2 = await browser.newContext({ viewport: { width: 344, height: 882 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true }); contexts.push(context2);
+      const infoPage = await context2.newPage(); infoPage.setDefaultTimeout(15000);
+      const requests = [], problems = [];
+      infoPage.on('request', request => requests.push(request.url()));
+      infoPage.on('pageerror', error => problems.push(error.message));
+      infoPage.on('console', message => { if (message.type() === 'error') problems.push(message.text()); });
+      await infoPage.goto(`${plain.url}/mobile-ar-poc/public/part-info.html#${id}`);
+      await infoPage.waitForFunction(value => document.body.dataset.partInfo === value, id);
+      await infoPage.waitForFunction(() => { const f = [...document.querySelectorAll('figure')]; return f.length === 2 && f.every(x => x.dataset.image === 'loaded'); });
+      const text = await infoPage.locator('main').innerText();
+      for (const part of words) assert.ok(text.includes(part), `${id}: ${part}`);
+      assert.ok(!text.includes('찾아볼 곳:'), `${id}: nothing sends a person to look for it`);
+      assert.ok(text.includes('있는 곳:'), id);
+      assert.equal(requests.some(url => url.includes('/v1/')), false, 'no session or result request');
+      assert.equal(await infoPage.evaluate(() => Boolean(window.__selfInspection || window.__checklistInspection)), false, 'no inspection runs here');
+      assert.equal(await infoPage.locator('#checklist, #primary, #sync-send, input').count(), 0, 'nothing to answer or send');
+      assert.equal(await infoPage.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
+      await infoPage.screenshot({ path: path.join(output, `info-${id}.png`), fullPage: true });
+      await infoPage.locator('.part-guide-frame').first().click();
+      assert.equal(await infoPage.evaluate(() => document.getElementById('part-guide-zoom').open), true);
+      await infoPage.goBack();
+      await infoPage.waitForFunction(() => !document.getElementById('part-guide-zoom').open);
+      // A part with an inspection, or nonsense, is not shown here.
+      for (const other of ['washer-fluid-cap', 'tire.front-left', 'nothing', '']) {
+        await infoPage.evaluate(value => { location.hash = value; }, other);
+        await infoPage.waitForFunction(() => document.body.dataset.partInfo === 'none' || location.hash === '');
+        if (other) assert.equal(await infoPage.evaluate(() => document.body.dataset.partInfo), 'none', other);
+        assert.equal(await infoPage.locator('figure').count(), 0, other);
+      }
+      assert.deepEqual(problems, [], id);
+      await closeAll();
+    }
+    pass('the two parts with no inspection open in their own read-only page with no task, answer, request or result, and that page refuses any other part');
+  }
+
+  { // What may not be shown.
     const { page } = await open({ qr: false });
     const rendered = await page.evaluate(async () => {
       const { renderPartGuide } = await import('/mobile-ar-poc/public/part-guide.mjs');
       const { PART_GUIDES, IMAGE_KIND, LICENSE } = await import('/mobile-ar-poc/public/part-guides.mjs');
       const base = { ...PART_GUIDES['washer-fluid-cap'], partId: 'brake-fluid-reservoir', taskId: 'brake-fluid', title: '브레이크액' };
-      const photo = { file: 'guide-washer-area.svg', kind: IMAGE_KIND.PHOTO, alt: '설명', caption: '캡션', imageSource: '소유자 서면 허가', licenseStatus: LICENSE.PERMISSION_GRANTED, vehicle: { make: 'Make', model: 'Model', year: 2024 } };
+      const photo = { file: 'guide-brake-fluid-reservoir-area.svg', kind: IMAGE_KIND.PHOTO, alt: '설명', caption: '캡션', imageSource: '소유자 서면 허가', licenseStatus: LICENSE.PERMISSION_GRANTED, vehicle: { make: 'Make', model: 'Model', year: 2024 } };
       const show = async guide => {
         const { body, load } = renderPartGuide(guide); document.querySelector('main').append(body); load();
         const figures = () => [...body.querySelectorAll('figure')];
@@ -318,7 +442,7 @@ try {
     assert.match(rendered.none.text, /아직 준비된 사진이나 그림이 없어요/);
     assert.match(rendered.none.text, /앞유리·분사 모양/, 'the words remain');
     await closeAll();
-    pass('a part with no guide shows no empty card; the same screen takes another part, labels a real photo with its vehicle and source, and refuses one without them');
+    pass('the same screen labels a real photo with its vehicle and source, refuses one without them, and with no picture at all still gives its words');
   }
   result.status = 'PASS';
 } catch (error) {

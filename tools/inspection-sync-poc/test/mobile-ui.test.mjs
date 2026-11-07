@@ -178,10 +178,10 @@ test('WebXR guide: QR v2 host serves it only when told to, and no variable can t
 
 test('part guide pictures are served as listed, as images, under the unchanged CSP, on the QR host', async (t) => {
   const s = await startMobileDevServer(); t.after(() => s.stop());
-  for (const name of ['guide-washer-area.svg', 'guide-washer-mark.svg']) {
+  for (const name of ['guide-washer-fluid-cap-area.svg', 'guide-ev-battery-pack-detail.svg', 'part-info.html']) {
     const r = await fetch(`${s.url}/mobile-ar-poc/public/${name}`);
     assert.equal(r.status, 200, name);
-    assert.match(r.headers.get('content-type'), /^image\/svg\+xml/);
+    assert.match(r.headers.get('content-type'), name.endsWith('.html') ? /^text\/html/ : /^image\/svg\+xml/);
     assert.equal(r.headers.get('content-security-policy'), MOBILE_HEADERS['Content-Security-Policy']);
   }
   assert.equal((await fetch(`${s.url}/mobile-ar-poc/public/guide-not-listed.svg`)).status, 404);

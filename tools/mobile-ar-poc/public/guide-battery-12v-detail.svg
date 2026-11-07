@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" role="img" aria-label="상자 모양 배터리 그림. 12V 글자와 플러스, 마이너스 단자 덮개가 있습니다. 특정 차량의 형상이 아닙니다.">
+<rect width="400" height="300" fill="#1e2228"/>
+<rect x="84" y="86" width="232" height="158" rx="10" fill="#2a2f37" stroke="#5f6772" stroke-width="4"/><rect x="84" y="86" width="232" height="30" rx="8" fill="#3a404a"/>
+<rect x="112" y="60" width="50" height="30" rx="6" fill="#5f6772"/><rect x="238" y="60" width="50" height="30" rx="6" fill="#5f6772"/>
+<text x="137" y="82" fill="#e8eaed" font-family="system-ui,sans-serif" font-size="22" font-weight="700" text-anchor="middle">+</text><text x="263" y="82" fill="#e8eaed" font-family="system-ui,sans-serif" font-size="22" font-weight="700" text-anchor="middle">−</text><text x="200" y="188" fill="#e8eaed" font-family="system-ui,sans-serif" font-size="44" font-weight="700" text-anchor="middle">12V</text><text x="200" y="44" fill="#ef9867" font-family="system-ui,sans-serif" font-size="13" font-weight="400" text-anchor="middle">단자 덮개는 열지 않아요</text>
+<text x="14" y="290" fill="#a6adb7" font-family="system-ui,sans-serif" font-size="12" font-weight="400" text-anchor="start">설명용 그림</text>
+</svg>

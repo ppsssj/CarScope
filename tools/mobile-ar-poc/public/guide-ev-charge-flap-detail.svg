@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" role="img" aria-label="차체 면에 있는 사각형 덮개 그림. 경첩 쪽과 플러그 기호가 표시되어 있습니다. 특정 차량의 형상이 아닙니다.">
+<rect width="400" height="300" fill="#1e2228"/>
+<rect x="46" y="44" width="308" height="220" rx="12" fill="#2a2f37" stroke="#5f6772" stroke-width="3"/><rect x="118" y="76" width="164" height="136" rx="16" fill="#14303a" stroke="#3ec6e0" stroke-width="4"/>
+<path d="M118 92 H106 M118 196 H106" stroke="#e8eaed" stroke-width="6" stroke-linecap="round"/><g fill="none" stroke="#e8eaed" stroke-width="5" stroke-linecap="round"><path d="M182 114 V136 M218 114 V136 M170 136 H230 V150 Q230 172 200 172 Q170 172 170 150 Z M200 172 V192"/></g><text x="200" y="240" fill="#e8eaed" font-family="system-ui,sans-serif" font-size="14" font-weight="700" text-anchor="middle">차체와 이어진 닫힌 덮개</text><text x="200" y="32" fill="#ef9867" font-family="system-ui,sans-serif" font-size="13" font-weight="400" text-anchor="middle">억지로 열거나 닫지 않아요</text>
+<text x="14" y="290" fill="#a6adb7" font-family="system-ui,sans-serif" font-size="12" font-weight="400" text-anchor="start">설명용 그림</text>
+</svg>
