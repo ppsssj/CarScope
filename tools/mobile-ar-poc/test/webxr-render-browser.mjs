@@ -188,6 +188,7 @@ try {
     for (const [name] of WEBXR_GUIDE_FILES) assert.equal((await direct(service.port, GUIDE + name)).status, 200, name);
     assert.ok((await direct(service.port, GUIDE + 'three.module.min.js')).size > 100_000, 'three.js is really served');
     assert.equal((await direct(service.port, '/mobile-ar-poc/node_modules/three/package.json')).status, 404, 'only the listed file of the package');
+    assert.match((await direct(service.port, '/mobile-ar-poc/public/guide-washer-area.svg')).headers['content-type'], /^image\/svg\+xml/, 'the part guide picture is served on the Render path');
 
     const session = await openSession(service.port, registration);
     const phone = await openPhone(session);

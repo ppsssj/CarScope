@@ -176,6 +176,17 @@ test('WebXR guide: QR v2 host serves it only when told to, and no variable can t
   assert.throws(() => webxrGuideEnabled({ CARSCOPE_WEBXR_GUIDE: 'yes' }), /INVALID/);
 });
 
+test('part guide pictures are served as listed, as images, under the unchanged CSP, on the QR host', async (t) => {
+  const s = await startMobileDevServer(); t.after(() => s.stop());
+  for (const name of ['guide-washer-area.svg', 'guide-washer-mark.svg']) {
+    const r = await fetch(`${s.url}/mobile-ar-poc/public/${name}`);
+    assert.equal(r.status, 200, name);
+    assert.match(r.headers.get('content-type'), /^image\/svg\+xml/);
+    assert.equal(r.headers.get('content-security-policy'), MOBILE_HEADERS['Content-Security-Policy']);
+  }
+  assert.equal((await fetch(`${s.url}/mobile-ar-poc/public/guide-not-listed.svg`)).status, 404);
+});
+
 test('mobile timers are called unbound and polling pauses, resumes, then stops on page close', async () => {
   let scheduled = 0, released = 0;
   const schedule = function () { assert.equal(this, undefined); scheduled++; return scheduled; };

@@ -3,6 +3,7 @@ import {getChecklistProfile} from './checklist-profiles.mjs';
 import {InspectionCamera} from './inspection-camera.mjs';
 import {renderSummary,renderOutcome,actionGate,mountLocationGuide,wheelMap} from './inspection-ui.mjs';
 import {taskCopy,questionCopy,ANSWER_COPY,CHECKLIST_OUTCOME,REPORT_NOTE,SAFETY_ACK,CANNOT_CONFIRM_NOTE,iconElement} from './inspection-copy.mjs';
+import {mountPartGuide} from './part-guide.mjs';
 
 // Long enough to see the choice land, short enough to feel like one action.
 const ADVANCE_MS=320;
@@ -27,7 +28,7 @@ export function prepareChecklistPage(taskId,{locked=false}={}){const task=getChe
   document.getElementById('hero-icon').append(iconElement(copy.icon));if(task.id.startsWith('tire.'))document.getElementById('hero-visual').append(wheelMap(task.id));
 }
 export function startChecklistPage({handoff,onComplete=()=>{},onRestart=()=>{}}){const $=id=>document.getElementById(id),task=getChecklistProfile(handoff.task),copy=taskCopy(task);let state=task.flow.initial(task.id),restartAfter=0,advance=null,pointerAnswer=false;
-  mountLocationGuide(task,$('camera'));
+  mountLocationGuide(task,$('camera'));mountPartGuide(task.id,$('step-intro').querySelector('details.help'));
   const run=actionGate(),canCamera=()=>state.mode==='camera'&&['locate','check'].includes(state.step);
   const camera=new InspectionCamera({video:$('video'),overlay:$('overlay'),stage:$('stage'),start:$('start'),stop:$('stop'),clear:$('clear-mark'),placeholder:$('placeholder'),canRun:canCamera,targetLabel:task.label,
     drawGuide:(ctx,r,d)=>task.drawGuide(ctx,r,d,{index:state.index,step:state.step}),
