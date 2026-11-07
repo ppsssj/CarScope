@@ -56,6 +56,14 @@ test('drawings are the final form: nothing in the guide words mentions a photo, 
   }
 });
 
+test('the source and licence of every drawing stay in the data, off the screen', () => {
+  for (const image of Object.values(PART_GUIDES).flatMap(guide => [guide.overviewImage, guide.detailImage])) {
+    assert.ok(image.imageSource, image.file);
+    assert.equal(image.licenseStatus, LICENSE.CARSCOPE_ORIGINAL, image.file);
+    assert.deepEqual(imageProblems(image), [], image.file);
+  }
+});
+
 test('no real photo is claimed, and each drawing and its words are its own', () => {
   const images = Object.values(PART_GUIDES).flatMap(guide => [guide.overviewImage, guide.detailImage]);
   assert.equal(images.length, 38);
