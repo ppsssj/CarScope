@@ -10,8 +10,9 @@ import {mkdir,readFile,writeFile} from 'node:fs/promises';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {PART_UX_ISSUES} from './part-ux-known-issues.mjs';
-import {partLabel} from '../inspection-parts.mjs';
-import {ALL_PARTS,BATTERY_PART,CHARGE_PARTS,FRAMING_BANDS,HOOD_PARTS,LIGHT_PARTS,MIN_TOUCH_PX,POSE_TOLERANCE_M,TIRE_PARTS,VIEWPORTS,WIPER_PARTS,classifyIssue,compareBaseline,distanceBetween,framesInsideVehicle,internalWords,spread,withinBand} from './part-ux-metrics.mjs';
+import {partById,partLabel} from '../inspection-parts.mjs';
+import {FRAMING} from '../inspection-camera.mjs';
+import {ALL_PARTS,BATTERY_PART,CHARGE_PARTS,HOOD_PARTS,LIGHT_PARTS,MIN_TOUCH_PX,POSE_TOLERANCE_M,TIRE_PARTS,VIEWPORTS,WIPER_PARTS,classifyIssue,compareBaseline,distanceBetween,framesInsideVehicle,internalWords,spread,withinBand} from './part-ux-metrics.mjs';
 
 const require=createRequire(new URL('../../mobile-ar-poc/package.json',import.meta.url)),{chromium}=require('playwright');
 const out=process.env.CARSCOPE_EVIDENCE_DIR,url=process.env.CARSCOPE_3D_TEST_URL;
@@ -65,7 +66,7 @@ const scanPart=(page,id,cells=15)=>page.evaluate(({id,cells})=>{
   }
   const color=mine?rgb.map(v=>v/mine):null;
   return {...out,sizeCm:b.max.map((v,i)=>(v-b.min[i])*100),screenW:right-left,screenH:low-top,
-    fillPercent:100*(right-left)*(low-top)/(usableW*usableH),centerOffset:[(left+right)/2-usableW/2,(top+low)/2-usableH/2],outsideCells:outside,hits,mineCells:mine,
+    fillPercent:100*(right-left)*(low-top)/(usableW*usableH),widthPercent:100*(right-left)/usableW,centerOffset:[(left+right)/2-usableW/2,(top+low)/2-usableH/2],outsideCells:outside,hits,mineCells:mine,
     touchPx:[Math.max(0,...[...rows.values()])*cellW,Math.max(0,...[...columns.values()])*cellH],hitCells:hitCells.slice(0,40),
     color,meshes:comp?comp.meshes.length:tire.meshes.length,highlightedMeshes:comp?comp.meshes.filter(m=>m.highlighted).length:tire.meshes.filter(m=>m.highlighted).length,selectionIntensity:tire?tire.meshes[0]?.selectionIntensity??null:null};
 },{id,cells});
@@ -84,7 +85,7 @@ const panelFacts=page=>page.evaluate(()=>{
 const simplifyScan=s=>{
   if(s.bounds===null)return {distance:round(s.distance),polar:round(s.polar,1),azimuth:round(s.azimuth,1),position:s.position.map(v=>round(v)),target:s.target.map(v=>round(v)),bounds:null};
   return {distance:round(s.distance),azimuth:round(s.azimuth,1),polar:round(s.polar,1),position:s.position.map(v=>round(v)),target:s.target.map(v=>round(v)),sizeCm:s.sizeCm.map(v=>round(v,1)),
-    screenPx:[Math.round(s.screenW),Math.round(s.screenH)],fillPercent:round(s.fillPercent,1),centerOffsetPx:s.centerOffset.map(v=>Math.round(v)),mineCells:s.mineCells,touchPx:s.touchPx.map(v=>Math.round(v)),
+    screenPx:[Math.round(s.screenW),Math.round(s.screenH)],fillPercent:round(s.fillPercent,1),widthPercent:round(s.widthPercent,1),centerOffsetPx:s.centerOffset.map(v=>Math.round(v)),mineCells:s.mineCells,touchPx:s.touchPx.map(v=>Math.round(v)),
     meshes:s.meshes,highlightedMeshes:s.highlightedMeshes};
 };
 
@@ -158,11 +159,26 @@ async function measureViewport(browser,viewport){
     const entry={...simplifyScan(scan),title:resultFacts.title,crumb:resultFacts.crumb,hood:round(await page.evaluate(()=>window.__inspect.hoodAngle),1)};
     await t.dispatch({type:'BACK'});await page.waitForTimeout(30);await t.settle();await page.waitForTimeout(30);await t.settle();
     entry.backTo=(await t.state()).name;R.result[id]=entry;
+    // The same part from the history overlay.
+    await t.toOverview();await t.dispatch({type:'OPEN_RESULT',id});await t.until('PART_RESULT');await t.settle();await page.waitForTimeout(30);await t.settle();
+    await t.dispatch({type:'OPEN_HISTORY'});await t.until('HISTORY_LIST');await t.settle();
+    entry.historyPosition=(await t.pose()).position.map(v=>round(v));
+    await t.dispatch({type:'BACK'});await t.until('PART_RESULT');await t.settle();await t.dispatch({type:'BACK'});await page.waitForTimeout(30);await t.settle();await page.waitForTimeout(30);await t.settle();
   }
 
+  // ---- area views: the longer side of the group's box
+  const groupSpan=ids=>page.evaluate(ids=>{
+    const I=window.__inspect,pose=I.cameraPose(),boxes=ids.map(id=>I.componentInfo().find(c=>c.id===id)?.bounds??I.tireInfo().find(t=>t.id===id)?.bounds);
+    const min=[0,1,2].map(i=>Math.min(...boxes.map(b=>b.min[i]))),max=[0,1,2].map(i=>Math.max(...boxes.map(b=>b.max[i])));
+    const sub=(a,c)=>a.map((v,i)=>v-c[i]),dot=(a,c)=>a[0]*c[0]+a[1]*c[1]+a[2]*c[2],cross=(a,c)=>[a[1]*c[2]-a[2]*c[1],a[2]*c[0]-a[0]*c[2],a[0]*c[1]-a[1]*c[0]],norm=a=>{const n=Math.hypot(...a);return a.map(v=>v/n);};
+    const f=norm(sub(pose.target,pose.position)),r=norm(cross(f,[0,1,0])),u=cross(r,f),T=Math.tan(35*Math.PI/360),H=innerHeight,W=innerWidth,p=document.getElementById('panel').getBoundingClientRect(),wide=p.width<W*.7,side=wide?p.width+18:0,bottom=wide?0:H*.46;
+    const xs=[],ys=[];for(const x of [min[0],max[0]])for(const y of [min[1],max[1]])for(const z of [min[2],max[2]]){const v=sub([x,y,z],pose.position),d=dot(v,f);xs.push(dot(v,r)/(d*T)*H/2);ys.push(dot(v,u)/(d*T)*H/2);}
+    return Math.max((Math.max(...xs)-Math.min(...xs))/(W-side),(Math.max(...ys)-Math.min(...ys))/(H-bottom))*100;
+  },ids);
   // ---- flows
   const F=R.flows;
   await t.toOverview();await t.dispatch({type:'SELECT_AREA',id:'hood'});await t.until('COMPONENT_SELECTION');await t.settle();await shot('bay');
+  R.areas={bay:round(await groupSpan(HOOD_PARTS.filter(id=>id!=='lcw-coolant-reservoir')),1)};
   F.bayLabel=(await panelFacts(page)).label;
   F.hoodListNames=await page.evaluate(()=>Object.fromEntries([...document.querySelectorAll('#panel button.item[data-id]')].map(b=>[b.dataset.id,b.firstChild.textContent.trim()])));
   await t.dispatch({type:'OPEN_RESULT',id:'lcw-coolant-reservoir'});await t.until('PART_RESULT');await t.settle();await t.dispatch({type:'BACK'});await page.waitForTimeout(30);await t.settle();await page.waitForTimeout(30);await t.settle();
@@ -172,6 +188,7 @@ async function measureViewport(browser,viewport){
   await t.toOverview();const overviewPose=await t.pose();
   await t.dispatch({type:'SELECT_AREA',id:'tires'});await t.until('TIRE_SELECTION');await t.settle();
   const direct=await page.evaluate(()=>window.__inspect.view());
+  R.areas.tires=round(await groupSpan(TIRE_PARTS),1);await shot('tire-list');
   R.geometry.tires={charge:await page.evaluate(()=>window.__inspect.chargeGeometry().visible)};
   await t.toOverview();await t.dispatch({type:'SELECT_TIRE',id:'tire.front-left'});await t.settle();await t.dispatch({type:'BACK'});await t.until('TIRE_SELECTION');await t.settle();
   const viaTire=await page.evaluate(()=>window.__inspect.view());
@@ -243,6 +260,7 @@ async function measurePaths(browser,viewport){
   R.other['bay>coolant']=await sample({type:'SELECT_COMPONENT',id:'coolant-reservoir'});
   R.other['coolant>battery-12v']=await sample({type:'SELECT_COMPONENT',id:'battery-12v'});
   R.other['battery-12v>washer']=await sample({type:'SELECT_COMPONENT',id:'washer-fluid-cap'});
+  R.other['washer>rear-right-result']=await sample({type:'OPEN_RESULT',id:'tire.rear-right'},'path-washer-to-rear-tire');
   await context.close();
   return R;
 }
@@ -280,7 +298,10 @@ function evaluateIssues(runs,paths,mobile){
   const views=Object.keys(runs),allPreview=(fn)=>views.every(v=>fn(runs[v].preview,runs[v]));
   const anyView=runs[views[0]];
   const tireFrames=Object.values(paths).flatMap(p=>Object.values(p.tires).map(x=>x.inside));
-  const fills=v=>ALL_PARTS.filter(id=>runs[v].preview[id]?.fillPercent!==undefined&&id!==BATTERY_PART&&!LIGHT_PARTS.includes(id)&&!WIPER_PARTS.includes(id)).map(id=>runs[v].preview[id].fillPercent);
+  const figure=(p,rule)=>rule.measure==='width'?p.widthPercent:p.fillPercent;
+  const outOfBand=v=>ALL_PARTS.filter(id=>runs[v].preview[id]?.selectable).filter(id=>{const rule=FRAMING[partById(id).cameraClass];return !withinBand(figure(runs[v].preview[id],rule),rule.band);}).map(id=>`${id}:${figure(runs[v].preview[id],FRAMING[partById(id).cameraClass])}`);
+  const areaOut=v=>Object.entries(runs[v].areas).filter(([,x])=>!withinBand(x,FRAMING.AREA.band)).map(([k,x])=>`${k}:${x}`);
+  const samePose=(a,b)=>distanceBetween(a,b)<=POSE_TOLERANCE_M*2;
   const colors=views.flatMap(v=>[...HOOD_PARTS,...TIRE_PARTS,BATTERY_PART].map(id=>runs[v].preview[id]?.color).filter(Boolean)).map(c=>(0.2126*c[0]+0.7152*c[1]+0.0722*c[2])/255);
   const visibleModeled=ALL_PARTS.filter(id=>runs[views[0]].preview[id]?.selectable);
   return {
@@ -288,7 +309,8 @@ function evaluateIssues(runs,paths,mobile){
     'P0-2':{met:tireFrames.every(x=>x===0),value:{transitions:tireFrames.length,withFramesInside:tireFrames.filter(x=>x>0).length,maxFramesInside:Math.max(...tireFrames)}},
     'P0-3':{met:views.every(v=>runs[v].flows.resultBackFromList==='COMPONENT_SELECTION'),value:Object.fromEntries(views.map(v=>[v,runs[v].flows.resultBackFromList]))},
     'P0-4':{met:views.every(v=>TIRE_PARTS.concat(WIPER_PARTS).filter(id=>runs[v].overview[id].mineCells>0).every(id=>runs[v].overview[id].highlightedMeshes>0)),value:Object.fromEntries(views.map(v=>[v,{textClaimsHighlight:runs[v].overviewFacts.text,visibleUnhinted:TIRE_PARTS.concat(WIPER_PARTS).filter(id=>runs[v].overview[id].mineCells>0&&runs[v].overview[id].highlightedMeshes===0)}]))},
-    'P1-1':{met:views.every(v=>fills(v).every(x=>withinBand(x,FRAMING_BANDS.part))),value:Object.fromEntries(views.map(v=>[v,{min:Math.min(...fills(v)),max:Math.max(...fills(v))}]))},
+    'P1-1':{met:views.every(v=>outOfBand(v).length===0&&areaOut(v).length===0),value:Object.fromEntries(views.map(v=>[v,{outOfBand:outOfBand(v),areaOut:areaOut(v),areas:runs[v].areas}]))},
+    'P1-15':(()=>{const wrong=views.flatMap(v=>RESULT_PARTS.filter(id=>runs[v].preview[id]?.selectable).flatMap(id=>{const p=runs[v].preview[id],r=runs[v].result[id];return [samePose(p.position,r.position)?null:`${v} ${id} result`,samePose(r.position,r.historyPosition)?null:`${v} ${id} history`].filter(Boolean);}));return {met:wrong.length===0,value:{wrong:wrong.slice(0,20)}};})(),
     'P1-2':{met:null,value:'VISUAL: preview captures of hood parts'},
     'P1-3':{met:allPreview(p=>visibleModeled.every(id=>p[id].label)),value:Object.fromEntries(views.map(v=>[v,visibleModeled.filter(id=>runs[v].preview[id]?.label)]))},
     'P1-4':{met:spread(colors)<=0.25,value:{luminanceSpread:round(spread(colors)),min:round(Math.min(...colors)),max:round(Math.max(...colors)),note:'Mean of the rendered pixels of the selected part. Also depends on lighting and view.'}},

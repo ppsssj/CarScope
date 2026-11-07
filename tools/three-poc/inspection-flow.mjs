@@ -195,7 +195,7 @@ export function hoodTarget(state) {
   return [S.HOOD_OPENING, S.COMPONENT_SELECTION, S.WASHER_SELECTED, S.COMPONENT_PREVIEW, S.MOBILE_HANDOFF_READY].includes(state.name) ? HOOD_OPEN_DEG : 0;
 }
 
-/** Named camera goal for `state`: home orbit, overview, engine bay or washer close-up. */
+/** Named camera goal for `state`: home orbit, overview, engine bay, or the selected part on any screen. */
 export function cameraGoal(state) {
   switch (state.name) {
     case S.PART_RESULT:return state.component==='lcw-coolant-reservoir'?'bay':state.component;
@@ -209,7 +209,6 @@ export function cameraGoal(state) {
     case S.VISIBILITY_PREVIEW: return state.component;
     case S.HOOD_CLOSING: return state.afterClose === S.IDLE ? 'home' : 'overview';
     case S.HOOD_OPENING: case S.COMPONENT_SELECTION: return 'bay';
-    case S.COMPONENT_PREVIEW: return state.component;
-    default: return 'washer';
+    default: return state.component;
   }
 }
