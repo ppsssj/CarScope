@@ -2,6 +2,8 @@
 
 연구용 로컬 도구다. **학습된 모델이 없고 판정은 `DATASET_REQUIRED`다.** 모바일 페이지와 배포에 포함되지 않는다. 판단 근거는 [설계 문서](../../docs/p12-b-vision-poc.md)에 있다.
 
+공개 모델 재사용과 예비 평가(`EXPLORATORY_EVALUATION`)는 [P12-C 문서](../../docs/p12-c-existing-model.md)에 있다. 수치는 정식 지표가 아니며 API 키와 이미지는 저장소 밖에 둔다.
+
 ## 실행
 
 ```powershell

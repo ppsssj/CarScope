@@ -9,3 +9,7 @@ models/
 *.webp
 *.heic
 __pycache__/
+*.key
+.env
+.env.*
+results*.json

@@ -22,7 +22,7 @@ const html = `<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>
 body{margin:0;padding:24px;background:#0e1013;color:#e8eaed;font:15px/1.45 system-ui,"Malgun Gothic",sans-serif}h1{font-size:22px;margin:0 0 4px}.lead{color:#a6adb7;margin:0 0 20px}
 main{display:grid;grid-template-columns:repeat(auto-fill,minmax(560px,1fr));gap:18px}section{background:#171a1f;border:1px solid #2a2f37;border-radius:12px;padding:12px 14px}h2{font-size:16px;margin:0}.meta{color:#a6adb7;font-size:12px;margin:2px 0 8px}code{font-size:11.5px}
 .pair{display:grid;grid-template-columns:1fr 1fr;gap:10px}figure{margin:0}img{width:100%;display:block;border-radius:8px}figcaption{color:#a6adb7;font-size:12px;margin-top:4px}
-</style></head><body><h1>CarScope 부품 안내 그림 19개 (38장)</h1><p class="lead">CarScope가 직접 그린 설명용 그림입니다. 실제 사진이 아니고 특정 차량의 구조나 위치가 아닙니다.</p><main>${rows.join('\n')}</main></body></html>`;
+</style></head><body><h1>CarScope 부품 안내 그림 19개 (38장)</h1><p class="lead">CarScope가 직접 그린 설명용 그림이며 실제 차량과 위치·형태가 다를 수 있습니다.</p><main>${rows.join('\n')}</main></body></html>`;
 const gallery = path.join(dir, 'index.html');
 await writeFile(gallery, html);
 const browser = await chromium.launch({ channel: process.env.POC_BROWSER_CHANNEL ?? 'chrome', headless: true });
