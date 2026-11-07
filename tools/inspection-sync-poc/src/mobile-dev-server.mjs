@@ -6,10 +6,10 @@ import { startSyncServer } from './server.mjs';
 import { ProductionSessionCreationAuthorizer, LocalTestSessionCreationAuthorizer } from './creation-authorizer.mjs';
 import { webxrGuideEnabled } from '../../mobile-ar-poc/webxr-flag.mjs';
 
-export async function startMobileDevServer({ port = 0, store, now, limits, rates, authorizer = new ProductionSessionCreationAuthorizer(), log = () => {}, webxrGuide = false } = {}) {
+export async function startMobileDevServer({ port = 0, store, now, limits, rates, authorizer = new ProductionSessionCreationAuthorizer(), log = () => {}, webxrGuide = false, partDetection = null } = {}) {
   let limiter;
   if (store?.rateCheck) { const { SQLiteRateLimiter } = await import('./sqlite-store.mjs'); limiter = new SQLiteRateLimiter({ store, now, rates }); }
-  const api = await startSyncServer({ host: '127.0.0.1', port: 0, store, now, limits, rates, limiter, authorizer, log });
+  const api = await startSyncServer({ host: '127.0.0.1', port: 0, store, now, limits, rates, limiter, authorizer, log, partDetection });
   const server = http.createServer(async (req, res) => {
     try {
       const origin = `http://127.0.0.1:${server.address().port}`;
@@ -25,7 +25,7 @@ export async function startMobileDevServer({ port = 0, store, now, limits, rates
         upstream.on('error', () => { if (!res.headersSent) res.writeHead(502, headers); res.end(); });
         req.on('aborted', () => upstream.destroy()); req.pipe(upstream); return;
       }
-      await serveMobilePage(req, res, { webxrGuide });
+      await serveMobilePage(req, res, { webxrGuide, partDetection: Boolean(partDetection) });
     } catch { if (!res.headersSent) res.writeHead(500, headers); res.end(); }
   });
   try { await new Promise((resolve, reject) => { server.once('error', reject); server.listen(port, '127.0.0.1', resolve); }); }

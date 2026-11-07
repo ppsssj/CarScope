@@ -2,12 +2,14 @@
 import { access, readFile } from 'node:fs/promises';
 import {MOBILE_ASSETS,MOBILE_MODULES as mobileFiles,MOBILE_PAGES} from '../../mobile-ar-poc/public-modules.mjs';
 import {WEBXR_GUIDE_FILES, WEBXR_PERMISSION, markWebXrGuidePage} from '../../mobile-ar-poc/webxr-modules.mjs';
+import {PART_DETECTION_FILES, markPartDetectionPage} from '../../mobile-ar-poc/part-detection-modules.mjs';
 // Experimental guide, off unless an entry passes webxrGuide. On Render only render-webxr-experiment.mjs does: see WEBXR_EXPERIMENT_ENTRY_ONLY.
 const guideFiles = new Map(WEBXR_GUIDE_FILES.map(([name, source, type]) => [`/mobile-ar-poc/public/webxr/${name}`, [new URL(`../../mobile-ar-poc/${source}`, import.meta.url), type]]));
 /** A deployment with the guide on but three.js not installed would offer a button that can only fail, so it does not start. */
 export async function assertWebXrGuideFiles() {
   try { await Promise.all([...guideFiles.values()].map(([source]) => access(source))); } catch { throw new Error('WEBXR_GUIDE_ASSET_MISSING'); }
 }
+const detectionFiles = new Map(PART_DETECTION_FILES.map((name) => [`/mobile-ar-poc/public/${name}`, new URL(`../../mobile-ar-poc/public/${name}`, import.meta.url)]));
 const syncFiles = ['mobile-dev-entry.mjs', 'mobile-handoff.mjs', 'mobile-sync.mjs', 'sync-client.mjs'];
 const files = new Map([
   ...[...mobileFiles,...MOBILE_ASSETS,...MOBILE_PAGES].map((s) => [`/mobile-ar-poc/public/${s}`, new URL(`../../mobile-ar-poc/public/${s}`, import.meta.url)]),
@@ -21,7 +23,7 @@ export const MOBILE_HEADERS = Object.freeze({
   'Permissions-Policy': 'camera=(self), microphone=(), geolocation=()',
   'Content-Security-Policy': "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' blob:; media-src 'self' blob:; connect-src 'self'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'",
 });
-export async function serveMobilePage(req, res, { tls = false, webxrGuide = false } = {}) {
+export async function serveMobilePage(req, res, { tls = false, webxrGuide = false, partDetection = false } = {}) {
   const headers = { ...MOBILE_HEADERS, ...(tls ? { 'Strict-Transport-Security': 'max-age=31536000' } : {}),
     ...(webxrGuide ? { 'Permissions-Policy': MOBILE_HEADERS['Permissions-Policy'] + WEBXR_PERMISSION } : {}) };
   const url = new URL(req.url, 'http://localhost');
@@ -31,12 +33,14 @@ export async function serveMobilePage(req, res, { tls = false, webxrGuide = fals
   if (url.pathname === '/') {
     body = (await readFile(new URL('../../mobile-ar-poc/public/index.html', import.meta.url), 'utf8')).replace('src="/app-entry.mjs"', 'src="/public/mobile-dev-entry.mjs"');
     if (webxrGuide) body = markWebXrGuidePage(body);
+    if (partDetection) body = markPartDetectionPage(body);
     type = 'text/html; charset=utf-8';
   } else if (url.pathname === '/handoff.json') { body = '{"configured":false,"url":null}'; type = 'application/json'; }
   else if (webxrGuide && guideFiles.has(url.pathname)) {
     const [source, mime] = guideFiles.get(url.pathname);
     body = await readFile(source); type = mime;
   }
+  else if (partDetection && detectionFiles.has(url.pathname)) body = await readFile(detectionFiles.get(url.pathname));
   else if (files.has(url.pathname)) {
     body = await readFile(files.get(url.pathname));
     if (url.pathname.endsWith('.css')) type = 'text/css; charset=utf-8';

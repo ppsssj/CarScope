@@ -168,6 +168,17 @@ dialog.enlarged .part-guide-zoom-view img { width: 220%; height: auto; max-width
 .part-guide-related a { display: inline-block; min-height: 44px; padding: 10px 12px 10px 0; font-weight: 600; }
 #part-info-main { flex: 1; }
 
+/* Part detection experiment: an entry row, and a full screen panel that leaves the inspection as it was */
+.part-detect-entry { display: block; width: 100%; margin: 10px 0; font-weight: 600; }
+.part-detect-entry-location { display: none; }
+body[data-step="locate"] .part-detect-entry-location, body[data-step="check"] .part-detect-entry-location { display: block; }
+dialog.part-detect-dialog { width: 100vw; max-width: 100vw; height: 100dvh; max-height: 100dvh; margin: 0; padding: 0; border: 0; background: var(--bg); color: var(--ink); }
+dialog.part-detect-dialog[open] { display: flex; flex-direction: column; }
+.part-detect-body { flex: 1; min-height: 0; overflow: auto; width: 100%; max-width: 620px; margin: 0 auto; padding: 0 16px 20px; }
+.part-detect-picture { display: block; width: 100%; height: auto; max-height: 62dvh; object-fit: contain; border-radius: 10px; background: #05070a; }
+.part-detect-status { padding: 24px 0; text-align: center; font-weight: 600; }
+#part-detect-again { display: block; width: 100%; }
+
 /* Camera */
 #stage { position: relative; width: 100%; aspect-ratio: 3 / 4; max-height: 54vh; max-height: 54dvh; margin: 0 auto; background: #05070a; border-radius: var(--radius); overflow: hidden; color: #fff; touch-action: manipulation; cursor: crosshair; }
 body[data-step="check"] #stage { max-height: 30vh; max-height: 30dvh; }
