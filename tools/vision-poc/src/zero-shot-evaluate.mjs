@@ -13,8 +13,8 @@ export const OPERATING_POINTS = Object.freeze({ owlv2: 0.1, 'grounding-dino-tiny
 export const RELIABILITY_BAR = Object.freeze({ minRecall: 0.8, minPrecision: 0.8, blackCapDetected: true, confuserFalsePositives: 0 });
 export const VERDICT = Object.freeze({ NOT_RELIABLE: 'NOT_RELIABLE', WORTH_LARGER_EVALUATION: 'WORTH_LARGER_EVALUATION' });
 
-// A label counts as the target only when it names the washer. A partial phrase such as "fluid cap" is ambiguous and does not count.
-export const isTargetLabel = label => /\b(washer|windshield)\b/i.test(label ?? '');
+// A label counts as the target only when it names the washer and no other part. "fluid cap", or a phrase that merged several prompts, is ambiguous and does not count.
+export const isTargetLabel = label => /\b(washer|windshield)\b/i.test(label ?? '') && !/\b(radiator|coolant|brake|oil)\b/i.test(label ?? '');
 
 export function nonMaxSuppress(predictions, overlap = NMS_IOU) {
   const kept = [];

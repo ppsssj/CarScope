@@ -24,6 +24,29 @@ MODELS = {
 RAW_THRESHOLD = 0.02
 
 
+def gdino_rows(outputs, inputs, processor, labels):
+    # The library's phrase decoding joins every token above text_threshold, so at a low threshold each box is named after the whole prompt.
+    # Each box is named here after the label whose tokens score highest, and the box score is that label's score.
+    token_ids = inputs.input_ids[0].tolist()
+    dot = processor.tokenizer.convert_tokens_to_ids(".")
+    spans, start = [], 1
+    for index, token in enumerate(token_ids):
+        if token == dot:
+            spans.append((start, index))
+            start = index + 1
+    if len(spans) != len(labels):
+        raise ValueError(f"Expected {len(labels)} label spans, found {len(spans)}")
+    probabilities = outputs.logits[0].sigmoid()
+    per_label = torch.stack([probabilities[:, a:b].max(dim=1).values for a, b in spans], dim=1)
+    scores, best = per_label.max(dim=1)
+    rows = []
+    for query in torch.nonzero(scores >= RAW_THRESHOLD).flatten().tolist():
+        cx, cy, w, h = outputs.pred_boxes[0][query].tolist()
+        rows.append({"label": labels[best[query]], "score": scores[query].item(), "box": [cx - w / 2, cy - h / 2, w, h]})
+    rows.sort(key=lambda row: -row["score"])
+    return rows[:150]
+
+
 def detect(kind, model, processor, image, labels):
     size = [(image.height, image.width)]
     if kind == "gdino":
@@ -31,8 +54,7 @@ def detect(kind, model, processor, image, labels):
         inputs = processor(images=image, text=text, return_tensors="pt")
         with torch.no_grad():
             outputs = model(**inputs)
-        result = processor.post_process_grounded_object_detection(outputs, inputs.input_ids, threshold=RAW_THRESHOLD, text_threshold=RAW_THRESHOLD, target_sizes=size)[0]
-        names = result.get("text_labels", result["labels"])
+        return gdino_rows(outputs, inputs, processor, labels)
     elif kind == "omdet":
         inputs = processor(images=image, text=labels, task=f"Detect {', '.join(labels)}.", return_tensors="pt")
         with torch.no_grad():

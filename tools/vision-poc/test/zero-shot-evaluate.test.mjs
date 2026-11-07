@@ -10,6 +10,7 @@ const image = (id, overrides = {}) => ({ id, split: 'exploratory', vehicle: { ma
 test('only a label naming the washer counts; a partial phrase does not', () => {
   for (const label of ['windshield washer fluid cap', 'Washer fluid cap', 'windshield']) assert.ok(isTargetLabel(label), label);
   for (const label of ['fluid cap', 'cap', 'radiator coolant cap', 'brake fluid cap', 'engine oil cap', '', null, undefined, 'dishwashers']) assert.ok(!isTargetLabel(label), String(label));
+  assert.ok(!isTargetLabel('windshield washer fluid cap radiator coolant cap brake fluid cap engine oil cap'), 'a phrase that merged every prompt names no single part');
 });
 
 test('duplicate boxes merge to the strongest; boxes apart stay', () => {
