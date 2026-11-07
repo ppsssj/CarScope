@@ -1,5 +1,6 @@
 // P12-G: the review page. It shows, a person decides. Nothing here sets a status, a reviewer or a finished review on its own.
 import { BOX_KIND, boxFromCorners, emptyPart, fitView, moveBox, partProblems, PART_KEYS, resizeBox, roundBox, STATUS, toNormalized, zoomAt, iou } from '/review-model.mjs';
+import { importAssisted } from '/assisted-model.mjs';
 
 const $ = id => document.getElementById(id);
 const el = (tag, className, text) => { const node = document.createElement(tag); if (className) node.className = className; if (text != null) node.textContent = text; return node; };
@@ -14,6 +15,9 @@ const image = () => app.data.images[app.index];
 const metaOf = key => app.data.parts.find(part => part.key === key);
 const size = () => { const { width, height } = image(); return { width, height }; };
 const threshold = () => Number($('ai-threshold').value);
+const candidate = () => image().assisted?.parts[app.partKey];
+const weakEvidence = item => !item.assisted || item.assisted.parts[app.partKey].status !== 'EVIDENCE_SUPPORTED' || item.assisted.parts[app.partKey].additionalReferenceNeeded;
+const CATEGORY_TEXT = { DETECTION_SUCCESS_CANDIDATE: '탐지 성공 후보', MISSED_CANDIDATE: '미탐 후보', FALSE_POSITIVE_CANDIDATE: '오탐 후보', PART_CONFUSION_CANDIDATE: '부품 혼동 후보', UNDETERMINED: '판단 불가' };
 
 async function api(path, options) {
   const response = await fetch(path, { cache: 'no-store', ...options });
@@ -56,6 +60,14 @@ function tag(node, text) { const t = el('span', 'tag', text); node.append(t); }
 function drawOverlay() {
   const overlay = $('overlay'); overlay.replaceChildren();
   const partKeys = $('show-all-parts').checked ? PART_KEYS : [app.partKey];
+  if ($('show-assisted').checked) for (const key of partKeys) {
+    const part = image().assisted?.parts[key];
+    if (!part) continue;
+    for (const kind of ['boxes', 'caps']) for (const box of part[kind]) {
+      const node = el('div', 'box assisted'); node.dataset.layer = 'assisted'; node.dataset.part = key;
+      place(node, box); tag(node, `Codex 후보 ${metaOf(key).name} ${KIND_TEXT[kind]}`); overlay.append(node);
+    }
+  }
   if ($('show-draft').checked) for (const key of partKeys) {
     const draft = image().draft[key];
     for (const kind of Object.values(BOX_KIND)) for (const box of draft[kind] ?? []) { const node = el('div', `box draft ${kind}`); node.dataset.layer = 'draft'; node.dataset.part = key; place(node, box); tag(node, `초안 ${metaOf(key).name} ${KIND_TEXT[kind]}`); overlay.append(node); }
@@ -130,11 +142,11 @@ function setTool(tool) { app.tool = tool; document.body.dataset.activeTool = too
 // ---- Panels
 const visibleImages = () => {
   const chosenCase = app.data.cases.find(item => item.id === app.filterCase);
-  return app.data.images.map((item, index) => ({ item, index })).filter(({ item }) => (app.filterState === 'ALL' || item.state === app.filterState) && (!chosenCase || chosenCase.images.includes(item.id)));
+  return app.data.images.map((item, index) => ({ item, index })).filter(({ item }) => item.dataset === $('filter-dataset').value && (!$('filter-evidence').checked || weakEvidence(item)) && (app.filterState === 'ALL' || item.state === app.filterState) && (!chosenCase || chosenCase.images.includes(item.id)));
 };
 function renderProgress() {
   const p = app.data.progress, node = $('progress');
-  node.replaceChildren(el('span', null, `전체 ${p.total}장`), el('span', null, `사람 검수 완료 ${p.reviewed}장`), el('span', null, `검수 필요 ${p.needed}장`), ...(p.inProgress ? [el('span', null, `진행 중 ${p.inProgress}장`)] : []), ...(p.invalidated ? [el('span', 'bad', `무효 ${p.invalidated}장`)] : []));
+  node.replaceChildren(el('span', null, `P12-F 전체 ${p.total}장`), el('span', null, `사람 검수 완료 ${p.reviewed}장`), el('span', null, `검수 필요 ${p.needed}장`), ...(p.inProgress ? [el('span', null, `진행 중 ${p.inProgress}장`)] : []), ...(p.invalidated ? [el('span', 'bad', `무효 ${p.invalidated}장`)] : []));
   const e = app.data.evaluation;
   $('review-state').textContent = e.reviewState; $('metric-state').textContent = e.metricState;
 }
@@ -155,6 +167,9 @@ function renderHead() {
   $('photo-id').textContent = current.id; $('photo-vehicle').textContent = current.vehicle + (current.electrified ? ' · 전동화' : '');
   $('photo-state').textContent = STATE_TEXT[current.state] + (current.record?.reviewer ? ` · ${current.record.reviewer}` : ''); $('photo-state').dataset.state = current.state;
   $('photo-license').textContent = `${current.license}${current.attribution ? ` · ${current.attribution}` : ''}`; $('photo-source').href = current.source;
+  const reference = current.dataset === 'IONIQ5_REFERENCE';
+  $('reference-only').hidden = !reference;
+  $('save-draft').disabled = $('save-complete').disabled = reference;
 }
 function renderTabs() {
   const tabs = $('part-tabs'); tabs.replaceChildren();
@@ -172,6 +187,19 @@ function renderPart() {
   $('part-name').textContent = meta.name;
   $('part-id').textContent = `${meta.partId}${meta.measuredOnly ? ' · 측정만, 운전자에게 제공 안 함' : ''}`;
   $('part-caution').textContent = meta.caution;
+  const assisted = candidate();
+  $('assisted-info').textContent = assisted ? `PROVISIONAL_AI_ASSISTED · ${assisted.status}` : `후보 ${app.data.assisted.status}: ${app.data.assisted.problems.join('; ')}`;
+  $('assisted-evidence').textContent = assisted?.evidence ?? '';
+  $('assisted-uncertainty').textContent = assisted ? `${image().assisted.vehicleIdentityBasis} · 연식 ${image().assisted.vehicleYear ?? '미확인'} · ${assisted.uncertainty} · 추가 자료 ${assisted.additionalReferenceNeeded ? '필요' : '불필요'}` : '';
+  const sources = $('assisted-sources'); sources.replaceChildren();
+  for (const ref of assisted?.references ?? []) {
+    const li = el('li'), a = el('a', null, `${ref.official ? '제조사 공식 문서' : '사진 근거'}: ${ref.title} · ${ref.locator}`);
+    a.href = ref.url; a.target = '_blank'; a.rel = 'noopener noreferrer'; li.append(a, el('p', 'muted', ref.applicability)); sources.append(li);
+  }
+  if (assisted && !assisted.references.length) sources.append(el('li', 'muted', '확인한 독립 자료 없음. 차종·연식·시장·파워트레인에 맞는 설명서나 부품 표기 근접 사진이 필요해요.'));
+  $('use-assisted').disabled = !assisted || !(assisted.boxes.length + assisted.caps.length);
+  const comparisons = image().comparison?.results.filter(r => r.key === app.partKey) ?? [];
+  $('assisted-comparison').textContent = image().dataset === 'IONIQ5_REFERENCE' ? '저장된 모델 추론 없음 · 비교/평가 제외' : `예비 비교 (신뢰도 0.4, IoU 0.5; 정식 성능 아님): ${comparisons.map(r => CATEGORY_TEXT[r.category]).join(', ') || '판단 불가'}`;
   $('tool-hv').hidden = app.partKey !== 'battery';
   const statuses = $('statuses'); statuses.replaceChildren();
   for (const status of Object.values(STATUS)) {
@@ -247,6 +275,7 @@ function move(step) {
 }
 
 async function save(complete) {
+  if (image().dataset !== 'P12F') return;
   const reviewer = $('reviewer').value.trim(), problem = $('save-problem');
   problem.hidden = true;
   const fail = text => { problem.textContent = text; problem.hidden = false; };
@@ -271,12 +300,24 @@ function wire() {
   frame.addEventListener('keydown', event => { if (event.key === 'Delete' || event.key === 'Backspace') { event.preventDefault(); deleteSelected(); } });
   $('zoom-in').addEventListener('click', () => zoomBy(1.25)); $('zoom-out').addEventListener('click', () => zoomBy(0.8)); $('zoom-fit').addEventListener('click', fit);
   for (const b of document.querySelectorAll('button[data-tool]')) b.addEventListener('click', () => setTool(b.dataset.tool));
-  for (const id of ['show-labels', 'show-draft', 'show-ai', 'show-all-parts', 'show-other', 'ai-threshold']) $(id).addEventListener('change', drawOverlay);
+  for (const id of ['show-labels', 'show-draft', 'show-assisted', 'show-ai', 'show-all-parts', 'show-other', 'ai-threshold']) $(id).addEventListener('change', drawOverlay);
+  $('filter-evidence').addEventListener('change', renderList);
+  $('filter-dataset').addEventListener('change', () => {
+    if (!mayLeave()) { $('filter-dataset').value = image().dataset; return; }
+    app.filterCase = 'ALL'; $('filter-case').value = 'ALL'; $('case-note').hidden = true;
+    app.filterState = 'ALL'; $('filter-state').value = 'ALL';
+    const first = visibleImages()[0]; if (first) openImage(first.index); else renderList();
+  });
+  $('use-assisted').addEventListener('click', () => {
+    const part = candidate(); if (!part) return;
+    app.working.parts[app.partKey] = importAssisted(app.partKey, part);
+    app.selected = null; edited(); render();
+  });
   $('filter-state').addEventListener('change', event => { app.filterState = event.target.value; renderList(); });
   $('filter-case').addEventListener('change', event => {
     app.filterCase = event.target.value; $('case-note').hidden = app.filterCase === 'ALL';
     const chosen = app.data.cases.find(item => item.id === app.filterCase);
-    if (chosen) { app.partKey = chosen.focus; const first = app.data.images.findIndex(item => item.id === chosen.images[0]); if (first !== app.index && mayLeave()) openImage(first); else render(); } else renderList();
+    if (chosen) { app.partKey = chosen.focus; const first = app.data.images.findIndex(item => item.id === chosen.images[0]); if (first !== app.index && mayLeave()) { $('filter-dataset').value = 'P12F'; openImage(first); } else render(); } else renderList();
   });
   $('use-draft').addEventListener('click', () => { // Copies boxes only. The decision stays with the person.
     const draft = image().draft[app.partKey], part = app.working.parts[app.partKey];
@@ -293,10 +334,12 @@ function wire() {
 const start = await api('/api/state');
 if (!start.ok) { document.body.textContent = '검수 데이터를 불러오지 못했어요.'; throw new Error('state'); }
 app.data = start.body;
+app.data.images.push(...app.data.referenceImages);
+$('filter-dataset').querySelector('[value="IONIQ5_REFERENCE"]').disabled = !app.data.referenceImages.length;
 $('synthetic').hidden = !app.data.synthetic; $('labels-changed').hidden = !app.data.sourceLabelsChanged;
 for (const item of app.data.cases) { const option = el('option', null, item.title); option.value = item.id; $('filter-case').append(option); }
 wire();
-const first = app.data.images.findIndex(item => item.state !== 'HUMAN_REVIEWED');
+const first = app.data.images.findIndex(item => item.dataset === 'P12F' && item.state !== 'HUMAN_REVIEWED');
 openImage(first < 0 ? 0 : first);
 document.body.dataset.ready = 'true';
 // Read-only test hook: coordinates only, no way to change anything.

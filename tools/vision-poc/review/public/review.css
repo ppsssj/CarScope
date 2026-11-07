@@ -46,6 +46,10 @@ body[data-active-tool]:not([data-active-tool="select"]) .frame { cursor: crossha
 .box.label.ignore { border: 2px solid #c9ced6; background: repeating-linear-gradient(45deg, #c9ced622 0 4px, transparent 4px 10px); }
 .box.label.hv { border: 2px solid #ff4d4d; background: repeating-linear-gradient(-45deg, #ff4d4d22 0 4px, transparent 4px 10px); }
 .box.ai { border: 2px dotted var(--c); pointer-events: none; }
+.box.assisted { border: 2px dashed #50e0d0; pointer-events: none; }
+.box.assisted .tag { color: #50e0d0; }
+.assisted-panel { border: 1px solid #378c82; padding: 8px; border-radius: 6px; overflow-wrap: anywhere; }
+.assisted-panel ul { padding-left: 16px; }
 .box.ai .tag { bottom: auto; top: 100%; color: var(--c); }
 .box.ai.other { --c: #aab3bd; border-width: 1px; }
 .box.draft { border: 1px solid #fff; opacity: .8; pointer-events: none; } .box.draft .tag { display: none; }

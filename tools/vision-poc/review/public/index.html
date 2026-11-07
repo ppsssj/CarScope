@@ -18,6 +18,8 @@
   <p id="labels-changed" class="banner warn" hidden>원본 라벨 파일이 이 검수를 시작한 뒤 바뀌었어요. 변경 내역 비교를 믿지 마세요.</p>
   <main class="layout">
     <nav class="rail" aria-label="사진 목록">
+      <label class="field">평가 세트 <select id="filter-dataset"><option value="P12F">기존 P12-F · 26장</option><option value="IONIQ5_REFERENCE">IONIQ 5 · 별도 참고 세트</option></select></label>
+      <label class="check"><input id="filter-evidence" type="checkbox"> 현재 부품의 근거 부족</label>
       <label class="field">상태 <select id="filter-state">
         <option value="ALL">전체</option><option value="UNREVIEWED">검수 전</option><option value="IN_PROGRESS">진행 중</option><option value="HUMAN_REVIEWED">검수 완료</option><option value="INVALIDATED">무효(해시 변경)</option>
       </select></label>
@@ -43,6 +45,7 @@
         <div class="group">
           <label class="check"><input type="checkbox" id="show-labels" checked> 정답</label>
           <label class="check"><input type="checkbox" id="show-draft" checked> P12-F 초안</label>
+          <label class="check"><input type="checkbox" id="show-assisted" checked> Codex 후보</label>
           <label class="check"><input type="checkbox" id="show-ai" checked> AI 예측</label>
           <label class="check"><input type="checkbox" id="show-all-parts"> 모든 부품</label>
           <label class="check"><input type="checkbox" id="show-other"> 다른 AI 클래스</label>
@@ -66,6 +69,17 @@
         <h2 id="part-name"></h2>
         <p id="part-id" class="muted small"></p>
         <p id="part-caution" class="caution small"></p>
+        <section class="assisted-panel" aria-label="Codex 보조 식별">
+          <h3>Codex 식별 후보 · 사람 검수 전</h3>
+          <p id="assisted-info" class="small"></p>
+          <p id="assisted-evidence" class="small"></p>
+          <p id="assisted-uncertainty" class="small caution"></p>
+          <ul id="assisted-sources" class="small"></ul>
+          <p id="assisted-comparison" class="small"></p>
+          <button type="button" id="use-assisted">Codex 후보를 편집 초안으로 가져오기</button>
+          <p class="muted small">가져오면 이 부품은 검수 전으로 돌아가요. 판정·검수자·완료 여부는 자동 입력하지 않아요.</p>
+          <p id="reference-only" class="caution small" hidden>별도 참고 세트예요. 박스는 이 창에서 편집할 수 있어요. P12-G 저장·평가에는 포함하지 않으며 이동하면 편집이 사라져요.</p>
+        </section>
         <fieldset class="statuses"><legend>판정</legend><div id="statuses"></div></fieldset>
         <p id="part-problem" class="problem small" role="alert" hidden></p>
         <h3>내가 그린 정답</h3>
