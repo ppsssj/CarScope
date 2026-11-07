@@ -8,7 +8,7 @@ import { notMeasuredReport } from '../src/evaluate.mjs';
 
 const args = process.argv.slice(2), rootAt = args.indexOf('--root');
 const root = rootAt >= 0 ? args[rootAt + 1] : null;
-const manifestPath = args.find((a, i) => !a.startsWith('--') && i !== rootAt + 1) ?? fileURLToPath(new URL('../dataset/manifest.json', import.meta.url));
+const manifestPath = args.find((a, i) => !a.startsWith('--') && (rootAt < 0 || i !== rootAt + 1)) ?? fileURLToPath(new URL('../dataset/manifest.json', import.meta.url));
 const manifest = JSON.parse(await readFile(path.resolve(manifestPath), 'utf8'));
 const result = validateDataset(manifest);
 if (root) {

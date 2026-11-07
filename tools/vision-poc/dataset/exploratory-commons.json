@@ -1,0 +1,551 @@
+{
+ "evaluationType": "EXPLORATORY_EVALUATION",
+ "class": "washer-fluid-cap",
+ "note": "Wikimedia Commons photos, each with its own license. Boxes and the visible-symbol judgement are from one automated annotator and have not been reviewed by a person. Not part of DATASET_GATE. Images are not in Git.",
+ "images": [
+  {
+   "id": "commons-029",
+   "file": "commons-029.jpg",
+   "downloadUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/58/2008_NISSAN_PRESIDENT_engine_room.jpg/1280px-2008_NISSAN_PRESIDENT_engine_room.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+   "sha256": "c61755e295025f14d083f86865779b3c9da2b542065feea80459ad9e0cea739e",
+   "dhash": "20c0c0c081133c9c",
+   "split": "exploratory",
+   "title": "File:2008 NISSAN PRESIDENT engine room.jpg",
+   "license": {
+    "id": "PDM-1.0",
+    "source": "https://commons.wikimedia.org/wiki/File:2008_NISSAN_PRESIDENT_engine_room.jpg",
+    "attribution": "TTTNIS"
+   },
+   "vehicle": {
+    "make": "Nissan",
+    "model": "President",
+    "groupId": "commons-nissan-president",
+    "verifiedBy": "SOURCE_PAGE"
+   },
+   "captureSessionId": "commons-029",
+   "privacyReviewed": true,
+   "conditions": {
+    "lighting": "daylight",
+    "angle": "top",
+    "distance": "wide",
+    "occlusion": "none",
+    "reflection": "present"
+   },
+   "labels": [
+    {
+     "class": "washer-fluid-cap",
+     "box": [
+      0.5342,
+      0.7378,
+      0.0618,
+      0.0963
+     ],
+     "truth": "SYMBOL_VISIBLE",
+     "capColor": "light blue"
+    }
+   ],
+   "confusers": []
+  },
+  {
+   "id": "commons-032",
+   "file": "commons-032.jpg",
+   "downloadUrl": "https://upload.wikimedia.org/wikipedia/commons/1/14/2014_Skoda_Rapid_1.4TSI_-_CAXA_Engine_Bay.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+   "sha256": "57a4114670848385178bcc2f65a4999931a2307a738a9a700e4728edf3d8432f",
+   "dhash": "26fae9cd1c0db931",
+   "split": "exploratory",
+   "title": "File:2014 Skoda Rapid 1.4TSI - CAXA Engine Bay.jpg",
+   "license": {
+    "id": "CC-BY-SA-4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:2014_Skoda_Rapid_1.4TSI_-_CAXA_Engine_Bay.jpg",
+    "attribution": "Seagull Consulting"
+   },
+   "vehicle": {
+    "make": "Skoda",
+    "model": "Rapid",
+    "groupId": "commons-skoda-rapid",
+    "verifiedBy": "SOURCE_PAGE"
+   },
+   "captureSessionId": "commons-032",
+   "privacyReviewed": true,
+   "conditions": {
+    "lighting": "daylight",
+    "angle": "top",
+    "distance": "wide",
+    "occlusion": "none",
+    "reflection": "none"
+   },
+   "labels": [
+    {
+     "class": "washer-fluid-cap",
+     "box": [
+      0.0855,
+      0.69,
+      0.1072,
+      0.0855
+     ],
+     "truth": "SYMBOL_VISIBLE",
+     "capColor": "light blue"
+    }
+   ],
+   "confusers": [
+    {
+     "kind": "coolant-cap",
+     "box": [
+      0.028,
+      0.34,
+      0.085,
+      0.075
+     ]
+    }
+   ]
+  },
+  {
+   "id": "commons-040",
+   "file": "commons-040.jpg",
+   "downloadUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d1/2023_Denver_Auto_Show_Kia_K5_GT_engine_bay.jpg/1280px-2023_Denver_Auto_Show_Kia_K5_GT_engine_bay.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+   "sha256": "dc5e1c86f0accd1fe3482cd155c100fb2253acf9c13e9365161ecfc4f4eb2634",
+   "dhash": "ecf0e8f8f4b6b2f0",
+   "split": "exploratory",
+   "title": "File:2023 Denver Auto Show Kia K5 GT engine bay.jpg",
+   "license": {
+    "id": "CC0-1.0",
+    "source": "https://commons.wikimedia.org/wiki/File:2023_Denver_Auto_Show_Kia_K5_GT_engine_bay.jpg",
+    "attribution": "Corqe"
+   },
+   "vehicle": {
+    "make": "Kia",
+    "model": "K5 GT",
+    "groupId": "commons-kia-k5-gt",
+    "verifiedBy": "SOURCE_PAGE"
+   },
+   "captureSessionId": "commons-040",
+   "privacyReviewed": true,
+   "conditions": {
+    "lighting": "shade",
+    "angle": "top",
+    "distance": "wide",
+    "occlusion": "none",
+    "reflection": "none"
+   },
+   "labels": [
+    {
+     "class": "washer-fluid-cap",
+     "box": [
+      0.174,
+      0.5704,
+      0.0366,
+      0.0484
+     ],
+     "truth": "SYMBOL_VISIBLE",
+     "capColor": "blue"
+    }
+   ],
+   "confusers": []
+  },
+  {
+   "id": "commons-041",
+   "file": "commons-041.jpg",
+   "downloadUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/66/2023_Denver_Auto_Show_Kia_Sportage_Hybrid_engine_bay.jpg/1280px-2023_Denver_Auto_Show_Kia_Sportage_Hybrid_engine_bay.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+   "sha256": "b16a46c9f7eb87089dd1cf3ce57f50718e189fc6e3d0856d80d4b99c54379d32",
+   "dhash": "e4e4f4f8ca2b13d0",
+   "split": "exploratory",
+   "title": "File:2023 Denver Auto Show Kia Sportage Hybrid engine bay.jpg",
+   "license": {
+    "id": "CC0-1.0",
+    "source": "https://commons.wikimedia.org/wiki/File:2023_Denver_Auto_Show_Kia_Sportage_Hybrid_engine_bay.jpg",
+    "attribution": "Corqe"
+   },
+   "vehicle": {
+    "make": "Kia",
+    "model": "Sportage Hybrid",
+    "groupId": "commons-kia-sportage-hybrid",
+    "verifiedBy": "SOURCE_PAGE"
+   },
+   "captureSessionId": "commons-041",
+   "privacyReviewed": true,
+   "conditions": {
+    "lighting": "shade",
+    "angle": "top",
+    "distance": "wide",
+    "occlusion": "none",
+    "reflection": "none"
+   },
+   "labels": [
+    {
+     "class": "washer-fluid-cap",
+     "box": [
+      0.1267,
+      0.6259,
+      0.0468,
+      0.0609
+     ],
+     "truth": "SYMBOL_VISIBLE",
+     "capColor": "blue"
+    }
+   ],
+   "confusers": []
+  },
+  {
+   "id": "commons-045",
+   "file": "commons-045.jpg",
+   "downloadUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/28/2025_Toyota_Corolla_1.8_Hybrid_Engine.jpg/1280px-2025_Toyota_Corolla_1.8_Hybrid_Engine.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+   "sha256": "41081b9d95bbbc503e3cd7b5e805baa42c5f5172a5939b14fea7c9155686512c",
+   "dhash": "3c70e0c098f0e6b6",
+   "split": "exploratory",
+   "title": "File:2025 Toyota Corolla 1.8 Hybrid Engine.jpg",
+   "license": {
+    "id": "CC-BY-SA-4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:2025_Toyota_Corolla_1.8_Hybrid_Engine.jpg",
+    "attribution": "Sezenkerem"
+   },
+   "vehicle": {
+    "make": "Toyota",
+    "model": "Corolla Hybrid",
+    "groupId": "commons-toyota-corolla-hybrid",
+    "verifiedBy": "SOURCE_PAGE"
+   },
+   "captureSessionId": "commons-045",
+   "privacyReviewed": true,
+   "conditions": {
+    "lighting": "daylight",
+    "angle": "oblique",
+    "distance": "wide",
+    "occlusion": "none",
+    "reflection": "none"
+   },
+   "labels": [
+    {
+     "class": "washer-fluid-cap",
+     "box": [
+      0.264,
+      0.8174,
+      0.0548,
+      0.066
+     ],
+     "truth": "SYMBOL_VISIBLE",
+     "capColor": "blue"
+    }
+   ],
+   "confusers": []
+  },
+  {
+   "id": "commons-086",
+   "file": "commons-086.jpg",
+   "downloadUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/65/Dacia_Spring_Motorraum.jpg/1280px-Dacia_Spring_Motorraum.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+   "sha256": "0106bf5db89a6a0aee4fd287d1449873228bed17ec2935121598748503084bb3",
+   "dhash": "c1d545c4ac6828b8",
+   "split": "exploratory",
+   "title": "File:Dacia Spring Motorraum.jpg",
+   "license": {
+    "id": "CC-BY-SA-4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Dacia_Spring_Motorraum.jpg",
+    "attribution": "Hans-Christoph Seidel"
+   },
+   "vehicle": {
+    "make": "Dacia",
+    "model": "Spring",
+    "groupId": "commons-dacia-spring",
+    "verifiedBy": "SOURCE_PAGE"
+   },
+   "captureSessionId": "commons-086",
+   "privacyReviewed": true,
+   "conditions": {
+    "lighting": "daylight",
+    "angle": "top",
+    "distance": "wide",
+    "occlusion": "none",
+    "reflection": "none"
+   },
+   "labels": [
+    {
+     "class": "washer-fluid-cap",
+     "box": [
+      0.0428,
+      0.02,
+      0.0442,
+      0.0336
+     ],
+     "truth": "SYMBOL_VISIBLE",
+     "capColor": "light blue"
+    }
+   ],
+   "confusers": []
+  },
+  {
+   "id": "commons-094",
+   "file": "commons-094.jpg",
+   "downloadUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/ee/Engine_bay_of_a_Toyota_Yaris_Hybrid_GR_Sport.jpg/1280px-Engine_bay_of_a_Toyota_Yaris_Hybrid_GR_Sport.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+   "sha256": "f50f80164d8f1f67bc707ff7aab562d1693aa4cd81ff23c39e49d1a458823964",
+   "dhash": "1b31cae22a6be3a1",
+   "split": "exploratory",
+   "title": "File:Engine bay of a Toyota Yaris Hybrid GR Sport.jpg",
+   "license": {
+    "id": "CC-BY-4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Engine_bay_of_a_Toyota_Yaris_Hybrid_GR_Sport.jpg",
+    "attribution": "Acgskup"
+   },
+   "vehicle": {
+    "make": "Toyota",
+    "model": "Yaris Hybrid GR Sport",
+    "groupId": "commons-toyota-yaris-hybrid-gr-sport",
+    "verifiedBy": "SOURCE_PAGE"
+   },
+   "captureSessionId": "commons-094",
+   "privacyReviewed": true,
+   "conditions": {
+    "lighting": "shade",
+    "angle": "top",
+    "distance": "wide",
+    "occlusion": "none",
+    "reflection": "none"
+   },
+   "labels": [
+    {
+     "class": "washer-fluid-cap",
+     "box": [
+      0.0898,
+      0.6115,
+      0.041,
+      0.0547
+     ],
+     "truth": "SYMBOL_VISIBLE",
+     "capColor": "blue"
+    }
+   ],
+   "confusers": [
+    {
+     "kind": "coolant-cap",
+     "box": [
+      0.18,
+      0.69,
+      0.09,
+      0.09
+     ]
+    }
+   ]
+  },
+  {
+   "id": "commons-123",
+   "file": "commons-123.jpg",
+   "downloadUrl": "https://upload.wikimedia.org/wikipedia/commons/f/fa/Hybrid_Engine_-_2012_Toyota_Prius_V_%288228834228%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+   "sha256": "6218fcf455a9f9168e40ed8d1ad5e26b9e85a7a1bb281661af1a40583a201af3",
+   "dhash": "9ec90fad8993d671",
+   "split": "exploratory",
+   "title": "File:Hybrid Engine - 2012 Toyota Prius V (8228834228).jpg",
+   "license": {
+    "id": "CC-BY-2.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Hybrid_Engine_-_2012_Toyota_Prius_V_(8228834228).jpg",
+    "attribution": "Michael Sheehan"
+   },
+   "vehicle": {
+    "make": "Toyota",
+    "model": "Prius V",
+    "groupId": "commons-toyota-prius-v",
+    "verifiedBy": "SOURCE_PAGE"
+   },
+   "captureSessionId": "commons-123",
+   "privacyReviewed": true,
+   "conditions": {
+    "lighting": "low-light",
+    "angle": "top",
+    "distance": "wide",
+    "occlusion": "none",
+    "reflection": "none"
+   },
+   "labels": [
+    {
+     "class": "washer-fluid-cap",
+     "box": [
+      0.0796,
+      0.6282,
+      0.0507,
+      0.0563
+     ],
+     "truth": "SYMBOL_VISIBLE",
+     "capColor": "black"
+    }
+   ],
+   "confusers": []
+  },
+  {
+   "id": "commons-159",
+   "file": "commons-159.jpg",
+   "downloadUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/9c/Mercedes-Benz_C200_CGI_BlueEFFICIENCY_Station_Wagon_engine_room.jpg/1280px-Mercedes-Benz_C200_CGI_BlueEFFICIENCY_Station_Wagon_engine_room.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+   "sha256": "869426fc3764f9f8471d29ded6dd8790931aeac27690fff14960776aa15630d7",
+   "dhash": "efdb191d9d77bbf5",
+   "split": "exploratory",
+   "title": "File:Mercedes-Benz C200 CGI BlueEFFICIENCY Station Wagon engine room.jpg",
+   "license": {
+    "id": "PDM-1.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Mercedes-Benz_C200_CGI_BlueEFFICIENCY_Station_Wagon_engine_room.jpg",
+    "attribution": "TTTNIS"
+   },
+   "vehicle": {
+    "make": "Mercedes-Benz",
+    "model": "C200 CGI Station Wagon",
+    "groupId": "commons-mercedes-benz-c200-cgi-station-wagon",
+    "verifiedBy": "SOURCE_PAGE"
+   },
+   "captureSessionId": "commons-159",
+   "privacyReviewed": true,
+   "conditions": {
+    "lighting": "shade",
+    "angle": "oblique",
+    "distance": "wide",
+    "occlusion": "none",
+    "reflection": "none"
+   },
+   "labels": [
+    {
+     "class": "washer-fluid-cap",
+     "box": [
+      0.6754,
+      0.7494,
+      0.1089,
+      0.101
+     ],
+     "truth": "SYMBOL_VISIBLE",
+     "capColor": "teal"
+    }
+   ],
+   "confusers": []
+  },
+  {
+   "id": "commons-170",
+   "file": "commons-170.jpg",
+   "downloadUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/25/Motorraum_Ora_Funky_Cat.jpg/1280px-Motorraum_Ora_Funky_Cat.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+   "sha256": "0b9a2f6436bd581a44c454524581c20321526d8c4d3791a145a0805efd880542",
+   "dhash": "f8aaaccc9eb0b0b0",
+   "split": "exploratory",
+   "title": "File:Motorraum Ora Funky Cat.jpg",
+   "license": {
+    "id": "CC-BY-SA-3.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Motorraum_Ora_Funky_Cat.jpg",
+    "attribution": "Michael.Kramer"
+   },
+   "vehicle": {
+    "make": "Ora",
+    "model": "Funky Cat",
+    "groupId": "commons-ora-funky-cat",
+    "verifiedBy": "SOURCE_PAGE"
+   },
+   "captureSessionId": "commons-170",
+   "privacyReviewed": true,
+   "conditions": {
+    "lighting": "shade",
+    "angle": "top",
+    "distance": "wide",
+    "occlusion": "none",
+    "reflection": "none"
+   },
+   "labels": [
+    {
+     "class": "washer-fluid-cap",
+     "box": [
+      0.0769,
+      0.5342,
+      0.0673,
+      0.0899
+     ],
+     "truth": "SYMBOL_VISIBLE",
+     "capColor": "blue"
+    }
+   ],
+   "confusers": [
+    {
+     "kind": "coolant-cap",
+     "box": [
+      0.245,
+      0.55,
+      0.125,
+      0.16
+     ]
+    }
+   ]
+  },
+  {
+   "id": "commons-171",
+   "file": "commons-171.jpg",
+   "downloadUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/58/Motorraum_Peugeot_e208.jpg/1280px-Motorraum_Peugeot_e208.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+   "sha256": "124cd8433d2d0c2c51294df92b5c54bd8a25b8feef9b36f1f4c83099f16e74cc",
+   "dhash": "0e8686485cdca6a2",
+   "split": "exploratory",
+   "title": "File:Motorraum Peugeot e208.jpg",
+   "license": {
+    "id": "CC-BY-SA-4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Motorraum_Peugeot_e208.jpg",
+    "attribution": "Tomás Freres"
+   },
+   "vehicle": {
+    "make": "Peugeot",
+    "model": "e-208",
+    "groupId": "commons-peugeot-e-208",
+    "verifiedBy": "SOURCE_PAGE"
+   },
+   "captureSessionId": "commons-171",
+   "privacyReviewed": true,
+   "conditions": {
+    "lighting": "daylight",
+    "angle": "top",
+    "distance": "wide",
+    "occlusion": "none",
+    "reflection": "none"
+   },
+   "labels": [
+    {
+     "class": "washer-fluid-cap",
+     "box": [
+      0.078,
+      0.5467,
+      0.045,
+      0.0449
+     ],
+     "truth": "SYMBOL_VISIBLE",
+     "capColor": "dark blue"
+    }
+   ],
+   "confusers": []
+  },
+  {
+   "id": "commons-066",
+   "file": "commons-066.jpg",
+   "downloadUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d5/Brake_fluid_reservoir_in_%C5%A0koda_Fabia_I.jpg/1280px-Brake_fluid_reservoir_in_%C5%A0koda_Fabia_I.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+   "sha256": "cfc9019b02121cc22a4d40f4a8bc525855e10ce6f2aa9961eaddcb7a82d2fba0",
+   "dhash": "5c1e0e2e0e1e7a62",
+   "split": "exploratory",
+   "title": "File:Brake fluid reservoir in Škoda Fabia I.jpg",
+   "license": {
+    "id": "CC-BY-3.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Brake_fluid_reservoir_in_%C5%A0koda_Fabia_I.jpg",
+    "attribution": "Frettie"
+   },
+   "vehicle": {
+    "make": "Skoda",
+    "model": "Fabia",
+    "groupId": "commons-skoda-fabia",
+    "verifiedBy": "SOURCE_PAGE"
+   },
+   "captureSessionId": "commons-066",
+   "privacyReviewed": true,
+   "conditions": {
+    "lighting": "shade",
+    "angle": "top",
+    "distance": "closeup",
+    "occlusion": "none",
+    "reflection": "none"
+   },
+   "labels": [],
+   "confusers": [
+    {
+     "kind": "brake-fluid-cap",
+     "box": [
+      0.09,
+      0.03,
+      0.235,
+      0.26
+     ]
+    }
+   ]
+  }
+ ]
+}
