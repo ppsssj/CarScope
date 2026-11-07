@@ -1,5 +1,9 @@
 # 로드맵 및 진입 조건
 
+## P12-D — 학습 없는 사전학습 모델 비교
+
+OWLv2, Grounding DINO Tiny, OmDet-Turbo Tiny를 텍스트 프롬프트로 실행해 사진 12장에서 YOLOv8 및 색상 규칙과 비교했다. **세 모델 모두 사전 고정 기준을 넘지 못해 `NOT_RELIABLE`이며 제품 권장 모델은 없다.** 캡을 찾지만 어떤 캡인지 구분하지 못한다. 수치는 예비이고 정식 평가는 `DATASET_REQUIRED`다. 학습, 300장 수집, 운영 코드 변경은 하지 않았다. [판정](p12-d-zero-shot-comparison.md), [증거 인덱스](evidence/p12-d/README.md).
+
 ## P12-A2 — 19개 부품 시각 안내
 
 모바일 부품 안내를 레지스트리 19개 전체로 넓혔다. 점검이 있는 17개는 점검 화면에, 점검이 없는 2개는 별도 정보 페이지에 연결했고 작업 ID나 결과를 새로 만들지 않았다. 그림 38장은 공통 생성기로 만든 설명용 그림이며 보닛 부품의 위치는 참고 배치 예시다. **실제 사진은 0장이고 19개 모두 `PHOTO_NEEDED`다. Z Flip8과 Render 운영 확인은 NOT_RUN이다.** [설계와 지원 현황](p12-a2-all-part-guides.md), [증거 인덱스](evidence/p12-a2/README.md).
