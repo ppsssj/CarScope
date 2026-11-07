@@ -1,30 +1,32 @@
 // P12-E: which bonnet part may ask the hosted model for a candidate, and what counts as one. Pure data and rules, shared by the page and the server.
 // A class name alone proves nothing, so each row keeps why it has its status. The evidence is in docs/p12-e-bonnet-part-detection.md.
-// Nothing here is VERIFIED, and nothing can become so without an evaluation against rules set in advance.
+// Nothing here is VERIFIED: P12-F's 26 photos have labels no person reviewed. See docs/p12-f-real-part-detection.md.
 export const DETECTION_STATUS = Object.freeze({ UNSUPPORTED: 'UNSUPPORTED', EXPERIMENTAL: 'EXPERIMENTAL', VERIFIED: 'VERIFIED' });
 export const DETECTION_MODEL_ID = 'engine-bay-parts/1';
 export const DETECTION_CONSENT = 'external-ai-v1';
-// Not tuned: the value that removed the one false box in P12-C's 12 preliminary photos, chosen after seeing them. To be set by an evaluation.
+// Boxes are [left, top, width, height] as fractions of the picture sent, origin top left. Later tracking reads this, not pixels.
+export const DETECTION_COORDINATES = 'normalized-top-left-xywh';
+// Not tuned: the value that removed the one false box in P12-C's 12 preliminary photos. P12-F kept it and reported other values beside it. To be set by an evaluation with reviewed labels.
 export const MIN_CANDIDATE_SCORE = 0.4;
 export const MAX_CANDIDATES = 3;
 
 const row = (partId, taskId, status, modelClass, reason, caution = null) => Object.freeze({ partId, taskId, status, modelClass, reason, caution });
 export const PART_DETECTION = Object.freeze({
   'washer-fluid-cap': row('washer-fluid-cap', 'washer-fluid', DETECTION_STATUS.EXPERIMENTAL, 'Windshield Wiper Fluid',
-    'P12-C: 12 preliminary photos, boxes on the cap and not the whole tank, no box on 4 labelled other caps. Labels not reviewed by a person.',
+    'P12-F real model, 16 photos, unreviewed labels, score 0.4: 6 of 14 caps found, 0 counted false. Boxes sit on the cap. A radiator cap was also marked on a photo not scored for this part.',
     '캡의 앞유리·분사 모양 표시를 직접 확인해 주세요. 색이나 AI 표시만으로 정하지 마세요.'),
   'coolant-reservoir': row('coolant-reservoir', 'coolant-reservoir', DETECTION_STATUS.EXPERIMENTAL, 'Engine Coolant Reservoir',
-    'Boxes overlapped all 3 coolant caps labelled in P12-C (IoU 0.21 to 0.79), which were labelled as confusers, not scored. Cap or whole tank unknown. No low-conductivity class exists, so that tank may be marked as this.',
+    'P12-F real model, 15 photos, unreviewed labels, score 0.4: 4 of 13 tanks found, 2 false. Weakest of the four. Boxes hold the whole tank. No low-conductivity class exists, so that tank may be marked as this.',
     '일반 냉각수인지 저전도 냉각수인지 AI가 구별하지 못해요. 설명서의 표기를 직접 확인해 주세요.'),
   'lcw-coolant-reservoir': row('lcw-coolant-reservoir', 'lcw-coolant-reservoir', DETECTION_STATUS.UNSUPPORTED, null,
     'The model has no low-conductivity class. Nothing shows that Inverter or Secondary Coolant Reservoir mean this part, and some cars do not have it.'),
   'brake-fluid-reservoir': row('brake-fluid-reservoir', 'brake-fluid', DETECTION_STATUS.EXPERIMENTAL, 'Brake Fluid',
-    'Owner test figures only. The one labelled brake cap in P12-C, a close-up, was missed. Mix-ups with other tanks not measured.',
+    'P12-F real model, 18 photos, unreviewed labels, score 0.4: 7 of 17 found, 1 false, on the part beside it. Close-ups were missed. Clutch and power steering tanks barely appear in the photos.',
     '다른 액체 통과 헷갈릴 수 있어요. 설명서의 표기와 MIN·MAX 표시를 직접 확인해 주세요.'),
   'battery-12v': row('battery-12v', 'battery-12v', DETECTION_STATUS.UNSUPPORTED, null,
-    'The class is only called Battery. It cannot say a box is the 12V battery and not a high voltage part, and that mix-up matters most here.'),
+    'P12-F: Battery found 6 of 14 and put no box on 12 marked high voltage regions, but only 3 of 9 on electrified cars and no photo shows a high voltage battery. Nothing shows the class means 12V, and that mix-up matters most here.'),
   'fuse-box': row('fuse-box', 'fuse-box', DETECTION_STATUS.EXPERIMENTAL, 'Fuse Box',
-    'Owner test figures only. No labelled photo checked, and mix-ups with other electrical parts not measured.',
+    'P12-F real model: only 3 labelled photos, 1 found, and a close-up was missed. Boxes on black lidded boxes that could not be judged. Too few to say. Mix-ups with other electrical parts not measured.',
     '다른 전장 부품일 수 있어요. 설명서의 배치도와 덮개 표시를 직접 확인해 주세요.'),
 });
 export const detectionForTask = taskId => Object.values(PART_DETECTION).find(entry => entry.taskId === taskId) ?? null;
@@ -60,19 +62,19 @@ export function candidatesFor(partId, parsed) {
 
 // ---- The panel's states. A late answer from an earlier photo, or from before the part changed, is dropped by its attempt number.
 export const PHASE = Object.freeze({ CLOSED: 'CLOSED', CONSENT: 'CONSENT', ANALYZING: 'ANALYZING', CANDIDATES: 'CANDIDATES', NONE_FOUND: 'NONE_FOUND', FAILED: 'FAILED' });
-const fresh = (partId, attempt) => Object.freeze({ phase: PHASE.CLOSED, partId, consented: false, attempt, candidates: Object.freeze([]), code: null });
+const fresh = (partId, attempt) => Object.freeze({ phase: PHASE.CLOSED, partId, consented: false, attempt, candidates: Object.freeze([]), detection: null, code: null });
 export const initialDetection = (partId = null) => fresh(partId, 0);
 export function reduceDetection(state, event) {
   const to = patch => Object.freeze({ ...state, ...patch });
   switch (event.type) {
     case 'OPEN': return state.phase === PHASE.CLOSED ? to({ phase: PHASE.CONSENT, consented: false, candidates: Object.freeze([]), code: null }) : state;
     case 'CONSENT': return state.phase === PHASE.CONSENT ? to({ consented: event.value === true }) : state;
-    case 'PHOTO': return state.phase === PHASE.CONSENT && state.consented ? to({ phase: PHASE.ANALYZING, attempt: state.attempt + 1, candidates: Object.freeze([]), code: null }) : state;
+    case 'PHOTO': return state.phase === PHASE.CONSENT && state.consented ? to({ phase: PHASE.ANALYZING, attempt: state.attempt + 1, candidates: Object.freeze([]), detection: null, code: null }) : state;
     case 'ANSWER':
       if (state.phase !== PHASE.ANALYZING || event.attempt !== state.attempt) return state;
-      return event.candidates.length ? to({ phase: PHASE.CANDIDATES, candidates: Object.freeze([...event.candidates]) }) : to({ phase: PHASE.NONE_FOUND });
+      return event.candidates.length ? to({ phase: PHASE.CANDIDATES, candidates: Object.freeze([...event.candidates]), detection: event.detection ?? null }) : to({ phase: PHASE.NONE_FOUND, detection: event.detection ?? null });
     case 'FAIL': return state.phase === PHASE.ANALYZING && event.attempt === state.attempt ? to({ phase: PHASE.FAILED, code: event.code }) : state;
-    case 'AGAIN': return [PHASE.CANDIDATES, PHASE.NONE_FOUND, PHASE.FAILED].includes(state.phase) ? to({ phase: PHASE.CONSENT, consented: false, candidates: Object.freeze([]), code: null }) : state;
+    case 'AGAIN': return [PHASE.CANDIDATES, PHASE.NONE_FOUND, PHASE.FAILED].includes(state.phase) ? to({ phase: PHASE.CONSENT, consented: false, candidates: Object.freeze([]), detection: null, code: null }) : state;
     case 'SELECT_PART': return state.partId === event.partId ? state : fresh(event.partId, state.attempt + 1);
     case 'CLOSE': return fresh(state.partId, state.attempt + 1);
     default: return state;

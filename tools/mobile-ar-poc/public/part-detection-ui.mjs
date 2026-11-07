@@ -105,7 +105,7 @@ export function mountPartDetection({ taskId, detector, introBefore, locationAfte
       source = shrunk.canvas;
       const answer = await detector.detect(entry.partId, shrunk.blob);
       if (attempt !== state.attempt) return;
-      if (answer.ok) dispatch({ type: 'ANSWER', attempt, candidates: answer.candidates });
+      if (answer.ok) dispatch({ type: 'ANSWER', attempt, candidates: answer.candidates, detection: answer.detection });
       else dispatch({ type: 'FAIL', attempt, code: answer.code });
     } catch (error) {
       dispatch({ type: 'FAIL', attempt, code: error?.code ?? 'UNAVAILABLE' });
