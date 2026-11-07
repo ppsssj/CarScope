@@ -1,9 +1,13 @@
 // Shared allow-list for the loopback dev server and the HTTPS same-origin service.
-import { readFile } from 'node:fs/promises';
+import { access, readFile } from 'node:fs/promises';
 import {MOBILE_MODULES as mobileFiles} from '../../mobile-ar-poc/public-modules.mjs';
 import {WEBXR_GUIDE_FILES, WEBXR_PERMISSION, markWebXrGuidePage} from '../../mobile-ar-poc/webxr-modules.mjs';
-// Experimental guide, off unless a development entry passes webxrGuide. Render never does: see mobile-ui.test.mjs.
+// Experimental guide, off unless an entry passes webxrGuide. On Render only render-webxr-experiment.mjs does: see WEBXR_EXPERIMENT_ENTRY_ONLY.
 const guideFiles = new Map(WEBXR_GUIDE_FILES.map(([name, source, type]) => [`/mobile-ar-poc/public/webxr/${name}`, [new URL(`../../mobile-ar-poc/${source}`, import.meta.url), type]]));
+/** A deployment with the guide on but three.js not installed would offer a button that can only fail, so it does not start. */
+export async function assertWebXrGuideFiles() {
+  try { await Promise.all([...guideFiles.values()].map(([source]) => access(source))); } catch { throw new Error('WEBXR_GUIDE_ASSET_MISSING'); }
+}
 const syncFiles = ['mobile-dev-entry.mjs', 'mobile-handoff.mjs', 'mobile-sync.mjs', 'sync-client.mjs'];
 const files = new Map([
   ...mobileFiles.map((s) => [`/mobile-ar-poc/public/${s}`, new URL(`../../mobile-ar-poc/public/${s}`, import.meta.url)]),

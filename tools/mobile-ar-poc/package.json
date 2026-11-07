@@ -18,7 +18,8 @@
     "test:browser:brake": "node test/brake-browser.mjs",
     "test:browser:ar": "node test/mobile-ar-browser.mjs",
     "serve:webxr": "node server.mjs --webxr-guide",
-    "test:browser:webxr": "node test/webxr-browser.mjs && node test/webxr-qr-browser.mjs"
+    "test:browser:webxr": "node test/webxr-browser.mjs && node test/webxr-qr-browser.mjs",
+    "test:browser:webxr:render": "node test/webxr-render-browser.mjs"
   },
   "dependencies": {
     "qrcode": "1.5.4",

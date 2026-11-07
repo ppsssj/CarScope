@@ -56,6 +56,12 @@ export async function probeDeployment({ origin, approveRateWindowWrites = false,
     : body.historyRead === 'AVD_REGISTRATION_ONLY' && body.mode === 'STATEFUL_AVD_SIMULATION'
       ? check('RENDER_HISTORY_AUTHORITY', 'MANUAL', 'AVD history demonstration is running: enrollment-scoped reads, no vehicle ownership. Confirm the approved window, or restore the Start Command')
       : check('RENDER_HISTORY_AUTHORITY', 'FAIL', 'health reports a configured history authority while production auth is blocked'));
+  // Same for the WebXR experiment. Reported only when present: the default command says nothing about it.
+  if (Object.hasOwn(body, 'mobileGuide')) {
+    out.push(body.mobileGuide === 'WEBXR_EXPERIMENT'
+      ? check('RENDER_WEBXR_GUIDE', 'MANUAL', 'WebXR guide experiment is running: every supported phone on this service sees it. Confirm the approval, or restore the Start Command')
+      : check('RENDER_WEBXR_GUIDE', 'FAIL', 'health reports an unknown mobile guide'));
+  }
   if (!approveRateWindowWrites) {
     out.push(check('RENDER_API_BOUNDARY', 'NOT_RUN', 'records 403 / session 401 probes write cs_rate_windows: pass --approve-rate-window-writes'));
     return out;

@@ -40,3 +40,46 @@ jobs:
         run: npm run test:browser:webxr
         env:
           POC_EVIDENCE_DIR: C:/CarScope-External/p9-xr-c/ci
+  webxr-render:
+    name: WebXR guide on the Render entrypoints (real Start Commands and PostgreSQL 16, stand-in edge, fake XR runtime)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: carscope_ci
+          POSTGRES_PASSWORD: local_test_only
+          POSTGRES_DB: carscope_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U carscope_ci -d carscope_ci"
+          --health-interval 3s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '22.16.0'
+      - name: The Build Command the experiment needs, as documented in docs/p11-xr-webxr-render-entry.md
+        run: |
+          npm install --prefix tools/inspection-sync-poc --ignore-scripts --no-audit --no-fund --package-lock=false
+          npm ci --prefix tools/mobile-ar-poc --omit=dev --ignore-scripts --no-audit --no-fund
+          node --check tools/inspection-sync-poc/src/render-webxr-experiment.mjs
+      - name: That build holds three.js and no test tool
+        run: |
+          test -f tools/mobile-ar-poc/node_modules/three/build/three.module.min.js
+          test ! -e tools/mobile-ar-poc/node_modules/playwright
+      - name: Test tools for the browser suite only
+        run: npm ci --ignore-scripts --no-audit --no-fund
+        working-directory: tools/mobile-ar-poc
+      - name: Start Commands, QR v2 and result through Chrome (no Render, no device, no real tracking, no Native)
+        run: npm run test:browser:webxr:render
+        working-directory: tools/mobile-ar-poc
+        env:
+          PG_TEST_URL: postgresql://carscope_ci:local_test_only@127.0.0.1:5432/carscope_ci
+          POC_EVIDENCE_DIR: ${{ runner.temp }}/p11-xr

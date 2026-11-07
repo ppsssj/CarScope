@@ -169,6 +169,117 @@ try {
     pass('a connection made on opening survives AR and Back, claims once and submits');
   }
 
+  { // App switch, re-entry and Back during a connected attempt with answers already made.
+    const flow = await pair(on), { page, log, receiver } = flow;
+    await claim(flow);
+    await page.evaluate(() => { window.__sameDocument = true; window.__hidden = false; Object.defineProperty(document, 'hidden', { configurable: true, get: () => window.__hidden }); });
+    await page.waitForFunction(() => window.__webXrGuide?.capability);
+    assert.equal(await page.locator('#xr-methods-title').isVisible(), true);
+    await page.locator('#manual-start').click();
+    await page.locator('#checklist input[value="parked"]').click();
+    const held = () => page.evaluate(() => { const { step, mode, checks, record } = window.__selfInspection.state; return { step, mode, checks, inspectionId: record.inspectionId, recordState: record.state, aids: record.aids }; });
+    const before = await held();
+    const setHidden = value => page.evaluate(hidden => { window.__hidden = hidden; document.dispatchEvent(new Event('visibilitychange')); }, value);
+    const polls = () => count(log, '/v1/submissions/status', 'GET');
+
+    // Leaving for another app in AR: the session ends and releases everything, and polling sleeps.
+    await runAr(page);
+    await setHidden(true);
+    await page.evaluate(() => window.__env.setVisibility('hidden'));
+    await waitPhase(page, 'ENDED');
+    assert.equal(await page.evaluate(() => window.__env.currentSession.ended), true);
+    assert.equal(await page.evaluate(() => window.__env.anchors.every(a => a.deleted) && window.__env.hitSources.every(h => h.cancelled)), true);
+    await page.waitForTimeout(300);
+    const asleep = polls();
+    await page.waitForTimeout(2600);
+    assert.equal(polls(), asleep, 'no polling while nobody is looking');
+
+    // Coming back: polling wakes, the guide says what happened, and nothing connected again.
+    await setHidden(false);
+    await page.waitForFunction(() => document.getElementById('xr-ended') && !document.getElementById('xr-ended').hidden);
+    for (let i = 0; polls() === asleep && i < 60; i++) await page.waitForTimeout(100);
+    assert.ok(polls() > asleep, 'polling resumed with the same credentials');
+    assert.deepEqual(await held(), before, 'answers and attempt survive an app switch');
+
+    // Re-entry from the ended panel, then Back from AR.
+    await page.locator('#xr-start').click();
+    await waitPhase(page, 'AIMING');
+    await settle(page);
+    assert.equal(await page.evaluate(() => window.__webXrGuide.state.markerMode), null, 'the old marker does not come back');
+    await page.evaluate(() => window.__env.select());
+    await settle(page);
+    await waitPhase(page, 'PLACED');
+    await page.goBack();
+    await page.waitForFunction(() => !window.__webXrGuide.open);
+    assert.equal(await page.evaluate(() => window.__env.sessions.every(s => s.ended)), true);
+    assert.deepEqual(await held(), before, 'answers and attempt survive Back');
+
+    // AR again, ended by its own button, back to the checklist.
+    await runAr(page);
+    await page.locator('#xr-exit').click();
+    await waitPhase(page, 'ENDED');
+    await page.locator('#xr-to-checklist').click();
+    await page.waitForFunction(() => !window.__webXrGuide.open);
+    assert.deepEqual(await held(), before, 'answers and attempt survive the end of AR');
+    assert.equal(await page.evaluate(() => window.__sameDocument), true, 'never left the document');
+    assert.equal(await page.evaluate(() => window.__env.sessions.length), 3);
+    assert.equal(await page.evaluate(() => window.__env.sessions.every(s => s.ended) && window.__env.anchors.every(a => a.deleted) && window.__env.hitSources.every(h => h.cancelled)), true, 'three sessions, nothing left');
+    assert.match(await page.locator('body > main').textContent(), /연결됐어요/);
+    assert.equal(count(log, '/v1/claim'), 1, 'one claim across all of it');
+    assert.equal(count(log, '/v1/submissions'), 0, 'AR sent nothing');
+    await noLeak(flow);
+
+    // The answer already ticked stays ticked, and the same credentials finish the job.
+    await page.locator('#checklist input:not(:checked)').evaluateAll(boxes => boxes.forEach(box => box.click()));
+    await page.click('#primary'); await page.click('[data-status="OK"]'); await page.click('#primary'); await page.click('#primary');
+    await page.waitForSelector('body[data-step="done"]');
+    await page.locator('#sync-send').click();
+    await waitSync(page, 'SENT');
+    const submitted = await receiver.view();
+    assert.equal(submitted.result.inspectionId, before.inspectionId, 'the result is the attempt that started before AR');
+    await receiver.accept(submitted.resultDigest);
+    await page.locator('#sync-refresh').click();
+    await waitSync(page, 'ACCEPTED');
+    await noLeak(flow);
+    await finish(flow, 'app switch');
+    pass('app switch, re-entry, Back and AR end keep the claim, the answers and the attempt, release each session, and the same credentials send');
+  }
+
+  { // Denied permission and an unsupported phone on the QR path: 2D and manual, still connected, still sending.
+    const denied = await pair(on, { fake: { requestError: 'NotAllowedError' } });
+    await claim(denied);
+    await denied.page.waitForFunction(() => window.__webXrGuide?.capability);
+    await denied.page.locator('#xr-entry-open').click();
+    await waitPhase(denied.page, 'READY');
+    await denied.page.locator('#xr-start').click();
+    await waitPhase(denied.page, 'FAILED');
+    assert.match(await denied.page.locator('#xr-fallback-reason').textContent(), /권한이 허용되지 않았어요/);
+    assert.equal(await denied.page.locator('#xr-to-camera').isVisible(), true);
+    await denied.page.locator('#xr-to-checklist').click();
+    await denied.page.waitForFunction(() => !window.__webXrGuide.open);
+    assert.match(await denied.page.locator('body > main').textContent(), /연결됐어요/);
+    await complete(denied.page);
+    await denied.page.locator('#sync-send').click();
+    await waitSync(denied.page, 'SENT');
+    assert.equal(count(denied.log, '/v1/claim'), 1);
+    await finish(denied, 'denied');
+
+    const flat = await pair(on, { fake: { supported: false } });
+    await claim(flat);
+    await flat.page.waitForFunction(() => window.__webXrGuide?.capability);
+    assert.equal(await flat.page.locator('#xr-entry-open').isVisible(), false);
+    assert.equal(await flat.page.locator('#xr-methods-title').isVisible(), false);
+    assert.equal(await flat.page.locator('#primary').isVisible(), true);
+    assert.match(await flat.page.locator('#xr-entry-unavailable').textContent(), /지원하지 않아요/);
+    assert.equal(flat.log.requests.some(r => r.url.includes('three')), false, 'no three.js on a phone that cannot use it');
+    await flat.page.locator('#manual-start').click();
+    await complete(flat.page);
+    await flat.page.locator('#sync-send').click();
+    await waitSync(flat.page, 'SENT');
+    await finish(flat, 'unsupported');
+    pass('permission denial and an unsupported phone fall back to the 2D and manual paths with the connection intact, and the result still sends');
+  }
+
   { // The vehicle's decision still reaches the phone across AR.
     const flow = await pair(on), { page, receiver } = flow;
     await claim(flow);

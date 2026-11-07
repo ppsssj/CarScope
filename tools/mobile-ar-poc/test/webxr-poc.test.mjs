@@ -123,7 +123,12 @@ test('copy warns on tracking loss and never claims recognition or a measured acc
   assert.equal(statusCopy({ ...base, tracking: 'LOST' }).tone, 'warn');
   assert.equal(statusCopy({ ...base, tracking: 'LIMITED' }).tone, 'warn');
   assert.equal(statusCopy({ ...base, markerVisible: false }).tone, 'warn');
-  assert.match(statusCopy(base).hint, /부품 인식 결과가 아닙니다/);
+  assert.match(statusCopy(base).hint, /부품을 인식한 결과가 아니에요/);
+  assert.match(statusCopy(base).title, /공간에 고정됨/, 'an anchor is reported as held in space');
+  const hitPose = statusCopy({ ...base, markerMode: 'HIT_POSE' });
+  assert.equal(hitPose.tone, 'warn', 'a stored surface pose is not reported as fixed');
+  assert.match(hitPose.title, /공간 고정 안 됨/);
+  assert.match(statusCopy(base).hint, /체크리스트로 가면 표시는 사라져요/);
   const texts = [];
   for (const phase of PHASES) for (const tracking of ['TRACKING', 'LIMITED', 'LOST']) for (const surface of [true, false]) {
     const copy = statusCopy({ ...base, phase, tracking, surface });
