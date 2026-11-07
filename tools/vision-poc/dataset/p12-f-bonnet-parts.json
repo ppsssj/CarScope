@@ -1,0 +1,1237 @@
+{
+ "evaluationType": "EXPLORATORY_EVALUATION",
+ "model": "engine-bay-parts/1",
+ "note": "Fixed before any new model call on these photos. One automated annotator (Claude), not reviewed by a person. Part identity comes from what can be read or recognised in the photo, not from a service manual. A class left out of a photo is unknown and is not scored there. Not part of DATASET_GATE. Images are not in Git.",
+ "labelsReviewedByPerson": false,
+ "rule": {
+  "iou": 0.5,
+  "strict": "best IoU with the whole part, or with its cap when one is labelled, is at least 0.5",
+  "location": "box centre inside the whole part or its cap, and box area at most 4 times the part. Shows the right place, not a good box",
+  "thresholds": [
+   0.05,
+   0.25,
+   0.4,
+   0.5
+  ],
+  "primaryThreshold": 0.4
+ },
+ "classes": {
+  "washer": "Windshield Wiper Fluid",
+  "coolant": "Engine Coolant Reservoir",
+  "brake": "Brake Fluid",
+  "battery": "Battery",
+  "fuse": "Fuse Box"
+ },
+ "images": [
+  {
+   "id": "commons-029",
+   "file": "commons-029.jpg",
+   "root": "P12C",
+   "sha256": "c61755e295025f14d083f86865779b3c9da2b542065feea80459ad9e0cea739e",
+   "downloadUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/58/2008_NISSAN_PRESIDENT_engine_room.jpg/1280px-2008_NISSAN_PRESIDENT_engine_room.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+   "license": "PDM-1.0",
+   "source": "https://commons.wikimedia.org/wiki/File:2008_NISSAN_PRESIDENT_engine_room.jpg",
+   "attribution": "TTTNIS",
+   "vehicle": "Nissan President",
+   "electrified": false,
+   "inference": "CACHED_P12C_RUN2",
+   "parts": {
+    "washer": {
+     "boxes": [
+      [
+       0.5342,
+       0.7378,
+       0.0618,
+       0.0963
+      ]
+     ]
+    }
+   }
+  },
+  {
+   "id": "commons-032",
+   "file": "commons-032.jpg",
+   "root": "P12C",
+   "sha256": "57a4114670848385178bcc2f65a4999931a2307a738a9a700e4728edf3d8432f",
+   "downloadUrl": "https://upload.wikimedia.org/wikipedia/commons/1/14/2014_Skoda_Rapid_1.4TSI_-_CAXA_Engine_Bay.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+   "license": "CC-BY-SA-4.0",
+   "source": "https://commons.wikimedia.org/wiki/File:2014_Skoda_Rapid_1.4TSI_-_CAXA_Engine_Bay.jpg",
+   "attribution": "Seagull Consulting",
+   "vehicle": "Skoda Rapid",
+   "electrified": false,
+   "inference": "CACHED_P12C_RUN2",
+   "parts": {
+    "washer": {
+     "boxes": [
+      [
+       0.0855,
+       0.69,
+       0.1072,
+       0.0855
+      ]
+     ]
+    },
+    "coolant": {
+     "boxes": [
+      [
+       0.015,
+       0.33,
+       0.155,
+       0.175
+      ]
+     ],
+     "caps": [
+      [
+       0.028,
+       0.34,
+       0.085,
+       0.075
+      ]
+     ]
+    },
+    "battery": {
+     "boxes": [
+      [
+       0.74,
+       0.44,
+       0.26,
+       0.25
+      ]
+     ]
+    }
+   }
+  },
+  {
+   "id": "commons-040",
+   "file": "commons-040.jpg",
+   "root": "P12C",
+   "sha256": "dc5e1c86f0accd1fe3482cd155c100fb2253acf9c13e9365161ecfc4f4eb2634",
+   "downloadUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d1/2023_Denver_Auto_Show_Kia_K5_GT_engine_bay.jpg/1280px-2023_Denver_Auto_Show_Kia_K5_GT_engine_bay.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+   "license": "CC0-1.0",
+   "source": "https://commons.wikimedia.org/wiki/File:2023_Denver_Auto_Show_Kia_K5_GT_engine_bay.jpg",
+   "attribution": "Corqe",
+   "vehicle": "Kia K5 GT",
+   "electrified": false,
+   "inference": "CACHED_P12C_RUN2",
+   "parts": {
+    "washer": {
+     "boxes": [
+      [
+       0.174,
+       0.5704,
+       0.0366,
+       0.0484
+      ]
+     ]
+    },
+    "coolant": {
+     "boxes": [
+      [
+       0.16,
+       0.39,
+       0.095,
+       0.135
+      ]
+     ]
+    },
+    "brake": {
+     "boxes": [
+      [
+       0.6,
+       0.31,
+       0.045,
+       0.08
+      ]
+     ]
+    },
+    "battery": {
+     "boxes": [
+      [
+       0.66,
+       0.345,
+       0.1,
+       0.16
+      ]
+     ]
+    },
+    "fuse": {
+     "boxes": [
+      [
+       0.75,
+       0.4,
+       0.115,
+       0.165
+      ]
+     ]
+    }
+   }
+  },
+  {
+   "id": "commons-041",
+   "file": "commons-041.jpg",
+   "root": "P12C",
+   "sha256": "b16a46c9f7eb87089dd1cf3ce57f50718e189fc6e3d0856d80d4b99c54379d32",
+   "downloadUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/66/2023_Denver_Auto_Show_Kia_Sportage_Hybrid_engine_bay.jpg/1280px-2023_Denver_Auto_Show_Kia_Sportage_Hybrid_engine_bay.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+   "license": "CC0-1.0",
+   "source": "https://commons.wikimedia.org/wiki/File:2023_Denver_Auto_Show_Kia_Sportage_Hybrid_engine_bay.jpg",
+   "attribution": "Corqe",
+   "vehicle": "Kia Sportage Hybrid",
+   "electrified": true,
+   "inference": "CACHED_P12C_RUN2",
+   "parts": {
+    "washer": {
+     "boxes": [
+      [
+       0.1267,
+       0.6259,
+       0.0468,
+       0.0609
+      ]
+     ]
+    },
+    "coolant": {
+     "boxes": [
+      [
+       0.675,
+       0.46,
+       0.085,
+       0.135
+      ]
+     ]
+    },
+    "hv": [
+     [
+      0.62,
+      0.48,
+      0.18,
+      0.22
+     ]
+    ]
+   }
+  },
+  {
+   "id": "commons-045",
+   "file": "commons-045.jpg",
+   "root": "P12C",
+   "sha256": "41081b9d95bbbc503e3cd7b5e805baa42c5f5172a5939b14fea7c9155686512c",
+   "downloadUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/28/2025_Toyota_Corolla_1.8_Hybrid_Engine.jpg/1280px-2025_Toyota_Corolla_1.8_Hybrid_Engine.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+   "license": "CC-BY-SA-4.0",
+   "source": "https://commons.wikimedia.org/wiki/File:2025_Toyota_Corolla_1.8_Hybrid_Engine.jpg",
+   "attribution": "Sezenkerem",
+   "vehicle": "Toyota Corolla Hybrid",
+   "electrified": true,
+   "inference": "CACHED_P12C_RUN2",
+   "parts": {
+    "washer": {
+     "boxes": [
+      [
+       0.264,
+       0.8174,
+       0.0548,
+       0.066
+      ]
+     ]
+    },
+    "coolant": {
+     "boxes": [
+      [
+       0.1,
+       0.6,
+       0.105,
+       0.24
+      ]
+     ],
+     "ignore": [
+      [
+       0.755,
+       0.485,
+       0.08,
+       0.115
+      ]
+     ]
+    },
+    "brake": {
+     "boxes": [
+      [
+       0.605,
+       0.165,
+       0.08,
+       0.07
+      ]
+     ]
+    },
+    "battery": {
+     "boxes": [
+      [
+       0.8,
+       0.33,
+       0.135,
+       0.17
+      ]
+     ]
+    }
+   }
+  },
+  {
+   "id": "commons-086",
+   "file": "commons-086.jpg",
+   "root": "P12C",
+   "sha256": "0106bf5db89a6a0aee4fd287d1449873228bed17ec2935121598748503084bb3",
+   "downloadUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/65/Dacia_Spring_Motorraum.jpg/1280px-Dacia_Spring_Motorraum.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+   "license": "CC-BY-SA-4.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Dacia_Spring_Motorraum.jpg",
+   "attribution": "Hans-Christoph Seidel",
+   "vehicle": "Dacia Spring",
+   "electrified": true,
+   "inference": "CACHED_P12C_RUN2",
+   "parts": {
+    "washer": {
+     "boxes": [
+      [
+       0.0428,
+       0.02,
+       0.0442,
+       0.0336
+      ]
+     ]
+    },
+    "coolant": {
+     "boxes": [
+      [
+       0.205,
+       0.54,
+       0.13,
+       0.08
+      ]
+     ]
+    },
+    "brake": {
+     "boxes": [
+      [
+       0.615,
+       0.245,
+       0.05,
+       0.12
+      ]
+     ]
+    },
+    "battery": {
+     "boxes": [
+      [
+       0.055,
+       0.275,
+       0.22,
+       0.19
+      ]
+     ]
+    },
+    "hv": [
+     [
+      0.3,
+      0.4,
+      0.35,
+      0.25
+     ],
+     [
+      0.7,
+      0.11,
+      0.175,
+      0.18
+     ]
+    ]
+   }
+  },
+  {
+   "id": "commons-094",
+   "file": "commons-094.jpg",
+   "root": "P12C",
+   "sha256": "f50f80164d8f1f67bc707ff7aab562d1693aa4cd81ff23c39e49d1a458823964",
+   "downloadUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/ee/Engine_bay_of_a_Toyota_Yaris_Hybrid_GR_Sport.jpg/1280px-Engine_bay_of_a_Toyota_Yaris_Hybrid_GR_Sport.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+   "license": "CC-BY-4.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Engine_bay_of_a_Toyota_Yaris_Hybrid_GR_Sport.jpg",
+   "attribution": "Acgskup",
+   "vehicle": "Toyota Yaris Hybrid GR Sport",
+   "electrified": true,
+   "inference": "CACHED_P12C_RUN2",
+   "parts": {
+    "washer": {
+     "boxes": [
+      [
+       0.0898,
+       0.6115,
+       0.041,
+       0.0547
+      ]
+     ]
+    },
+    "coolant": {
+     "boxes": [
+      [
+       0.18,
+       0.695,
+       0.09,
+       0.15
+      ]
+     ],
+     "caps": [
+      [
+       0.18,
+       0.69,
+       0.09,
+       0.09
+      ]
+     ]
+    },
+    "brake": {
+     "boxes": [
+      [
+       0.705,
+       0.325,
+       0.09,
+       0.115
+      ]
+     ]
+    }
+   }
+  },
+  {
+   "id": "commons-123",
+   "file": "commons-123.jpg",
+   "root": "P12C",
+   "sha256": "6218fcf455a9f9168e40ed8d1ad5e26b9e85a7a1bb281661af1a40583a201af3",
+   "downloadUrl": "https://upload.wikimedia.org/wikipedia/commons/f/fa/Hybrid_Engine_-_2012_Toyota_Prius_V_%288228834228%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+   "license": "CC-BY-2.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Hybrid_Engine_-_2012_Toyota_Prius_V_(8228834228).jpg",
+   "attribution": "Michael Sheehan",
+   "vehicle": "Toyota Prius V",
+   "electrified": true,
+   "inference": "CACHED_P12C_RUN2",
+   "parts": {
+    "washer": {
+     "boxes": [
+      [
+       0.0796,
+       0.6282,
+       0.0507,
+       0.0563
+      ]
+     ]
+    },
+    "coolant": {
+     "boxes": [
+      [
+       0.01,
+       0.31,
+       0.12,
+       0.28
+      ]
+     ],
+     "ignore": [
+      [
+       0.73,
+       0.27,
+       0.09,
+       0.13
+      ]
+     ]
+    },
+    "brake": {
+     "boxes": [
+      [
+       0.71,
+       0.18,
+       0.115,
+       0.105
+      ]
+     ]
+    },
+    "battery": {
+     "boxes": []
+    },
+    "hv": [
+     [
+      0.66,
+      0.42,
+      0.28,
+      0.2
+     ]
+    ]
+   }
+  },
+  {
+   "id": "commons-159",
+   "file": "commons-159.jpg",
+   "root": "P12C",
+   "sha256": "869426fc3764f9f8471d29ded6dd8790931aeac27690fff14960776aa15630d7",
+   "downloadUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/9c/Mercedes-Benz_C200_CGI_BlueEFFICIENCY_Station_Wagon_engine_room.jpg/1280px-Mercedes-Benz_C200_CGI_BlueEFFICIENCY_Station_Wagon_engine_room.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+   "license": "PDM-1.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Mercedes-Benz_C200_CGI_BlueEFFICIENCY_Station_Wagon_engine_room.jpg",
+   "attribution": "TTTNIS",
+   "vehicle": "Mercedes-Benz C200 CGI Station Wagon",
+   "electrified": false,
+   "inference": "CACHED_P12C_RUN2",
+   "parts": {
+    "washer": {
+     "boxes": [
+      [
+       0.6754,
+       0.7494,
+       0.1089,
+       0.101
+      ]
+     ]
+    }
+   }
+  },
+  {
+   "id": "commons-170",
+   "file": "commons-170.jpg",
+   "root": "P12C",
+   "sha256": "0b9a2f6436bd581a44c454524581c20321526d8c4d3791a145a0805efd880542",
+   "downloadUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/25/Motorraum_Ora_Funky_Cat.jpg/1280px-Motorraum_Ora_Funky_Cat.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+   "license": "CC-BY-SA-3.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Motorraum_Ora_Funky_Cat.jpg",
+   "attribution": "Michael.Kramer",
+   "vehicle": "Ora Funky Cat",
+   "electrified": true,
+   "inference": "CACHED_P12C_RUN2",
+   "parts": {
+    "washer": {
+     "boxes": [
+      [
+       0.0769,
+       0.5342,
+       0.0673,
+       0.0899
+      ]
+     ]
+    },
+    "coolant": {
+     "boxes": [
+      [
+       0.25,
+       0.55,
+       0.13,
+       0.18
+      ]
+     ],
+     "caps": [
+      [
+       0.245,
+       0.55,
+       0.125,
+       0.16
+      ]
+     ],
+     "ignore": [
+      [
+       0.865,
+       0.22,
+       0.105,
+       0.18
+      ]
+     ]
+    },
+    "brake": {
+     "boxes": [
+      [
+       0.655,
+       0.105,
+       0.065,
+       0.135
+      ]
+     ]
+    },
+    "battery": {
+     "boxes": [
+      [
+       0.16,
+       0.235,
+       0.185,
+       0.2
+      ]
+     ]
+    },
+    "hv": [
+     [
+      0.39,
+      0.24,
+      0.21,
+      0.3
+     ]
+    ]
+   }
+  },
+  {
+   "id": "commons-171",
+   "file": "commons-171.jpg",
+   "root": "P12C",
+   "sha256": "124cd8433d2d0c2c51294df92b5c54bd8a25b8feef9b36f1f4c83099f16e74cc",
+   "downloadUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/58/Motorraum_Peugeot_e208.jpg/1280px-Motorraum_Peugeot_e208.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+   "license": "CC-BY-SA-4.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Motorraum_Peugeot_e208.jpg",
+   "attribution": "Tomás Freres",
+   "vehicle": "Peugeot e-208",
+   "electrified": true,
+   "inference": "CACHED_P12C_RUN2",
+   "parts": {
+    "washer": {
+     "boxes": [
+      [
+       0.078,
+       0.5467,
+       0.045,
+       0.0449
+      ]
+     ]
+    },
+    "coolant": {
+     "boxes": [
+      [
+       0.07,
+       0.44,
+       0.105,
+       0.12
+      ]
+     ]
+    },
+    "brake": {
+     "boxes": [
+      [
+       0.6,
+       0.345,
+       0.06,
+       0.08
+      ]
+     ]
+    },
+    "hv": [
+     [
+      0.33,
+      0.43,
+      0.24,
+      0.16
+     ]
+    ]
+   }
+  },
+  {
+   "id": "commons-066",
+   "file": "commons-066.jpg",
+   "root": "P12C",
+   "sha256": "cfc9019b02121cc22a4d40f4a8bc525855e10ce6f2aa9961eaddcb7a82d2fba0",
+   "downloadUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d5/Brake_fluid_reservoir_in_%C5%A0koda_Fabia_I.jpg/1280px-Brake_fluid_reservoir_in_%C5%A0koda_Fabia_I.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+   "license": "CC-BY-3.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Brake_fluid_reservoir_in_%C5%A0koda_Fabia_I.jpg",
+   "attribution": "Frettie",
+   "vehicle": "Skoda Fabia",
+   "electrified": false,
+   "inference": "CACHED_P12C_RUN2",
+   "parts": {
+    "washer": {
+     "boxes": []
+    },
+    "coolant": {
+     "boxes": []
+    },
+    "brake": {
+     "boxes": [
+      [
+       0.02,
+       0.01,
+       0.66,
+       0.62
+      ]
+     ],
+     "caps": [
+      [
+       0.09,
+       0.03,
+       0.235,
+       0.26
+      ]
+     ]
+    },
+    "battery": {
+     "boxes": []
+    },
+    "fuse": {
+     "boxes": []
+    }
+   }
+  },
+  {
+   "id": "commons-024",
+   "file": "commons-024.jpg",
+   "root": "P12F",
+   "sha256": "e9293fae8a00894c58438faa4c7c19cd308b12175319bbb2f635cf29da618584",
+   "downloadUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f5/1996_Mitsubishi_Galant_2.0_V6_Exceed_Engine_bay.jpg/330px-1996_Mitsubishi_Galant_2.0_V6_Exceed_Engine_bay.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+   "license": "CC-BY-4.0",
+   "source": "https://commons.wikimedia.org/wiki/File:1996_Mitsubishi_Galant_2.0_V6_Exceed_Engine_bay.jpg",
+   "attribution": "Grünkohlaktionär",
+   "vehicle": "Mitsubishi Galant",
+   "electrified": false,
+   "inference": "REAL_CALL",
+   "parts": {
+    "fuse": {
+     "boxes": [
+      [
+       0.03,
+       0.405,
+       0.167,
+       0.17
+      ]
+     ]
+    },
+    "battery": {
+     "boxes": [
+      [
+       0.03,
+       0.575,
+       0.24,
+       0.205
+      ]
+     ]
+    },
+    "brake": {
+     "boxes": [
+      [
+       0.6,
+       0.25,
+       0.05,
+       0.085
+      ]
+     ]
+    }
+   }
+  },
+  {
+   "id": "commons-031",
+   "file": "commons-031.jpg",
+   "root": "P12F",
+   "sha256": "62596088d718a1314db440ebbf1c59c5069ba41197024f64d9fdcdd3574ad7d2",
+   "downloadUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/da/2013_Nissan_Tiida_1.6T_XV_engine_room.jpg/330px-2013_Nissan_Tiida_1.6T_XV_engine_room.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+   "license": "CC0-1.0",
+   "source": "https://commons.wikimedia.org/wiki/File:2013_Nissan_Tiida_1.6T_XV_engine_room.jpg",
+   "attribution": "TTTNIS",
+   "vehicle": "Nissan Tiida",
+   "electrified": false,
+   "inference": "REAL_CALL",
+   "parts": {
+    "battery": {
+     "boxes": [
+      [
+       0.665,
+       0.34,
+       0.19,
+       0.31
+      ]
+     ]
+    }
+   }
+  },
+  {
+   "id": "commons-036",
+   "file": "commons-036.jpg",
+   "root": "P12F",
+   "sha256": "f40fbb4815da2cafc38a751940c1646260c33789de1b3d2be836a20d5146952d",
+   "downloadUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/7d/2020_Chevrolet_Bolt_EV_under_hood_view_3.jpg/330px-2020_Chevrolet_Bolt_EV_under_hood_view_3.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+   "license": "CC-BY-4.0",
+   "source": "https://commons.wikimedia.org/wiki/File:2020_Chevrolet_Bolt_EV_under_hood_view_3.jpg",
+   "attribution": "4300streetcar",
+   "vehicle": "Chevrolet Bolt EV",
+   "electrified": true,
+   "inference": "REAL_CALL",
+   "parts": {
+    "battery": {
+     "boxes": [
+      [
+       0.745,
+       0.3,
+       0.13,
+       0.2
+      ]
+     ]
+    },
+    "brake": {
+     "boxes": [
+      [
+       0.61,
+       0.265,
+       0.075,
+       0.095
+      ]
+     ]
+    },
+    "hv": [
+     [
+      0.35,
+      0.3,
+      0.13,
+      0.2
+     ]
+    ]
+   }
+  },
+  {
+   "id": "commons-037",
+   "file": "commons-037.jpg",
+   "root": "P12F",
+   "sha256": "1b112698e9860268ffe51f7a7717ff130a2a349bb344040f85ba9fe837f5a254",
+   "downloadUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/8e/2020_Chevrolet_Bolt_EV_under_hood_view_4.jpg/330px-2020_Chevrolet_Bolt_EV_under_hood_view_4.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+   "license": "CC-BY-4.0",
+   "source": "https://commons.wikimedia.org/wiki/File:2020_Chevrolet_Bolt_EV_under_hood_view_4.jpg",
+   "attribution": "4300streetcar",
+   "vehicle": "Chevrolet Bolt EV",
+   "electrified": true,
+   "inference": "REAL_CALL",
+   "parts": {
+    "battery": {
+     "boxes": [
+      [
+       0.655,
+       0.42,
+       0.17,
+       0.205
+      ]
+     ]
+    },
+    "brake": {
+     "boxes": [
+      [
+       0.61,
+       0.315,
+       0.06,
+       0.085
+      ]
+     ]
+    },
+    "hv": [
+     [
+      0.32,
+      0.27,
+      0.15,
+      0.2
+     ]
+    ]
+   }
+  },
+  {
+   "id": "commons-039",
+   "file": "commons-039.jpg",
+   "root": "P12F",
+   "sha256": "1add07b8bb01da84e1da617653c4a2e9bcda9f48484eb1c67f1b82b3c7ffdbe3",
+   "downloadUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4a/2022_Toyota_Urban_Cruiser_Hyryder_V_Hybrid_%28India%29_M15D-FXE_engine.jpg/330px-2022_Toyota_Urban_Cruiser_Hyryder_V_Hybrid_%28India%29_M15D-FXE_engine.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+   "license": "CC-BY-3.0",
+   "source": "https://commons.wikimedia.org/wiki/File:2022_Toyota_Urban_Cruiser_Hyryder_V_Hybrid_(India)_M15D-FXE_engine.jpg",
+   "attribution": "DriveSpark",
+   "vehicle": "Toyota Urban Cruiser Hyryder",
+   "electrified": true,
+   "inference": "REAL_CALL",
+   "parts": {
+    "coolant": {
+     "boxes": [
+      [
+       0.04,
+       0.71,
+       0.17,
+       0.29
+      ]
+     ],
+     "ignore": [
+      [
+       0.72,
+       0.54,
+       0.08,
+       0.12
+      ]
+     ]
+    },
+    "battery": {
+     "boxes": [
+      [
+       0.72,
+       0,
+       0.18,
+       0.19
+      ]
+     ]
+    }
+   }
+  },
+  {
+   "id": "commons-047",
+   "file": "commons-047.jpg",
+   "root": "P12F",
+   "sha256": "92e25d47553711535cb9362c97c1f1536aa896632be1b918d96bf523d9d14ce6",
+   "downloadUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/5c/2026_BYD_Dolphin_G_DM-i_Comfort_engine_bay.png/330px-2026_BYD_Dolphin_G_DM-i_Comfort_engine_bay.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+   "license": "CC-BY-3.0",
+   "source": "https://commons.wikimedia.org/wiki/File:2026_BYD_Dolphin_G_DM-i_Comfort_engine_bay.png",
+   "attribution": "AutoMotoVlog",
+   "vehicle": "BYD Dolphin G DM-i",
+   "electrified": true,
+   "inference": "REAL_CALL",
+   "parts": {
+    "coolant": {
+     "boxes": [
+      [
+       0.08,
+       0.37,
+       0.12,
+       0.14
+      ]
+     ],
+     "ignore": [
+      [
+       0.715,
+       0.355,
+       0.08,
+       0.115
+      ]
+     ]
+    },
+    "brake": {
+     "boxes": [
+      [
+       0.455,
+       0.32,
+       0.08,
+       0.1
+      ]
+     ]
+    }
+   }
+  },
+  {
+   "id": "commons-059",
+   "file": "commons-059.jpg",
+   "root": "P12F",
+   "sha256": "0fedd6fc132a86e03bbcdce138abdba30d48e72a7752306f6540769cead6360e",
+   "downloadUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/82/Audi_80_B4_2.0_E_-_Motorraum.jpg/330px-Audi_80_B4_2.0_E_-_Motorraum.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+   "license": "CC-BY-SA-4.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Audi_80_B4_2.0_E_-_Motorraum.jpg",
+   "attribution": "Corvintaurus",
+   "vehicle": "Audi 80 B4",
+   "electrified": false,
+   "inference": "REAL_CALL",
+   "parts": {
+    "brake": {
+     "boxes": [
+      [
+       0.505,
+       0.285,
+       0.05,
+       0.075
+      ]
+     ]
+    }
+   }
+  },
+  {
+   "id": "new-00",
+   "file": "new-00.jpg",
+   "root": "P12F",
+   "sha256": "6727aca9ba69850a3382ca57a54ba1ec7221e79d910dadd8ce9dc72e95bd2f69",
+   "downloadUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/29/Nissan_Leaf_motor_compartment.JPG/1280px-Nissan_Leaf_motor_compartment.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+   "license": "CC0-1.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Nissan_Leaf_motor_compartment.JPG",
+   "attribution": "Kiwiev",
+   "vehicle": "Nissan Leaf",
+   "electrified": true,
+   "inference": "REAL_CALL",
+   "parts": {
+    "washer": {
+     "boxes": [
+      [
+       0.1,
+       0.705,
+       0.065,
+       0.1
+      ]
+     ]
+    },
+    "coolant": {
+     "boxes": [
+      [
+       0.2,
+       0.5,
+       0.18,
+       0.23
+      ]
+     ]
+    },
+    "brake": {
+     "boxes": [
+      [
+       0.715,
+       0.41,
+       0.08,
+       0.145
+      ]
+     ]
+    },
+    "battery": {
+     "boxes": [
+      [
+       0.71,
+       0.6,
+       0.225,
+       0.38
+      ]
+     ]
+    },
+    "hv": [
+     [
+      0.29,
+      0.2,
+      0.41,
+      0.5
+     ]
+    ]
+   }
+  },
+  {
+   "id": "new-03",
+   "file": "new-03.jpg",
+   "root": "P12F",
+   "sha256": "95bf485b5e2672c43ace46f6763958aa1c5cd0a1ec775af4b51c1abeee5360b6",
+   "downloadUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e6/2013_Ford_Focus_Electric_%28US%29_%287446032972%29.jpg/1280px-2013_Ford_Focus_Electric_%28US%29_%287446032972%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+   "license": "CC-BY-SA-2.0",
+   "source": "https://commons.wikimedia.org/wiki/File:2013_Ford_Focus_Electric_(US)_(7446032972).jpg",
+   "attribution": "InSapphoWeTrust from Los Angeles, California, USA",
+   "vehicle": "Ford Focus Electric",
+   "electrified": true,
+   "inference": "REAL_CALL",
+   "parts": {
+    "coolant": {
+     "boxes": [
+      [
+       0.18,
+       0.17,
+       0.165,
+       0.14
+      ]
+     ]
+    },
+    "brake": {
+     "boxes": [
+      [
+       0.76,
+       0.31,
+       0.09,
+       0.085
+      ]
+     ]
+    },
+    "battery": {
+     "boxes": [
+      [
+       0.71,
+       0.42,
+       0.22,
+       0.24
+      ]
+     ]
+    },
+    "hv": [
+     [
+      0.22,
+      0.21,
+      0.47,
+      0.52
+     ]
+    ]
+   }
+  },
+  {
+   "id": "new-04",
+   "file": "new-04.jpg",
+   "root": "P12F",
+   "sha256": "ee031a75c3119dafe7a9b79db2042c36e45234f7ec958b3efc2cbdf7930cad2b",
+   "downloadUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/5c/Nissan_Leaf_engine_bay_08_2013_Rio_6901.JPG/1280px-Nissan_Leaf_engine_bay_08_2013_Rio_6901.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+   "license": "CC-BY-SA-3.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Nissan_Leaf_engine_bay_08_2013_Rio_6901.JPG",
+   "attribution": "Mariordo (Mario Roberto Duran Ortiz)",
+   "vehicle": "Nissan Leaf",
+   "electrified": true,
+   "inference": "REAL_CALL",
+   "parts": {
+    "washer": {
+     "boxes": [
+      [
+       0.238,
+       0.705,
+       0.067,
+       0.095
+      ]
+     ]
+    },
+    "battery": {
+     "boxes": [
+      [
+       0.66,
+       0.205,
+       0.21,
+       0.29
+      ]
+     ]
+    },
+    "hv": [
+     [
+      0.3,
+      0.24,
+      0.31,
+      0.21
+     ]
+    ]
+   }
+  },
+  {
+   "id": "new-05",
+   "file": "new-05.jpg",
+   "root": "P12F",
+   "sha256": "6efd06a48aa5d6ab1c2298359150ea588b83d24bf4aeda95cf2d980043bbee35",
+   "downloadUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/cf/2022-bolt-motor.jpg/1280px-2022-bolt-motor.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+   "license": "CC-BY-SA-4.0",
+   "source": "https://commons.wikimedia.org/wiki/File:2022-bolt-motor.jpg",
+   "attribution": "Chiffre01",
+   "vehicle": "Chevrolet Bolt EV",
+   "electrified": true,
+   "inference": "REAL_CALL",
+   "parts": {
+    "brake": {
+     "boxes": [
+      [
+       0.805,
+       0.225,
+       0.095,
+       0.19
+      ]
+     ]
+    },
+    "hv": [
+     [
+      0.39,
+      0.31,
+      0.17,
+      0.29
+     ]
+    ]
+   }
+  },
+  {
+   "id": "new-06",
+   "file": "new-06.jpg",
+   "root": "P12F",
+   "sha256": "c847bb01494dd71ab28179d616a995a3c43847c2ceaae308d9bf93da6bc434be",
+   "downloadUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/14/Understanding_car_fuse_box_components_and_their_arrangement_in_a_vehicle_engine_bay_at_midday.jpg/1280px-Understanding_car_fuse_box_components_and_their_arrangement_in_a_vehicle_engine_bay_at_midday.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+   "license": "CC-BY-2.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Understanding_car_fuse_box_components_and_their_arrangement_in_a_vehicle_engine_bay_at_midday.jpg",
+   "attribution": "Shixart1985",
+   "vehicle": "unknown (fuse box close-up)",
+   "electrified": false,
+   "inference": "REAL_CALL",
+   "parts": {
+    "washer": {
+     "boxes": []
+    },
+    "coolant": {
+     "boxes": []
+    },
+    "brake": {
+     "boxes": []
+    },
+    "battery": {
+     "boxes": []
+    },
+    "fuse": {
+     "boxes": [
+      [
+       0.3,
+       0.09,
+       0.6,
+       0.87
+      ]
+     ]
+    }
+   }
+  },
+  {
+   "id": "new-07",
+   "file": "new-07.jpg",
+   "root": "P12F",
+   "sha256": "77322361b0d7971d902e303738a201b77477c99e08eebc2436a67287103f7426",
+   "downloadUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/fb/Chevrolet_Volt_Engine_Bay_%285871298909%29.jpg/1280px-Chevrolet_Volt_Engine_Bay_%285871298909%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+   "license": "CC-BY-SA-2.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Chevrolet_Volt_Engine_Bay_(5871298909).jpg",
+   "attribution": "InSapphoWeTrust from Los Angeles, California, USA",
+   "vehicle": "Chevrolet Volt",
+   "electrified": true,
+   "inference": "REAL_CALL",
+   "parts": {
+    "washer": {
+     "boxes": [
+      [
+       0.865,
+       0.695,
+       0.055,
+       0.07
+      ]
+     ]
+    },
+    "brake": {
+     "boxes": [
+      [
+       0.52,
+       0.255,
+       0.105,
+       0.1
+      ]
+     ]
+    },
+    "hv": [
+     [
+      0.16,
+      0.31,
+      0.42,
+      0.43
+     ],
+     [
+      0.58,
+      0.3,
+      0.28,
+      0.35
+     ]
+    ]
+   }
+  },
+  {
+   "id": "new-08",
+   "file": "new-08.jpg",
+   "root": "P12F",
+   "sha256": "d6b6559bf147e2db43de19924ebb519d6337504dfcf1f7004d9a5c40b699edb0",
+   "downloadUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/80/Bosch_battery_in_Mercedes-250S.jpg/1280px-Bosch_battery_in_Mercedes-250S.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+   "license": "CC-BY-SA-4.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Bosch_battery_in_Mercedes-250S.jpg",
+   "attribution": "Wikisympathisant",
+   "vehicle": "Mercedes-Benz 250S",
+   "electrified": false,
+   "inference": "REAL_CALL",
+   "parts": {
+    "battery": {
+     "boxes": [
+      [
+       0.16,
+       0.46,
+       0.44,
+       0.48
+      ]
+     ]
+    },
+    "fuse": {
+     "boxes": []
+    }
+   }
+  }
+ ]
+}
