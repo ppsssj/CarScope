@@ -7,6 +7,8 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { DEFAULT_PATHS, loadEvaluationSet, loadReviewFile } from './review-data.mjs';
 import { evaluateReview } from './review-evaluate.mjs';
+import { DEFAULT_ASSISTED, loadAssisted } from './assisted-data.mjs';
+import { compareAssisted } from './assisted-model.mjs';
 import { draftOf, imageState, predictionsOf, progressOf, REVIEW_CASES, REVIEW_PARTS, saveProblems } from './review-model.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -17,6 +19,7 @@ export const ROUTES = Object.freeze({
   '/review.mjs': path.join(here, 'public/review.mjs'),
   '/review.css': path.join(here, 'public/review.css'),
   '/review-model.mjs': path.join(here, 'review-model.mjs'),
+  '/assisted-model.mjs': path.join(here, 'assisted-model.mjs'),
 });
 export const HEADERS = Object.freeze({
   'Content-Security-Policy': "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self'; form-action 'none'; base-uri 'none'; frame-ancestors 'none'",
@@ -31,12 +34,14 @@ export function assertReviewPath(file, env = process.env) {
   return resolved;
 }
 
-export async function startReviewServer({ port = 0, reviewFile = DEFAULT_PATHS.review, data = {}, synthetic = false, now = () => new Date(), env = process.env } = {}) {
+export async function startReviewServer({ port = 0, reviewFile = DEFAULT_PATHS.review, data = {}, synthetic = false, assistedFile = synthetic ? null : DEFAULT_ASSISTED, now = () => new Date(), env = process.env } = {}) {
   const target = assertReviewPath(reviewFile, env);
   const set = loadEvaluationSet(data);
   if (set.status !== 'READY') { const error = new Error(`BLOCKED: ${set.problems.join('; ')}`); error.problems = set.problems; throw error; }
   const review = loadReviewFile(target, { images: set.images, sourceLabelsSha256: set.sourceLabelsSha256, synthetic });
   const images = new Map(set.images.map(image => [image.id, image]));
+  const assisted = loadAssisted(assistedFile, set.images);
+  const observations = new Map(assisted.images.map(row => [row.id, row]));
 
   const persist = () => {
     mkdirSync(path.dirname(target), { recursive: true });
@@ -45,12 +50,15 @@ export async function startReviewServer({ port = 0, reviewFile = DEFAULT_PATHS.r
     renameSync(temp, target); // Whole file or nothing, even if the process dies here.
   };
   const payload = () => ({
+    assisted: { status: assisted.status, problems: assisted.problems },
     synthetic, sourceLabelsChanged: review.sourceLabelsSha256 !== set.sourceLabelsSha256, parts: REVIEW_PARTS, cases: REVIEW_CASES, progress: progressOf(set.images, review), evaluation: evaluateReview({ images: set.images, answers: set.answers, review }),
     images: set.images.map(image => {
       const answer = set.answers[image.id], record = review.images[image.id] ?? null;
-      return { id: image.id, vehicle: image.vehicle, electrified: image.electrified, license: image.license, attribution: image.attribution, source: image.source, sha256: image.sha256, width: answer.image.width, height: answer.image.height, state: imageState(image, record), record,
+      const observation = observations.get(image.id) ?? null;
+      return { id: image.id, dataset: 'P12F', assisted: observation, comparison: observation ? compareAssisted(observation, predictionsOf(answer)) : null, vehicle: image.vehicle, electrified: image.electrified, license: image.license, attribution: image.attribution, source: image.source, sha256: image.sha256, width: answer.image.width, height: answer.image.height, state: imageState(image, record), record,
         draft: Object.fromEntries(REVIEW_PARTS.map(({ key }) => [key, draftOf(image, key)])), predictions: predictionsOf(answer) };
     }),
+    referenceImages: assisted.images.filter(row => row.dataset === 'IONIQ5_REFERENCE').map(({ file, ...row }) => ({ ...row, assisted: { ...row, file: undefined }, electrified: true, state: 'UNREVIEWED', record: null, predictions: [], comparison: null, draft: Object.fromEntries(REVIEW_PARTS.map(({ key }) => [key, { labelled: false, boxes: [], caps: [], ignore: [], hv: [] }])) })),
   });
 
   const server = createServer(async (request, response) => {
@@ -87,7 +95,7 @@ export async function startReviewServer({ port = 0, reviewFile = DEFAULT_PATHS.r
       if (request.method !== 'GET' && request.method !== 'HEAD') return send(405, { error: 'METHOD' });
       if (pathname === '/api/state') return send(200, payload());
       const photo = /^\/images\/([a-z0-9-]{1,40})$/.exec(pathname);
-      if (photo) { const file = set.files.get(photo[1]); return file ? send(200, readFileSync(file.file), file.type) : send(404, { error: 'UNKNOWN_IMAGE' }); }
+      if (photo) { const file = set.files.get(photo[1]) ?? assisted.files.get(photo[1]); return file ? send(200, readFileSync(file.file), file.type) : send(404, { error: 'UNKNOWN_IMAGE' }); }
       const file = Object.hasOwn(ROUTES, pathname) ? ROUTES[pathname] : null;
       if (!file) return send(404, { error: 'NOT_FOUND' });
       return send(200, readFileSync(file), TYPES[path.extname(file)]);
@@ -100,7 +108,7 @@ export async function startReviewServer({ port = 0, reviewFile = DEFAULT_PATHS.r
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const option = (name, fallback) => { const at = process.argv.indexOf(`--${name}`); return at >= 0 ? process.argv[at + 1] : fallback; };
   try {
-    const { url, review } = await startReviewServer({ port: Number(option('port', 8210)), reviewFile: option('review', DEFAULT_PATHS.review), data: { p12cResults: DEFAULT_PATHS.p12cResults } });
+    const { url, review } = await startReviewServer({ port: Number(option('port', 8210)), reviewFile: option('review', DEFAULT_PATHS.review), assistedFile: option('assisted', DEFAULT_ASSISTED), data: { p12cResults: DEFAULT_PATHS.p12cResults } });
     console.log(`Label review on ${url} (127.0.0.1 only). ${Object.keys(review.images).length} photos have a saved record. No model is called.`);
   } catch (error) { console.error(error.message); process.exit(2); }
 }

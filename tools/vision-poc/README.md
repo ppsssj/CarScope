@@ -52,3 +52,9 @@ node scripts/evaluate.mjs <manifest.json> <dataset folder> <predictions.json>
 ```
 
 `evaluate.mjs`는 게이트를 통과하지 못하면 수치 없이 `NOT_MEASURED`를 출력한다. 항목 형식은 `src/dataset.mjs`, 수량은 `DATASET_GATE`에 있다. 이미지와 모델은 Git에 넣지 않는다.
+
+## P12-H AI 보조 검수
+
+`npm run review`는 외부 `C:/CarScope-External/p12-h/assisted-labels.json`이 있으면 Codex 후보와 근거를 별도 레이어로 표시한다. `--assisted <파일>`로 바꿀 수 있다. 파일이 없거나 잘못되면 후보만 비활성화하며 사람 검수 기능은 유지한다. 후보 가져오기는 `UNREVIEWED` 편집 초안을 만들고 사람 검수를 완료하지 않는다. IONIQ 5는 별도 참고 세트이며 편집 내용은 현재 창에만 남는다.
+
+`npm run assisted:report`는 저장 추론과의 `PROVISIONAL_AI_ASSISTED` 비교 목록을 출력한다. 추론을 호출하거나 사람 검수 파일을 쓰지 않는다. `npm run test:browser:assisted`는 합성 데이터로 가져오기 게이트를 확인한다. 공식 자료·차량 사양의 한계와 실제 26+1장 분석은 [P12-H 기록](../../docs/p12-h-assisted-identification.md)을 참조한다.

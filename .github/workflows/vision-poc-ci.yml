@@ -44,3 +44,5 @@ jobs:
         run: npm run test:browser
       - name: Label review page with synthetic pictures and synthetic reviews (no real photo, no model, not a human review)
         run: npm run test:browser:review
+      - name: Assisted candidates remain undecided drafts (synthetic only, no model or upload)
+        run: npm run test:browser:assisted
