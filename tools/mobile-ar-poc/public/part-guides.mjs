@@ -72,7 +72,7 @@ function guide({ partId, taskId, title, role, area, features, safety, applies, o
     overviewImage: drawing(partId, 'area', overview[0], overview[1]),
     detailImage: drawing(partId, 'detail', detail[0], detail[1]),
     identifyingFeatures: Object.freeze(features), safetyNotes: safety, vehicleApplicability: applies,
-    manualReference: manual, relatedInfo: related, photoStatus: 'PHOTO_NEEDED', // See docs/p12-a2-all-part-guides.md.
+    manualReference: manual, relatedInfo: related, photoStatus: 'SCHEMATIC_ONLY', // The decided final form: see docs/p12-a3-schematic-only.md.
   });
 }
 const bonnet = ({ partId, taskId = partId, title, role, zone, features, safety, shape, related, dashed = false }) => guide({
