@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CarScope 라벨 검수</title>
+  <link rel="stylesheet" href="/review.css">
+</head>
+<body>
+  <header class="top">
+    <strong class="brand">라벨 검수</strong>
+    <div id="progress" class="progress" role="status"></div>
+    <span id="review-state" class="state-pill"></span>
+    <label class="reviewer">검수자 <input id="reviewer" autocomplete="off" maxlength="80" placeholder="직접 입력"></label>
+    <span id="dirty" class="dirty" role="status" hidden>저장 안 된 수정이 있어요</span>
+  </header>
+  <p id="synthetic" class="banner warn" hidden>합성 시험 데이터예요. 실제 검수가 아니에요.</p>
+  <p id="labels-changed" class="banner warn" hidden>원본 라벨 파일이 이 검수를 시작한 뒤 바뀌었어요. 변경 내역 비교를 믿지 마세요.</p>
+  <main class="layout">
+    <nav class="rail" aria-label="사진 목록">
+      <label class="field">상태 <select id="filter-state">
+        <option value="ALL">전체</option><option value="UNREVIEWED">검수 전</option><option value="IN_PROGRESS">진행 중</option><option value="HUMAN_REVIEWED">검수 완료</option><option value="INVALIDATED">무효(해시 변경)</option>
+      </select></label>
+      <label class="field">집중 사례 <select id="filter-case"><option value="ALL">전체</option></select></label>
+      <p id="case-note" class="muted small" hidden>P12-F의 예비 관찰이에요. 정답은 검수로 정해요.</p>
+      <ol id="image-list" class="image-list"></ol>
+    </nav>
+    <section class="viewer" aria-label="사진과 박스">
+      <div class="toolbar" role="toolbar" aria-label="보기와 그리기">
+        <div class="group" role="radiogroup" aria-label="도구">
+          <button type="button" data-tool="select" aria-pressed="true">선택·이동</button>
+          <button type="button" data-tool="boxes" aria-pressed="false">부품 전체 그리기</button>
+          <button type="button" data-tool="caps" aria-pressed="false">캡 그리기</button>
+          <button type="button" data-tool="ignore" aria-pressed="false">제외 영역 그리기</button>
+          <button type="button" data-tool="hv" aria-pressed="false" id="tool-hv">고전압 영역 그리기</button>
+        </div>
+        <div class="group">
+          <button type="button" id="zoom-out" aria-label="축소">−</button>
+          <span id="zoom-level" class="zoom-level">100%</span>
+          <button type="button" id="zoom-in" aria-label="확대">+</button>
+          <button type="button" id="zoom-fit">맞춤</button>
+        </div>
+        <div class="group">
+          <label class="check"><input type="checkbox" id="show-labels" checked> 정답</label>
+          <label class="check"><input type="checkbox" id="show-draft" checked> P12-F 초안</label>
+          <label class="check"><input type="checkbox" id="show-ai" checked> AI 예측</label>
+          <label class="check"><input type="checkbox" id="show-all-parts"> 모든 부품</label>
+          <label class="check"><input type="checkbox" id="show-other"> 다른 AI 클래스</label>
+          <label class="check">AI 신뢰도 <select id="ai-threshold"><option>0.05</option><option>0.25</option><option selected>0.4</option><option>0.5</option></select></label>
+        </div>
+      </div>
+      <div id="frame" class="frame" tabindex="0" aria-label="사진. 휠로 확대, 빈 곳을 끌어 이동">
+        <div id="stage" class="stage"><img id="photo" alt="" draggable="false"><div id="overlay" class="overlay"></div></div>
+      </div>
+      <p class="muted small hint">휠: 확대·축소 · 빈 곳을 끌기: 이동 · 박스를 끌기: 옮기기 · 모서리: 크기 조절 · Delete: 삭제 · 실선 정답, 점선 AI, 가는 흰 선 초안</p>
+    </section>
+    <aside class="panel" aria-label="검수">
+      <header class="photo-head">
+        <h1 id="photo-id"></h1>
+        <p id="photo-vehicle" class="muted"></p>
+        <p id="photo-state" class="state-line"></p>
+        <p class="small muted"><span id="photo-license"></span> · <a id="photo-source" target="_blank" rel="noopener noreferrer">출처</a></p>
+      </header>
+      <div class="part-tabs" role="tablist" aria-label="부품" id="part-tabs"></div>
+      <section class="part">
+        <h2 id="part-name"></h2>
+        <p id="part-id" class="muted small"></p>
+        <p id="part-caution" class="caution small"></p>
+        <fieldset class="statuses"><legend>판정</legend><div id="statuses"></div></fieldset>
+        <p id="part-problem" class="problem small" role="alert" hidden></p>
+        <h3>내가 그린 정답</h3>
+        <ul id="box-list" class="rows"></ul>
+        <h3>P12-F 초안 <span class="muted small">(사람 검수 안 됨)</span></h3>
+        <p id="draft-info" class="small"></p>
+        <button type="button" id="use-draft">초안 박스 가져오기</button>
+        <p class="muted small">가져와도 판정은 바뀌지 않아요. 직접 확인하고 판정을 골라 주세요.</p>
+        <h3>AI 예측 <span id="ai-class" class="muted small"></span></h3>
+        <ul id="ai-list" class="rows"></ul>
+        <label class="field">메모 <textarea id="part-note" rows="2" maxlength="2000"></textarea></label>
+        <label class="field">참고 근거 <input id="part-reference" maxlength="500" placeholder="설명서 쪽수, 사진 속 표시 등"></label>
+      </section>
+      <footer class="actions">
+        <p id="save-problem" class="problem small" role="alert" hidden></p>
+        <div class="row"><button type="button" id="save-draft">임시 저장</button><button type="button" id="save-complete" class="primary">검수 완료 저장</button></div>
+        <div class="row"><button type="button" id="prev">이전 사진</button><button type="button" id="next">다음 사진</button></div>
+      </footer>
+      <details class="evaluation" id="evaluation-box">
+        <summary>평가 <span id="metric-state" class="state-pill"></span></summary>
+        <div id="evaluation"></div>
+      </details>
+    </aside>
+  </main>
+  <script type="module" src="/review.mjs"></script>
+</body>
+</html>
