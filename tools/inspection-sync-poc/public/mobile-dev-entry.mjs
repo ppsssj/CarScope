@@ -64,5 +64,7 @@ if (entry.version === 2) {
   addEventListener('pageshow', (e) => { if (e.persisted) sync.close(); });
   document.addEventListener('visibilitychange', () => document.hidden ? sync.pause() : sync.resume());
 }
-await startInspectionPage({ handoff: entry.handoff, onComplete: (record) => sync?.setResult(record), onRestart: () => sync?.close() });
+// Only a connected QR inspection has a credential, so only it can offer part detection.
+const partDetector = sync ? { detect: (partId, blob) => sync.detectPart(partId, blob, { consent: 'external-ai-v1' }) } : null;
+await startInspectionPage({ handoff: entry.handoff, onComplete: (record) => sync?.setResult(record), onRestart: () => sync?.close(), partDetector });
 if (entry.version === 2) document.getElementById('handoff-status').textContent = '';

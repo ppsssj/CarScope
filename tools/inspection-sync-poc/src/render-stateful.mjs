@@ -16,7 +16,7 @@ import { MOBILE_HEADERS, serveMobilePage } from './mobile-page.mjs';
 import { httpsOrigin } from '../bin/host-readiness.mjs';
 import { databasePoolOptions } from './database-config.mjs';
 
-export async function startRenderStateful({ pool, publicOrigin, host = '127.0.0.1', port = 0, sweepMs = 30_000, enableAvdSimulation = false, enableAvdHistoryRead = false, historyAuthority, historyAuthorizer, expectedSchema = null, webxrGuide = false } = {}) {
+export async function startRenderStateful({ pool, publicOrigin, host = '127.0.0.1', port = 0, sweepMs = 30_000, enableAvdSimulation = false, enableAvdHistoryRead = false, historyAuthority, historyAuthorizer, expectedSchema = null, webxrGuide = false, partDetection = null } = {}) {
   const origin = httpsOrigin(publicOrigin);
   if (!Number.isSafeInteger(port) || port < 0 || port > 65535 ||
       !Number.isSafeInteger(sweepMs) || sweepMs < 1000) throw new Error('INVALID_RENDER_STATEFUL_CONFIG');
@@ -56,6 +56,7 @@ export async function startRenderStateful({ pool, publicOrigin, host = '127.0.0.
       // explicitly enabled AVD simulation mode or a reviewed history authority. The outer request
       // handler rejects unverified Host / Origin / X-Forwarded-Proto first.
       trustedEdgeSecure: simStore || historyRead ? edgeSecure : null,
+      partDetection,
     });
     server = http.createServer(async (req, res) => {
       const headers = { ...MOBILE_HEADERS, 'Strict-Transport-Security': 'max-age=31536000' };
@@ -96,7 +97,7 @@ export async function startRenderStateful({ pool, publicOrigin, host = '127.0.0.
           await serveAvdSimulatorHistory(req,res,{credentialStore:simStore,history:avdHistory,limiter,secure:edgeSecure(req),publicOrigin:origin}); return;
         }
         if (req.url.startsWith('/v1/')) { await api(req, res); return; }
-        await serveMobilePage(req, res, { tls: true, webxrGuide });
+        await serveMobilePage(req, res, { tls: true, webxrGuide, partDetection: Boolean(partDetection) });
       } catch {
         if (!res.headersSent) res.writeHead(500, headers);
         res.end();

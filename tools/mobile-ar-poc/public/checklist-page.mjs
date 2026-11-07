@@ -1,7 +1,7 @@
 import {taskLinks} from './inspection-tasks.mjs';
 import {getChecklistProfile} from './checklist-profiles.mjs';
 import {InspectionCamera} from './inspection-camera.mjs';
-import {renderSummary,renderOutcome,actionGate,mountLocationGuide,wheelMap} from './inspection-ui.mjs';
+import {renderSummary,renderOutcome,actionGate,mountLocationGuide,wheelMap,offerPartDetection} from './inspection-ui.mjs';
 import {taskCopy,questionCopy,ANSWER_COPY,CHECKLIST_OUTCOME,REPORT_NOTE,SAFETY_ACK,CANNOT_CONFIRM_NOTE,iconElement} from './inspection-copy.mjs';
 import {mountPartGuide} from './part-guide.mjs';
 
@@ -27,7 +27,7 @@ export function prepareChecklistPage(taskId,{locked=false}={}){const task=getChe
   <footer class="actions"><button id="back" class="secondary">이전</button><button id="primary" class="primary">카메라로 점검 시작</button></footer>`;
   document.getElementById('hero-icon').append(iconElement(copy.icon));if(task.id.startsWith('tire.'))document.getElementById('hero-visual').append(wheelMap(task.id));
 }
-export function startChecklistPage({handoff,onComplete=()=>{},onRestart=()=>{}}){const $=id=>document.getElementById(id),task=getChecklistProfile(handoff.task),copy=taskCopy(task);let state=task.flow.initial(task.id),restartAfter=0,advance=null,pointerAnswer=false;
+export function startChecklistPage({handoff,onComplete=()=>{},onRestart=()=>{},partDetector=null}){const $=id=>document.getElementById(id),task=getChecklistProfile(handoff.task),copy=taskCopy(task);let state=task.flow.initial(task.id),restartAfter=0,advance=null,pointerAnswer=false;
   mountLocationGuide(task,$('camera'));mountPartGuide(task.id,$('step-intro').querySelector('details.help'));
   const run=actionGate(),canCamera=()=>state.mode==='camera'&&['locate','check'].includes(state.step);
   const camera=new InspectionCamera({video:$('video'),overlay:$('overlay'),stage:$('stage'),start:$('start'),stop:$('stop'),clear:$('clear-mark'),placeholder:$('placeholder'),canRun:canCamera,targetLabel:task.label,
@@ -69,5 +69,6 @@ export function startChecklistPage({handoff,onComplete=()=>{},onRestart=()=>{}})
   $('manual-start').onclick=()=>run(()=>dispatch({type:'START',camera:false}));$('locate-manual').onclick=()=>run(()=>dispatch({type:'TO_CHECK',manual:true}));$('back').onclick=()=>run(()=>dispatch({type:'BACK'}));
   $('cancel').onclick=()=>{cancelAdvance();camera.stop('확인하는 동안 카메라를 껐어요.');$('cancel-confirm').hidden=false;$('cancel-no').focus();};$('cancel-no').onclick=()=>{$('cancel-confirm').hidden=true;$('cancel').focus();};$('cancel-yes').onclick=()=>dispatch({type:'CANCEL'});
   $('handoff-status').textContent=handoff.source==='qr-sync'?'':'이 휴대폰에만 기록돼요';addEventListener('hashchange',()=>location.reload());
+  offerPartDetection({taskId:task.id,detector:partDetector,introBefore:$('step-intro').querySelector('details.part-guide'),locationAfter:document.querySelector('details.part-location'),onOpen:()=>camera.stop('사진을 고르는 동안 카메라를 껐어요.')});
   render();window.__checklistInspection={get state(){return state;},get mark(){return camera.mark;}};window[task.hook]=window.__checklistInspection;return {get state(){return state;}};
 }

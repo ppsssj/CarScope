@@ -96,6 +96,8 @@ export class MobileSync {
     }
     this.#later();
   }
+  // Outside the send and status flow on purpose: nothing it does can change what is shown or sent.
+  detectPart(partId, blob, options) { return this.#closed ? Promise.resolve({ ok: false, code: 'NOT_CONNECTED' }) : this.#client.detectPart(partId, blob, options); }
   pause() { this.#paused = true; this.#stopTimer(); }
   resume() { this.#paused = false; this.#errors = 0; this.#later(); }
   close() {

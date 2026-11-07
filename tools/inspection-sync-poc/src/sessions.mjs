@@ -160,6 +160,12 @@ export class SessionService {
     return { sessionState: s.state, expiresAt: s.expiresAt, receipt: s.resultDigest ? this.#receipt(s) : null };
   }
 
+  /** Which inspection this phone credential belongs to, for a request that must match it (part detection). Reads only. */
+  async detectionScope(submitToken) {
+    const s = await this.#byToken('submit', submitToken);
+    return { taskId: s.taskId, sessionState: s.state };
+  }
+
   // ---------- housekeeping ----------
 
   /**

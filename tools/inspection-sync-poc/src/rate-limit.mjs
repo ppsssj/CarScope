@@ -7,6 +7,8 @@ export const DEFAULT_RATES = Object.freeze({
   submit: { limit: 30, windowMs: 60_000 },
   read: { limit: 120, windowMs: 60_000 },
   static: { limit: 240, windowMs: 60_000 },
+  detect: { limit: 10, windowMs: 60_000 },
+  'detect-session': { limit: 12, windowMs: 600_000 },
 });
 
 export class RateLimiter {

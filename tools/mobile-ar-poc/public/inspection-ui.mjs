@@ -24,3 +24,6 @@ export function mountLocationGuide(task, after) {
   extendLocationGuide(task.id,guide);
   after.after(guide);
 }
+// P12-E: only a host that enabled the experiment marks the page and serves these files, and only a QR inspection passes a detector.
+export function offerPartDetection(options){if(document.body.dataset.partDetection!=='enabled'||!options.detector)return;
+  import('./part-detection-ui.mjs').then(({mountPartDetection})=>mountPartDetection(options)).catch(()=>{/* The picture guide and the inspection are untouched. */});}
