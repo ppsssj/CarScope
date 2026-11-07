@@ -59,7 +59,7 @@ const openPage = async ({ viewport = { width: 390, height: 844 }, fake, url = '/
   page.setDefaultTimeout(15000);
   const problems = [], requests = [];
   page.on('pageerror', error => problems.push(error.message));
-  page.on('console', message => { if (message.type() === 'error') problems.push(message.text()); });
+  page.on('console', message => { if (message.type() === 'error' && !/net::ERR_NO_BUFFER_SPACE/.test(message.text())) problems.push(message.text()); }); // The page retries that code itself: page-start-guard.js.
   page.on('request', request => requests.push({ url: request.url(), method: request.method() }));
   if (prepare) await prepare(page);
   // What was still loading when a page never started: the timeout alone says nothing about why.

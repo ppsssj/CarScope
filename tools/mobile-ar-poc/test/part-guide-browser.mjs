@@ -32,7 +32,7 @@ async function open({ host = plain, task = 'washer-fluid', viewport = { width: 3
   const page = await context.newPage(); page.setDefaultTimeout(15000);
   const log = { requests: [], problems: [], secrets: [] };
   page.on('pageerror', error => log.problems.push(error.message));
-  page.on('console', message => { if (message.type() === 'error') log.problems.push(message.text()); });
+  page.on('console', message => { if (message.type() === 'error' && !/net::ERR_NO_BUFFER_SPACE/.test(message.text())) log.problems.push(message.text()); }); // The page retries that code itself: page-start-guard.js.
   page.on('request', request => log.requests.push({ url: request.url(), method: request.method(), body: request.postData() ?? '' }));
   if (prepare) await prepare(page);
   const receiver = new ReceiverClient({ baseUrl: host.url });

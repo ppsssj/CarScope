@@ -15,6 +15,7 @@ const files = new Map([
   ...[...mobileFiles,...MOBILE_ASSETS,...MOBILE_PAGES].map((s) => [`/mobile-ar-poc/public/${s}`, new URL(`../../mobile-ar-poc/public/${s}`, import.meta.url)]),
   ...syncFiles.map((s) => [`/public/${s}`, new URL(`../public/${s}`, import.meta.url)]),
   ['/src/protocol.mjs', new URL('./protocol.mjs', import.meta.url)],
+  ['/page-start-guard.js', new URL('../../mobile-ar-poc/public/page-start-guard.js', import.meta.url)],
   ['/style.css', new URL('../../mobile-ar-poc/public/style.css', import.meta.url)],
   ['/favicon.svg', new URL('../../mobile-ar-poc/public/favicon.svg', import.meta.url)],
 ]);

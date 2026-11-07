@@ -179,6 +179,10 @@ dialog.part-detect-dialog[open] { display: flex; flex-direction: column; }
 .part-detect-status { padding: 24px 0; text-align: center; font-weight: 600; }
 #part-detect-again { display: block; width: 100%; }
 
+/* The page could not start: only the message and the manual guide are of use */
+body[data-start-failed] .step, body[data-start-failed] .actions, body[data-start-failed] #progress, body[data-start-failed] #manual, body[data-start-failed] #guidance-close { display: none !important; }
+#page-start-failed button { display: block; width: 100%; margin-top: 8px; }
+
 /* Camera */
 #stage { position: relative; width: 100%; aspect-ratio: 3 / 4; max-height: 54vh; max-height: 54dvh; margin: 0 auto; background: #05070a; border-radius: var(--radius); overflow: hidden; color: #fff; touch-action: manipulation; cursor: crosshair; }
 body[data-step="check"] #stage { max-height: 30vh; max-height: 30dvh; }
