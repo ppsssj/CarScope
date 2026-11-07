@@ -1,0 +1,52 @@
+# 워셔액 주입구 탐지 PoC (P12-B)
+
+연구용 로컬 도구다. **학습된 모델이 없고 판정은 `DATASET_REQUIRED`다.** 모바일 페이지와 배포에 포함되지 않는다. 판단 근거는 [설계 문서](../../docs/p12-b-vision-poc.md)에 있다.
+
+## 실행
+
+```powershell
+npm ci --ignore-scripts --prefix tools/vision-poc
+npm ci --ignore-scripts --prefix tools/mobile-ar-poc   # 기준선 파일과 브라우저 테스트의 Playwright
+Set-Location tools/vision-poc
+npm run check
+npm test
+npm run test:browser
+npm run dataset:status   # 데이터가 없으면 종료 코드 2
+npm run serve            # http://127.0.0.1:8199
+```
+
+모델이 없으면 화면은 `MODEL_REQUIRED`를 표시하고 색상 규칙만 실행한다.
+
+## 학습된 모델 연결
+
+모델 정보 파일을 저장소 밖에 만든다. `role`과 `labels`가 맞아야 후보를 표시하고, `sha256`이 다르면 서버가 시작되지 않는다.
+
+```json
+{ "modelId": "...", "role": "TARGET_CANDIDATE", "labels": ["washer-fluid-cap"], "sha256": "..." }
+```
+
+```powershell
+$env:CARSCOPE_VISION_MODEL='C:\CarScope-External\p12-b\models\model.tflite'
+$env:CARSCOPE_VISION_MODEL_MANIFEST='C:\CarScope-External\p12-b\models\model.json'
+npm run serve
+```
+
+## 런타임 측정
+
+COCO 모델로 런타임만 측정한다. 대상 모델의 성능이 아니다. 모델은 [MediaPipe 저장소](https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite0/int8/1/efficientdet_lite0.tflite)에서 받아 저장소 밖에 둔다.
+
+```powershell
+$env:CARSCOPE_VISION_MODEL='C:\CarScope-External\p12-b\models\efficientdet_lite0_int8_v1.tflite'
+$env:CARSCOPE_EVIDENCE_DIR='C:\CarScope-External\p12-b\YOUR-RUN-ID'
+npm run measure:runtime
+```
+
+## 데이터셋과 평가
+
+```powershell
+python scripts/fingerprint_images.py <image>...   # sha256, dhash. Pillow 필요
+node scripts/dataset-status.mjs <manifest.json> --root <dataset folder>
+node scripts/evaluate.mjs <manifest.json> <dataset folder> <predictions.json>
+```
+
+`evaluate.mjs`는 게이트를 통과하지 못하면 수치 없이 `NOT_MEASURED`를 출력한다. 항목 형식은 `src/dataset.mjs`, 수량은 `DATASET_GATE`에 있다. 이미지와 모델은 Git에 넣지 않는다.

@@ -1,0 +1,21 @@
+:root { color-scheme: light; font-family: system-ui, sans-serif; color: #17212b; background: #f4f6f8; }
+* { box-sizing: border-box; }
+body { margin: 0; }
+main { max-width: 720px; margin: 0 auto; padding: 20px 16px 40px; }
+h1 { margin: 4px 0 12px; font-size: 1.5rem; }
+h2 { margin: 24px 0 6px; font-size: 1.05rem; }
+p { line-height: 1.5; }
+.eyebrow { margin: 0; color: #8a4b00; font-size: .85rem; font-weight: 700; }
+.notice { margin: 0 0 16px; padding: 12px; border-left: 4px solid #b45f06; background: #fff4e5; }
+.note { margin: 6px 0; color: #51606e; font-size: .88rem; }
+input[type=file] { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.pick { display: flex; align-items: center; justify-content: center; min-height: 48px; border-radius: 8px; color: #fff; background: #17476f; font-weight: 700; cursor: pointer; }
+input[type=file]:focus-visible + .note, .pick:focus-within { outline: 3px solid #4d90c4; }
+figure { margin: 18px 0 0; }
+canvas { display: block; width: 100%; height: auto; border-radius: 6px; background: #dfe4e8; }
+figcaption { margin-top: 6px; color: #51606e; font-size: .85rem; }
+.candidates { margin: 8px 0; padding: 0; list-style: none; }
+.candidates li { margin-bottom: 8px; padding: 12px; border: 1px solid #cdd6dd; border-radius: 8px; background: #fff; }
+.answers { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.answers button { flex: 1 1 88px; min-height: 44px; border: 1px solid #8796a3; border-radius: 8px; color: #17212b; background: #fff; font: inherit; cursor: pointer; }
+.answers button[aria-pressed=true] { border-color: #17476f; color: #fff; background: #17476f; }
