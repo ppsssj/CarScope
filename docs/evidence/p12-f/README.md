@@ -87,7 +87,7 @@
 |---|---|---|
 | 평가·원장·라벨 파일 | `tools/vision-poc`: `npm test` | PASS 111, FAIL 0 |
 | 로컬 진입점, 오류 처리 (가짜 fetch) | `node --test test/part-detection-local.test.mjs` | PASS |
-| 서버·동기화 전체 | `tools/inspection-sync-poc`: `npm test` | 아래 참고 |
+| 서버·동기화 전체 | `tools/inspection-sync-poc`: `npm test` (PowerShell) | PASS 252, FAIL 0, SKIP 37 |
 | 모바일 | `tools/mobile-ar-poc`: `npm test` | PASS 150, FAIL 0 |
 | P12-E 탐지 흐름 (가짜 공급자) | `part-detection-browser.mjs` | PASS |
 | WebXR, WebXR+QR, 부품 안내, 페이지 시작 | 각 `test/*.mjs` | PASS |
@@ -96,7 +96,11 @@
 
 Postgres 시험 37건은 로컬에 DB가 없어 SKIP이고 CI에서 실행한다. **CI 성공은 실제 Roboflow 추론의 증거가 아니다.** CI는 키 없이 가짜 fetch로만 돈다.
 
-**알려진 로컬 실패:** `avd-setup-script.test.mjs`의 1건이 Git Bash에서 실행하면 실패한다. 한글 사용자 경로가 인코딩 때문에 깨지는 문제이고, 수정하지 않은 다른 작업 사본에서도 같다. PowerShell 결과는 PR 본문에 적는다.
+**알려진 로컬 실패:** `avd-setup-script.test.mjs`의 1건이 Git Bash에서 실행하면 실패한다. 한글 사용자 경로가 인코딩 때문에 깨지는 문제이고, 수정하지 않은 다른 작업 사본에서도 같다. PowerShell에서는 통과한다.
+
+### 변이 (선택한 조건만 대상, 완전성 증명이 아님)
+
+규칙을 하나씩 임시로 깨고 복원했다. 11건 모두 시험이 실패했다(정상). 대상: 크기 비율 검사, `detection` 기록, `RENDER` 거부, 저장소 안 키 파일 거부, 호출 상한, 진입점의 원장 경유, URL의 키, 배터리 활성화, `unknown`의 집계 제외, `ignore` 영역, 라벨 검수 표시.
 
 ## 조사 범위
 
