@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" role="img" aria-label="둥근 캡 그림. 캡 위에 앞유리 모양과 그 위로 뿜어지는 물줄기 모양의 표시가 있습니다.">
+<rect width="400" height="300" fill="#1e2228"/>
+<circle cx="200" cy="146" r="112" fill="#2a2f37" stroke="#5f6772" stroke-width="4"/><circle cx="200" cy="146" r="92" fill="none" stroke="#5f6772" stroke-width="2" stroke-dasharray="6 8"/>
+<path d="M136 206 Q200 166 264 206 L250 232 Q200 204 150 232 Z" fill="none" stroke="#e8eaed" stroke-width="7" stroke-linejoin="round"/><path d="M200 196 V224" stroke="#e8eaed" stroke-width="6" stroke-linecap="round"/>
+<g fill="none" stroke="#3ec6e0" stroke-width="7" stroke-linecap="round"><path d="M200 162 V136" stroke-dasharray="9 10"/><path d="M200 160 Q200 110 150 84" stroke-dasharray="9 10"/><path d="M200 160 Q200 110 250 84" stroke-dasharray="9 10"/></g>
+<text x="14" y="290" fill="#a6adb7" font-family="system-ui,sans-serif" font-size="12" font-weight="400" text-anchor="start">설명용 그림</text>
+</svg>

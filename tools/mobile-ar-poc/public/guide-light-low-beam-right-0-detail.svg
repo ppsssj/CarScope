@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" role="img" aria-label="오른쪽 전조등 모양과 아래로 기울어진 빛줄기 표시 그림. 하향등을 뜻하는 일반적인 표시이며 실제 램프의 구조가 아닙니다.">
+<rect width="400" height="300" fill="#1e2228"/>
+<g transform="translate(400 0) scale(-1 1)"><path d="M60 110 Q40 170 76 222 H170 Q196 166 170 92 H92 Q70 92 60 110 Z" fill="#2a2f37" stroke="#5f6772" stroke-width="4"/><path d="M84 124 Q74 160 92 196 H146 Q156 160 146 112 H98 Q88 112 84 124 Z" fill="#171a1f" stroke="#5f6772" stroke-width="2"/><path d="M216 118 L276 136" stroke="#3ec6e0" stroke-width="7" stroke-linecap="round"/><path d="M216 142 L276 160" stroke="#3ec6e0" stroke-width="7" stroke-linecap="round"/><path d="M216 166 L276 184" stroke="#3ec6e0" stroke-width="7" stroke-linecap="round"/><path d="M216 190 L276 208" stroke="#3ec6e0" stroke-width="7" stroke-linecap="round"/></g>
+<text x="200" y="40" fill="#e8eaed" font-family="system-ui,sans-serif" font-size="14" font-weight="700" text-anchor="middle">오른쪽 하향등 · 아래로 비춤</text><text x="200" y="272" fill="#a6adb7" font-family="system-ui,sans-serif" font-size="13" font-weight="400" text-anchor="middle">상향·하향이 한 램프에 함께 있을 수 있어요</text>
+<text x="14" y="290" fill="#a6adb7" font-family="system-ui,sans-serif" font-size="12" font-weight="400" text-anchor="start">설명용 그림</text>
+</svg>

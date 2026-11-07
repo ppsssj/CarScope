@@ -1,6 +1,6 @@
 // Shared allow-list for the loopback dev server and the HTTPS same-origin service.
 import { access, readFile } from 'node:fs/promises';
-import {MOBILE_ASSETS,MOBILE_MODULES as mobileFiles} from '../../mobile-ar-poc/public-modules.mjs';
+import {MOBILE_ASSETS,MOBILE_MODULES as mobileFiles,MOBILE_PAGES} from '../../mobile-ar-poc/public-modules.mjs';
 import {WEBXR_GUIDE_FILES, WEBXR_PERMISSION, markWebXrGuidePage} from '../../mobile-ar-poc/webxr-modules.mjs';
 // Experimental guide, off unless an entry passes webxrGuide. On Render only render-webxr-experiment.mjs does: see WEBXR_EXPERIMENT_ENTRY_ONLY.
 const guideFiles = new Map(WEBXR_GUIDE_FILES.map(([name, source, type]) => [`/mobile-ar-poc/public/webxr/${name}`, [new URL(`../../mobile-ar-poc/${source}`, import.meta.url), type]]));
@@ -10,7 +10,7 @@ export async function assertWebXrGuideFiles() {
 }
 const syncFiles = ['mobile-dev-entry.mjs', 'mobile-handoff.mjs', 'mobile-sync.mjs', 'sync-client.mjs'];
 const files = new Map([
-  ...[...mobileFiles,...MOBILE_ASSETS].map((s) => [`/mobile-ar-poc/public/${s}`, new URL(`../../mobile-ar-poc/public/${s}`, import.meta.url)]),
+  ...[...mobileFiles,...MOBILE_ASSETS,...MOBILE_PAGES].map((s) => [`/mobile-ar-poc/public/${s}`, new URL(`../../mobile-ar-poc/public/${s}`, import.meta.url)]),
   ...syncFiles.map((s) => [`/public/${s}`, new URL(`../public/${s}`, import.meta.url)]),
   ['/src/protocol.mjs', new URL('./protocol.mjs', import.meta.url)],
   ['/style.css', new URL('../../mobile-ar-poc/public/style.css', import.meta.url)],
@@ -41,6 +41,7 @@ export async function serveMobilePage(req, res, { tls = false, webxrGuide = fals
     body = await readFile(files.get(url.pathname));
     if (url.pathname.endsWith('.css')) type = 'text/css; charset=utf-8';
     if (url.pathname.endsWith('.svg')) type = 'image/svg+xml';
+    if (url.pathname.endsWith('.html')) type = 'text/html; charset=utf-8';
   } else { res.writeHead(404, headers); res.end(); return; }
   res.writeHead(200, { ...headers, 'Content-Type': type }); res.end(req.method === 'HEAD' ? undefined : body);
 }

@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" role="img" aria-label="둥근 충전구 그림. 단자 구멍 세 개가 일반적인 모양으로 표시되어 있습니다. 실제 단자 배치가 아닙니다.">
+<rect width="400" height="300" fill="#1e2228"/>
+<rect x="60" y="48" width="280" height="214" rx="18" fill="#2a2f37" stroke="#5f6772" stroke-width="3"/><circle cx="200" cy="140" r="78" fill="#14171b" stroke="#5f6772" stroke-width="4"/>
+<g fill="#3a404a" stroke="#3ec6e0" stroke-width="3"><circle cx="164" cy="118" r="15"/><circle cx="236" cy="118" r="15"/><circle cx="200" cy="168" r="15"/></g><text x="200" y="36" fill="#ef9867" font-family="system-ui,sans-serif" font-size="13" font-weight="400" text-anchor="middle">단자 안에 손이나 물건을 넣지 않아요</text><text x="200" y="246" fill="#e8eaed" font-family="system-ui,sans-serif" font-size="14" font-weight="700" text-anchor="middle">바깥쪽 겉모습만 봐요</text>
+<text x="14" y="290" fill="#a6adb7" font-family="system-ui,sans-serif" font-size="12" font-weight="400" text-anchor="start">설명용 그림</text>
+</svg>

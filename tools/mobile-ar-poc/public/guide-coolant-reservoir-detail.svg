@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" role="img" aria-label="캡이 닫힌 반투명 통 그림. 옆에 F와 L 눈금이 있고 캡에 경고 삼각형이 있습니다. 특정 차량의 형상이 아닙니다.">
+<rect width="400" height="300" fill="#1e2228"/>
+<rect x="168" y="30" width="64" height="26" rx="6" fill="#5f6772"/><path d="M200 36 l10 14 h-20 z" fill="#e0b25a"/><path d="M120 76 Q120 58 140 58 H260 Q280 58 280 76 V240 Q280 262 256 262 H144 Q120 262 120 240 Z" fill="#2a2f37" stroke="#5f6772" stroke-width="4"/>
+<path d="M124 150 H276 V240 Q276 258 256 258 H144 Q124 258 124 240 Z" fill="#14303a"/>
+<g stroke="#3ec6e0" stroke-width="3"><path d="M280 110 H306"/><path d="M280 196 H306"/></g><text x="312" y="116" fill="#e8eaed" font-family="system-ui,sans-serif" font-size="14" font-weight="700" text-anchor="start">F</text><text x="312" y="202" fill="#e8eaed" font-family="system-ui,sans-serif" font-size="14" font-weight="700" text-anchor="start">L</text>
+<text x="70" y="96" fill="#a6adb7" font-family="system-ui,sans-serif" font-size="13" font-weight="400" text-anchor="middle">닫힌 캡</text><path d="M104 90 Q130 60 164 46" fill="none" stroke="#5f6772" stroke-width="2"/>
+<text x="14" y="290" fill="#a6adb7" font-family="system-ui,sans-serif" font-size="12" font-weight="400" text-anchor="start">설명용 그림</text>
+</svg>

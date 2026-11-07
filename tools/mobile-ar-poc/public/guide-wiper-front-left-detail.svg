@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" role="img" aria-label="앞유리에 놓인 와이퍼 그림. 왼쪽에서 시작하는 암과 그 끝의 고무 날이 표시되어 있습니다.">
+<rect width="400" height="300" fill="#1e2228"/>
+<path d="M20 236 Q200 170 380 236 L380 86 Q200 34 20 86 Z" fill="#171a1f" stroke="#5f6772" stroke-width="3"/><text x="200" y="96" fill="#a6adb7" font-family="system-ui,sans-serif" font-size="13" font-weight="400" text-anchor="middle">앞유리</text>
+<path d="M110 226 L262 118" stroke="#5f6772" stroke-width="8" stroke-linecap="round"/><path d="M230 142 L294 92" stroke="#3ec6e0" stroke-width="10" stroke-linecap="round"/>
+<circle cx="110" cy="226" r="10" fill="#5f6772"/><text x="330" y="88" fill="#e8eaed" font-family="system-ui,sans-serif" font-size="14" font-weight="700" text-anchor="middle">고무 날</text><text x="96" y="178" fill="#e8eaed" font-family="system-ui,sans-serif" font-size="14" font-weight="700" text-anchor="middle">암</text><text x="200" y="272" fill="#e8eaed" font-family="system-ui,sans-serif" font-size="14" font-weight="700" text-anchor="middle">차에 앉아 앞을 볼 때 왼쪽</text>
+<text x="14" y="290" fill="#a6adb7" font-family="system-ui,sans-serif" font-size="12" font-weight="400" text-anchor="start">설명용 그림</text>
+</svg>

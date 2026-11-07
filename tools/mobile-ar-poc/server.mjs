@@ -4,7 +4,7 @@ import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import QRCode from 'qrcode';
 import { handoffURL } from './public/handoff.mjs';
-import {MOBILE_ASSETS,MOBILE_MODULES} from './public-modules.mjs';
+import {MOBILE_ASSETS,MOBILE_MODULES,MOBILE_PAGES} from './public-modules.mjs';
 import {WEBXR_GUIDE_FILES, WEBXR_PERMISSION, markWebXrGuidePage} from './webxr-modules.mjs';
 import {webxrGuideEnabled} from './webxr-flag.mjs';
 
@@ -13,6 +13,7 @@ const files = new Map([
   ['/', ['index.html', 'text/html; charset=utf-8']],
   ...['app-entry.mjs',...MOBILE_MODULES].map(name => [`/${name}`, [name, 'text/javascript; charset=utf-8']]),
   ...MOBILE_ASSETS.map(name => [`/${name}`, [name, 'image/svg+xml']]),
+  ...MOBILE_PAGES.map(name => [`/${name}`, [name, 'text/html; charset=utf-8']]),
   ['/style.css', ['style.css', 'text/css; charset=utf-8']],
   ['/favicon.svg', ['favicon.svg', 'image/svg+xml']]
 ]);

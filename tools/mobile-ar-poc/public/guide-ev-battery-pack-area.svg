@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" role="img" aria-label="옆에서 본 차 그림. 앞뒤 바퀴 사이의 바닥 아래 영역이 주황색 점선으로 강조되어 있습니다. 실제 크기나 위치가 아닙니다.">
+<rect width="400" height="300" fill="#1e2228"/>
+<text x="362" y="56" fill="#a6adb7" font-family="system-ui,sans-serif" font-size="13" font-weight="400" text-anchor="middle">앞</text><path d="M348 62 h22 l-6 -5 m6 5 l-6 5" fill="none" stroke="#a6adb7" stroke-width="2"/>
+<path d="M36 180 Q40 130 92 124 L150 86 Q200 74 262 86 L320 124 Q366 132 370 180 L370 204 L36 204 Z" fill="#2a2f37" stroke="#5f6772" stroke-width="3"/>
+<path d="M162 96 H256 L296 126 H130 Z" fill="#171a1f" stroke="#5f6772" stroke-width="2"/>
+<circle cx="104" cy="204" r="28" fill="#14171b" stroke="#5f6772" stroke-width="3"/><circle cx="304" cy="204" r="28" fill="#14171b" stroke="#5f6772" stroke-width="3"/>
+<rect x="136" y="198" width="136" height="20" rx="4" fill="#14303a" stroke="#ef9867" stroke-width="3" stroke-dasharray="8 5"/>
+<path d="M204 218 L204 240" stroke="#3ec6e0" stroke-width="2"/><text x="204" y="258" fill="#e8eaed" font-family="system-ui,sans-serif" font-size="14" font-weight="700" text-anchor="middle">차 바닥 아래</text><text x="204" y="276" fill="#ef9867" font-family="system-ui,sans-serif" font-size="13" font-weight="400" text-anchor="middle">볼 수 있어도 다가가지 마세요</text>
+<text x="14" y="290" fill="#a6adb7" font-family="system-ui,sans-serif" font-size="12" font-weight="400" text-anchor="start">설명용 그림</text>
+</svg>

@@ -3,11 +3,11 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import QRCode from 'qrcode';
 import { handoffURL, isLoopbackHost } from '../public/handoff.mjs';
-import {MOBILE_ASSETS,MOBILE_MODULES} from '../public-modules.mjs';
+import {MOBILE_ASSETS,MOBILE_MODULES,MOBILE_PAGES} from '../public-modules.mjs';
 import {WEBXR_GUIDE_FILES, markWebXrGuidePage} from '../webxr-modules.mjs';
 import {webxrGuideEnabled} from '../webxr-flag.mjs';
 
-export const PUBLIC_FILES = ['index.html','style.css','app-entry.mjs',...MOBILE_MODULES,...MOBILE_ASSETS,'favicon.svg'];
+export const PUBLIC_FILES = ['index.html','style.css','app-entry.mjs',...MOBILE_MODULES,...MOBILE_ASSETS,...MOBILE_PAGES,'favicon.svg'];
 
 // Static staging only: the page and modules are copied unchanged. No upload API, no result transport (AR-01).
 // The experimental WebXR guide is added only on explicit request, so a default build keeps its exact files and bytes.
