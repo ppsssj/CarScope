@@ -65,10 +65,11 @@ test('on the Render path: off without a provider; with one, the same credentials
   assert.equal(ok.data.candidates.length, 1, 'only this part\'s class');
   assert.equal(calls.length, 1);
   assert.deepEqual(await tables(), before, 'no table was added');
-  // The limit holds through PostgreSQL's windows: 10 a minute per client, and the eleventh never reaches the provider.
-  for (let i = 1; i < 10; i++) assert.equal((await detect(claim.data.submitToken)).status, 200, String(i));
-  assert.equal(calls.length, 10);
+  // The limit holds through PostgreSQL's windows: 10 a minute per client, refused requests included, and what is over it never reaches the provider.
+  const REFUSED_SO_FAR = 3, OK_SO_FAR = 1;
+  for (let i = REFUSED_SO_FAR + OK_SO_FAR; i < 10; i++) assert.equal((await detect(claim.data.submitToken)).status, 200, String(i));
+  assert.equal(calls.length, 10 - REFUSED_SO_FAR);
   assert.equal((await detect(claim.data.submitToken)).status, 429);
-  assert.equal(calls.length, 10);
+  assert.equal(calls.length, 10 - REFUSED_SO_FAR);
   assert.ok(Number((await pool.query('SELECT count(*) n FROM cs_rate_windows')).rows[0].n) > 0);
 });
