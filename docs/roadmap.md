@@ -1,5 +1,9 @@
 # 로드맵 및 진입 조건
 
+## P12-D — 학습 없는 사전학습 모델 비교
+
+OWLv2, Grounding DINO Tiny, OmDet-Turbo Tiny를 텍스트 프롬프트로 실행해 사진 12장에서 YOLOv8 및 색상 규칙과 비교했다. **세 모델 모두 사전 고정 기준을 넘지 못해 `NOT_RELIABLE`이며 제품 권장 모델은 없다.** 캡을 찾지만 어떤 캡인지 구분하지 못한다. 수치는 예비이고 정식 평가는 `DATASET_REQUIRED`다. 학습, 300장 수집, 운영 코드 변경은 하지 않았다. [판정](p12-d-zero-shot-comparison.md), [증거 인덱스](evidence/p12-d/README.md).
+
 ## P12-C — 기존 학습 모델 재사용 검증
 
 공개 모델 `engine-bay-parts/1`을 호스팅 API로 실제 추론해 권리를 확인한 사진 12장으로 예비 평가했다. `Windshield Wiper Fluid`는 Precision 0.88, Recall 0.64, mAP@0.5 0.64(공식 지표 아님)로 색상 규칙(0.42, 0.45)보다 오탐이 적고 캡 자체를 잡는다. **`yolov8n`(AGPL 계열)이고 데이터 원출처가 미확인이라 연구 기준으로만 재사용하며 제품 탑재는 불가다. 정식 평가는 `DATASET_REQUIRED`, Z Flip8은 `NOT_MEASURED`다.** 운영 코드는 바꾸지 않았다. [판정](p12-c-existing-model.md), [증거 인덱스](evidence/p12-c/README.md).
