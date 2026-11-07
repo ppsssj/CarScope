@@ -59,11 +59,23 @@ const openPage = async ({ viewport = { width: 390, height: 844 }, fake, url = '/
   page.setDefaultTimeout(15000);
   const problems = [], requests = [];
   page.on('pageerror', error => problems.push(error.message));
-  page.on('console', message => { if (message.type() === 'error') problems.push(message.text()); });
+  page.on('console', message => { if (message.type() === 'error' && !/net::ERR_NO_BUFFER_SPACE/.test(message.text())) problems.push(message.text()); }); // The page retries that code itself: page-start-guard.js.
   page.on('request', request => requests.push({ url: request.url(), method: request.method() }));
   if (prepare) await prepare(page);
+  // What was still loading when a page never started: the timeout alone says nothing about why.
+  const pending = new Set(), bad = [], failed = [];
+  page.on('request', request => pending.add(request.url()));
+  page.on('requestfinished', request => pending.delete(request.url()));
+  page.on('requestfailed', request => { pending.delete(request.url()); failed.push(`${request.url()} ${request.failure()?.errorText}`); });
+  page.on('response', response => { if (response.status() >= 400) bad.push(`${response.url()} ${response.status()}`); });
+  const started = Date.now();
   await page.goto(host + url);
-  await page.waitForFunction(() => window.__selfInspection || window.__checklistInspection);
+  try {
+    await page.waitForFunction(() => window.__selfInspection || window.__checklistInspection);
+  } catch (error) {
+    const seen = await page.evaluate(() => ({ ready: document.readyState, step: document.body?.dataset.step, resources: performance.getEntriesByType('resource').length })).catch(failure => failure.name);
+    throw new Error(`${error.message}\nstart diagnostics after ${Date.now() - started}ms: ${JSON.stringify({ url, seen, pending: [...pending], failed, bad, requested: requests.length, problems })}`);
+  }
   return { page, context, problems, requests };
 };
 const guideReady = page => page.waitForFunction(() => window.__webXrGuide?.capability);

@@ -180,6 +180,34 @@ export function webxrExperimentGate(root = TOOL_ROOT) {
     : check('WEBXR_EXPERIMENT_ENTRY_ONLY', 'PASS', 'only the experiment entrypoint turns on the guide; no variable can, and the default CLI does not');
 }
 
+/**
+ * P12-E: part detection stays off. No deployed command passes a provider, no variable reaches one, and the Render path holds no model.
+ * The option exists in these hosts as a parameter only; a real entrypoint is a later, separately approved change.
+ */
+export function partDetectionGate(root = TOOL_ROOT) {
+  const problems = [];
+  const entry = readFileSync(resolve(root, ENTRY), 'utf8');
+  if (/partDetection/.test(entry.slice(entry.indexOf(MAIN_MARKER)))) problems.push('default CLI passes a provider');
+  if (!/partDetection = null/.test(entry.slice(0, entry.indexOf(MAIN_MARKER)))) problems.push('option is not off by default');
+  const HOSTS = ['src/render-stateful.mjs', 'src/mobile-dev-server.mjs', 'src/server.mjs', 'src/mobile-page.mjs'];
+  for (const dir of ['src', 'bin']) {
+    for (const name of readdirSync(resolve(root, dir)).filter((x) => x.endsWith('.mjs'))) {
+      const file = dir + '/' + name, source = readFileSync(resolve(root, file), 'utf8');
+      const cli = source.includes(MAIN_MARKER) ? source.slice(source.indexOf(MAIN_MARKER)) : '';
+      if (!HOSTS.includes(file) && /partDetection\s*:/.test(source)) problems.push(file + ' passes a provider');
+      if (/partDetection/.test(cli)) problems.push(file + ' CLI passes a provider');
+    }
+  }
+  const closure = importGraph(ENTRY, root);
+  if (closure.some((f) => /roboflow|vision-poc/.test(f))) problems.push('a hosted client is inside the Render closure');
+  for (const file of closure) if (/onnxruntime|@tensorflow|tfjs|from '@roboflow|ROBOFLOW|mediapipe/i.test(readFileSync(resolve(root, file), 'utf8'))) problems.push(file + ' names a model runtime or a key');
+  const pkg = JSON.parse(readFileSync(resolve(root, 'package.json'), 'utf8'));
+  if (Object.keys(pkg.dependencies ?? {}).join() !== 'pg') problems.push('the service gained a runtime dependency');
+  return problems.length
+    ? check('PART_DETECTION_OFF', 'FAIL', problems.join('; '))
+    : check('PART_DETECTION_OFF', 'PASS', 'no command passes a provider, no variable reaches one, and no model runtime is in the Render closure');
+}
+
 export function ddlGate(root = TOOL_ROOT) {
   const inventory = schemaInventory(root);
   const bad = Object.values(inventory).flatMap((x) => x.nonAdditive.map((s) => `${x.file}: ${s}`));
@@ -385,6 +413,7 @@ export async function runStaticGates() {
     ['AVD_HISTORY_DEMO_ENTRY_ONLY', () => avdHistoryDemoGate()],
     ['AVD_HISTORY_DEMO_REFUSES_UNSAFE_CONFIG', () => avdHistoryDemoRefusalGate()],
     ['WEBXR_EXPERIMENT_ENTRY_ONLY', () => webxrExperimentGate()],
+    ['PART_DETECTION_OFF', () => partDetectionGate()],
     ['UNVERIFIED_AUTHORITY_BLOCKED', () => unverifiedAuthorityGate()],
     ['RENDER_CLI_REFUSES_UNSAFE_CONFIG', () => cliRefusalGate()],
     ['TEST_PROD_CREDENTIAL_SEPARATION', () => credentialSeparationGate()],

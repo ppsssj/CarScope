@@ -81,7 +81,7 @@ try {
   await noLeak(); await page.evaluate(() => scrollTo(0, 0)); await page.screenshot({ path: path.join(output, '02-server-received.png'), fullPage: true });
   pass('actual AR-01 checklist→completion→double SEND→verified receipt; SENT remains distinct from ACCEPTED');
   const view = await paired.receiver.view(); await paired.receiver.accept(view.resultDigest);
-  await page.click('#sync-refresh'); await waitState('ACCEPTED'); await noLeak();
+  await waitState('ACCEPTED'); await noLeak(); // Polling brings it, and hides the refresh button once final: a click here would race it.
   await page.locator('#done-sync').scrollIntoViewIfNeeded(); await page.screenshot({ path: path.join(output, '03-accepted.png'), fullPage: false });
   pass('receiver exact-digest acceptance appears in mobile through server polling');
   await page.reload(); assert.equal(await page.locator('#sync-send').count(), 0);
@@ -93,7 +93,7 @@ try {
   pass('used QR rejected with new-QR guidance');
 
   paired = await pair(); await complete(); await send(); await waitState('SENT'); await paired.receiver.cancel();
-  await page.click('#sync-refresh'); await waitState('CANCELLED');
+  await waitState('CANCELLED');
   assert.equal(await page.locator('#sync-send').isEnabled(), false); pass('receiver CANCELLED disables resend');
 
   paired = await pair(); now = paired.session.expiresAt + 1;
@@ -164,7 +164,7 @@ try {
     body.sessionState = 'ACCEPTED'; // receipt still says RESULT_SUBMITTED: must never display acceptance.
     await route.fulfill({ response, json: body });
   });
-  await page.click('#sync-refresh'); await waitState('REJECTED_INVALID');
+  await waitState('REJECTED_INVALID');
   pass('status ACCEPTED with a submitted-only Receipt is rejected despite matching Digest');
 
   paired = await pair(); await complete(); await send(); await waitState('SENT');
@@ -173,7 +173,7 @@ try {
   try { restored = await paired.receiver.view(); }
   catch (error) { if (error.cause?.code !== 'ECONNRESET' && error.cause?.code !== 'UND_ERR_SOCKET') throw error; restored = await paired.receiver.view(); }
   assert.equal(restored.sessionState, 'RESULT_SUBMITTED');
-  await paired.receiver.accept(restored.resultDigest); await page.click('#sync-refresh'); await waitState('ACCEPTED');
+  await paired.receiver.accept(restored.resultDigest); await waitState('ACCEPTED');
   pass('SQLite/API restart preserves result and receiver authority; mobile sees subsequent ACCEPTED');
 
   paired = await pair(); await complete();

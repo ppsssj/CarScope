@@ -7,7 +7,7 @@ import { reduce, initialState, allChecked, progressOf, CHECK_ITEMS } from './sel
 import { validateResult, STATUS_TEXT } from './inspection-result.mjs';
 import {isChecklistTask,parseInspectionHandoff,taskLinks,WASHER_TASK} from './inspection-tasks.mjs';
 import {prepareChecklistPage,startChecklistPage} from './checklist-page.mjs';
-import {renderSummary as summary,renderOutcome,mountLocationGuide} from './inspection-ui.mjs';
+import {renderSummary as summary,renderOutcome,mountLocationGuide,offerPartDetection} from './inspection-ui.mjs';
 import {WASHER_OUTCOME,REPORT_NOTE} from './inspection-copy.mjs';
 import {mountPartGuide} from './part-guide.mjs';
 
@@ -18,7 +18,7 @@ export async function startInspectionPage(options={}){const handoff=options.hand
 }
 
 // Both entries use the same AR-01 flow; only the isolated development entry supplies sync callbacks.
-async function startWasherInspectionPage({ handoff = parseHandoff(location.hash), onComplete = () => {}, onRestart = () => {} } = {}) {
+async function startWasherInspectionPage({ handoff = parseHandoff(location.hash), onComplete = () => {}, onRestart = () => {}, partDetector = null } = {}) {
 const $ = id => document.getElementById(id);
 if(handoff.source!=='qr-sync'){const more=document.createElement('details'),title=document.createElement('summary'),nav=document.createElement('nav');title.textContent='다른 부품 점검하기';nav.className='task-links';nav.setAttribute('aria-label','다른 부품 점검');for(const t of taskLinks()){const a=document.createElement('a');a.href=t.href;a.textContent=t.label;nav.append(a);}more.append(title,nav);$('step-intro').append(more);}
 const video = $('video');
@@ -181,6 +181,8 @@ $('start').disabled = !handoff.valid;
 render();
 // Test hook (read-only view of the flow; the page itself never sends this anywhere).
 window.__selfInspection = { get state() { return state; }, get mark() { return camera.mark; } };
+
+if (handoff.valid) offerPartDetection({ taskId: WASHER_TASK.id, detector: partDetector, introBefore: $('step-intro').querySelector('details.part-guide'), locationAfter: document.querySelector('details.part-location'), onOpen: () => stop('사진을 고르는 동안 카메라를 껐어요.') });
 
 // P9-XR-C: only a host that enabled the experiment marks the page, and only that host serves these files.
 // The guide sends nothing and never changes the record: each choice below is the same event the page's own buttons use.

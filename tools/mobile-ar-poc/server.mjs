@@ -14,6 +14,7 @@ const files = new Map([
   ...['app-entry.mjs',...MOBILE_MODULES].map(name => [`/${name}`, [name, 'text/javascript; charset=utf-8']]),
   ...MOBILE_ASSETS.map(name => [`/${name}`, [name, 'image/svg+xml']]),
   ...MOBILE_PAGES.map(name => [`/${name}`, [name, 'text/html; charset=utf-8']]),
+  ['/page-start-guard.js', ['page-start-guard.js', 'text/javascript; charset=utf-8']],
   ['/style.css', ['style.css', 'text/css; charset=utf-8']],
   ['/favicon.svg', ['favicon.svg', 'image/svg+xml']]
 ]);

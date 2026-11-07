@@ -1,5 +1,9 @@
 # 로드맵 및 진입 조건
 
+## P12-E — 보닛 부품 AI 후보 탐지 PoC
+
+보닛 내부 6개 부품의 지원표와 동의, 사진 1장 전송, 후보 표시, 인증된 서버 중계를 구현했다. 실험 4개(워셔액, 냉각수, 브레이크액, 퓨즈박스), 미지원 2개(저전도 냉각수, 12V 배터리), 검증 0개다. 기능 플래그는 꺼져 있고 진입점이 없으며 동작 시험의 공급자는 가짜다. **실제 모델 호출은 승인 대상이고, 모델 정확도·Render·Z Flip8은 NOT_RUN이다.** [판정과 차단 사항](p12-e-bonnet-part-detection.md), [증거 인덱스](evidence/p12-e/README.md).
+
 ## P12-D — 학습 없는 사전학습 모델 비교
 
 OWLv2, Grounding DINO Tiny, OmDet-Turbo Tiny를 텍스트 프롬프트로 실행해 사진 12장에서 YOLOv8 및 색상 규칙과 비교했다. **세 모델 모두 사전 고정 기준을 넘지 못해 `NOT_RELIABLE`이며 제품 권장 모델은 없다.** 캡을 찾지만 어떤 캡인지 구분하지 못한다. 수치는 예비이고 정식 평가는 `DATASET_REQUIRED`다. 학습, 300장 수집, 운영 코드 변경은 하지 않았다. [판정](p12-d-zero-shot-comparison.md), [증거 인덱스](evidence/p12-d/README.md).
