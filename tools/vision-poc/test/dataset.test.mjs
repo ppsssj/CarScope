@@ -127,6 +127,18 @@ test('the status script reports DATASET_REQUIRED and no number for the real inve
   assert.equal(output.report.zFlip8, 'NOT_MEASURED');
 });
 
+test('the status script reads the manifest it is given, with or without --root', async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), 'vision-status-'));
+  try {
+    const script = fileURLToPath(new URL('../scripts/dataset-status.mjs', import.meta.url)), manifest = path.join(dir, 'm.json');
+    await writeFile(manifest, JSON.stringify({ images: [image()] }));
+    const count = args => JSON.parse(spawnSync(process.execPath, [script, ...args], { encoding: 'utf8' }).stdout).counts.images;
+    assert.equal(count([manifest]), 1);
+    assert.equal(count([manifest, '--root', dir]), 1);
+    assert.equal(count(['--root', dir, manifest]), 1);
+  } finally { await rm(dir, { recursive: true, force: true }); }
+});
+
 test('the evaluate script refuses to print a metric without a ready dataset', async () => {
   const dir = await mkdtemp(path.join(tmpdir(), 'vision-eval-'));
   try {

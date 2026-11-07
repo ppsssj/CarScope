@@ -1,5 +1,9 @@
 # 로드맵 및 진입 조건
 
+## P12-C — 기존 학습 모델 재사용 검증
+
+공개 모델 `engine-bay-parts/1`을 호스팅 API로 실제 추론해 권리를 확인한 사진 12장으로 예비 평가했다. `Windshield Wiper Fluid`는 Precision 0.88, Recall 0.64, mAP@0.5 0.64(공식 지표 아님)로 색상 규칙(0.42, 0.45)보다 오탐이 적고 캡 자체를 잡는다. **`yolov8n`(AGPL 계열)이고 데이터 원출처가 미확인이라 연구 기준으로만 재사용하며 제품 탑재는 불가다. 정식 평가는 `DATASET_REQUIRED`, Z Flip8은 `NOT_MEASURED`다.** 운영 코드는 바꾸지 않았다. [판정](p12-c-existing-model.md), [증거 인덱스](evidence/p12-c/README.md).
+
 ## P12-A3 — 설명용 그림을 최종 안내로 확정
 
 실제 사진을 추가하지 않기로 결정했다. 19개 부품을 `SCHEMATIC_ONLY`로 바꾸고 화면의 사진 관련 안내와 그림별 배지·출처 줄을 없앴으며, 설명용 그림이고 실제 차량과 다를 수 있다는 안내는 부품 안내 하단에 한 번만 둔다. 그림 38장, 확대, QR, WebXR, 점검 상태는 그대로다. **Z Flip8과 Render 운영 확인은 NOT_RUN이다.** [결정과 변경](p12-a3-schematic-only.md), [증거 인덱스](evidence/p12-a3/README.md).

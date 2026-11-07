@@ -36,16 +36,16 @@ const CONDITIONS = {
 const validBox = b => Array.isArray(b) && b.length === 4 && b.every(Number.isFinite) && b[0] >= 0 && b[1] >= 0 && b[2] > 0 && b[3] > 0 && b[0] + b[2] <= 1.000001 && b[1] + b[3] <= 1.000001;
 const hamming = (a, b) => { let bits = 0; for (let x = BigInt(`0x${a}`) ^ BigInt(`0x${b}`); x; x &= x - 1n) bits++; return bits; };
 
-function imageErrors(image) {
+export function imageErrors(image, { splits = SPLITS, licenses = ALLOWED_LICENSES } = {}) {
   const e = [], at = message => e.push(`${image?.id ?? '(no id)'}: ${message}`);
   if (!image?.id || !image.file) at('id and file are required');
   if (!/^[0-9a-f]{64}$/.test(image?.sha256 ?? '')) at('sha256 is required');
   if (!/^[0-9a-f]{16}$/.test(image?.dhash ?? '')) at('dhash is required');
-  if (!SPLITS.includes(image?.split)) at('split must be train, val or test');
+  if (!splits.includes(image?.split)) at(`split must be ${splits.join(', ')}`);
   const license = image?.license;
-  if (!ALLOWED_LICENSES.includes(license?.id)) at(`license ${license?.id ?? 'missing'} is not allowed`);
+  if (!licenses.includes(license?.id)) at(`license ${license?.id ?? 'missing'} is not allowed`);
   else if (license.id === 'OWNER_CONSENT' ? !license.consentRecord : !license.source) at('license needs its consent record or source page');
-  if (license?.id === 'CC-BY-4.0' && !license.attribution) at('license CC-BY-4.0 needs attribution');
+  if (license?.id?.startsWith('CC-BY') && !license.attribution) at(`license ${license.id} needs attribution`);
   const vehicle = image?.vehicle;
   if (!vehicle?.make || !vehicle.model || !vehicle.groupId || !vehicle.verifiedBy) at('vehicle make, model, groupId and verifiedBy are required');
   if (!image?.captureSessionId) at('captureSessionId is required');
