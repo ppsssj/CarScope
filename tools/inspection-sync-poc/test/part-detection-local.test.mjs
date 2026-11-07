@@ -97,6 +97,6 @@ test('it refuses to start outside a local experiment', () => {
 
 test('the entrypoint stays out of what Render runs, and the off gate still holds', () => {
   assert.equal(partDetectionGate().status, 'PASS', partDetectionGate().detail);
-  for (const file of importGraph()) assert.ok(!/vision-poc|part-detection-local|call-ledger/.test(file), file);
+  for (const file of importGraph()) assert.ok(!/vision-poc|part-detection-local|call-ledger|review-server|review-model/.test(file), file);
   for (const file of ['src/render-stateful.mjs', 'src/render-webxr-experiment.mjs', 'src/render-avd-history-demo.mjs']) assert.ok(!readFileSync(resolve(import.meta.dirname, '..', file), 'utf8').includes('part-detection-local'), file);
 });

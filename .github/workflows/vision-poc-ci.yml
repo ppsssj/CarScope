@@ -42,3 +42,5 @@ jobs:
       - run: npm test
       - name: Real Chrome with a scripted detector (no trained model, no phone)
         run: npm run test:browser
+      - name: Label review page with synthetic pictures and synthetic reviews (no real photo, no model, not a human review)
+        run: npm run test:browser:review
