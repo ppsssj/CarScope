@@ -1,0 +1,6 @@
+# P12-D CPU inference, in a virtual environment outside the repository. Install torch from https://download.pytorch.org/whl/cpu
+torch==2.15.0
+transformers==5.22.2
+pillow==12.0.0
+psutil==7.2.2
+timm==1.0.31

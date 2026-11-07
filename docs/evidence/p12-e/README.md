@@ -2,7 +2,7 @@
 
 **모든 동작 시험은 가짜 공급자로 실행했다. 사진을 Roboflow로 보내지 않았고 이번 작업에서 API를 호출하지 않았다.** 그래서 아래 결과는 화면과 서버 동작의 근거이고, **모델 정확도의 근거가 아니다.** 판정은 [P12-E](../../p12-e-bonnet-part-detection.md)에 있다.
 
-환경: Windows 10, Node 22.16.0, Chrome 157.0.8103.38. 캡처와 결과 JSON은 작업 PC `C:\CarScope-External\p12-e\run1\p12-e`에 있고 Git에 넣지 않았다. 시험 사진은 코드로 만든 단색 이미지다.
+환경: Windows 10, Node 22.16.0, Chrome 157.0.8103.38. 캡처와 결과 JSON은 작업 PC `C:\CarScope-External\p12-e\run2\p12-e`에 있고 Git에 넣지 않았다. 시험 사진은 코드로 만든 단색 이미지다.
 
 ## 모델 근거의 출처
 
@@ -12,7 +12,7 @@
 |---|---|
 | `C:\CarScope-External\p12-c\run2\model-info.json` | Roboflow 메타데이터: 클래스, 라벨 수, 소유자 수치 |
 | `C:\CarScope-External\p12-c\run2\results.json` | 공개 사진 12장의 실제 응답 |
-| PR #102 (미병합) | 예비 평가와 클라이언트. 읽기만 했고 수정하지 않았다 |
+| PR #102 (작업 중 병합됨) | 예비 평가와 클라이언트. 수정하지 않았다 |
 
 `universe.roboflow.com`은 자동 접근이 막혀 있다(403). 저장소 밖의 키 파일은 안내받지 않아 열지 않았다.
 
@@ -20,8 +20,8 @@
 
 | 명령 | 결과 | 범위 |
 |---|---|---|
-| `tools/inspection-sync-poc: node --test test/part-detection.test.mjs` | PASS 18 | 지원표, 매핑 52개 클래스, 인증, 동의, 제한, 키, 게이트 우회 |
-| `tools/inspection-sync-poc: npm test` | 282 중 PASS 245, 실패 0, SKIP 37 | SKIP은 `PG_TEST_URL` 없음으로 이 로컬에서 NOT_RUN |
+| `tools/inspection-sync-poc: node --test test/part-detection.test.mjs` | PASS 19 | 지원표, 매핑 52개 클래스, 인증, 동의, 제한, 키, 게이트 우회, 실제 클라이언트·파서 호환(가짜 `fetch`) |
+| `tools/inspection-sync-poc: npm test` | 283 중 PASS 246, 실패 0, SKIP 37 | SKIP은 `PG_TEST_URL` 없음으로 이 로컬에서 NOT_RUN |
 | `tools/mobile-ar-poc: npm test` | PASS 150 | |
 | `node test/part-detection-browser.mjs` | PASS 7개 그룹 | 가짜 공급자, 실제 QR HTTP, 합성 Chrome |
 | `part-guide-browser`, `webxr-browser`, `webxr-qr-browser` | PASS 12개, 14개, 7개 그룹 | 그림 안내, WebXR, QR v2 회귀 |
@@ -55,7 +55,7 @@
 
 ## CI 간헐 실패
 
-PR 첫 CI(`bbd2cdd`, run 42360684434)의 Windows `webxr-browser.mjs`에서 페이지 시작 대기가 15초를 넘었다(`openPage`, 시나리오 "Every way out"). 이 경로는 정적 서버이고 새 파일을 불러오지 않는다. `main` `686b016`의 `ux-browser.mjs`에서 본 시작 대기 시간 초과와 증상이 같다. **원인은 미확정이다.** 시간 제한은 늘리지 않았다.
+Windows `webxr-browser.mjs`에서 페이지 시작 대기가 15초를 넘는 실패가 이 브랜치에서 2회 연속 났다(`bbd2cdd` run 42360684434, `8d82a42` run 42360869311). 시나리오가 매번 달랐고(416번째 줄, 624번째 줄), 정적 서버 경로라 새 파일을 불러오지 않는다. 같은 시점의 `main`에서 같은 workflow는 통과했고(run 42361748358), 로컬은 4회 통과했다. `main` `686b016`의 `ux-browser.mjs`에서도 같은 증상이 있었다. **원인은 미확정이다.** 시간 제한은 늘리지 않았고, 다음에 나면 원인을 알 수 있도록 대기 중인 요청과 페이지 상태를 오류에 남기게 했다.
 
 ## NOT_RUN
 

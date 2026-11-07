@@ -360,3 +360,33 @@ test('the gate catches every shortcut around staying off', (t) => {
   assert.equal(environmentGate(tool).status, 'FAIL');
   assert.match(environmentGate(tool).detail, /ROBOFLOW_API_KEY/);
 });
+
+test('the provider fits the real hosted client and parser of tools/vision-poc, with no network', async () => {
+  const { inferImage, HOSTED_API_URL } = await import('../../vision-poc/src/roboflow-client.mjs');
+  const { parseRoboflowResponse, ROBOFLOW_MODEL_ID } = await import('../../vision-poc/src/roboflow-adapter.mjs');
+  assert.equal(DETECTION_MODEL_ID, ROBOFLOW_MODEL_ID);
+  const KEY = 'rf_key_only_in_the_header', calls = [];
+  let reply = { status: 200, body: { image: { width: 640, height: 480 }, predictions: [
+    { x: 100, y: 100, width: 40, height: 40, confidence: 0.8, class: 'Fuse Box', class_id: 16, detection_id: 'a' },
+    { x: 200, y: 100, width: 40, height: 40, confidence: 0.9, class: '4', class_id: 40, detection_id: 'b' },
+    { x: 300, y: 100, width: 40, height: 40, confidence: 0.95, class: 'Battery', class_id: 41, detection_id: 'c' },
+  ] } };
+  const fetchImpl = async (url, init) => { calls.push({ url, init }); return new Response(JSON.stringify(reply.body), { status: reply.status }); };
+  const provider = hostedDetectionProvider({ apiKey: KEY, parseResponse: parseRoboflowResponse, inferImage: args => inferImage({ ...args, fetchImpl }) });
+  const image = jpeg();
+  const parsed = await provider.detect({ image });
+  assert.equal(calls.length, 1);
+  assert.ok(calls[0].url.startsWith(`${HOSTED_API_URL}/${DETECTION_MODEL_ID}`));
+  assert.ok(!calls[0].url.includes(KEY), 'the key is not in the address');
+  assert.equal(calls[0].init.headers.Authorization, `Bearer ${KEY}`);
+  assert.equal(calls[0].init.body, image.toString('base64'));
+  assert.deepEqual(candidatesFor('fuse-box', parsed).map(c => c.score), [0.8], 'through the real parser, only this part\'s class');
+  for (const status of [401, 403, 402, 429, 500]) {
+    reply = { status, body: { message: `refused ${KEY}` } };
+    await assert.rejects(provider.detect({ image }), error => !error.message.includes(KEY), String(status));
+  }
+  reply = { status: 200, body: { predictions: 'nonsense' } };
+  await assert.rejects(provider.detect({ image }), /INVALID/);
+  // The client stays out of what Render runs today: tests may import it, the service does not.
+  assert.ok(!importGraph().some(file => file.includes('vision-poc')));
+});

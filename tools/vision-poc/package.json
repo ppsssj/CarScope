@@ -4,14 +4,21 @@
   "private": true,
   "type": "module",
   "description": "P12-B washer-fluid-cap detection PoC. Local only, not part of the mobile page, the app or any deployment.",
-  "engines": { "node": ">=22" },
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "serve": "node server.mjs",
-    "check": "node --check server.mjs && node --check src/detection-contract.mjs && node --check src/dataset.mjs && node --check src/evaluate.mjs && node --check public/poc.mjs && node --check public/detector-runtime.mjs && node --check scripts/dataset-status.mjs && node --check scripts/evaluate.mjs",
+    "check": "node --check server.mjs && node --check src/detection-contract.mjs && node --check src/dataset.mjs && node --check src/evaluate.mjs && node --check public/poc.mjs && node --check public/detector-runtime.mjs && node --check scripts/dataset-status.mjs && node --check scripts/evaluate.mjs && node --check src/roboflow-adapter.mjs && node --check src/roboflow-client.mjs && node --check src/exploratory.mjs && node --check scripts/roboflow-infer.mjs && node --check scripts/exploratory-evaluate.mjs && node --check scripts/color-baseline-run.mjs && node --check scripts/fetch-exploratory.mjs && node --check src/exploratory-alias.mjs && node --check scripts/exploratory-alias-analysis.mjs",
     "test": "node --test test/*.test.mjs",
     "test:browser": "node test/poc-browser.mjs",
     "measure:runtime": "node test/runtime-smoke.mjs",
-    "dataset:status": "node scripts/dataset-status.mjs"
+    "dataset:status": "node scripts/dataset-status.mjs",
+    "roboflow:infer": "node scripts/roboflow-infer.mjs",
+    "exploratory:evaluate": "node scripts/exploratory-evaluate.mjs",
+    "exploratory:baseline": "node scripts/color-baseline-run.mjs",
+    "exploratory:fetch": "node scripts/fetch-exploratory.mjs",
+    "exploratory:alias": "node scripts/exploratory-alias-analysis.mjs"
   },
   "dependencies": {
     "@mediapipe/tasks-vision": "1.2.2"
