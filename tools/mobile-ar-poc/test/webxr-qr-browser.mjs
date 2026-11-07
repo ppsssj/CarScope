@@ -39,8 +39,21 @@ async function pair(host, { taskId = 'washer-fluid', fake = {} } = {}) {
   page.on('response', async response => {
     if (response.url().endsWith('/v1/claim') && response.ok()) { const body = await response.json().catch(() => null); if (body?.submitToken) log.secrets.push(body.submitToken); }
   });
+  // What was still loading, or failed, when a page never started. The invite stays out: paths only.
+  const pending = new Set(), bad = [], failed = [];
+  const where = value => new URL(value).pathname;
+  page.on('request', request => pending.add(where(request.url())));
+  page.on('requestfinished', request => pending.delete(where(request.url())));
+  page.on('requestfailed', request => { pending.delete(where(request.url())); failed.push(`${where(request.url())} ${request.failure()?.errorText}`); });
+  page.on('response', response => { if (response.status() >= 400) bad.push(`${where(response.url())} ${response.status()}`); });
+  const started = Date.now();
   await page.goto(host.url + '/' + session.fragment);
-  await page.waitForFunction(() => window.__selfInspection || window.__checklistInspection);
+  try {
+    await page.waitForFunction(() => window.__selfInspection || window.__checklistInspection);
+  } catch (error) {
+    const seen = await page.evaluate(() => ({ ready: document.readyState, step: document.body?.dataset.step, checklist: document.body?.dataset.checklist, flow: document.body?.dataset.flow, resources: performance.getEntriesByType('resource').length })).catch(failure => failure.name);
+    throw new Error(`${error.message}\nstart diagnostics after ${Date.now() - started}ms: ${JSON.stringify({ taskId, seen, pending: [...pending], failed, bad, requested: log.requests.length, problems: log.problems })}`);
+  }
   return { receiver, session, invite, context, page, log };
 }
 const count = (log, suffix, method = 'POST') => log.requests.filter(r => r.method === method && r.url.endsWith(suffix)).length;

@@ -63,16 +63,18 @@ const openPage = async ({ viewport = { width: 390, height: 844 }, fake, url = '/
   page.on('request', request => requests.push({ url: request.url(), method: request.method() }));
   if (prepare) await prepare(page);
   // What was still loading when a page never started: the timeout alone says nothing about why.
-  const pending = new Set();
+  const pending = new Set(), bad = [], failed = [];
   page.on('request', request => pending.add(request.url()));
-  for (const event of ['requestfinished', 'requestfailed']) page.on(event, request => pending.delete(request.url()));
+  page.on('requestfinished', request => pending.delete(request.url()));
+  page.on('requestfailed', request => { pending.delete(request.url()); failed.push(`${request.url()} ${request.failure()?.errorText}`); });
+  page.on('response', response => { if (response.status() >= 400) bad.push(`${response.url()} ${response.status()}`); });
   const started = Date.now();
   await page.goto(host + url);
   try {
     await page.waitForFunction(() => window.__selfInspection || window.__checklistInspection);
   } catch (error) {
     const seen = await page.evaluate(() => ({ ready: document.readyState, step: document.body?.dataset.step, resources: performance.getEntriesByType('resource').length })).catch(failure => failure.name);
-    throw new Error(`${error.message}\nstart diagnostics after ${Date.now() - started}ms: ${JSON.stringify({ url, seen, pending: [...pending], requested: requests.length, problems })}`);
+    throw new Error(`${error.message}\nstart diagnostics after ${Date.now() - started}ms: ${JSON.stringify({ url, seen, pending: [...pending], failed, bad, requested: requests.length, problems })}`);
   }
   return { page, context, problems, requests };
 };
