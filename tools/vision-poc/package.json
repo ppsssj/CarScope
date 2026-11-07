@@ -1,0 +1,19 @@
+{
+  "name": "carscope-vision-poc",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "P12-B washer-fluid-cap detection PoC. Local only, not part of the mobile page, the app or any deployment.",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "serve": "node server.mjs",
+    "check": "node --check server.mjs && node --check src/detection-contract.mjs && node --check src/dataset.mjs && node --check src/evaluate.mjs && node --check public/poc.mjs && node --check public/detector-runtime.mjs && node --check scripts/dataset-status.mjs && node --check scripts/evaluate.mjs",
+    "test": "node --test test/*.test.mjs",
+    "test:browser": "node test/poc-browser.mjs",
+    "measure:runtime": "node test/runtime-smoke.mjs",
+    "dataset:status": "node scripts/dataset-status.mjs"
+  },
+  "dependencies": {
+    "@mediapipe/tasks-vision": "1.2.2"
+  }
+}

@@ -4,6 +4,10 @@
 
 워셔액 주입구의 역할, 찾아볼 영역, 구별 특징, 안전 안내와 확대 가능한 그림을 점검 시작과 위치 찾기·체크리스트 화면에 접힌 형태로 넣었다. 부품 ID 기준 데이터라 다른 부품도 같은 화면을 쓴다. **실제 사진은 없고 직접 그린 설명용 그림 2장으로 대체했으며 `PHOTO_NEEDED`다. Z Flip8과 Render 운영 확인은 NOT_RUN이다.** [설계와 필요한 사진](p12-a-part-photo-guide.md), [증거 인덱스](evidence/p12-a/README.md).
 
+## P12-B — 워셔액 주입구 AI 탐지 PoC
+
+사진에서 워셔액 주입구 후보를 표시하고 사용자가 확인하는 독립 PoC와 데이터셋 게이트, 평가 도구를 `tools/vision-poc`에 추가했다. 런타임은 MediaPipe로 선택했고 학습 도구는 미정이다. **권한과 라벨이 확인된 이미지가 없어 `DATASET_REQUIRED`이며 학습과 탐지 성능은 없다. Z Flip8은 `NOT_MEASURED`다.** 모바일 화면, QR, 결과 계약, WebXR, 배포는 바꾸지 않았다. [설계와 수집 계획](p12-b-vision-poc.md), [증거 인덱스](evidence/p12-b/README.md).
+
 ## P11-XR — WebXR 모바일 점검 통합
 
 P9-XR-C의 3D AR 위치 찾기를 P11 화면의 점검 방법 선택에 통합하고, Render에서 환경변수 없이 별도 진입점과 Start Command로만 켜지는 경로를 준비했다. 기본은 꺼져 있고 워셔액만 대상이다. QR, 인증, 세션, 결과 계약은 바꾸지 않았다. **Render 배포·활성화는 하지 않았고 승인 항목이 남아 있다. Z Flip8과 실차는 NOT_RUN이다.** [설계와 승인 항목](p11-xr-webxr-render-entry.md), [증거 인덱스](evidence/p11-xr/README.md).
