@@ -9,6 +9,7 @@ import {isChecklistTask,parseInspectionHandoff,taskLinks,WASHER_TASK} from './in
 import {prepareChecklistPage,startChecklistPage} from './checklist-page.mjs';
 import {renderSummary as summary,renderOutcome,mountLocationGuide} from './inspection-ui.mjs';
 import {WASHER_OUTCOME,REPORT_NOTE} from './inspection-copy.mjs';
+import {mountPartGuide} from './part-guide.mjs';
 
 export function prepareInspectionPage(handoff){if(handoff.valid&&isChecklistTask(handoff.task))prepareChecklistPage(handoff.task,{locked:handoff.source==='qr-sync'});}
 export async function startInspectionPage(options={}){const handoff=options.handoff??parseInspectionHandoff(location.hash);
@@ -22,6 +23,7 @@ const $ = id => document.getElementById(id);
 if(handoff.source!=='qr-sync'){const more=document.createElement('details'),title=document.createElement('summary'),nav=document.createElement('nav');title.textContent='다른 부품 점검하기';nav.className='task-links';nav.setAttribute('aria-label','다른 부품 점검');for(const t of taskLinks()){const a=document.createElement('a');a.href=t.href;a.textContent=t.label;nav.append(a);}more.append(title,nav);$('step-intro').append(more);}
 const video = $('video');
 mountLocationGuide(WASHER_TASK,$('camera'));
+mountPartGuide(WASHER_TASK.id,$('step-intro').querySelector('details.help'));
 const frame = document.createElement('canvas'), frameContext = frame.getContext('2d', { willReadFrequently: true });
 let state = initialState();
 let lastStatus = '', misses = 0, candidates = [], camera;

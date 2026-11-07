@@ -1,4 +1,5 @@
 // Shared DOM presentation primitive; no storage, task policy, transport or HTML interpolation.
+import {extendLocationGuide} from './part-guide.mjs';
 export function renderSummary(dl,rows){dl.replaceChildren(...rows.flatMap(([key,value,cls,edit])=>{const dt=document.createElement('dt'),dd=document.createElement('dd'),text=document.createElement('span');dt.textContent=key;text.textContent=value;if(cls)text.className=cls;dd.append(text);
   if(edit){const b=document.createElement('button');b.type='button';b.className='edit';b.textContent='수정';b.setAttribute('aria-label',`${key} 수정`);b.onclick=edit;dd.append(b);}return [dt,dd];}));}
 export function actionGate(now=()=>performance.now()){let until=-Infinity;return (action,ms=350)=>{const t=now();if(t<until)return false;const changed=action();if(changed)until=t+ms;return changed;};}
@@ -20,5 +21,6 @@ export function mountLocationGuide(task, after) {
   if(task.id.startsWith('tire.')){
     const caption=document.createElement('p');caption.className='fine';caption.textContent='위쪽이 차량 앞입니다. 차량을 마주 보고 선 방향과 좌우가 다를 수 있습니다.';guide.append(wheelMap(task.id),caption);
   }
+  extendLocationGuide(task.id,guide);
   after.after(guide);
 }
