@@ -25,7 +25,7 @@
 | 임계값 | OWLv2 0.1, Grounding DINO 0.3, OmDet-Turbo 0.3 |
 | 기준 | Recall ≥ 0.8, Precision ≥ 0.8, 검은 캡 탐지, 혼동 부품 오인 0 |
 
-사진은 #102 `343f33b`의 `exploratory-commons.json`(SHA-256 앞자리 `81821629e823157e`)이다. YOLOv8과 색상 규칙의 값은 P12-C의 `run2/results.json`, `run1/baseline-results.json`에서 다시 계산했다. Roboflow는 이번에 호출하지 않았다.
+사진은 #102 `343f33b`의 `exploratory-commons.json` 복사본(파일 SHA-256 앞자리 `81821629e823157e`)으로 실행했다. 이 목록은 이후 #102 병합으로 `tools/vision-poc/dataset/`에 들어왔고 JSON 내용이 같음을 확인했다. YOLOv8과 색상 규칙의 값은 P12-C의 `run2/results.json`, `run1/baseline-results.json`에서 다시 계산했다. Roboflow는 이번에 호출하지 않았다.
 
 | 모델 | 저장소 | 리비전 |
 |---|---|---|
@@ -86,6 +86,8 @@
 |---|---|---|
 | 전체 Node 테스트 | `npm test` | PASS 68, FAIL 0 |
 | 비교 스크립트 왕복 | `test/zero-shot-compare.test.mjs` | 포함. 합성 수치만 사용 |
+| `main`(P12-A3, P12-C) 병합 후 재실행 | `npm test` | PASS 104, FAIL 0 (P12-C 테스트 포함) |
+| 병합 후 비교 재계산 | `scripts/zero-shot-compare.mjs` | 저장소의 사진 목록으로 다시 계산. `run1/compare.json`과 바이트 단위로 동일. 모델은 다시 실행하지 않음 |
 
 CI는 모델과 사진 없이 판정 코드만 시험한다. **CI 성공은 모델 추론의 증거가 아니다.** Python 추론 스크립트는 CI에서 실행되지 않고 이번 실행으로만 확인했다.
 

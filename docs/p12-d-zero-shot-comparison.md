@@ -129,18 +129,18 @@ i5-4690 CPU 4스레드에서 측정했다(사진당 중앙값, `contrast`). 휴�
 
 ## 재현
 
-PR #102가 아직 병합되지 않아 이 브랜치는 그 코드를 포함하지 않는다. 사진 목록은 #102의 `343f33b`에서 저장소 밖으로 복사했다.
+사진 목록은 P12-C(PR #102)에서 병합된 `tools/vision-poc/dataset/exploratory-commons.json`이다. 실행 당시에는 #102가 미병합이어서 내용이 같은 저장소 밖 복사본(`343f33b`)을 썼다. YOLOv8과 색상 규칙의 원본 결과는 저장소 밖 P12-C 실행 폴더에 있다.
 
 ```powershell
-python -m venv C:\CarScope-External\p12-d\venv
-C:\CarScope-External\p12-d\venv\Scripts\pip install torch==2.15.0 --index-url https://download.pytorch.org/whl/cpu
-C:\CarScope-External\p12-d\venv\Scripts\pip install -r tools\vision-poc\zero-shot\requirements.txt
-git show 343f33b:tools/vision-poc/dataset/exploratory-commons.json > C:\CarScope-External\p12-d\exploratory-commons.json
-Set-Location tools\vision-poc
+python -m venv C:\CarScope-External\p12-denv
+C:\CarScope-External\p12-denv\Scripts\pip install torch==2.15.0 --index-url https://download.pytorch.org/whl/cpu
+C:\CarScope-External\p12-denv\Scripts\pip install -r toolsision-poc\zero-shotequirements.txt
+Set-Location toolsision-poc
+node scripts/fetch-exploratory.mjs dataset/exploratory-commons.json C:\CarScope-External\p12-c\exploratory
 $env:HF_HOME='C:\CarScope-External\p12-d\hf'
 foreach ($model in 'owlv2','grounding-dino-tiny','omdet-turbo') {
-  C:\CarScope-External\p12-d\venv\Scripts\python -B zero-shot\run_zero_shot.py --model $model --manifest C:\CarScope-External\p12-d\exploratory-commons.json --images C:\CarScope-External\p12-c\exploratory --out "C:\CarScope-External\p12-d\run1\$model.json"
+  C:\CarScope-External\p12-denv\Scripts\python -B zero-shotun_zero_shot.py --model $model --manifest dataset\exploratory-commons.json --images C:\CarScope-External\p12-c\exploratory --out "C:\CarScope-External\p12-dun1\$model.json"
 }
-$E='C:\CarScope-External\p12-d\run1'
-node scripts/zero-shot-compare.mjs C:\CarScope-External\p12-d\exploratory-commons.json $E\compare.json --zero-shot "$E\owlv2.json,$E\grounding-dino-tiny.json,$E\omdet-turbo.json" --roboflow C:\CarScope-External\p12-c\run2\results.json --colour C:\CarScope-External\p12-c\run1\baseline-results.json
+$E='C:\CarScope-External\p12-dun1'
+node scripts/zero-shot-compare.mjs dataset\exploratory-commons.json $E\compare.json --zero-shot "$E\owlv2.json,$E\grounding-dino-tiny.json,$E\omdet-turbo.json" --roboflow C:\CarScope-External\p12-cun2esults.json --colour C:\CarScope-External\p12-cun1aseline-results.json
 ```
