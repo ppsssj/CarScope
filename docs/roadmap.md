@@ -1,5 +1,9 @@
 # 로드맵 및 진입 조건
 
+## P13-F — Roboflow + GPT 실험 모바일 연결
+
+별도 Vision CLI에서만 계정/권리/처리/비용 확인을 뜻하는 명시적 Roboflow 승인으로 4부품 탐지를 연결한다. 2부품은 수동 전용이며 6부품 모두 수동 지정 + GPT를 지원한다. Debug 앱의 명시적 빌드 Origin과 별도 enrollment로 같은 QR 인증을 사용한다. 기존 운영 진입점과 기본 거부는 유지한다. 실제 API·Render·휴대폰은 자격/계정/사진 확인 전 NOT_RUN이며 MOCK을 실제 성공으로 집계하지 않는다. [설정·1+1 실행](p13-f-live-vision-e2e.md), [증거](evidence/p13-f/README.md).
+
 ## P13-E — 실제 모바일 Vision 실험 서비스 연결
 
 기본 Render 진입점/DENY_DEFAULT는 그대로 두고 별도 Vision 명령에서만 6부품 직접 지정·Crop·OpenAI 동의·분석·확인을 제공한다. PostgreSQL 일/월 시도 상한과 QR별 분산 lease를 사용하며 Roboflow는 권리 승인 전 CLI에서 비활성이다. 실제 QR·PostgreSQL·Chrome과 outbound MOCK으로 검증하며 **유료 호출·배포·비밀 변수·실기기 시험은 NOT_RUN**이다. [구조·설정·실기기 절차](p13-e-real-mobile-vision.md), [증거](evidence/p13-e/README.md).

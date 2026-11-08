@@ -63,8 +63,8 @@ export async function probeDeployment({ origin, approveRateWindowWrites = false,
       : check('RENDER_WEBXR_GUIDE', 'FAIL', 'health reports an unknown mobile guide'));
   }
   if (Object.hasOwn(body, 'vision')) {
-    out.push(body.vision === 'EXPERIMENT' && body.detection === 'OFF'
-      ? check('RENDER_VISION_EXPERIMENT', 'MANUAL', 'manual-region Vision experiment is running: confirm operator approval, private schema and durable call budgets; no Roboflow activation')
+    out.push(body.vision === 'EXPERIMENT' && (body.detection === 'OFF' || body.detection === 'EXPERIMENT' && body.detectionModel === 'engine-bay-parts/1')
+      ? check('RENDER_VISION_EXPERIMENT', 'MANUAL', 'Vision experiment is running: detection=' + body.detection + '; confirm operator/account/data-processing approval, private schema and durable per-provider call budgets')
       : check('RENDER_VISION_EXPERIMENT', 'FAIL', 'unknown or unapproved Vision/detection mode'));
   }
   if (!approveRateWindowWrites) {

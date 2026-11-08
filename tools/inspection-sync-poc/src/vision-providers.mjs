@@ -11,7 +11,18 @@ export function experimentVisionProvider({ env, budget, fetchImpl }) {
   return Object.freeze({ ...adapter, analyzePart: budgetedCall({ budget, provider: 'openai', call: adapter.analyzePart }) });
 }
 
-// Prepared for four supported parts, but never called by the Render CLI. Rights/data-processing approval is still pending.
+// Only the separate experiment may enable this, after account/rights/data-processing approval.
+export function detectionEnvironment(env) {
+  if (!env.CARSCOPE_ROBOFLOW_APPROVAL) return { enabled: false };
+  if (env.CARSCOPE_ROBOFLOW_APPROVAL !== 'OPERATOR_APPROVED' || typeof env.ROBOFLOW_API_KEY !== 'string' || !env.ROBOFLOW_API_KEY.trim()) throw new Error('ROBOFLOW_OPERATOR_CONFIGURATION_REQUIRED');
+  return { enabled: true };
+}
+
+export function experimentDetectionProvider({ env, budget, fetchImpl }) {
+  if (!detectionEnvironment(env).enabled) return null;
+  return approvedDetectionProvider({ rightsApproved: true, apiKey: env.ROBOFLOW_API_KEY, budget, fetchImpl });
+}
+
 export function approvedDetectionProvider({ rightsApproved = false, apiKey, budget, fetchImpl } = {}) {
   if (rightsApproved !== true) throw new Error('ROBOFLOW_RIGHTS_APPROVAL_REQUIRED');
   const adapter = hostedDetectionProvider({ apiKey, parseResponse: parseRoboflowResponse,

@@ -13,11 +13,13 @@ import { MOBILE_HEADERS, serveMobilePage } from './mobile-page.mjs';
 import { httpsOrigin } from '../bin/host-readiness.mjs';
 import { openRenderPool, renderEnvironment, stopOnSignal } from './render-stateful.mjs';
 import { PostgreSQLVisionBudget } from './vision-budget.mjs';
-import { experimentVisionProvider } from './vision-providers.mjs';
+import { experimentVisionProvider, experimentDetectionProvider, detectionEnvironment } from './vision-providers.mjs';
+import { DETECTION_MODEL_ID } from '../../mobile-ar-poc/public/part-detection.mjs';
 import { assertVisionProvider } from './part-analysis-route.mjs';
 import { assertPrivateSchemaName } from './database-config.mjs';
 
 export function visionEnvironment(env = process.env) {
+  detectionEnvironment(env); // Refuse incomplete or misspelled detector approval before opening a database.
   assertPrivateSchemaName(env.CARSCOPE_DB_SCHEMA);
   const integer = value => typeof value === 'string' && /^[1-9][0-9]{0,6}$/.test(value) ? Number(value) : NaN;
   const daily = integer(env.CARSCOPE_VISION_DAILY_CALL_LIMIT), monthly = integer(env.CARSCOPE_VISION_MONTHLY_CALL_LIMIT);
@@ -52,7 +54,8 @@ export async function startRenderVisionExperiment({ pool, publicOrigin, provider
           if (expectedSchema !== null && reached.rows[0]?.name !== expectedSchema) throw new Error('DATABASE_SCHEMA_MISMATCH');
           res.writeHead(200, { ...headers, 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ status: 'UP', mode: simStore ? 'STATEFUL_AVD_SIMULATION' : 'STATEFUL_DENY_DEFAULT',
-            sessionCreation: simStore ? 'OPERATOR_APPROVED_AVD_ONLY' : 'DENIED', vision: 'EXPERIMENT', detection: partDetection ? 'EXPERIMENT' : 'OFF' })); return;
+            sessionCreation: simStore ? 'OPERATOR_APPROVED_AVD_ONLY' : 'DENIED', vision: 'EXPERIMENT', detection: partDetection ? 'EXPERIMENT' : 'OFF',
+            ...(partDetection ? { detectionModel: DETECTION_MODEL_ID } : {}) })); return;
         }
         if (!edgeSecure(req)) { res.writeHead(403, headers); res.end(); return; }
         if (!req.url?.startsWith('/') || req.url.startsWith('//') || req.url.includes('\\') || req.url.includes('#') ||
@@ -86,10 +89,11 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     pool = await openRenderPool(base.connection);
     const budget = new PostgreSQLVisionBudget({ pool, ...limits, expectedSchema: base.expectedSchema });
     const provider = experimentVisionProvider({ env: process.env, budget });
+    const detector = experimentDetectionProvider({ env: process.env, budget });
     const app = await startRenderVisionExperiment({ pool, provider, budget, publicOrigin: base.publicOrigin,
+      partDetection: detector ? { provider: detector, admission: budget } : null,
       host: '0.0.0.0', port: base.port, expectedSchema: base.expectedSchema, enableAvdSimulation: base.enableAvdSimulation });
-    // Roboflow stays off in this command, even if a key or an enabling variable is present.
-    console.log('CarScope Vision experiment ready; manual regions; detection=OFF; existing session authority unchanged');
+    console.log('CarScope Vision experiment ready; detection=' + (detector ? 'EXPERIMENT' : 'OFF') + '; existing session authority unchanged');
     stopOnSignal(app);
   } catch {
     if (pool) await pool.end().catch(() => {});

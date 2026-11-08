@@ -19,7 +19,7 @@ const request = (port, route, { method = 'GET', headers = {}, body } = {}) => ne
   }); q.on('error', reject); q.end(body);
 });
 
-test('real Vision CLI starts with explicit config, keeps creation/history denied, refuses ingress tricks and never calls AI at startup', { skip, timeout:30_000 }, async t => {
+for (const detection of [false, true]) test('real Vision CLI detection=' + detection + ' keeps creation/history denied and never calls AI at startup', { skip, timeout:30_000 }, async t => {
   const db = await visionDatabase(); t.after(() => db.close());
   const owned = tempFixture(); t.after(() => owned.cleanup());
   const preload = join(owned.dir, 'no-network.mjs');
@@ -30,6 +30,7 @@ test('real Vision CLI starts with explicit config, keeps creation/history denied
     CARSCOPE_DB_SCHEMA:db.schema, PGOPTIONS:'-c search_path=' + db.schema, PORT:String(port),
     CARSCOPE_VISION_APPROVAL:'OPERATOR_APPROVED', CARSCOPE_VISION_DAILY_CALL_LIMIT:'1', CARSCOPE_VISION_MONTHLY_CALL_LIMIT:'2',
     OPENAI_API_KEY:'synthetic-cli-key', OPENAI_VISION_MODEL:'synthetic-model', ROBOFLOW_API_KEY:'ignored-synthetic-key', ENABLE_ROBOFLOW:'true' };
+  if (detection) env.CARSCOPE_ROBOFLOW_APPROVAL = 'OPERATOR_APPROVED';
   const child = spawn(process.execPath, ['--import',pathToFileURL(preload).href,entry], { env, stdio:['ignore','pipe','pipe'], windowsHide:true });
   let output = ''; child.stdout.on('data', c => { output += c; }); child.stderr.on('data', c => { output += c; });
   const closed = new Promise(resolve => child.once('close', resolve)); t.after(async () => { child.kill(); await closed; });
@@ -39,8 +40,10 @@ test('real Vision CLI starts with explicit config, keeps creation/history denied
     await new Promise(resolve => setTimeout(resolve,50));
   }
   const health = JSON.parse((await request(port,'/healthz')).text);
-  assert.equal(health.mode,'STATEFUL_DENY_DEFAULT'); assert.equal(health.sessionCreation,'DENIED'); assert.equal(health.detection,'OFF');
-  const home = await request(port,'/'); assert.match(home.text,/data-part-analysis="enabled"/); assert.doesNotMatch(home.text,/data-part-detection="enabled"/);
+  assert.equal(health.mode,'STATEFUL_DENY_DEFAULT'); assert.equal(health.sessionCreation,'DENIED'); assert.equal(health.detection,detection ? 'EXPERIMENT' : 'OFF');
+  if (detection) assert.equal(health.detectionModel,'engine-bay-parts/1');
+  const home = await request(port,'/'); assert.match(home.text,/data-part-analysis="enabled"/);
+  assert.equal(/data-part-detection="enabled"/.test(home.text),detection);
   assert.equal((await request(port,'/v1/sessions',{ method:'POST', headers:{ 'Content-Type':'application/json' }, body:'{"taskId":"washer-fluid"}' })).status,403);
   assert.equal((await request(port,'/v1/inspection-records')).status,403);
   assert.equal((await request(port,'/',{ headers:{ Host:'evil.example' } })).status,403);
@@ -48,7 +51,7 @@ test('real Vision CLI starts with explicit config, keeps creation/history denied
   assert.equal((await request(port,'/',{ headers:{ 'X-Forwarded-Proto':'http' } })).status,403);
   assert.equal((await request(port,'//evil.example/')).status,400);
   assert.equal((await request(port,'/?enable=true')).status,400);
-  assert.equal((await request(port,'/v1/part-detections/washer-fluid-cap',{ method:'POST' })).status,404);
+  assert.equal((await request(port,'/v1/part-detections/washer-fluid-cap',{ method:'POST' })).status,detection ? 428 : 404);
   assert.equal((await db.admin.query('SELECT count(*) AS n FROM ' + db.schema + '.cs_vision_calls')).rows[0].n,'0');
   assert.doesNotMatch(output,/FORBIDDEN_EXTERNAL_FETCH|synthetic-cli-key|ignored-synthetic-key/);
   child.kill(); await closed;

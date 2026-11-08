@@ -39,7 +39,7 @@ export function withTimeout(work, ms) {
   return Promise.race([work, new Promise((_, reject) => { timer = setTimeout(() => reject(new Error('timeout')), ms); })]).finally(() => clearTimeout(timer));
 }
 
-export function createPartDetectionRoute({ provider, limits = DETECTION_LIMITS, clock = () => new Date() }) {
+export function createPartDetectionRoute({ provider, limits = DETECTION_LIMITS, clock = () => new Date(), admission = null }) {
   if (typeof provider?.detect !== 'function') throw new Error('PART_DETECTION_PROVIDER_REQUIRED');
   let inFlight = 0;
   return async function handle({ req, partId, token, service, limiter }) {
@@ -55,14 +55,19 @@ export function createPartDetectionRoute({ provider, limits = DETECTION_LIMITS, 
     if (inFlight >= limits.maxInFlight) throw new SyncError(CODE.BUSY, 429);
     inFlight++;
     const abort = new AbortController(), stop = () => abort.abort();
+    let lease;
     req.socket?.once('close', stop);
     try {
+      lease = await admission?.acquire(token);
       const image = await readImage(req, limits.maxBytes);
       const size = jpegSize(image);
       if (!size || size.width < limits.minSide || size.height < limits.minSide || size.width > limits.maxSide || size.height > limits.maxSide) throw new SyncError(CODE.IMAGE, 422);
+      const current = await service.detectionScope(token);
+      if (current.taskId !== scope.taskId || current.sessionState !== 'CLAIMED' || abort.signal.aborted) throw new SyncError(ERRORS.INVALID_STATE, 409);
       let parsed;
       // An upstream message could quote the request or the key, so no part of a failure leaves here.
-      try { parsed = await withTimeout(provider.detect({ image }, { signal: abort.signal }), limits.timeoutMs); } catch { throw new SyncError(CODE.UNAVAILABLE, 503); }
+      try { parsed = await withTimeout(provider.detect({ image }, { signal: abort.signal }), limits.timeoutMs); }
+      catch (error) { if (error?.code === 'VISION_BUDGET_EXHAUSTED') throw new SyncError('VISION_BUDGET_EXHAUSTED', 429); throw new SyncError(CODE.UNAVAILABLE, 503); }
       let candidates;
       try {
         candidates = candidatesFor(entry.partId, parsed);
@@ -72,7 +77,7 @@ export function createPartDetectionRoute({ provider, limits = DETECTION_LIMITS, 
       // P12-F: one record a later step can track from: which model, which class, when, on what picture, and how to read the boxes.
       const detection = { modelId: DETECTION_MODEL_ID, modelClass: entry.modelClass, coordinates: DETECTION_COORDINATES, image: { width: size.width, height: size.height }, inferredAt: clock().toISOString() };
       return { partId: entry.partId, status: entry.status, candidates, detection };
-    } finally { abort.abort(); req.socket?.off('close', stop); inFlight--; }
+    } finally { abort.abort(); await lease?.release().catch(() => {}); req.socket?.off('close', stop); inFlight--; }
   };
 }
 
@@ -81,7 +86,7 @@ export function createPartDetectionRoute({ provider, limits = DETECTION_LIMITS, 
  * Nothing here calls the network by itself, and the key stays in this closure.
  */
 export function hostedDetectionProvider({ inferImage, parseResponse, apiKey, modelId = DETECTION_MODEL_ID, timeoutMs = DETECTION_LIMITS.timeoutMs }) {
-  if (typeof inferImage !== 'function' || typeof parseResponse !== 'function' || !apiKey) throw new Error('PART_DETECTION_PROVIDER_CONFIG');
+  if (typeof inferImage !== 'function' || typeof parseResponse !== 'function' || !apiKey || modelId !== DETECTION_MODEL_ID) throw new Error('PART_DETECTION_PROVIDER_CONFIG');
   return Object.freeze({
     async detect({ image }, { signal } = {}) {
       const answer = await inferImage({ modelId, apiKey, image, timeoutMs, signal });

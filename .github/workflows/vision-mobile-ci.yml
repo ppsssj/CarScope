@@ -12,7 +12,7 @@ concurrency:
   cancel-in-progress: true
 jobs:
   mobile-vision:
-    name: Real QR and PostgreSQL with MOCK OpenAI (no paid calls)
+    name: Real QR and PostgreSQL with MOCK Roboflow + OpenAI (no paid calls)
     runs-on: ubuntu-latest
     timeout-minutes: 15
     services:
@@ -47,4 +47,4 @@ jobs:
       - run: npm run test:browser:vision:render
         working-directory: tools/mobile-ar-poc
         env:
-          POC_EVIDENCE_DIR: ${{ runner.temp }}/p13-e-vision
+          POC_EVIDENCE_DIR: ${{ runner.temp }}/p13-f-vision

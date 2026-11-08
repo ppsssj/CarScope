@@ -126,9 +126,11 @@ export class SyncClient {
   }
 
   /** One photo for one part, with the consent the page has just collected. No retry: each try is an outside call on a person's photo. */
-  async detectPart(partId, blob, { consent, timeoutMs = 15000 } = {}) {
+  async detectPart(partId, blob, { consent, signal, timeoutMs = 15000 } = {}) {
     if (this.#disposed || !this.#submitToken) return { ok: false, code: 'NOT_CONNECTED' };
     const ctrl = new AbortController();
+    if (signal?.aborted) return { ok: false, code: 'CANCELLED' };
+    const cancel = () => ctrl.abort(); signal?.addEventListener('abort', cancel, { once: true });
     this.#controllers.add(ctrl);
     const timer = setTimeout(() => ctrl.abort(), timeoutMs);
     try {
@@ -136,14 +138,15 @@ export class SyncClient {
         method: 'POST', signal: ctrl.signal, credentials: 'omit', cache: 'no-store', referrerPolicy: 'no-referrer', redirect: 'error',
         headers: { Authorization: `Bearer ${this.#submitToken}`, 'Content-Type': 'image/jpeg', 'X-CarScope-External-Processing': consent }, body: blob,
       });
-      if (res.status === 429) return { ok: false, code: 'RATE_LIMITED' };
+      if (res.status === 429) { const error = await res.json().catch(() => null); return { ok: false, code: error?.error?.code === 'VISION_BUDGET_EXHAUSTED' ? 'BUDGET_EXHAUSTED' : 'RATE_LIMITED' }; }
+      if (res.status === 409) { const error = await res.json().catch(() => null); return { ok: false, code: error?.error?.code === 'PART_ANALYSIS_IN_PROGRESS' ? 'IN_PROGRESS' : 'NOT_CONNECTED' }; }
       if (res.status === 413) return { ok: false, code: 'TOO_LARGE' };
       if (res.status === 422 || res.status === 415) return { ok: false, code: 'UNREADABLE' };
       if (res.status === 401 || res.status === 403 || res.status === 404 || res.status === 409 || res.status === 410) return { ok: false, code: 'NOT_CONNECTED' };
       const json = res.ok ? await res.json() : null;
       if (!Array.isArray(json?.candidates)) return { ok: false, code: 'UNAVAILABLE' };
       return { ok: true, candidates: json.candidates, detection: json.detection ?? null };
-    } catch { return { ok: false, code: 'UNAVAILABLE' }; } finally { clearTimeout(timer); this.#controllers.delete(ctrl); }
+    } catch { return { ok: false, code: 'UNAVAILABLE' }; } finally { clearTimeout(timer); this.#controllers.delete(ctrl); signal?.removeEventListener('abort', cancel); }
   }
 
   /** Session state as seen by the phone (e.g. ACCEPTED after the vehicle side accepted). */

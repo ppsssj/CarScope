@@ -5,6 +5,8 @@ import { detectionForTask, initialDetection, offersDetection, PHASE, reduceDetec
 const MAX_INPUT_BYTES = 15 * 1024 * 1024, MAX_SIDE = 1280, JPEG_QUALITY = 0.85;
 const el = (tag, className, text) => { const node = document.createElement(tag); if (className) node.className = className; if (text != null) node.textContent = text; return node; };
 const FAILURE = Object.freeze({
+  BUDGET_EXHAUSTED: 'AI 위치 찾기의 오늘 또는 이번 달 사용 한도에 도달했어요. 직접 영역을 지정하거나 기존 점검을 이어가 주세요.',
+  IN_PROGRESS: '이 QR에서 AI 요청을 처리하고 있어요. 잠시 기다리거나 직접 점검을 이어가 주세요.',
   RATE_LIMITED: '요청이 많아요. 잠시 후 다시 시도해 주세요.',
   TOO_LARGE: '사진이 너무 커요. 다른 사진으로 시도해 주세요.',
   UNREADABLE: '이 사진을 읽지 못했어요. 다른 사진으로 시도해 주세요.',
@@ -51,7 +53,7 @@ export function mountPartDetection({ taskId, detector, introBefore, locationAfte
   const manualOnly = !detectionEnabled || !offersDetection(entry);
   let localChoice = manualOnly;
   if (manualOnly && !(analysis && analysisOffered)) return null;
-  let state = initialDetection(entry.partId), source = null, original = null, historyPushed = false;
+  let state = initialDetection(entry.partId), source = null, original = null, historyPushed = false, controller = null;
 
   const dialog = el('dialog', 'part-detect-dialog'); dialog.id = 'part-detect'; dialog.setAttribute('aria-labelledby', 'part-detect-title');
   const bar = el('div', 'part-guide-zoom-bar'), close = el('button', null, '점검으로 돌아가기'); close.id = 'part-detect-close'; close.type = 'button'; bar.append(close);
@@ -76,7 +78,8 @@ export function mountPartDetection({ taskId, detector, introBefore, locationAfte
   const localNote = el('p', 'card', '사진을 고르는 것만으로는 어디에도 보내지 않아요. 직접 지정한 영역의 Crop을 확인하고 분석 동의 후에만 보내요.');
   if (!manualOnly) { detectionInfo.append(
     el('p', 'lead', '엔진룸 사진 한 장에서 부품 후보를 찾아 표시해요. 후보일 뿐이고, 부품을 확정하지 않아요.'),
-    el('p', 'card warn', '이 사진은 CarScope 서버를 거쳐 외부 AI 서비스(Roboflow)로 보내져요. CarScope는 사진을 저장하지 않아요. 외부 서비스의 처리·보관 조건은 아직 확인하지 못했어요. 번호판이나 사람이 나오지 않게 해 주세요.'),
+    el('p', 'card warn', '이 사진은 CarScope 서버를 거쳐 외부 AI 서비스(Roboflow)로 보내져요. CarScope는 사진을 저장하지 않아요. 외부 서비스에는 계정별 처리·보관 및 데이터 이용 조건이 적용돼요. 번호판이나 사람이 나오지 않게 해 주세요.'),
+    el('p', 'fine', '위치 찾기 모델: Stephens Workspace · engine-bay-parts/1 · 공개 데이터셋 MIT. 후보는 사용자가 직접 확인해 주세요.'),
     agreeLabel); consent.append(detectionInfo, direct, localNote, row, camera, library); }
 
   const busy = el('p', 'part-detect-status', manualOnly ? '사진을 준비하고 있어요…' : '사진을 분석하고 있어요…'); busy.id = 'part-detect-busy'; busy.setAttribute('role', 'status');
@@ -115,7 +118,7 @@ export function mountPartDetection({ taskId, detector, introBefore, locationAfte
   }
   const dispatch = event => { state = reduceDetection(state, event); render(); };
   // The photo lives only in memory: the file reference and the small canvas. Both go when the search ends, restarts or closes.
-  const release = () => { extension?.reset(); if (source) source.width = source.height = 0; source = null; original = null; picture.width = picture.height = 0; };
+  const release = () => { controller?.abort(); controller = null; extension?.reset(); if (source) source.width = source.height = 0; source = null; original = null; picture.width = picture.height = 0; };
 
   async function analyze(file) {
     if (localChoice) return prepareLocal(file);
@@ -127,7 +130,8 @@ export function mountPartDetection({ taskId, detector, introBefore, locationAfte
       const shrunk = await shrink(file);
       if (attempt !== state.attempt) return;
       source = shrunk.canvas; original = file;
-      const answer = await detector.detect(entry.partId, shrunk.blob);
+      controller = new AbortController();
+      const answer = await detector.detect(entry.partId, shrunk.blob, { signal: controller.signal });
       if (attempt !== state.attempt) return;
       if (answer.ok) dispatch({ type: 'ANSWER', attempt, candidates: answer.candidates, detection: answer.detection });
       else dispatch({ type: 'FAIL', attempt, code: answer.code });

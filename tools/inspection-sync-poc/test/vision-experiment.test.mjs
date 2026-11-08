@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { visionEnvironment } from '../src/render-vision-experiment.mjs';
-import { experimentVisionProvider, approvedDetectionProvider } from '../src/vision-providers.mjs';
+import { experimentVisionProvider, approvedDetectionProvider, experimentDetectionProvider, detectionEnvironment } from '../src/vision-providers.mjs';
 import { budgetedCall, PostgreSQLVisionBudget } from '../src/vision-budget.mjs';
 import { visionExperimentGate, environmentGate, partAnalysisGate, partDetectionGate, importGraph } from '../preflight/static-gates.mjs';
 import { buildAnalysisPrompt, validateAnalysisResult } from '../../mobile-ar-poc/public/part-analysis.mjs';
@@ -11,10 +11,33 @@ import { LocalTestSessionCreationAuthorizer } from '../src/creation-authorizer.m
 import { ReceiverClient } from '../bin/receiver.mjs';
 import { candidatesFor } from '../../mobile-ar-poc/public/part-detection.mjs';
 import { probeDeployment } from '../preflight/probe.mjs';
+import { createPartDetectionRoute, hostedDetectionProvider } from '../src/part-detection-route.mjs';
+import { Readable } from 'node:stream';
+import { SyncError } from '../src/sessions.mjs';
 
 const env = { CARSCOPE_DB_SCHEMA: 'cs_vision_test', CARSCOPE_VISION_APPROVAL: 'OPERATOR_APPROVED', OPENAI_API_KEY: 'synthetic-key-not-real', OPENAI_VISION_MODEL: 'synthetic-model', CARSCOPE_VISION_DAILY_CALL_LIMIT: '2', CARSCOPE_VISION_MONTHLY_CALL_LIMIT: '5' };
+
+test('detection rechecks QR after upload, shares admission and preserves budget refusal without dispatch', async () => {
+  let scopeReads = 0, acquired = 0, released = 0, calls = 0, expired = true;
+  const route = createPartDetectionRoute({
+    admission:{ acquire:async () => { acquired++; return { release:async () => { released++; } }; } },
+    provider:{ detect:async () => { calls++; throw new SyncError('VISION_BUDGET_EXHAUSTED',429); } },
+  });
+  const request = () => {
+    const req = Readable.from([Buffer.from([255,216,255,192,0,17,8,1,44,1,144,3,1,34,0,2,17,1,3,17,1,255,217])]);
+    req.headers = { 'x-carscope-external-processing':'external-ai-v1','content-type':'image/jpeg' }; return req;
+  };
+  const handle = () => route({ req:request(),partId:'washer-fluid-cap',token:'synthetic-token',
+    service:{ detectionScope:async () => ({ taskId:'washer-fluid',sessionState:expired && ++scopeReads > 1 ? 'CANCELLED' : 'CLAIMED' }) },limiter:{ check:async () => ({ ok:true }) } });
+  await assert.rejects(handle(), error => error.status === 409 || error.code === 'INVALID_STATE');
+  assert.equal(calls,0); assert.equal(acquired,1); assert.equal(released,1);
+  expired = false;
+  await assert.rejects(handle(), error => error.code === 'VISION_BUDGET_EXHAUSTED');
+  assert.equal(calls,1); assert.equal(released,2);
+  assert.throws(() => hostedDetectionProvider({ inferImage:() => {},parseResponse:() => {},apiKey:'synthetic',modelId:'other/1' }),/CONFIG/);
+});
 test('preflight reports the experiment without changing default readiness or probing a paid route', async () => {
-  for (const [extra, expected] of [[{},null],[{ vision:'EXPERIMENT',detection:'OFF' },'MANUAL'],[{ vision:'EXPERIMENT',detection:'EXPERIMENT' },'FAIL']]) {
+  for (const [extra, expected] of [[{},null],[{ vision:'EXPERIMENT',detection:'OFF' },'MANUAL'],[{ vision:'EXPERIMENT',detection:'EXPERIMENT' },'FAIL'],[{ vision:'EXPERIMENT',detection:'EXPERIMENT',detectionModel:'engine-bay-parts/1' },'MANUAL']]) {
     let calls = 0;
     const rows = await probeDeployment({ origin:'https://vision-test.example', request:async (_origin, route) => {
       assert.equal(route,'/healthz'); calls++;
@@ -22,6 +45,22 @@ test('preflight reports the experiment without changing default readiness or pro
     } });
     assert.equal(rows.find(r => r.id === 'RENDER_VISION_EXPERIMENT')?.status ?? null,expected); assert.equal(calls,1);
   }
+});
+
+test('detector activation requires separate exact approval and key, never a generic switch; fixed model and header-only key', async () => {
+  const budget = { reserve: async id => assert.equal(id, 'roboflow') };
+  assert.deepEqual(detectionEnvironment({ ROBOFLOW_API_KEY:'synthetic', ENABLE_ROBOFLOW:'true' }), { enabled:false });
+  assert.equal(experimentDetectionProvider({ env:{}, budget }), null);
+  for (const bad of [{ CARSCOPE_ROBOFLOW_APPROVAL:'true' },{ CARSCOPE_ROBOFLOW_APPROVAL:'OPERATOR_APPROVED' }]) assert.throws(() => detectionEnvironment(bad), /CONFIGURATION_REQUIRED/);
+  let calls = 0;
+  const provider = experimentDetectionProvider({ env:{ CARSCOPE_ROBOFLOW_APPROVAL:'OPERATOR_APPROVED',ROBOFLOW_API_KEY:'synthetic-detect-key' },budget,
+    fetchImpl:async (url, options) => {
+      calls++; assert.equal(url,'https://serverless.roboflow.com/engine-bay-parts/1?confidence=0.05');
+      assert.equal(options.redirect,'error'); assert.equal(options.headers.Authorization,'Bearer synthetic-detect-key');
+      assert.equal(options.body,Buffer.from('jpeg').toString('base64'));
+      return Response.json({ image:{ width:400,height:300 }, predictions:[] });
+    } });
+  assert.deepEqual((await provider.detect({ image:Buffer.from('jpeg') })).predictions,[]); assert.equal(calls,1);
 });
 test('separate bootstrap requires explicit operator configuration and limits; default gates remain OFF', () => {
   assert.deepEqual(visionEnvironment(env), { daily: 2, monthly: 5 });
