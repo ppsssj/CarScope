@@ -1,5 +1,9 @@
 # 로드맵 및 진입 조건
 
+## P13-B — 워셔액 캡 실제 Vision 평가 준비
+
+평가 기준을 먼저 커밋(`f4e89e7`)하고, 사람 정답 입력 화면, 실제 저장 탐지 또는 사람 영역만 쓰는 영역 규칙, Chrome에서 P13-A 코드로 만드는 40%·80% 크롭, 승인 체크리스트가 있는 실행(MOCK/실제 5회 상한)과 채점 도구를 만들었다. P13-A 제품 크롭은 12개 영역 중 11개에서 두 여백이 같은 픽셀이라, 비교는 최소 크기를 64px로 낮춘 평가 전용 갈래로 한다. **판정 `READY_FOR_HUMAN_REVIEW`. 정답 0/26장, 실제 OpenAI 호출 0회, Roboflow 추가 호출 0회.** [준비 상태](p13-b-vision-eval-readiness.md), [기준](p13-b-washer-vision-eval-criteria.md), [증거](evidence/p13-b/README.md).
+
 ## P13-A — 하이브리드 AI 부품 상태 분석 (로컬 PoC)
 
 P12-E/F 위치 후보 뒤에 영역 선택(후보 또는 직접 지정), 원본에서 주변까지 자르는 Crop, 별도 동의, Vision 공급자 인터페이스(OpenAI 어댑터, MOCK), 서버가 검사하는 구조화 결과, 모바일 결과 화면을 붙였다. 분석 프로파일은 워셔액 주입구 하나만 `EXPERIMENTAL`이고 냉각수·브레이크액·퓨즈박스는 `DRAFT`, 12V·저전도는 `UNSUPPORTED`다. **판정 `IMPLEMENTED_LOCAL_POC`. 실제 OpenAI 호출은 `REAL_PROVIDER_NOT_RUN`이고 실제 분석 정확도는 알 수 없다.** Roboflow 추가 호출 0회, 기본 꺼짐(`PART_ANALYSIS_OFF`), Render 불변. [설계와 한계](p13-a-hybrid-vision-inspection.md), [증거 인덱스](evidence/p13-a/README.md).

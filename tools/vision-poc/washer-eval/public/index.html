@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>P13-B 워셔액 캡 정답 검수</title>
+<link rel="stylesheet" href="/truth.css">
+<script type="module" src="/truth.mjs"></script>
+</head>
+<body>
+<header>
+  <h1>워셔액 주입구 정답 검수 · P13-B</h1>
+  <p id="synthetic" class="banner" hidden>합성 시험 데이터예요. 실제 검수가 아니에요.</p>
+  <label class="reviewer">검수자 <input id="reviewer" autocomplete="off" maxlength="80" placeholder="직접 입력"></label>
+  <p id="progress" role="status"></p>
+</header>
+<main>
+  <nav aria-label="사진 목록"><ol id="list"></ol></nav>
+  <section id="work" hidden>
+    <h2 id="title"></h2>
+    <p id="credit" class="fine"></p>
+    <div class="photo-wrap"><canvas id="photo" aria-label="사진과 영역"></canvas></div>
+    <p class="fine">노란 점선: 저장된 실제 탐지(engine-bay-parts/1, 점수 0.4 이상). 초록: P12-G 사람 검수 박스. 하늘색: 지금 고른 영역. 사진 위를 끌면 직접 그려요.</p>
+    <fieldset id="regions"><legend>1. 분석할 영역</legend><div id="region-buttons" class="row"></div></fieldset>
+    <fieldset id="crops"><legend>2. 보낼 사진 미리 보기 (같은 영역, 여백 40% · 80%)</legend>
+      <div class="row crops"><figure><canvas id="crop-m40"></canvas><figcaption id="cap-m40"></figcaption></figure><figure><canvas id="crop-m80"></canvas><figcaption id="cap-m80"></figcaption></figure></div>
+    </fieldset>
+    <fieldset id="answers"><legend>3. 사진만 보고 답하기. 모르면 UNKNOWN</legend>
+      <div class="q" data-key="identification"><span>이 영역이 워셔액 주입구 캡인가요?</span></div>
+      <div class="q" data-key="capMissing"><span>캡이 없어 보이나요? (누락)</span></div>
+      <div class="q" data-key="capOpen"><span>캡이 열려 있어 보이나요? (개방)</span></div>
+      <div class="q" data-key="capDamage"><span>캡이나 주입구에 손상이 보이나요?</span></div>
+      <div class="q" data-key="judgeable"><span>이 사진으로 캡 상태를 판단할 수 있나요?</span></div>
+      <div class="q" data-key="personalData"><span>두 미리 보기에 번호판·사람·개인 정보가 보이나요?</span></div>
+      <label class="note">메모 <textarea id="note" maxlength="500" rows="2"></textarea></label>
+    </fieldset>
+    <p id="expected" class="card"></p>
+    <div class="row">
+      <button id="save-draft" type="button">임시 저장</button>
+      <button id="save-complete" type="button" class="primary">검수 완료 저장</button>
+    </div>
+    <p id="message" role="status"></p>
+  </section>
+</main>
+</body>
+</html>
