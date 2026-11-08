@@ -196,7 +196,7 @@ export function partDetectionGate(root = TOOL_ROOT) {
       const file = dir + '/' + name, source = readFileSync(resolve(root, file), 'utf8');
       const cli = source.includes(MAIN_MARKER) ? source.slice(source.indexOf(MAIN_MARKER)) : '';
       if (!HOSTS.includes(file) && /partDetection\s*:/.test(source)) problems.push(file + ' passes a provider');
-      if (/partDetection/.test(cli)) problems.push(file + ' CLI passes a provider');
+      if (/partDetection/.test(cli) && (file !== VISION_EXPERIMENT_ENTRY || visionExperimentGate(root).status !== 'PASS')) problems.push(file + ' CLI passes a provider');
     }
   }
   const closure = importGraph(ENTRY, root);
@@ -206,7 +206,7 @@ export function partDetectionGate(root = TOOL_ROOT) {
   if (Object.keys(pkg.dependencies ?? {}).join() !== 'pg') problems.push('the service gained a runtime dependency');
   return problems.length
     ? check('PART_DETECTION_OFF', 'FAIL', problems.join('; '))
-    : check('PART_DETECTION_OFF', 'PASS', 'no command passes a provider, no variable reaches one, and no model runtime is in the Render closure');
+    : check('PART_DETECTION_OFF', 'PASS', 'default Render has no detector/key/runtime; only the separately checked experiment may enable a provider');
 }
 
 /**
@@ -242,15 +242,17 @@ export function visionExperimentGate(root = TOOL_ROOT) {
   const cli = entry.slice(entry.indexOf(MAIN_MARKER));
   if (base.includes(VISION_EXPERIMENT_ENTRY) || base.some(f => /vision-budget|vision-providers/.test(f))) problems.push('default imports experiment');
   if (graph.some(f => /^(test|preflight)\/|washer-eval|\/review\/|\/scripts\//.test(f))) problems.push('experiment imports test/evaluation code');
-  const allowed = ['CARSCOPE_DB_SCHEMA', 'CARSCOPE_VISION_APPROVAL', 'OPENAI_API_KEY', 'OPENAI_VISION_MODEL', 'CARSCOPE_VISION_DAILY_CALL_LIMIT', 'CARSCOPE_VISION_MONTHLY_CALL_LIMIT'];
+  const allowed = ['CARSCOPE_DB_SCHEMA', 'CARSCOPE_VISION_APPROVAL', 'OPENAI_API_KEY', 'OPENAI_VISION_MODEL', 'CARSCOPE_VISION_DAILY_CALL_LIMIT', 'CARSCOPE_VISION_MONTHLY_CALL_LIMIT', 'CARSCOPE_ROBOFLOW_APPROVAL', 'ROBOFLOW_API_KEY'];
   for (const f of graph.filter(f => !base.includes(f))) {
     const reads = environmentReads(readFileSync(resolve(root, f), 'utf8'), { isEntry: f === VISION_EXPERIMENT_ENTRY });
     if (reads.dynamic || reads.names.some(n => !allowed.includes(n))) problems.push(f + ' unexpected environment');
   }
-  if (!/visionEnvironment\(\)/.test(cli) || !/PostgreSQLVisionBudget/.test(cli) || !/experimentVisionProvider/.test(cli) || /partDetection\s*:|approvedDetectionProvider|LocalTest|createMock/.test(cli)) problems.push('unsafe experiment bootstrap');
+  if (!/visionEnvironment\(\)/.test(cli) || !/PostgreSQLVisionBudget/.test(cli) || !/experimentVisionProvider/.test(cli) || !/experimentDetectionProvider/.test(cli) || !/partDetection: detector \? \{ provider: detector, admission: budget \} : null/.test(cli) || /approvedDetectionProvider|LocalTest|createMock/.test(cli)) problems.push('unsafe experiment bootstrap');
+  const providers = readFileSync(resolve(root, 'src/vision-providers.mjs'), 'utf8');
+  if (!/detectionEnvironment\(env\)\.enabled/.test(providers) || !/CARSCOPE_ROBOFLOW_APPROVAL !== 'OPERATOR_APPROVED'/.test(providers)) problems.push('detector approval missing');
   if (!/partDetection = null/.test(entry) || !/new ProductionSessionCreationAuthorizer/.test(entry)) problems.push('default authority/detection changed');
   return problems.length ? check('VISION_EXPERIMENT_ENTRY_ONLY', 'FAIL', problems.join('; '))
-    : check('VISION_EXPERIMENT_ENTRY_ONLY', 'PASS', 'separate experiment, explicit approval and durable budgets, default Render OFF; detection remains off in its CLI');
+    : check('VISION_EXPERIMENT_ENTRY_ONLY', 'PASS', 'separate experiment, explicit Vision and detector approval, durable budgets; default Render OFF');
 }
 
 export function ddlGate(root = TOOL_ROOT) {

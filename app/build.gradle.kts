@@ -6,6 +6,15 @@ plugins {
 android {
     namespace = "io.carscope.app"
     compileSdk = 34
+    buildFeatures { buildConfig = true }
+    // Operator-selected, compiled into debug only; a runtime file/Intent cannot add an origin.
+    val visionOrigin = providers.gradleProperty("carscopeVisionOrigin").orElse("").get()
+    require(visionOrigin.isEmpty() || Regex("https://[a-z0-9][a-z0-9-]*\\.onrender\\.com").matches(visionOrigin)) {
+        "carscopeVisionOrigin must be an exact Render HTTPS origin"
+    }
+    buildTypes {
+        getByName("debug") { buildConfigField("String", "VISION_EXPERIMENT_ORIGIN", "\"$visionOrigin\"") }
+    }
     defaultConfig {
         applicationId = "io.carscope.app"
         minSdk = 28

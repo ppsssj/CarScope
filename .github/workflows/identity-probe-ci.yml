@@ -79,3 +79,12 @@ jobs:
           with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as out:
               out.write(f'App JVM: {totals}\n\nPublic API compilation and debug/release boundary only. Pleos AVD runtime is a separate local gate.\n')
           PY
+      - name: Verify explicitly compiled Vision Origin and isolated enrollment
+        run: >-
+          ./gradlew :app:testDebugUnitTest
+          --tests io.carscope.app.sync.AvdSimulatorProvisioningTest
+          --tests io.carscope.app.sync.SyncReceiverActivityTest
+          --tests io.carscope.app.sync.HttpsAvdSimulatorGrantExchangeTest
+          -PcarscopeVisionOrigin=https://carscope-vision-test.onrender.com
+          -Pkotlin.compiler.execution.strategy=in-process
+          --console=plain --max-workers=1

@@ -2,6 +2,7 @@ package io.carscope.app.sync
 
 import org.junit.Assert.*
 import org.junit.Test
+import io.carscope.app.BuildConfig
 import java.io.File
 import java.nio.file.Files
 
@@ -27,6 +28,35 @@ internal class PendingAvdSimulatorExchange : AvdSimulatorGrantExchange {
 }
 
 class AvdSimulatorProvisioningTest {
+    @Test fun experimentOriginIsCompiledExactAndNeverAnArbitraryRuntimeHost() {
+        val origin = "https://carscope-vision-test.onrender.com"
+        assertTrue(AvdSimulatorPolicy.allowedOrigin(AvdSimulatorPolicy.API_ORIGIN, ""))
+        assertFalse(AvdSimulatorPolicy.allowedOrigin(origin, ""))
+        assertTrue(AvdSimulatorPolicy.allowedOrigin(origin, origin))
+        for (bad in listOf("http://carscope-vision-test.onrender.com", "$origin/", "$origin.evil.example",
+            "https://evil.example", "https://user@carscope-vision-test.onrender.com")) {
+            assertFalse(AvdSimulatorPolicy.allowedOrigin(bad, origin))
+            assertFalse(AvdSimulatorPolicy.allowedOrigin(bad, bad))
+        }
+    }
+
+    @Test fun compiledExperimentUsesItsOwnEnrollmentFile() {
+        val origin = BuildConfig.VISION_EXPERIMENT_ORIGIN
+        if (origin.isEmpty()) {
+            assertFalse(AvdSimulatorPolicy.endpointAllowed(SyncEndpoint("https://carscope-vision-test.onrender.com", "https://carscope-vision-test.onrender.com/")))
+            return
+        }
+        val endpoint = SyncEndpoint(origin, "$origin/")
+        assertTrue(AvdSimulatorPolicy.endpointAllowed(endpoint))
+        assertFalse(AvdSimulatorPolicy.endpointAllowed(SyncEndpoint(origin, AvdSimulatorPolicy.API_ORIGIN)))
+        val dir = Files.createTempDirectory("vision-enrollment-test").toFile()
+        try {
+            File(dir, AvdSimulatorPolicy.ENROLLMENT_FILENAME).writeText(AvdSimulatorSamples.enrollment())
+            assertNull(AvdSimulatorPolicy.readEnrollment(dir, endpoint, 2100))
+            File(dir, AvdSimulatorPolicy.VISION_ENROLLMENT_FILENAME).writeText(AvdSimulatorSamples.enrollment())
+            assertNotNull(AvdSimulatorPolicy.readEnrollment(dir, endpoint, 2100))
+        } finally { dir.deleteRecursively() }
+    }
     @Test fun `one millisecond before notBefore is rejected without clock tolerance and exact expiry is denied`() {
         val raw = AvdSimulatorSamples.grant().toByteArray()
         assertThrows(AvdSimulatorPolicy.GrantNotYetValid::class.java) {

@@ -27,15 +27,24 @@ param(
   [string]$CaPemFile,
   [string]$Schema = 'carscope',
   [string]$StateDir = 'C:\CarScope-External\avd-simulator',
-  [string]$GlbPath
+  [string]$GlbPath,
+  [string]$VisionOrigin
 )
 $ErrorActionPreference = 'Stop'
 
 # Must stay equal to AvdSimulatorPolicy.API_ORIGIN: the app accepts no other origin for this mode.
 $Origin = 'https://carscope-lluo.onrender.com'
+if ($VisionOrigin) {
+  if ($VisionOrigin -cnotmatch '^https://[a-z0-9][a-z0-9-]*\.onrender\.com$' -or $VisionOrigin -eq $Origin) {
+    throw 'VisionOrigin must be a separate exact Render HTTPS origin'
+  }
+  # The installed Debug APK must have been built with -PcarscopeVisionOrigin equal to this origin.
+  $Origin = $VisionOrigin
+}
 $Package = 'io.carscope.app'
 $EndpointFile = 'sync-endpoint.json'
 $EnrollmentFile = 'avd-simulator-enrollment.json'
+if ($VisionOrigin) { $EnrollmentFile = 'avd-vision-enrollment.json' }
 $Tool = Split-Path -Parent $PSScriptRoot
 $Repository = Split-Path -Parent (Split-Path -Parent $Tool)
 $StateFile = Join-Path $StateDir ("registration-" + ($Serial -replace '[^A-Za-z0-9._-]', '_') + ".json")
@@ -79,6 +88,7 @@ function Get-Health {
 
 function Assert-SimulationMode {
   $health = Get-Health
+  if ($VisionOrigin -and $health.vision -ne 'EXPERIMENT') { throw 'VisionOrigin is not the separate Vision experiment. Nothing was issued.' }
   if ($health.status -ne 'UP' -or $health.mode -ne 'STATEFUL_AVD_SIMULATION' -or $health.sessionCreation -ne 'OPERATOR_APPROVED_AVD_ONLY') {
     throw "Render reports mode=$($health.mode) sessionCreation=$($health.sessionCreation). Nothing was issued. Set CARSCOPE_AVD_SIMULATOR_MODE=OPERATOR_APPROVED on Render and redeploy first: that is a separate operator approval."
   }

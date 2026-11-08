@@ -345,7 +345,8 @@ test('the gate catches every shortcut around staying off', (t) => {
     const root = mkdtempSync(join(tmpdir(), 'carscope-detect-gate-')), tool = join(root, 'tools/inspection-sync-poc');
     t.after(() => rmSync(root, { recursive: true, force: true }));
     mkdirSync(tool, { recursive: true });
-    for (const dir of ['src', 'bin']) cpSync(join(TOOL_ROOT, dir), join(tool, dir), { recursive: true });
+    for (const dir of ['src', 'bin', 'preflight']) cpSync(join(TOOL_ROOT, dir), join(tool, dir), { recursive: true });
+    cpSync(resolve(TOOL_ROOT, '../vision-poc/src'), join(root, 'tools/vision-poc/src'), { recursive: true });
     cpSync(join(TOOL_ROOT, 'package.json'), join(tool, 'package.json'));
     cpSync(resolve(TOOL_ROOT, '../mobile-ar-poc'), join(root, 'tools/mobile-ar-poc'), { recursive: true, filter: from => !/[\\/]node_modules([\\/]|$)/.test(from) });
     return tool;

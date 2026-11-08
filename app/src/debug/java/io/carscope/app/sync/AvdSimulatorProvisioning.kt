@@ -1,6 +1,7 @@
 package io.carscope.app.sync
 
 import android.util.Log
+import io.carscope.app.BuildConfig
 import com.google.gson.JsonObject
 import java.io.ByteArrayOutputStream
 import java.io.File
@@ -20,6 +21,7 @@ internal object AvdSimulatorPolicy {
     const val AUDIENCE = "carscope-avd-simulator"
     const val SCOPE = "inspection:session:create"
     const val ENROLLMENT_FILENAME = "avd-simulator-enrollment.json"
+    const val VISION_ENROLLMENT_FILENAME = "avd-vision-enrollment.json"
     const val GRANT_MAX_TTL_MS = 120_000L
     const val ENROLLMENT_MAX_TTL_MS = 86_400_000L
     private val UUID = Regex("[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}")
@@ -28,7 +30,12 @@ internal object AvdSimulatorPolicy {
     class GrantExpired : IllegalArgumentException("PROVISION_GRANT_EXPIRED")
 
     fun endpointAllowed(endpoint: SyncEndpoint) =
-        endpoint.apiOrigin == API_ORIGIN && endpoint.mobileRoot.trimEnd('/') == API_ORIGIN
+        allowedOrigin(endpoint.apiOrigin, BuildConfig.VISION_EXPERIMENT_ORIGIN) &&
+            endpoint.mobileRoot.trimEnd('/') == endpoint.apiOrigin
+
+    internal fun allowedOrigin(origin: String, experiment: String): Boolean =
+        origin == API_ORIGIN || (experiment.isNotEmpty() &&
+            Regex("https://[a-z0-9][a-z0-9-]*\\.onrender\\.com").matches(experiment) && origin == experiment)
 
     fun enrollment(bytes: ByteArray, endpoint: SyncEndpoint, at: Long): AvdSimulatorEnrollment {
         require(endpointAllowed(endpoint) && bytes.size in 1..512 && at > 0)
@@ -46,7 +53,7 @@ internal object AvdSimulatorPolicy {
     /** This one operator-created file is separate from sync-endpoint.json and never passed through an Intent. */
     fun readEnrollment(filesDir: File, endpoint: SyncEndpoint, at: Long): AvdSimulatorEnrollment? = try {
         if (!endpointAllowed(endpoint)) null else {
-            val file = File(filesDir, ENROLLMENT_FILENAME)
+            val file = File(filesDir, if (endpoint.apiOrigin == API_ORIGIN) ENROLLMENT_FILENAME else VISION_ENROLLMENT_FILENAME)
             if (!file.isFile || file.length() !in 1..512 || java.nio.file.Files.isSymbolicLink(file.toPath())) null
             else enrollment(file.readBytes(), endpoint, at)
         }
@@ -104,7 +111,7 @@ internal class HttpsAvdSimulatorGrantExchange(
 ) : AvdSimulatorGrantExchange {
     // Log only fixed diagnostic categories. Never log a proof, grant, URL with credentials or exception message.
     private val logTag = "CarScopeAvdAuth"
-    private val uri = URI(AvdSimulatorPolicy.API_ORIGIN + "/simulator/provision")
+    private val uri = URI(endpoint.apiOrigin + "/simulator/provision")
     private val worker = Executors.newSingleThreadExecutor()
     private val deadlines = Executors.newSingleThreadScheduledExecutor()
     private val closed = AtomicBoolean(false)
