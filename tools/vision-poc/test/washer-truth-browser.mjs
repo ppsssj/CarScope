@@ -7,6 +7,7 @@ import { join } from 'node:path';
 import { startTruthServer } from '../washer-eval/washer-truth-server.mjs';
 import { buildManifest, report, runEvaluation, status } from '../scripts/washer-eval.mjs';
 import { prepare } from '../scripts/washer-prepare.mjs';
+import { compareCrops } from '../scripts/washer-crop-compare.mjs';
 import { dataOf, makeFixture } from './review-fixture.mjs';
 
 const { chromium } = createRequire(new URL('../../mobile-ar-poc/package.json', import.meta.url))('playwright');
@@ -97,6 +98,20 @@ try {
   assert.equal(r.byMargin.m40.partMatch.agree, 1, 'the MOCK is wrong on the drawn region, as expected of a MOCK');
   assert.equal(r.byMargin.m40.state.scored, 1, 'syn-a has an UNKNOWN damage answer, syn-c expects WRONG_PART');
   pass('status plans both pairs and keeps the approval BLOCKED; a MOCK run and its report are marked MOCK_NOT_A_MEASUREMENT');
+
+  // P13-C: a report is written once; the crop comparison reproduces the prepared crops and agrees with the pure plan.
+  assert.throws(() => report({ runId: 'mock-browser', runsDir, truthFile, preparedDir, ...common }), /REPORT_EXISTS/);
+  const preparedBefore = readFileSync(join(preparedDir, 'prepared.json'), 'utf8');
+  const cmp = await compareCrops({ out: join(fixture.dir, 'p13-c', 'crop-compare'), truthFile, preparedDir, ...common });
+  assert.deepEqual(cmp.reproduced, { checked: 2, equal: 2 }, 'B and C are byte-identical to the prepared crops');
+  assert.equal(cmp.calls, 0);
+  for (const p of cmp.photos) {
+    assert.equal(p.comparison.arms.A_PRODUCT.minimumDecided.width || p.comparison.arms.A_PRODUCT.minimumDecided.height, true, `${p.id}: the product minimum decides a small region`);
+    for (const key of ['A_PRODUCT', 'B_EVAL_40', 'C_EVAL_80']) assert.equal(p.comparison.arms[key].containsPart, true);
+  }
+  assert.equal(readFileSync(join(preparedDir, 'prepared.json'), 'utf8'), preparedBefore, 'prepared index untouched');
+  assert.match(readFileSync(join(fixture.dir, 'p13-c', 'crop-compare', 'index.html'), 'utf8'), /default-src 'none'/);
+  pass('reports are not overwritten; the three-arm comparison reproduces B and C byte for byte and leaves the prepared crops as they were');
   console.log(JSON.stringify({ status: 'PASS', kind: 'SYNTHETIC_NOT_A_REVIEW', checks: checks.length }));
 } catch (error) {
   console.error(error); process.exitCode = 1;
