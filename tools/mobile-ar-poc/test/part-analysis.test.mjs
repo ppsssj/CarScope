@@ -1,7 +1,7 @@
 // P13-A: the analysis result contract, the profiles and the page's state machine. Pure; no model, no network.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { ANALYSIS_PROFILES, analysisJsonSchema, APHASE, ASSESSMENT, buildAnalysisPrompt, FORBIDDEN_TEXT, initialAnalysis, ISSUE_LABELS, offersAnalysis, PART_MATCH, PROFILE_STATUS, reduceAnalysis, REGION_SOURCE, RESULT_LIMITS, unsupportedResult, validateAnalysisResult } from '../public/part-analysis.mjs';
+import { ANALYSIS_PROFILES, ANALYSIS_SUPPORT, regionAllowed, analysisJsonSchema, APHASE, ASSESSMENT, buildAnalysisPrompt, FORBIDDEN_TEXT, initialAnalysis, ISSUE_LABELS, offersAnalysis, PART_MATCH, PROFILE_STATUS, reduceAnalysis, REGION_SOURCE, RESULT_LIMITS, unsupportedResult, validateAnalysisResult } from '../public/part-analysis.mjs';
 import { PART_DETECTION, DETECTION_STATUS } from '../public/part-detection.mjs';
 import { MOCK_SCENARIOS } from '../../vision-poc/src/mock-vision-provider.mjs';
 
@@ -11,14 +11,21 @@ const refused = (value, reason, partId = W) => { const r = validateAnalysisResul
 
 test('profiles follow the detection table: one experimental, three drafts, the two unsupported stay unsupported, none verified', () => {
   assert.deepEqual(Object.keys(ANALYSIS_PROFILES).sort(), Object.keys(PART_DETECTION).sort());
+  // P13-D: all six bonnet parts are offered for analysis, as an experiment. Detection support is a separate table and is unchanged.
   const status = Object.fromEntries(Object.values(ANALYSIS_PROFILES).map(p => [p.partId, p.status]));
-  assert.deepEqual(status, { 'washer-fluid-cap': 'EXPERIMENTAL', 'coolant-reservoir': 'DRAFT', 'brake-fluid-reservoir': 'DRAFT', 'fuse-box': 'DRAFT', 'battery-12v': 'UNSUPPORTED', 'lcw-coolant-reservoir': 'UNSUPPORTED' });
-  assert.deepEqual(Object.keys(ANALYSIS_PROFILES).filter(offersAnalysis), [W], 'only the washer cap is offered');
+  assert.deepEqual(status, Object.fromEntries(Object.keys(PART_DETECTION).map(id => [id, 'EXPERIMENTAL'])));
+  assert.deepEqual(Object.keys(ANALYSIS_PROFILES).filter(offersAnalysis).sort(), Object.keys(PART_DETECTION).sort());
+  assert.deepEqual(Object.fromEntries(Object.values(PART_DETECTION).map(e => [e.partId, e.status])), { 'washer-fluid-cap': 'EXPERIMENTAL', 'coolant-reservoir': 'EXPERIMENTAL', 'lcw-coolant-reservoir': 'UNSUPPORTED', 'brake-fluid-reservoir': 'EXPERIMENTAL', 'battery-12v': 'UNSUPPORTED', 'fuse-box': 'EXPERIMENTAL' }, 'detection statuses are not touched');
   for (const p of Object.values(ANALYSIS_PROFILES)) {
     assert.ok(!Object.values(p).includes('VERIFIED'));
     assert.ok(p.reason.length > 20, p.partId);
-    // An analysis never goes where detection is unsupported.
-    if (PART_DETECTION[p.partId].status === DETECTION_STATUS.UNSUPPORTED) assert.equal(p.status, PROFILE_STATUS.UNSUPPORTED, p.partId);
+    // Where detection is unsupported, analysis comes only from a region the person marks, and is labelled limited.
+    const detects = PART_DETECTION[p.partId].status !== DETECTION_STATUS.UNSUPPORTED;
+    assert.deepEqual(ANALYSIS_SUPPORT[p.partId].regionModes, detects ? ['AI_CANDIDATE', 'MANUAL'] : ['MANUAL'], p.partId);
+    assert.equal(ANALYSIS_SUPPORT[p.partId].limited, !detects, p.partId);
+    assert.equal(regionAllowed(p.partId, 'AI_CANDIDATE'), detects, p.partId);
+    assert.equal(regionAllowed(p.partId, 'MANUAL'), true, p.partId);
+    assert.equal(ANALYSIS_SUPPORT[p.partId].evidence, p.partId === W ? 'REAL_SMOKE_4_CALLS_NO_ACCURACY' : 'MOCK_ONLY');
     if (p.status !== PROFILE_STATUS.UNSUPPORTED) {
       assert.ok(p.identify && p.check.length && p.never.length && p.issues.length, p.partId);
       for (const code of p.issues) assert.ok(ISSUE_LABELS[code], code);
@@ -27,16 +34,25 @@ test('profiles follow the detection table: one experimental, three drafts, the t
   assert.match(ANALYSIS_PROFILES['brake-fluid-reservoir'].never.join(' '), /braking performance/);
   assert.match(ANALYSIS_PROFILES['fuse-box'].never.join(' '), /fuse or relay inside/);
   assert.match(ANALYSIS_PROFILES['coolant-reservoir'].identify, /low-conductivity/);
+  assert.match(ANALYSIS_PROFILES['coolant-reservoir'].never.join(' '), /hidden level normal/);
+  assert.match(ANALYSIS_PROFILES['battery-12v'].identify, /high-voltage parts.*never the 12V battery/);
+  assert.match(ANALYSIS_PROFILES['battery-12v'].never.join(' '), /state of charge, voltage/);
+  assert.match(ANALYSIS_PROFILES['battery-12v'].never.join(' '), /removing the battery, touching or loosening terminals/);
+  assert.match(ANALYSIS_PROFILES['lcw-coolant-reservoir'].identify, /only from a printed label/);
+  assert.match(ANALYSIS_PROFILES['lcw-coolant-reservoir'].never.join(' '), /conductivity/);
+  assert.equal(regionAllowed('nothing', 'MANUAL'), false);
   assert.ok(ANALYSIS_PROFILES[W].crop.margin > 0.4, 'a small cap keeps more surroundings than the default');
 });
 
-test('the prompt carries the rules, the part, the region and nothing personal; unsupported parts get none', () => {
+test('the prompt carries the rules, the part, the region and nothing personal; every bonnet part has one, an unknown part none', () => {
   const p = buildAnalysisPrompt(W, { targetInCrop: [0.3, 0.3, 0.4, 0.4], regionSource: REGION_SOURCE.MANUAL });
   for (const rule of [/Never state that the car/, /Never invent an issue/, /UNCERTAIN and assessment to INDETERMINATE/, /Never tell the person to open a cap/, /requiresUserConfirmation is always true/]) assert.match(p.instructions, rule);
   assert.match(p.instructions, /windshield washer fluid filler cap/);
   assert.match(p.userText, /A person marked/); assert.match(p.userText, /0\.300, 0\.300, 0\.400, 0\.400/);
   assert.match(buildAnalysisPrompt(W, { targetInCrop: [0, 0, 1, 1], regionSource: REGION_SOURCE.AI_CANDIDATE }).userText, /object detector proposed/);
-  for (const id of ['battery-12v', 'lcw-coolant-reservoir', 'nope']) assert.throws(() => buildAnalysisPrompt(id, { targetInCrop: [0, 0, 1, 1] }), /UNSUPPORTED/);
+  for (const id of Object.keys(ANALYSIS_PROFILES)) assert.match(buildAnalysisPrompt(id, { targetInCrop: [0, 0, 1, 1], regionSource: REGION_SOURCE.MANUAL }).instructions, /Never judge:/, id);
+  assert.match(buildAnalysisPrompt('battery-12v', { targetInCrop: [0, 0, 1, 1], regionSource: REGION_SOURCE.MANUAL }).instructions, /A person marked this region/);
+  assert.throws(() => buildAnalysisPrompt('nope', { targetInCrop: [0, 0, 1, 1] }), /UNSUPPORTED/);
 });
 
 test('the JSON schema is strict-mode shaped: every key required, no other keys, closed enums', () => {
@@ -81,7 +97,8 @@ test('malformed answers are refused whole: shape, keys, enums, lengths, types', 
   refused(ok({ assessment: 'SUSPECTED_ISSUE', suspectedIssues: [{ ...issue, code: 'LEVEL_BELOW_MIN_SUSPECTED' }] }), 'ISSUE_CODE');
   refused(ok({ assessment: 'SUSPECTED_ISSUE', suspectedIssues: [{ ...issue, severity: 'high' }] }), 'ISSUE_KEYS');
   refused(ok({ assessment: 'SUSPECTED_ISSUE', suspectedIssues: [{ ...issue, evidence: '' }] }), 'TEXT');
-  refused(ok(), 'PART_UNSUPPORTED', 'battery-12v');
+  refused(ok(), 'PART_UNSUPPORTED', 'nothing');
+  refused(ok(), 'PART_ID', 'battery-12v');
 });
 
 test('the rules are enforced, not trusted', () => {

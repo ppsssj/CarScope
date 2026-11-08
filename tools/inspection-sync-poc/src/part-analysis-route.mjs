@@ -1,7 +1,7 @@
 // P13-A: POST /v1/part-analyses/:partId, a thin relay from the phone to a vision provider. Same shape and order as P12-E's detection relay:
 // everything that can refuse does so before the body is read or anything is sent out. One cropped JPEG in memory per request, never
 // written, logged or echoed. The provider's answer is checked against the result contract; anything else is refused, never repaired.
-import { ANALYSIS_CONSENT, ANALYSIS_SERVICES, analysisProfile, buildAnalysisPrompt, offersAnalysis, REGION_SOURCE, validateAnalysisResult } from '../../mobile-ar-poc/public/part-analysis.mjs';
+import { ANALYSIS_CONSENT, ANALYSIS_SERVICES, analysisProfile, buildAnalysisPrompt, offersAnalysis, REGION_SOURCE, regionAllowed, validateAnalysisResult } from '../../mobile-ar-poc/public/part-analysis.mjs';
 import { PART_DETECTION } from '../../mobile-ar-poc/public/part-detection.mjs';
 import { ERRORS } from './protocol.mjs';
 import { SyncError } from './sessions.mjs';
@@ -39,6 +39,8 @@ export function createPartAnalysisRoute({ provider, limits = ANALYSIS_LIMITS, cl
     const targetInCrop = parseTargetBox(req.headers['x-carscope-target-box']);
     const regionSource = req.headers['x-carscope-region-source'];
     if (!targetInCrop || !Object.values(REGION_SOURCE).includes(regionSource)) throw new SyncError(ERRORS.BAD_REQUEST, 400);
+    // P13-D: a part the detector does not support can only have been marked by the person. An AI_CANDIDATE claim for it is refused.
+    if (!regionAllowed(partId, regionSource)) throw new SyncError(ERRORS.BAD_REQUEST, 400);
     const scope = await service.detectionScope(token);
     if (scope.taskId !== analysisTask(partId)) throw new SyncError(ERRORS.FORBIDDEN, 403);
     if (scope.sessionState !== 'CLAIMED') throw new SyncError(ERRORS.INVALID_STATE, 409);

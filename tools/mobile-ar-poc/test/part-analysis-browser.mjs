@@ -110,11 +110,14 @@ try {
       await search(other.page);
       await other.page.waitForFunction(() => ['CANDIDATES', 'NONE_FOUND'].includes(window.__partDetection.state.phase));
       await other.page.waitForTimeout(200);
-      assert.equal(await other.page.locator('#part-analysis').count(), 0, `${task}: draft profile, not offered`);
-      assert.equal(analyses(other.log).length, 0);
+      // P13-D: these parts are offered too, as an experiment. Choosing a region still sends nothing by itself.
+      await other.page.waitForFunction(() => window.__partAnalysis?.state.phase === 'REGION');
+      assert.equal(await other.page.locator('#part-analysis').count(), 1, `${task}: offered as an experiment`);
+      assert.match(await other.page.locator('#part-analysis-evidence').innerText(), /실험 기능이에요/);
+      assert.equal(analyses(other.log).length, 0, 'no analysis request until the person asks');
       await closeAll();
     }
-    pass('with the analysis off, and for the draft parts (coolant, brake, fuse box), no analysis section, file or request exists; the part search is as before');
+    pass('with the analysis off there is no analysis section, file or request; coolant, brake and fuse box now offer it as an experiment and send nothing until asked');
   }
 
   { // The main flow, inside a connected inspection that is already under way.

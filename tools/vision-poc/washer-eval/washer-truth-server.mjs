@@ -20,6 +20,8 @@ export const ROUTES = Object.freeze({
   '/washer-eval/washer-eval-model.mjs': path.join(here, 'washer-eval-model.mjs'),
   '/mobile-ar-poc/public/part-analysis.mjs': path.join(mobile, 'part-analysis.mjs'),
   '/mobile-ar-poc/public/context-crop.mjs': path.join(mobile, 'context-crop.mjs'),
+  // P13-D: part-analysis.mjs reads the detection table to tell detected parts from hand-marked ones.
+  '/mobile-ar-poc/public/part-detection.mjs': path.join(mobile, 'part-detection.mjs'),
 });
 const MAX_BODY = 64 * 1024;
 
