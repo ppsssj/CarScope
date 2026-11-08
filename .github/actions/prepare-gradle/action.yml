@@ -1,0 +1,26 @@
+name: Prepare verified Gradle cache
+description: Restore prior state and save a fresh snapshot only after a successful job
+runs:
+  using: composite
+  steps:
+    - uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
+      with:
+        # GitHub's MIT cache action owns these paths; no commercial provider.
+        cache-provider: external
+    - name: Restore Gradle cache and save successful state under a new key
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: |
+          ${{ env.GRADLE_USER_HOME }}/caches
+          ${{ env.GRADLE_USER_HOME }}/wrapper
+        key: ${{ runner.os }}-${{ runner.arch }}-gradle-v2-${{ github.job }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties', '**/gradle/*.versions.toml', '**/versions.properties') }}-${{ github.run_id }}-${{ github.run_attempt }}
+        restore-keys: |
+          ${{ runner.os }}-${{ runner.arch }}-gradle-v2-${{ github.job }}-
+          ${{ runner.os }}-${{ runner.arch }}-gradle-v2-
+          setup-java-${{ runner.os }}-x64-gradle-
+    - name: Inspect dependencies and prepare verified official artifacts
+      shell: bash
+      run: |
+        python3 -B -m unittest discover -s tools/ci -p 'test_*.py' -v
+        python3 -B tools/ci/prepare_kotlin.py
+        python3 -B tools/ci/prepare_gradle.py
