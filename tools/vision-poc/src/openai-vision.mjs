@@ -35,6 +35,13 @@ export function parseOpenAiResponse(body) {
   try { return JSON.parse(texts[0].text); } catch { return fail('OPENAI_JSON_INVALID'); }
 }
 
+/** Only the counts: input, output, and the reasoning share of output when reported. */
+export function pickUsage(usage) {
+  if (!usage || !Number.isFinite(usage.input_tokens) || !Number.isFinite(usage.output_tokens)) return null;
+  const reasoning = usage.output_tokens_details?.reasoning_tokens;
+  return { input_tokens: usage.input_tokens, output_tokens: usage.output_tokens, ...(Number.isFinite(reasoning) ? { reasoning_tokens: reasoning } : {}) };
+}
+
 async function readLimited(response, maxBytes) {
   const declared = Number(response.headers.get('content-length'));
   if (Number.isFinite(declared) && declared > maxBytes) fail('OPENAI_RESPONSE_TOO_LARGE');
@@ -60,7 +67,8 @@ export function openAiVisionProvider({ apiKey, model, fetchImpl = fetch, timeout
   if (!MODEL.test(model ?? '')) fail('OPENAI_MODEL_REQUIRED');
   return Object.freeze({
     id: 'openai', model,
-    async analyzePart(input, { signal } = {}) {
+    /** `onResponse` (P13-B, optional) receives the token counts and status OpenAI reported, for latency and cost records. Never the body. */
+    async analyzePart(input, { signal, onResponse } = {}) {
       const body = JSON.stringify(buildOpenAiRequest(input, { model, maxOutputTokens, detail }));
       const ctrl = new AbortController(), stop = () => ctrl.abort();
       signal?.addEventListener('abort', stop, { once: true });
@@ -75,6 +83,8 @@ export function openAiVisionProvider({ apiKey, model, fetchImpl = fetch, timeout
         try { text = await readLimited(response, maxResponseBytes); } catch (error) { fail(error?.code === 'OPENAI_RESPONSE_TOO_LARGE' ? error.code : 'OPENAI_NETWORK'); }
         let json;
         try { json = JSON.parse(text); } catch { fail('OPENAI_RESPONSE_INVALID'); }
+        // Reported before parsing, so a refused or cut-off answer still shows what it cost.
+        try { onResponse?.({ usage: pickUsage(json?.usage), status: typeof json?.status === 'string' ? json.status : null }); } catch { /* a reporting hook cannot break the call */ }
         return parseOpenAiResponse(json);
       } finally { clearTimeout(timer); signal?.removeEventListener('abort', stop); }
     },

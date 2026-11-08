@@ -46,3 +46,5 @@ jobs:
         run: npm run test:browser:review
       - name: Assisted candidates remain undecided drafts (synthetic only, no model or upload)
         run: npm run test:browser:assisted
+      - name: Washer truth page, crop prepare and MOCK evaluation run (synthetic pictures and answers; no real photo, no model, not a human review)
+        run: npm run test:browser:washer
