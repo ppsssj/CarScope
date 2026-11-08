@@ -1,5 +1,9 @@
 # 로드맵 및 진입 조건
 
+## P13-A — 하이브리드 AI 부품 상태 분석 (로컬 PoC)
+
+P12-E/F 위치 후보 뒤에 영역 선택(후보 또는 직접 지정), 원본에서 주변까지 자르는 Crop, 별도 동의, Vision 공급자 인터페이스(OpenAI 어댑터, MOCK), 서버가 검사하는 구조화 결과, 모바일 결과 화면을 붙였다. 분석 프로파일은 워셔액 주입구 하나만 `EXPERIMENTAL`이고 냉각수·브레이크액·퓨즈박스는 `DRAFT`, 12V·저전도는 `UNSUPPORTED`다. **판정 `IMPLEMENTED_LOCAL_POC`. 실제 OpenAI 호출은 `REAL_PROVIDER_NOT_RUN`이고 실제 분석 정확도는 알 수 없다.** Roboflow 추가 호출 0회, 기본 꺼짐(`PART_ANALYSIS_OFF`), Render 불변. [설계와 한계](p13-a-hybrid-vision-inspection.md), [증거 인덱스](evidence/p13-a/README.md).
+
 ## P12-G — 라벨 검수 도구와 재평가 기반
 
 사진 26장과 저장된 모델 응답을 사람이 검수하는 `127.0.0.1` 전용 도구와, 완료된 검수만 세는 재평가를 만들었다. **사람 검수 완료는 0장이고 상태는 `AWAITING_HUMAN_REVIEW`다. 검수 후 수치는 없고 모델 성능은 달라지지 않았다.** Roboflow 추가 호출은 0회다. [사용법과 판정](p12-g-label-review.md), [증거 인덱스](evidence/p12-g/README.md).

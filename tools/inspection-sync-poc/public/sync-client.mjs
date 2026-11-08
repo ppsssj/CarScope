@@ -147,6 +147,40 @@ export class SyncClient {
   }
 
   /** Session state as seen by the phone (e.g. ACCEPTED after the vehicle side accepted). */
+  /**
+   * P13-A: one cropped photo of one part, with the consent for the vision service the page has just collected. No retry.
+   * `signal` lets the page cancel; a cancelled or timed-out call answers CANCELLED or UNAVAILABLE and never a result.
+   * The answer is returned as received: the page checks it against the result contract before showing anything.
+   */
+  async analyzePart(partId, blob, { consent, targetInCrop, regionSource, signal, timeoutMs = 50000 } = {}) {
+    if (this.#disposed || !this.#submitToken) return { ok: false, code: 'NOT_CONNECTED' };
+    if (signal?.aborted) return { ok: false, code: 'CANCELLED' };
+    const ctrl = new AbortController(), cancel = () => ctrl.abort();
+    this.#controllers.add(ctrl);
+    signal?.addEventListener('abort', cancel, { once: true });
+    const timer = setTimeout(cancel, timeoutMs);
+    try {
+      const res = await this.fetch(`${this.baseUrl}/v1/part-analyses/${encodeURIComponent(partId)}`, {
+        method: 'POST', signal: ctrl.signal, credentials: 'omit', cache: 'no-store', referrerPolicy: 'no-referrer', redirect: 'error',
+        headers: { Authorization: `Bearer ${this.#submitToken}`, 'Content-Type': 'image/jpeg', 'X-CarScope-External-Processing': consent,
+          'X-CarScope-Target-Box': targetInCrop.map((n) => Math.min(1, Math.max(0, n)).toFixed(6)).join(','), 'X-CarScope-Region-Source': regionSource },
+        body: blob,
+      });
+      const json = await res.json().catch(() => null);
+      if (signal?.aborted) return { ok: false, code: 'CANCELLED' };
+      if (res.status === 429) return { ok: false, code: 'RATE_LIMITED' };
+      if (res.status === 409 && json?.error?.code === 'PART_ANALYSIS_IN_PROGRESS') return { ok: false, code: 'BUSY' };
+      if (res.status === 413) return { ok: false, code: 'TOO_LARGE' };
+      if (res.status === 422 || res.status === 415) return { ok: false, code: 'UNREADABLE' };
+      if (res.status === 502) return { ok: false, code: 'INVALID_RESPONSE' };
+      if ([401, 403, 404, 409, 410].includes(res.status)) return { ok: false, code: 'NOT_CONNECTED' };
+      if (!res.ok || !json?.result) return { ok: false, code: 'UNAVAILABLE' };
+      return { ok: true, result: json.result, analysis: json.analysis ?? null };
+    } catch { return { ok: false, code: signal?.aborted ? 'CANCELLED' : 'UNAVAILABLE' }; } finally {
+      clearTimeout(timer); this.#controllers.delete(ctrl); signal?.removeEventListener('abort', cancel);
+    }
+  }
+
   async status() {
     if (!this.#submitToken) return { ok: false, outcome: TRANSPORT.REJECTED_UNAUTHORIZED };
     const r = await this.#call('GET', '/v1/submissions/status', this.#submitToken);

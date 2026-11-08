@@ -275,3 +275,13 @@ body[data-flow="qr"][data-step="done"][data-sync-end] #primary { background: tra
 @media (horizontal-viewport-segments: 2) {
   main { max-width: calc(env(viewport-segment-width 1 0, 100vw) - 8px); margin-inline: env(viewport-segment-left 1 0, 0) 0; }
 }
+/* P13-A: part state analysis, under a finished part search. Same cards and buttons as the search. */
+.part-analysis { margin: 18px 0; padding-top: 14px; border-top: 1px solid rgba(255,255,255,.14); }
+.part-analysis h3 { margin: 0 0 6px; font-size: 1.05rem; }
+.part-analysis h4 { margin: 14px 0 6px; }
+.part-analysis h5 { margin: 10px 0 4px; font-size: .95rem; }
+.part-analysis button { display: block; width: 100%; margin: 8px 0; }
+.part-analysis button[aria-pressed="true"] { outline: 2px solid #7ee0ff; }
+.part-analysis-picker, .part-analysis-crop { display: block; width: 100%; height: auto; border-radius: 10px; background: #05070a; touch-action: manipulation; }
+.part-analysis-group ul { margin: 0; padding-left: 20px; }
+.part-analysis-group li { margin: 4px 0; overflow-wrap: anywhere; }

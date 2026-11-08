@@ -39,11 +39,14 @@ function drawCandidates(target, source, candidates) {
   });
 }
 
-/** Adds the entry rows for a part with a mapped class. A part without one gets nothing, and its picture guide stands alone. */
-export function mountPartDetection({ taskId, detector, introBefore, locationAfter, onOpen = () => {} }) {
+/**
+ * Adds the entry rows for a part with a mapped class. A part without one gets nothing, and its picture guide stands alone.
+ * `analysis` (P13-A, optional) builds a section shown under a finished search. It receives the chosen photo in memory and never changes this flow.
+ */
+export function mountPartDetection({ taskId, detector, introBefore, locationAfter, onOpen = () => {}, analysis = null }) {
   const entry = detectionForTask(taskId);
   if (!offersDetection(entry) || !detector) return null;
-  let state = initialDetection(entry.partId), source = null, historyPushed = false;
+  let state = initialDetection(entry.partId), source = null, original = null, historyPushed = false;
 
   const dialog = el('dialog', 'part-detect-dialog'); dialog.id = 'part-detect'; dialog.setAttribute('aria-labelledby', 'part-detect-title');
   const bar = el('div', 'part-guide-zoom-bar'), close = el('button', null, '점검으로 돌아가기'); close.id = 'part-detect-close'; close.type = 'button'; bar.append(close);
@@ -70,10 +73,12 @@ export function mountPartDetection({ taskId, detector, introBefore, locationAfte
   const message = el('p', null); message.id = 'part-detect-message'; message.setAttribute('role', 'status');
   const caution = el('p', 'card warn', entry.caution); caution.id = 'part-detect-caution';
   const again = el('button', null, '다른 사진으로 다시 해 보기'); again.id = 'part-detect-again'; again.type = 'button';
-  result.append(picture, message, caution, again);
+  const slot = el('div'); slot.id = 'part-analysis-slot';
+  result.append(picture, message, caution, slot, again);
   body.append(consent, busy, result);
   dialog.append(bar, body);
   document.body.append(dialog);
+  let extension = null;
 
   function render() {
     consent.hidden = state.phase !== PHASE.CONSENT;
@@ -90,9 +95,11 @@ export function mountPartDetection({ taskId, detector, introBefore, locationAfte
       message.textContent = `AI가 찾은 후보 ${state.candidates.length}개예요. 확정된 위치가 아니에요. 어느 것이 맞는지, 맞는 것이 있는지는 직접 확인해 주세요.`;
     } else if (state.phase === PHASE.NONE_FOUND) message.textContent = '이 사진에서는 후보를 찾지 못했어요. 부품이 없다는 뜻은 아니에요. 그림 안내와 차량 설명서로 찾아 주세요.';
     else if (state.phase === PHASE.FAILED) message.textContent = `${FAILURE[state.code] ?? FAILURE.UNAVAILABLE} 그림 안내와 차량 설명서로 찾아 주세요.`;
+    extension?.show({ phase: state.phase, candidates: state.candidates, source, file: original });
   }
   const dispatch = event => { state = reduceDetection(state, event); render(); };
-  const release = () => { if (source) source.width = source.height = 0; source = null; picture.width = picture.height = 0; };
+  // The photo lives only in memory: the file reference and the small canvas. Both go when the search ends, restarts or closes.
+  const release = () => { extension?.reset(); if (source) source.width = source.height = 0; source = null; original = null; picture.width = picture.height = 0; };
 
   async function analyze(file) {
     // Late or scripted file events cannot get around the consent or the single request.
@@ -102,7 +109,7 @@ export function mountPartDetection({ taskId, detector, introBefore, locationAfte
     try {
       const shrunk = await shrink(file);
       if (attempt !== state.attempt) return;
-      source = shrunk.canvas;
+      source = shrunk.canvas; original = file;
       const answer = await detector.detect(entry.partId, shrunk.blob);
       if (attempt !== state.attempt) return;
       if (answer.ok) dispatch({ type: 'ANSWER', attempt, candidates: answer.candidates, detection: answer.detection });
@@ -135,6 +142,8 @@ export function mountPartDetection({ taskId, detector, introBefore, locationAfte
   first.id = 'part-detect-open'; later.id = 'part-detect-open-location';
   introBefore?.before(first);
   locationAfter?.after(later);
+  const retake = () => { release(); dispatch({ type: 'AGAIN' }); };
+  if (analysis) { try { extension = analysis({ slot, entry, retake, close: () => dialog.close() }); } catch { extension = null; } }
   render();
   // Test hook, read only. It exposes no photo and no credentials.
   window.__partDetection = Object.freeze({ get state() { return state; }, get entry() { return entry; } });

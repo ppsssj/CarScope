@@ -6,10 +6,10 @@ import { startSyncServer } from './server.mjs';
 import { ProductionSessionCreationAuthorizer, LocalTestSessionCreationAuthorizer } from './creation-authorizer.mjs';
 import { webxrGuideEnabled } from '../../mobile-ar-poc/webxr-flag.mjs';
 
-export async function startMobileDevServer({ port = 0, store, now, limits, rates, authorizer = new ProductionSessionCreationAuthorizer(), log = () => {}, webxrGuide = false, partDetection = null } = {}) {
+export async function startMobileDevServer({ port = 0, store, now, limits, rates, authorizer = new ProductionSessionCreationAuthorizer(), log = () => {}, webxrGuide = false, partDetection = null, partAnalysis = null } = {}) {
   let limiter;
   if (store?.rateCheck) { const { SQLiteRateLimiter } = await import('./sqlite-store.mjs'); limiter = new SQLiteRateLimiter({ store, now, rates }); }
-  const api = await startSyncServer({ host: '127.0.0.1', port: 0, store, now, limits, rates, limiter, authorizer, log, partDetection });
+  const api = await startSyncServer({ host: '127.0.0.1', port: 0, store, now, limits, rates, limiter, authorizer, log, partDetection, partAnalysis });
   const server = http.createServer(async (req, res) => {
     try {
       const origin = `http://127.0.0.1:${server.address().port}`;
@@ -23,9 +23,10 @@ export async function startMobileDevServer({ port = 0, store, now, limits, rates
           res.writeHead(response.statusCode, response.headers); response.pipe(res);
         });
         upstream.on('error', () => { if (!res.headersSent) res.writeHead(502, headers); res.end(); });
-        req.on('aborted', () => upstream.destroy()); req.pipe(upstream); return;
+        // A phone that cancels or leaves closes its side; the upstream request goes too, so the route sees it (P13-A).
+        req.on('aborted', () => upstream.destroy()); res.on('close', () => { if (!res.writableFinished) upstream.destroy(); }); req.pipe(upstream); return;
       }
-      await serveMobilePage(req, res, { webxrGuide, partDetection: Boolean(partDetection) });
+      await serveMobilePage(req, res, { webxrGuide, partDetection: Boolean(partDetection), partAnalysis: partAnalysis ? partAnalysis.provider.id : null });
     } catch { if (!res.headersSent) res.writeHead(500, headers); res.end(); }
   });
   try { await new Promise((resolve, reject) => { server.once('error', reject); server.listen(port, '127.0.0.1', resolve); }); }

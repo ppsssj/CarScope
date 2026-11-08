@@ -26,4 +26,7 @@ export function mountLocationGuide(task, after) {
 }
 // P12-E: only a host that enabled the experiment marks the page and serves these files, and only a QR inspection passes a detector.
 export function offerPartDetection(options){if(document.body.dataset.partDetection!=='enabled'||!options.detector)return;
-  import('./part-detection-ui.mjs').then(({mountPartDetection})=>mountPartDetection(options)).catch(()=>{/* The picture guide and the inspection are untouched. */});}
+  // P13-A: the state analysis joins only where the host also marked the page for it and the detector can analyse. If it fails to load, the search still works.
+  const body=document.body.dataset,withAnalysis=body.partAnalysis==='enabled'&&typeof options.detector.analyze==='function';
+  Promise.all([import('./part-detection-ui.mjs'),withAnalysis?import('./part-analysis-ui.mjs').catch(()=>null):null]).then(([{mountPartDetection},analysisUi])=>mountPartDetection({...options,
+    analysis:analysisUi?context=>analysisUi.createPartAnalysis({...context,analyzer:options.detector,serviceId:body.partAnalysisService}):null})).catch(()=>{/* The picture guide and the inspection are untouched. */});}

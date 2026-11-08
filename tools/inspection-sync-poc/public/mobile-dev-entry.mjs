@@ -65,6 +65,10 @@ if (entry.version === 2) {
   document.addEventListener('visibilitychange', () => document.hidden ? sync.pause() : sync.resume());
 }
 // Only a connected QR inspection has a credential, so only it can offer part detection.
-const partDetector = sync ? { detect: (partId, blob) => sync.detectPart(partId, blob, { consent: 'external-ai-v1' }) } : null;
+// P13-A: the analysis call rides on the same object. It is used only where the host also marked the page for analysis.
+const partDetector = sync ? {
+  detect: (partId, blob) => sync.detectPart(partId, blob, { consent: 'external-ai-v1' }),
+  analyze: (partId, blob, meta) => sync.analyzePart(partId, blob, { ...meta, consent: 'external-vision-v1' }),
+} : null;
 await startInspectionPage({ handoff: entry.handoff, onComplete: (record) => sync?.setResult(record), onRestart: () => sync?.close(), partDetector });
 if (entry.version === 2) document.getElementById('handoff-status').textContent = '';
