@@ -17,6 +17,8 @@ import { parseRoboflowResponse } from '../src/roboflow-adapter.mjs';
 import { createMockVisionProvider } from '../src/mock-vision-provider.mjs';
 import { VISION_CALL_LIMIT, realOpenAiProvider } from './part-analysis-local.mjs';
 import { assertOutside, loadTruthFile, loadWasherSet, manifestHash, WASHER_PATHS } from '../washer-eval/washer-eval-data.mjs';
+import { diagnoseRecords, RUBRIC_STRICT, RUBRIC_V1 } from '../washer-eval/consistency.mjs';
+import { buildAnalysisPromptV2, PROMPT_VERSION_V2, toV1, validateV2 } from '../washer-eval/rubric-v2.mjs';
 import { detectionRegions, eligibility, gateResults, MARGIN_KEYS, MARGINS, PART_ID, planCalls, REGION_SOURCE, scoreRun, truthState } from '../washer-eval/washer-eval-model.mjs';
 
 export const RUN_SCHEMA = 'carscope-washer-run-v1';
@@ -95,9 +97,12 @@ export function status(options = {}) {
  * Sends the planned crops, one call each, and stores what came back. With `mock`, nothing leaves the machine and the run is marked synthetic.
  * Each record keeps the raw answer (a JSON object, never the photo), the latency, the provider's token counts and a fixed error code.
  */
-export async function runEvaluation({ runId, mock = false, real = false, env = process.env, runsDir = WASHER_PATHS.runs, provider: given = null, ...options }) {
+export async function runEvaluation({ runId, mock = false, real = false, rubric = 'v1', env = process.env, runsDir = WASHER_PATHS.runs, provider: given = null, ...options }) {
   if (!/^[a-z0-9-]{3,40}$/.test(runId ?? '')) throw new Error('RUN_ID_INVALID');
   if (mock === real && !given) throw new Error('CHOOSE_MOCK_OR_REAL');
+  if (!['v1', 'v2'].includes(rubric)) throw new Error('RUBRIC_INVALID');
+  // P13-B pre-registered the P13-A prompt (p13-a-1). A real run of the P13-C rubric prompt needs its own committed criteria first.
+  if (real && rubric === 'v2') throw new Error('REAL_V2_NEEDS_NEW_CRITERIA');
   const { set, truth, prepared } = context({ ...options, synthetic: options.synthetic ?? mock });
   const dir = path.join(assertOutside(runsDir, env), runId);
   if (existsSync(dir)) throw new Error('RUN_EXISTS');
@@ -112,7 +117,7 @@ export async function runEvaluation({ runId, mock = false, real = false, env = p
   } else if (mock) provider = createMockVisionProvider();
   const plan = planCalls(set.images, truth, prepared, budget);
   mkdirSync(dir, { recursive: true });
-  const meta = { schema: RUN_SCHEMA, runId, synthetic: Boolean(mock || options.synthetic), provider: provider.id, model: provider.model, startedAt: new Date().toISOString(), calls: plan.calls.length, skipped: plan.skipped, pairsDropped: plan.pairsDropped, manifestSha256: manifestHash(options.manifest ?? WASHER_PATHS.manifest) };
+  const meta = { schema: RUN_SCHEMA, runId, synthetic: Boolean(mock || options.synthetic), provider: provider.id, model: provider.model, startedAt: new Date().toISOString(), calls: plan.calls.length, skipped: plan.skipped, pairsDropped: plan.pairsDropped, manifestSha256: manifestHash(options.manifest ?? WASHER_PATHS.manifest), rubric, promptVersion: rubric === 'v2' ? PROMPT_VERSION_V2 : 'p13-a-1' };
   writeFileSync(path.join(dir, 'run.json'), JSON.stringify(meta, null, 1));
   const out = path.join(dir, 'records.jsonl');
   for (const { imageId, margin, sameCrop } of plan.calls) {
@@ -120,7 +125,7 @@ export async function runEvaluation({ runId, mock = false, real = false, env = p
     const image = readFileSync(path.join(assertOutside(options.preparedDir ?? WASHER_PATHS.prepared, env), crop.file));
     if (sha256(image) !== crop.sha256) throw new Error(`CROP_CHANGED: ${imageId} ${margin}`);
     const regionSource = truth.images[imageId].truth.region.source === REGION_SOURCE.DETECTION ? AREGION.AI_CANDIDATE : AREGION.MANUAL;
-    const input = { partId: PART_ID, image, imageSize: crop.output, targetInCrop: crop.targetInCrop, regionSource, ...buildAnalysisPrompt(PART_ID, { targetInCrop: crop.targetInCrop, regionSource }) };
+    const input = { partId: PART_ID, image, imageSize: crop.output, targetInCrop: crop.targetInCrop, regionSource, ...(rubric === 'v2' ? buildAnalysisPromptV2(PART_ID, { targetInCrop: crop.targetInCrop, regionSource }) : buildAnalysisPrompt(PART_ID, { targetInCrop: crop.targetInCrop, regionSource })) };
     let usage = null, responseStatus = null;
     const started = performance.now();
     let raw = null, errorCode = null;
@@ -133,16 +138,47 @@ export async function runEvaluation({ runId, mock = false, real = false, env = p
   return { dir, plan };
 }
 
-export function report({ runId, runsDir = WASHER_PATHS.runs, price = undefined, approvalFile = WASHER_PATHS.approval, ...options }) {
+const readRecords = dir => readFileSync(path.join(dir, 'records.jsonl'), 'utf8').split('\n').filter(Boolean).map(line => JSON.parse(line));
+/** A v2 answer is checked by its own rules, then scored as the v1 answer a client would get. A refused one scores as invalid. */
+const asV1 = records => records.map(r => {
+  if (r.raw == null) return r;
+  const checked = validateV2(PART_ID, r.raw);
+  return checked.ok ? { ...r, raw: toV1(checked.result) } : { ...r, raw: null, errorCode: `V2_${checked.reasons[0]}` };
+});
+
+/** Scores a stored run. Never overwrites: a run's report is written once, and a later reading goes to `out` (P13-C keeps real-001 as it was). */
+export function report({ runId, runsDir = WASHER_PATHS.runs, price = undefined, approvalFile = WASHER_PATHS.approval, out = null, ...options }) {
   const dir = path.join(assertOutside(runsDir), runId);
+  const target = out ? assertOutside(out) : path.join(dir, 'report.json');
+  if (existsSync(target)) throw new Error('REPORT_EXISTS');
   const meta = readJson(path.join(dir, 'run.json'));
   const { truth } = context({ ...options, synthetic: meta.synthetic });
-  const records = readFileSync(path.join(dir, 'records.jsonl'), 'utf8').split('\n').filter(Boolean).map(line => JSON.parse(line));
+  const stored = readRecords(dir);
+  const records = meta.rubric === 'v2' ? asV1(stored) : stored;
   const answers = Object.fromEntries(Object.entries(truth.images).filter(([, r]) => r.complete).map(([id, r]) => [id, r.truth]));
   const costPrice = price !== undefined ? price : existsSync(approvalFile) ? readJson(approvalFile).price ?? null : null;
   const score = scoreRun(records, answers, { price: costPrice });
   const result = { schema: 'carscope-washer-report-v1', runId, kind: meta.synthetic ? 'MOCK_NOT_A_MEASUREMENT' : 'REAL_PROVIDER', provider: meta.provider, model: meta.model, calls: records.length, reviewedPhotos: Object.keys(answers).length, gates: gateResults(score), ...score };
-  writeFileSync(path.join(dir, 'report.json'), JSON.stringify(result, null, 1));
+  writeFileSync(target, JSON.stringify(result, null, 1));
+  return result;
+}
+
+/**
+ * P13-C: consistency diagnostics of a stored run under both rubrics. Reads the run, writes only to `out` (outside the run folder), never overwrites.
+ * Diagnostic: it changes no score and no gate.
+ */
+export function diagnose({ runId, runsDir = WASHER_PATHS.runs, out }) {
+  const dir = path.join(assertOutside(runsDir), runId);
+  if (!out) throw new Error('OUT_REQUIRED');
+  const target = assertOutside(out);
+  if (path.resolve(target).toLowerCase().startsWith(path.resolve(dir).toLowerCase() + path.sep)) throw new Error('OUT_INSIDE_RUN');
+  if (existsSync(target)) throw new Error('DIAGNOSIS_EXISTS');
+  const meta = readJson(path.join(dir, 'run.json'));
+  const stored = readRecords(dir);
+  const records = meta.rubric === 'v2' ? asV1(stored) : stored;
+  const result = { schema: 'carscope-washer-diagnosis-v1', runId, kind: meta.synthetic ? 'MOCK_NOT_A_MEASUREMENT' : 'REAL_PROVIDER', model: meta.model, readOnlyInputs: ['run.json', 'records.jsonl'], byRubric: Object.fromEntries([RUBRIC_V1, RUBRIC_STRICT].map(rubric => [rubric.id, diagnoseRecords(records, { rubric })])) };
+  mkdirSync(path.dirname(target), { recursive: true });
+  writeFileSync(target, JSON.stringify(result, null, 1));
   return result;
 }
 
@@ -150,7 +186,7 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
   const [command, ...rest] = process.argv.slice(2);
   const flag = name => rest.includes(`--${name}`);
   const value = (name, fallback) => { const at = rest.indexOf(`--${name}`); return at >= 0 ? rest[at + 1] : fallback; };
-  const positional = rest.filter((x, i) => !x.startsWith('--') && !(i > 0 && rest[i - 1] === '--budget'));
+  const positional = rest.filter((x, i) => !x.startsWith('--') && !(i > 0 && ['--budget', '--out', '--rubric'].includes(rest[i - 1])));
   try {
     if (command === 'manifest') {
       const file = fileURLToPath(WASHER_PATHS.manifest);
@@ -160,10 +196,12 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
       const s = status({ budget: Number(value('budget', VISION_CALL_LIMIT)) });
       console.log(JSON.stringify(command === 'plan' ? s.plan : { counts: s.counts, rows: s.rows.map(({ id, truth, detections, humanBox, region, eligible, reasons }) => ({ id, truth, detections, humanBox, region, eligible, reasons: reasons.join(',') })), checklist: s.checklist }, null, 1));
     } else if (command === 'run') {
-      const { dir, plan } = await runEvaluation({ runId: positional[0], mock: flag('mock'), real: flag('real-openai') });
+      const { dir, plan } = await runEvaluation({ runId: positional[0], mock: flag('mock'), real: flag('real-openai'), rubric: value('rubric', 'v1') });
       console.log(`Run stored in ${dir}: ${plan.calls.length} calls. ${flag('mock') ? 'MOCK: nothing left this machine.' : ''}`);
     } else if (command === 'report') {
-      console.log(JSON.stringify(report({ runId: positional[0] }), null, 1));
-    } else { console.error('commands: manifest | status | plan | run --mock|--real-openai <runId> | report <runId>'); process.exit(2); }
+      console.log(JSON.stringify(report({ runId: positional[0], out: value('out', null) }), null, 1));
+    } else if (command === 'diagnose') {
+      console.log(JSON.stringify(diagnose({ runId: positional[0], out: value('out', `C:/CarScope-External/p13-c/diagnostics/${positional[0]}.json`) }), null, 1));
+    } else { console.error('commands: manifest | status | plan | run --mock|--real-openai [--rubric v1|v2] <runId> | report <runId> [--out file] | diagnose <runId> [--out file]'); process.exit(2); }
   } catch (error) { console.error(error.message); process.exit(2); }
 }
