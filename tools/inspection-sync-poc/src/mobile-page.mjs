@@ -36,15 +36,15 @@ export async function serveMobilePage(req, res, { tls = false, webxrGuide = fals
     body = (await readFile(new URL('../../mobile-ar-poc/public/index.html', import.meta.url), 'utf8')).replace('src="/app-entry.mjs"', 'src="/public/mobile-dev-entry.mjs"');
     if (webxrGuide) body = markWebXrGuidePage(body);
     if (partDetection) body = markPartDetectionPage(body);
-    if (partDetection && partAnalysis) body = markPartAnalysisPage(body, partAnalysis);
+    if (partAnalysis) body = markPartAnalysisPage(body, partAnalysis);
     type = 'text/html; charset=utf-8';
   } else if (url.pathname === '/handoff.json') { body = '{"configured":false,"url":null}'; type = 'application/json'; }
   else if (webxrGuide && guideFiles.has(url.pathname)) {
     const [source, mime] = guideFiles.get(url.pathname);
     body = await readFile(source); type = mime;
   }
-  else if (partDetection && detectionFiles.has(url.pathname)) body = await readFile(detectionFiles.get(url.pathname));
-  else if (partDetection && partAnalysis && analysisFiles.has(url.pathname)) body = await readFile(analysisFiles.get(url.pathname));
+  else if ((partDetection || partAnalysis) && detectionFiles.has(url.pathname)) body = await readFile(detectionFiles.get(url.pathname));
+  else if (partAnalysis && analysisFiles.has(url.pathname)) body = await readFile(analysisFiles.get(url.pathname));
   else if (files.has(url.pathname)) {
     body = await readFile(files.get(url.pathname));
     if (url.pathname.endsWith('.css')) type = 'text/css; charset=utf-8';

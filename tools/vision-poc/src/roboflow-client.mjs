@@ -21,14 +21,15 @@ export function classifyHttpStatus(status) {
   return CALL_STATUS.FAILED;
 }
 
-export async function inferImage({ apiUrl = HOSTED_API_URL, modelId, apiKey, image, fetchImpl = fetch, timeoutMs = 60000 }) {
+export async function inferImage({ apiUrl = HOSTED_API_URL, modelId, apiKey, image, fetchImpl = fetch, timeoutMs = 60000, signal }) {
   const url = `${apiUrl.replace(/\/+$/, '')}/${modelId}?confidence=${REQUEST_CONFIDENCE}`;
   try {
     const response = await fetchImpl(url, {
       method: 'POST',
+      redirect: 'error',
       headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/x-www-form-urlencoded' },
       body: Buffer.from(image).toString('base64'),
-      signal: AbortSignal.timeout(timeoutMs),
+      signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(timeoutMs)]) : AbortSignal.timeout(timeoutMs),
     });
     const status = classifyHttpStatus(response.status);
     if (status !== CALL_STATUS.OK) return { status, httpStatus: response.status };

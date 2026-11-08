@@ -54,13 +54,15 @@ export function createPartDetectionRoute({ provider, limits = DETECTION_LIMITS, 
     if (!session.ok) throw new SyncError(ERRORS.RATE_LIMITED, 429);
     if (inFlight >= limits.maxInFlight) throw new SyncError(CODE.BUSY, 429);
     inFlight++;
+    const abort = new AbortController(), stop = () => abort.abort();
+    req.socket?.once('close', stop);
     try {
       const image = await readImage(req, limits.maxBytes);
       const size = jpegSize(image);
       if (!size || size.width < limits.minSide || size.height < limits.minSide || size.width > limits.maxSide || size.height > limits.maxSide) throw new SyncError(CODE.IMAGE, 422);
       let parsed;
       // An upstream message could quote the request or the key, so no part of a failure leaves here.
-      try { parsed = await withTimeout(provider.detect({ image }), limits.timeoutMs); } catch { throw new SyncError(CODE.UNAVAILABLE, 503); }
+      try { parsed = await withTimeout(provider.detect({ image }, { signal: abort.signal }), limits.timeoutMs); } catch { throw new SyncError(CODE.UNAVAILABLE, 503); }
       let candidates;
       try {
         candidates = candidatesFor(entry.partId, parsed);
@@ -70,7 +72,7 @@ export function createPartDetectionRoute({ provider, limits = DETECTION_LIMITS, 
       // P12-F: one record a later step can track from: which model, which class, when, on what picture, and how to read the boxes.
       const detection = { modelId: DETECTION_MODEL_ID, modelClass: entry.modelClass, coordinates: DETECTION_COORDINATES, image: { width: size.width, height: size.height }, inferredAt: clock().toISOString() };
       return { partId: entry.partId, status: entry.status, candidates, detection };
-    } finally { inFlight--; }
+    } finally { abort.abort(); req.socket?.off('close', stop); inFlight--; }
   };
 }
 
@@ -81,8 +83,8 @@ export function createPartDetectionRoute({ provider, limits = DETECTION_LIMITS, 
 export function hostedDetectionProvider({ inferImage, parseResponse, apiKey, modelId = DETECTION_MODEL_ID, timeoutMs = DETECTION_LIMITS.timeoutMs }) {
   if (typeof inferImage !== 'function' || typeof parseResponse !== 'function' || !apiKey) throw new Error('PART_DETECTION_PROVIDER_CONFIG');
   return Object.freeze({
-    async detect({ image }) {
-      const answer = await inferImage({ modelId, apiKey, image, timeoutMs });
+    async detect({ image }, { signal } = {}) {
+      const answer = await inferImage({ modelId, apiKey, image, timeoutMs, signal });
       if (answer?.status !== 'OK') throw new Error('PROVIDER_REFUSED');
       return parseResponse(answer.body);
     },

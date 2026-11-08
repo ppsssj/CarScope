@@ -1,0 +1,50 @@
+name: Vision mobile experiment CI
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  mobile-vision:
+    name: Real QR and PostgreSQL with MOCK OpenAI (no paid calls)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: carscope_ci
+          POSTGRES_PASSWORD: local_test_only
+          POSTGRES_DB: carscope_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U carscope_ci -d carscope_ci"
+          --health-interval 3s --health-timeout 5s --health-retries 10
+    env:
+      PG_TEST_URL: postgresql://carscope_ci:local_test_only@127.0.0.1:5432/carscope_ci
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '22.16.0'
+      - run: npm install --ignore-scripts --no-audit --no-fund --package-lock=false
+        working-directory: tools/inspection-sync-poc
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+        working-directory: tools/mobile-ar-poc
+      - run: npm run test:vision
+        working-directory: tools/inspection-sync-poc
+      - run: npm test
+        working-directory: tools/mobile-ar-poc
+      - run: npm run test:browser:vision:render
+        working-directory: tools/mobile-ar-poc
+        env:
+          POC_EVIDENCE_DIR: ${{ runner.temp }}/p13-e-vision

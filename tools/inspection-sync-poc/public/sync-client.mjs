@@ -168,7 +168,7 @@ export class SyncClient {
       });
       const json = await res.json().catch(() => null);
       if (signal?.aborted) return { ok: false, code: 'CANCELLED' };
-      if (res.status === 429) return { ok: false, code: 'RATE_LIMITED' };
+      if (res.status === 429) return { ok: false, code: json?.error?.code === 'VISION_BUDGET_EXHAUSTED' ? 'BUDGET_EXHAUSTED' : 'RATE_LIMITED' };
       if (res.status === 409 && json?.error?.code === 'PART_ANALYSIS_IN_PROGRESS') return { ok: false, code: 'BUSY' };
       if (res.status === 413) return { ok: false, code: 'TOO_LARGE' };
       if (res.status === 422 || res.status === 415) return { ok: false, code: 'UNREADABLE' };

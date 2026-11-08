@@ -1,5 +1,9 @@
 # 로드맵 및 진입 조건
 
+## P13-E — 실제 모바일 Vision 실험 서비스 연결
+
+기본 Render 진입점/DENY_DEFAULT는 그대로 두고 별도 Vision 명령에서만 6부품 직접 지정·Crop·OpenAI 동의·분석·확인을 제공한다. PostgreSQL 일/월 시도 상한과 QR별 분산 lease를 사용하며 Roboflow는 권리 승인 전 CLI에서 비활성이다. 실제 QR·PostgreSQL·Chrome과 outbound MOCK으로 검증하며 **유료 호출·배포·비밀 변수·실기기 시험은 NOT_RUN**이다. [구조·설정·실기기 절차](p13-e-real-mobile-vision.md), [증거](evidence/p13-e/README.md).
+
 ## P13-D — 엔진룸 6개 부품 AI 외관 분석 통합
 
 워셔액·냉각수·브레이크액·퓨즈박스는 탐지 후보에서, 12V·저전도 냉각수는 사람이 직접 지정한 영역에서 같은 Crop·동의·분석 경로를 쓴다. 분석 지원 상태(`ANALYSIS_SUPPORT`)를 탐지 상태와 분리했고 탐지 상태는 그대로다. 부품별 금지 주장(전압·충전·전도도·제동 성능·내부 퓨즈 등)은 서버가 거부한다. **실제 호출 0회, 정확도 미측정, 모든 부품 실험 표시.** 실제 휴대폰 사용은 Render 실험 진입점과 OFF 게이트 변경, 운영 키, 서버 측 호출 상한 승인이 필요하다. [통합](p13-d-multipart-vision.md), [증거](evidence/p13-d/README.md).

@@ -40,11 +40,11 @@ async function service(t, { provider = createMockVisionProvider(), rates = { ...
 }
 const code = async response => (await response.json()).error?.code;
 
-test('off unless a host passes a provider, and never without part detection', async (t) => {
+test('off unless a host passes a provider; a detector is optional for manual regions', async (t) => {
   const off = await startSyncServer({ port: 0, authorizer: new LocalTestSessionCreationAuthorizer(), log: () => {}, partDetection: { provider: detector } });
   t.after(() => off.stop());
   assert.equal((await fetch(`${off.url}/v1/part-analyses/${W}`, { method: 'POST' })).status, 404, 'the path answers like any unknown one');
-  assert.throws(() => createSyncHandler({ service: {}, partAnalysis: { provider: createMockVisionProvider() } }), /PART_ANALYSIS_NEEDS_DETECTION/);
+  assert.equal(typeof createSyncHandler({ service: {}, partAnalysis: { provider: createMockVisionProvider() } }), 'function');
   for (const bad of [null, {}, { analyzePart() {}, id: 'other', model: 'x' }, { analyzePart() {}, id: 'openai', model: '' }, { analyzePart() {}, id: 'openai', model: 'bad model id' }])
     assert.throws(() => assertVisionProvider(bad), /PROVIDER_REQUIRED/);
   assert.equal(partAnalysisGate().status, 'PASS', partAnalysisGate().detail);
@@ -180,9 +180,10 @@ test('the phone client maps answers to fixed codes and supports cancel', async (
   assert.equal(token.length > 10, true);
 });
 
-test('the page is marked, and the files served, only with both flags; the service name comes from a fixed list', async (t) => {
+test('analysis-only and detection-plus-analysis pages are explicit; the service name comes from a fixed list', async (t) => {
   const html = '<html><body data-step="intro" class="x"></body></html>';
-  assert.throws(() => markPartAnalysisPage(html, 'mock'), /DETECTION_PAGE_MARKER_MISSING/);
+  assert.match(markPartAnalysisPage(html, 'mock'), /data-part-analysis="enabled"/);
+  assert.throws(() => markPartAnalysisPage('<body>', 'mock'), /DETECTION_PAGE_MARKER_MISSING/);
   assert.throws(() => markPartAnalysisPage(markPartDetectionPage(html), 'evil"><script>'), /PROVIDER_UNKNOWN/);
   assert.match(markPartAnalysisPage(markPartDetectionPage(html), 'openai'), /data-part-analysis="enabled" data-part-analysis-service="openai"/);
   const served = async options => {
@@ -198,7 +199,8 @@ test('the page is marked, and the files served, only with both flags; the servic
   assert.doesNotMatch(off['/'].body, /data-part-analysis/);
   for (const name of PART_ANALYSIS_FILES) assert.equal(off[`/mobile-ar-poc/public/${name}`].status, 404, name);
   const noDetection = await served({ partAnalysis: 'mock' });
-  for (const name of PART_ANALYSIS_FILES) assert.equal(noDetection[`/mobile-ar-poc/public/${name}`].status, 404, name);
+  assert.doesNotMatch(noDetection['/'].body, /data-part-detection="enabled"/);
+  for (const name of PART_ANALYSIS_FILES) assert.equal(noDetection[`/mobile-ar-poc/public/${name}`].status, 200, name);
   const on = await served({ partDetection: true, partAnalysis: 'mock' });
   assert.match(on['/'].body, /data-part-analysis-service="mock"/);
   for (const name of PART_ANALYSIS_FILES) assert.equal(on[`/mobile-ar-poc/public/${name}`].status, 200, name);

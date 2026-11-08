@@ -62,6 +62,11 @@ export async function probeDeployment({ origin, approveRateWindowWrites = false,
       ? check('RENDER_WEBXR_GUIDE', 'MANUAL', 'WebXR guide experiment is running: every supported phone on this service sees it. Confirm the approval, or restore the Start Command')
       : check('RENDER_WEBXR_GUIDE', 'FAIL', 'health reports an unknown mobile guide'));
   }
+  if (Object.hasOwn(body, 'vision')) {
+    out.push(body.vision === 'EXPERIMENT' && body.detection === 'OFF'
+      ? check('RENDER_VISION_EXPERIMENT', 'MANUAL', 'manual-region Vision experiment is running: confirm operator approval, private schema and durable call budgets; no Roboflow activation')
+      : check('RENDER_VISION_EXPERIMENT', 'FAIL', 'unknown or unapproved Vision/detection mode'));
+  }
   if (!approveRateWindowWrites) {
     out.push(check('RENDER_API_BOUNDARY', 'NOT_RUN', 'records 403 / session 401 probes write cs_rate_windows: pass --approve-rate-window-writes'));
     return out;
