@@ -2,7 +2,8 @@
 // It never reads or changes the inspection. The person reads the result, confirms they will check the part themselves, and goes back.
 // Only the cropped picture is sent, never the whole photo. Every text from the AI is set with textContent after the contract check.
 import { boxAroundPoint, cropWithContext } from './context-crop.mjs';
-import { analysisProfile, ANALYSIS_SERVICES, APHASE, ASSESSMENT, initialAnalysis, ISSUE_LABELS, offersAnalysis, PART_MATCH, reduceAnalysis, REGION_SOURCE, validateAnalysisResult } from './part-analysis.mjs';
+import { analysisProfile, ANALYSIS_SERVICES, ANALYSIS_SUPPORT, APHASE, ASSESSMENT, initialAnalysis, ISSUE_LABELS, offersAnalysis, PART_MATCH, reduceAnalysis, REGION_SOURCE, validateAnalysisResult } from './part-analysis.mjs';
+import { detectionForTask } from './part-detection.mjs';
 
 const el = (tag, className, text) => { const node = document.createElement(tag); if (className) node.className = className; if (text != null) node.textContent = text; return node; };
 const button = (id, text, className) => { const b = el('button', className, text); b.id = id; b.type = 'button'; return b; };
@@ -24,7 +25,11 @@ export const HEADLINE = Object.freeze({
   [ASSESSMENT.UNSUPPORTED]: ['이 부품은 AI 상태 분석을 지원하지 않아요', '그림 안내와 차량 설명서로 직접 확인해 주세요.'],
 });
 const MATCH = Object.freeze({ [PART_MATCH.LIKELY_MATCH]: '선택한 부품으로 보여요.', [PART_MATCH.UNCERTAIN]: '선택한 부품인지 분명하지 않아요.', [PART_MATCH.NOT_MATCH]: '다른 부품으로 보여요.' });
-const SHOWN = new Set(['CANDIDATES', 'NONE_FOUND', 'FAILED']);
+// LOCAL_ONLY (P13-D): a part with no detector; the photo is on the phone and the region is marked by hand.
+const SHOWN = new Set(['CANDIDATES', 'NONE_FOUND', 'FAILED', 'LOCAL_ONLY']);
+/** P13-D: whether the page may offer analysis for this inspection task at all. Used before any dialog is built. */
+export const analysisOfferedForTask = taskId => { const entry = detectionForTask(taskId); return Boolean(entry && ANALYSIS_SUPPORT[entry.partId]?.offered); };
+const EVIDENCE_WORDS = Object.freeze({ REAL_SMOKE_4_CALLS_NO_ACCURACY: '실험 기능이에요. 실제 사진 2장으로 동작만 확인했고, 얼마나 맞는지는 아직 몰라요.', MOCK_ONLY: '실험 기능이에요. 실제 사진으로 확인하지 않았어요.' });
 
 function outline(ctx, box, width, height, label) {
   const unit = Math.max(2, Math.round(Math.max(width, height) / 320));
@@ -51,8 +56,12 @@ export function createPartAnalysis({ slot, entry, analyzer, serviceId, retake, c
   let state = initialAnalysis(), ctx = { phase: null, candidates: [], source: null, file: null }, crop = null, controller = null, sentAt = -Infinity;
 
   const section = el('section', 'part-analysis'); section.id = 'part-analysis'; section.setAttribute('aria-labelledby', 'part-analysis-title');
-  const title = el('h3', null, `부품 상태 AI 분석 · 실험 · ${profile.label}`); title.id = 'part-analysis-title';
-  const lead = el('p', 'fine', '위치 찾기와 따로 진행해요. 분석할 영역을 고르면 주변까지 잘라서 먼저 보여 드려요.');
+  const support = ANALYSIS_SUPPORT[entry.partId];
+  const title = el('h3', null, `부품 상태 AI 분석 · 실험 · ${profile.label}${support.limited ? ' · 직접 지정, 제한적 분석' : ''}`); title.id = 'part-analysis-title';
+  const lead = el('p', 'fine', support.limited
+    ? '이 부품은 AI 위치 찾기가 없어서 직접 지정한 영역만 분석해요. 사진만으로 부품 종류를 확정하기 어려워 판단 불가가 자주 나올 수 있어요.'
+    : '위치 찾기와 따로 진행해요. 분석할 영역을 고르면 주변까지 잘라서 먼저 보여 드려요.');
+  const evidenceNote = el('p', 'fine', EVIDENCE_WORDS[support.evidence]); evidenceNote.id = 'part-analysis-evidence';
 
   const region = el('div', 'part-analysis-region'); region.id = 'part-analysis-choose';
   const choices = el('div', 'row'); choices.id = 'part-analysis-choices';
@@ -100,7 +109,7 @@ export function createPartAnalysis({ slot, entry, analyzer, serviceId, retake, c
   const failRetake = button('part-analysis-fail-retake', '다시 촬영하기');
   failed.append(failText, retry, failRetake);
 
-  section.append(title, lead, region, preview, busy, result, failed);
+  section.append(title, lead, evidenceNote, region, preview, busy, result, failed);
   slot.append(section);
 
   const releaseCrop = () => { if (crop) crop.canvas.width = crop.canvas.height = 0; crop = null; cropView.width = cropView.height = 0; };

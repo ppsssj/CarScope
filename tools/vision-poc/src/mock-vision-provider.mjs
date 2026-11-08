@@ -1,6 +1,7 @@
 // P13-A: a MOCK vision provider and a fixture detector, for local runs and tests. Neither looks at the picture: what they return says
 // nothing about how well any real model sees. They exist to drive the pipeline, the contract and the screens end to end.
 import { jpegSize } from '../../inspection-sync-poc/src/part-detection-route.mjs';
+import { analysisProfile } from '../../mobile-ar-poc/public/part-analysis.mjs';
 
 const washer = (fields) => ({
   partId: 'washer-fluid-cap', partMatch: 'LIKELY_MATCH', assessment: 'NO_VISIBLE_ISSUE_DETECTED',
@@ -19,6 +20,25 @@ export const MOCK_SCENARIOS = Object.freeze({
 });
 
 /**
+ * P13-D: the same scenario names for every part. The washer keeps its P13-A answers; another part gets a generic answer with its own
+ * partId and its profile's first issue code, so the contract and the screens can be driven for all six parts. Invalid scenarios stay invalid.
+ */
+export function mockAnswer(partId, name) {
+  if (partId === 'washer-fluid-cap' || !analysisProfile(partId)) return MOCK_SCENARIOS[name];
+  const base = MOCK_SCENARIOS[name];
+  if (!base || typeof base !== 'object') return base;
+  const profile = analysisProfile(partId);
+  const generic = {
+    'no-visible-issue': { observations: [`${profile.label}로 보이는 부품이 사진에 보입니다.`, '보이는 범위에서 뚜렷한 파손이나 누출 흔적은 보이지 않습니다.'] },
+    suspected: { observations: [`${profile.label}로 보이는 부품이 사진에 보입니다.`], suspectedIssues: [{ code: profile.issues[0], description: '사진에서 이상이 의심되는 부분이 있습니다.', evidence: '표시한 영역에 주변과 다른 자국이 보입니다.' }], limitations: ['사진 범위 밖의 부분은 판단하지 않았습니다.'] },
+    indeterminate: { observations: ['부품 일부가 보이지만 표기는 읽을 수 없습니다.'], limitations: ['표기와 액면을 구분할 수 없어 부품 종류와 상태를 판단할 수 없습니다.'], retakeInstructions: ['부품의 표기가 보이도록 조금 더 가까이에서 찍어 주세요.'] },
+    'wrong-part': { observations: ['요청한 부품이 아닌 다른 부품의 표기가 보입니다.'] },
+    'claims-safe': { observations: ['부품은 정상입니다.'] },
+  }[name] ?? {};
+  return { ...base, partId, ...generic };
+}
+
+/**
  * @param o.scenario  a key of MOCK_SCENARIOS, or a function (input) => answer
  * @param o.mode      'answer' | 'error' | 'hold' (waits until release() or the abort signal)
  */
@@ -35,7 +55,7 @@ export function createMockVisionProvider({ scenario = 'no-visible-issue' } = {})
       signal?.addEventListener('abort', () => { call.aborted = true; }, { once: true });
       if (mode === 'error') throw new Error('mock upstream failure sk-should-never-leave');
       if (mode === 'hold') await new Promise(resolve => { held.push(resolve); signal?.addEventListener('abort', resolve, { once: true }); });
-      const answer = typeof current === 'function' ? current(input) : MOCK_SCENARIOS[current];
+      const answer = typeof current === 'function' ? current(input) : mockAnswer(input.partId, current);
       return structuredClone(answer);
     },
   };

@@ -58,9 +58,11 @@ test('consent, credential, own part, profile and a valid region are required bef
   const token = await session();
   assert.equal((await post(W)).status, 401);
   assert.equal(await code(await post(W, token, jpeg(), { 'X-CarScope-External-Processing': 'external-ai-v1' })), 'CONSENT_REQUIRED', 'the detection consent does not cover the vision service');
-  for (const id of ['coolant-reservoir', 'brake-fluid-reservoir', 'fuse-box', 'battery-12v', 'lcw-coolant-reservoir', 'nothing']) {
+  for (const id of ['nothing', 'tire.front-left']) {
     const r = await post(id, token); assert.equal(r.status, 404, id); assert.equal(await code(r), 'PART_ANALYSIS_UNSUPPORTED', id);
   }
+  // P13-D: the other bonnet parts are offered, but a washer credential may analyse only the washer cap.
+  for (const id of ['coolant-reservoir', 'brake-fluid-reservoir', 'fuse-box', 'battery-12v', 'lcw-coolant-reservoir']) assert.equal((await post(id, token, jpeg(), { 'X-CarScope-Region-Source': 'MANUAL' })).status, 403, id);
   for (const box of ['', '0,0,0,0.1', '0.9,0,0.2,0.1', '-0.1,0,0.1,0.1', '0,0,1', 'a,b,c,d', '0.1,0.1,0.1,0.1,0.1', '0.1234567,0,0.1,0.1'])
     assert.equal((await post(W, token, jpeg(), { 'X-CarScope-Target-Box': box })).status, 400, box);
   assert.equal((await post(W, token, jpeg(), { 'X-CarScope-Region-Source': 'GUESS' })).status, 400);
@@ -203,4 +205,29 @@ test('the page is marked, and the files served, only with both flags; the servic
   const dev = await startMobileDevServer({ authorizer: new LocalTestSessionCreationAuthorizer(), partDetection: { provider: detector }, partAnalysis: { provider: createMockVisionProvider() } });
   t.after(() => dev.stop());
   assert.match(await (await fetch(`${dev.url}/`)).text(), /data-part-analysis-service="mock"/);
+});
+
+test('P13-D: every bonnet part is analysed under its own inspection; parts without a detector accept only a marked region', async (t) => {
+  const { provider, session, post } = await service(t);
+  const tasks = { 'washer-fluid-cap': 'washer-fluid', 'coolant-reservoir': 'coolant-reservoir', 'brake-fluid-reservoir': 'brake-fluid', 'fuse-box': 'fuse-box', 'battery-12v': 'battery-12v', 'lcw-coolant-reservoir': 'lcw-coolant-reservoir' };
+  for (const [partId, task] of Object.entries(tasks)) {
+    const token = await session(task);
+    const manualOnly = partId === 'battery-12v' || partId === 'lcw-coolant-reservoir';
+    const viaDetector = await post(partId, token, jpeg(), { 'X-CarScope-Region-Source': 'AI_CANDIDATE' });
+    assert.equal(viaDetector.status, manualOnly ? 400 : 200, `${partId} AI_CANDIDATE`);
+    const marked = await post(partId, token, jpeg(), { 'X-CarScope-Region-Source': 'MANUAL' });
+    assert.equal(marked.status, 200, `${partId} MANUAL`);
+    const body = await marked.json();
+    assert.equal(body.partId, partId); assert.equal(body.result.partId, partId); assert.equal(body.profileStatus, 'EXPERIMENTAL');
+    assert.equal(body.analysis.regionSource, 'MANUAL');
+    // The credential of this inspection reaches no other part.
+    const other = Object.keys(tasks).find(id => id !== partId);
+    assert.equal((await post(other, token, jpeg(), { 'X-CarScope-Region-Source': 'MANUAL' })).status, 403, `${partId} -> ${other}`);
+  }
+  assert.deepEqual([...new Set(provider.calls.map(c => c.partId))].sort(), Object.keys(tasks).sort());
+  assert.ok(provider.calls.filter(c => ['battery-12v', 'lcw-coolant-reservoir'].includes(c.partId)).every(c => c.regionSource === 'MANUAL'), 'no AI_CANDIDATE reached the provider for a manual-only part');
+  // A claim this part may not make is refused whole, for any part.
+  provider.scenario = input => ({ partId: input.partId, partMatch: 'LIKELY_MATCH', assessment: 'NO_VISIBLE_ISSUE_DETECTED', observations: ['전압이 12.6V입니다.'], suspectedIssues: [], limitations: [], retakeRequired: false, retakeInstructions: [], requiresUserConfirmation: true });
+  const claim = await post('battery-12v', await session('battery-12v'), jpeg(), { 'X-CarScope-Region-Source': 'MANUAL' });
+  assert.equal(claim.status, 502); assert.equal(await code(claim), 'PART_ANALYSIS_INVALID_RESPONSE');
 });

@@ -61,8 +61,9 @@ export function candidatesFor(partId, parsed) {
 }
 
 // ---- The panel's states. A late answer from an earlier photo, or from before the part changed, is dropped by its attempt number.
-export const PHASE = Object.freeze({ CLOSED: 'CLOSED', CONSENT: 'CONSENT', ANALYZING: 'ANALYZING', CANDIDATES: 'CANDIDATES', NONE_FOUND: 'NONE_FOUND', FAILED: 'FAILED' });
-const fresh = (partId, attempt) => Object.freeze({ phase: PHASE.CLOSED, partId, consented: false, attempt, candidates: Object.freeze([]), detection: null, code: null });
+// LOCAL_ONLY (P13-D): a part with no detector. The photo is prepared on the phone and the person marks the region; nothing goes to the hosted detector.
+export const PHASE = Object.freeze({ CLOSED: 'CLOSED', CONSENT: 'CONSENT', ANALYZING: 'ANALYZING', CANDIDATES: 'CANDIDATES', NONE_FOUND: 'NONE_FOUND', FAILED: 'FAILED', LOCAL_ONLY: 'LOCAL_ONLY' });
+const fresh = (partId, attempt) => Object.freeze({ phase: PHASE.CLOSED, partId, consented: false, attempt, candidates: Object.freeze([]), detection: null, code: null, local: false });
 export const initialDetection = (partId = null) => fresh(partId, 0);
 export function reduceDetection(state, event) {
   const to = patch => Object.freeze({ ...state, ...patch });
@@ -70,11 +71,14 @@ export function reduceDetection(state, event) {
     case 'OPEN': return state.phase === PHASE.CLOSED ? to({ phase: PHASE.CONSENT, consented: false, candidates: Object.freeze([]), code: null }) : state;
     case 'CONSENT': return state.phase === PHASE.CONSENT ? to({ consented: event.value === true }) : state;
     case 'PHOTO': return state.phase === PHASE.CONSENT && state.consented ? to({ phase: PHASE.ANALYZING, attempt: state.attempt + 1, candidates: Object.freeze([]), detection: null, code: null }) : state;
+    // No detector consent is asked or needed: this photo is not sent anywhere at this step.
+    case 'LOCAL_PHOTO': return state.phase === PHASE.CONSENT ? to({ phase: PHASE.ANALYZING, attempt: state.attempt + 1, candidates: Object.freeze([]), detection: null, code: null, local: true }) : state;
+    case 'LOCAL_READY': return state.phase === PHASE.ANALYZING && state.local && event.attempt === state.attempt ? to({ phase: PHASE.LOCAL_ONLY }) : state;
     case 'ANSWER':
-      if (state.phase !== PHASE.ANALYZING || event.attempt !== state.attempt) return state;
+      if (state.phase !== PHASE.ANALYZING || state.local || event.attempt !== state.attempt) return state;
       return event.candidates.length ? to({ phase: PHASE.CANDIDATES, candidates: Object.freeze([...event.candidates]), detection: event.detection ?? null }) : to({ phase: PHASE.NONE_FOUND, detection: event.detection ?? null });
     case 'FAIL': return state.phase === PHASE.ANALYZING && event.attempt === state.attempt ? to({ phase: PHASE.FAILED, code: event.code }) : state;
-    case 'AGAIN': return [PHASE.CANDIDATES, PHASE.NONE_FOUND, PHASE.FAILED].includes(state.phase) ? to({ phase: PHASE.CONSENT, consented: false, candidates: Object.freeze([]), detection: null, code: null }) : state;
+    case 'AGAIN': return [PHASE.CANDIDATES, PHASE.NONE_FOUND, PHASE.FAILED, PHASE.LOCAL_ONLY].includes(state.phase) ? to({ phase: PHASE.CONSENT, consented: false, candidates: Object.freeze([]), detection: null, code: null, local: false }) : state;
     case 'SELECT_PART': return state.partId === event.partId ? state : fresh(event.partId, state.attempt + 1);
     case 'CLOSE': return fresh(state.partId, state.attempt + 1);
     default: return state;

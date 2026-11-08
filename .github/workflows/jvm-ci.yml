@@ -36,6 +36,9 @@ jobs:
           java-version: '17'
           overwrite-settings: false
 
+      - name: Prepare verified Gradle cache
+        uses: ./.github/actions/prepare-gradle
+
       - name: Run core tests with Gradle Wrapper 8.14
         run: ./gradlew -PcoreOnly=true :vehicle-core:test --rerun-tasks --console=plain
 

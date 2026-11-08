@@ -59,6 +59,8 @@ jobs:
           distribution: temurin
           java-version: '17'
           overwrite-settings: false
+      - name: Prepare verified Gradle cache
+        uses: ./.github/actions/prepare-gradle
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
           node-version: '22.16.0'

@@ -2,6 +2,7 @@
 // page, the server and every provider. The model's free text is never the result: only a result that passes validateAnalysisResult is.
 // Nothing here is a vehicle safety verdict. NO_VISIBLE_ISSUE_DETECTED means "nothing seen in this photo", not "the part is fine".
 import { CROP_DEFAULTS } from './context-crop.mjs';
+import { offersDetection, PART_DETECTION } from './part-detection.mjs';
 
 export const ANALYSIS_CONSENT = 'external-vision-v1';
 export const PROMPT_VERSION = 'p13-a-1';
@@ -19,7 +20,7 @@ export const RESULT_LIMITS = Object.freeze({ textChars: 200, items: 5 });
 // UNSUPPORTED is the server's answer for a part with no profile. A model may not choose it.
 const MODEL_ASSESSMENTS = Object.freeze([ASSESSMENT.NO_VISIBLE_ISSUE_DETECTED, ASSESSMENT.SUSPECTED_ISSUE, ASSESSMENT.INDETERMINATE, ASSESSMENT.WRONG_PART]);
 
-const profile = (partId, status, fields = {}) => Object.freeze({ partId, status, label: fields.label ?? partId, crop: Object.freeze({ ...CROP_DEFAULTS, ...fields.crop }), identify: fields.identify ?? '', check: Object.freeze(fields.check ?? []), never: Object.freeze(fields.never ?? []), issues: Object.freeze(fields.issues ?? []), reason: fields.reason ?? '' });
+const profile = (partId, status, fields = {}) => Object.freeze({ partId, status, label: fields.label ?? partId, crop: Object.freeze({ ...CROP_DEFAULTS, ...fields.crop }), identify: fields.identify ?? '', check: Object.freeze(fields.check ?? []), never: Object.freeze(fields.never ?? []), issues: Object.freeze(fields.issues ?? []), claims: fields.claims ?? null, reason: fields.reason ?? '' });
 export const ANALYSIS_PROFILES = Object.freeze({
   'washer-fluid-cap': profile('washer-fluid-cap', PROFILE_STATUS.EXPERIMENTAL, {
     label: '워셔액 주입구',
@@ -29,46 +30,86 @@ export const ANALYSIS_PROFILES = Object.freeze({
     check: ['whether the cap looks seated and closed', 'whether the cap appears to be missing or the filler opening is exposed', 'visible cracks or breaks on the cap or the filler neck'],
     never: ['the washer fluid level or quantity (the tank is usually not visible from the cap)', 'whether the washer pump or nozzles work'],
     issues: ['CAP_MISSING_SUSPECTED', 'CAP_OPEN_SUSPECTED', 'CAP_OR_NECK_DAMAGE_SUSPECTED'],
-    reason: 'First analysis profile. Shape and refusal rules tested with a MOCK provider only. No real image analysis was run, so accuracy is unknown.',
+    reason: 'First analysis profile. P13-B real smoke: 4 calls on 2 photos, schema 4/4; accuracy not established (INSUFFICIENT_SAMPLE).',
   }),
-  'coolant-reservoir': profile('coolant-reservoir', PROFILE_STATUS.DRAFT, {
+  // P13-D: the other five bonnet parts. EXPERIMENTAL for analysis means "offered, labelled as an experiment, never evaluated on real photos".
+  // It says nothing about detection: battery-12v and lcw-coolant-reservoir stay UNSUPPORTED in PART_DETECTION and are analysed from a region
+  // the person marks (ANALYSIS_SUPPORT below).
+  'coolant-reservoir': profile('coolant-reservoir', PROFILE_STATUS.EXPERIMENTAL, {
     label: '냉각수 리저버',
     crop: { margin: 0.4 },
-    identify: 'the engine coolant expansion reservoir. Electrified cars may also have a separate low-conductivity coolant reservoir that looks similar. If you cannot tell which one this is from a printed label, the part match is UNCERTAIN.',
-    check: ['whether the liquid surface is clearly visible', 'whether MIN and MAX marks are visible and readable', 'if both are clearly visible, whether the surface looks below MIN', 'visible traces that look like leaks or stains around the reservoir and hoses'],
-    never: ['coolant quality, concentration or temperature', 'the cooling system as a whole'],
+    identify: 'the engine (normal) coolant expansion reservoir. Electrified cars may also have a separate low-conductivity coolant reservoir that looks similar. If no printed label or marking shows which reservoir this is, and a low-conductivity reservoir could exist on this car, set partMatch to UNCERTAIN.',
+    check: ['whether this is the coolant reservoir', 'whether the MIN and MAX marks are visible and readable', 'whether the liquid surface is clearly visible', 'only if both the surface and MIN are clearly visible, whether the surface looks below MIN', 'clearly visible cracks, breaks, or traces that look like leaks or stains around the reservoir and hoses'],
+    never: ['a level that is not visible (never call a hidden level normal)', 'whether this is the same as a low-conductivity coolant reservoir without a label that says so', 'whether the cooling system works, or coolant quality, concentration or temperature'],
     issues: ['LEVEL_BELOW_MIN_SUSPECTED', 'LEAK_TRACE_SUSPECTED', 'RESERVOIR_DAMAGE_SUSPECTED'],
-    reason: 'Draft only: not offered, not evaluated. Normal and low-conductivity coolant can be confused (P12-F).',
+    claims: /(냉각\s*(계통|시스템|성능))[이은가는]?\s*(정상|양호|문제\s*없)|농도[가는이은]?\s*(\d|적정|정상|충분)/,
+    reason: 'P13-D: offered as an experiment. MOCK tests only, no real photo evaluated. Normal and low-conductivity coolant can be confused (P12-F).',
   }),
-  'brake-fluid-reservoir': profile('brake-fluid-reservoir', PROFILE_STATUS.DRAFT, {
+  'brake-fluid-reservoir': profile('brake-fluid-reservoir', PROFILE_STATUS.EXPERIMENTAL, {
     label: '브레이크액 리저버',
     crop: { margin: 0.5 },
     identify: 'the brake fluid reservoir, usually translucent with MIN and MAX marks and a cap with a brake symbol. Do not confuse it with clutch or power steering reservoirs.',
-    check: ['whether the liquid surface and the MIN and MAX marks are clearly visible', 'if both are clearly visible, whether the surface looks below MIN', 'visible traces that look like leaks around the reservoir'],
-    never: ['braking performance or whether the brakes are safe', 'brake fluid quality or water content'],
+    check: ['whether this is the brake fluid reservoir', 'whether the liquid surface and the MIN and MAX marks are clearly visible', 'only if both are clearly visible, whether the surface looks below MIN', 'clearly visible cracks, breaks or traces that look like leaks around the reservoir'],
+    never: ['braking performance, or whether the brakes or the car are safe to drive', 'brake fluid quality, colour meaning or water content'],
     issues: ['LEVEL_BELOW_MIN_SUSPECTED', 'LEAK_TRACE_SUSPECTED', 'RESERVOIR_DAMAGE_SUSPECTED'],
-    reason: 'Draft only: not offered, not evaluated. Brake related, so it must stay conservative.',
+    claims: /제동\s*(성능|력|장치)[이은가는]?\s*(정상|양호|충분|문제\s*없)|수분\s*함량[이은]?\s*\d|(브레이크액|오일)\s*(품질|상태)[이은가는]?\s*(정상|양호|좋)/,
+    reason: 'P13-D: offered as an experiment. MOCK tests only, no real photo evaluated. Brake related: judged conservatively.',
   }),
-  'fuse-box': profile('fuse-box', PROFILE_STATUS.DRAFT, {
+  'fuse-box': profile('fuse-box', PROFILE_STATUS.EXPERIMENTAL, {
     label: '퓨즈박스',
     crop: { margin: 0.3 },
-    identify: 'the fuse box housing in the bonnet area, usually a black box with a lid. Other electrical boxes look similar.',
-    check: ['whether the lid looks present and closed', 'visible cracks or damage on the housing or lid'],
-    never: ['the state of any fuse or relay inside', 'anything about the electrical system'],
-    issues: ['COVER_MISSING_SUSPECTED', 'COVER_DAMAGE_SUSPECTED'],
-    reason: 'Draft only: not offered, not evaluated. Only 3 labelled photos in P12-F.',
+    identify: 'the fuse box housing in the bonnet area, usually a black box with a lid, sometimes with a fuse layout printed on the lid. Other electrical boxes look similar: without such a marking, set partMatch to UNCERTAIN.',
+    check: ['whether this is the fuse box housing and its cover', 'whether the cover looks present', 'whether the cover looks closed and latched, not lifted or open', 'clearly visible cracks or breaks on the housing or cover'],
+    never: ['the state of any fuse or relay inside, which cannot be seen with the cover on', 'whether the electrical system works'],
+    issues: ['COVER_MISSING_SUSPECTED', 'COVER_OPEN_SUSPECTED', 'COVER_OR_HOUSING_DAMAGE_SUSPECTED'],
+    claims: /퓨즈[가는이은]?\s*(정상|모두\s*정상|끊어지지\s*않)|전기\s*(계통|장치)[이은가는]?\s*(정상|양호|문제\s*없)/,
+    reason: 'P13-D: offered as an experiment. MOCK tests only, no real photo evaluated. Only 3 labelled photos in P12-F.',
   }),
-  'battery-12v': profile('battery-12v', PROFILE_STATUS.UNSUPPORTED, { label: '12V 보조 배터리', reason: 'Detection is UNSUPPORTED (P12-F). A mix-up with high voltage parts matters most here.' }),
-  'lcw-coolant-reservoir': profile('lcw-coolant-reservoir', PROFILE_STATUS.UNSUPPORTED, { label: '저전도 냉각수 리저버', reason: 'Detection is UNSUPPORTED: the model has no class for it (P12-F).' }),
+  'battery-12v': profile('battery-12v', PROFILE_STATUS.EXPERIMENTAL, {
+    label: '12V 보조 배터리',
+    crop: { margin: 0.25, minShortSideFraction: 0.35 },
+    identify: 'the 12V auxiliary (low-voltage) battery. Electrified cars also have high-voltage parts, with orange cables and high-voltage warning labels: these are never the 12V battery. If a label or the terminals do not show it is the 12V battery, set partMatch to UNCERTAIN. A person marked this region; no detector proposed it.',
+    check: ['whether it can be confirmed as the 12V auxiliary battery', 'clearly visible cracks, bulges or breaks of the battery case', 'clearly visible liquid traces that look like leaks', 'only where the terminals are clearly visible, white or green deposits that look like corrosion'],
+    never: ['state of charge, voltage, capacity, health or remaining life', 'anything about the high-voltage battery or high-voltage system', 'any handling: removing the battery, touching or loosening terminals, jump starting or charging'],
+    issues: ['CASE_DAMAGE_SUSPECTED', 'LEAK_TRACE_SUSPECTED', 'TERMINAL_CORROSION_SUSPECTED'],
+    claims: /전압[은이가는]?\s*(약\s*)?\d|\d+(\.\d+)?\s*V(?![A-Za-z])\s*(로|으로|입니다|이에요|정도)|충전\s*(상태|량|율)[은이가는]?\s*(\d|충분|양호|정상|낮|높)|수명[이은가는]?\s*(\d|충분|남아|다\s*되)|탈거|단자를\s*(풀|조이|조여|만지|닦)|점프\s*(시동|스타트)/,
+    reason: 'P13-D: limited analysis from a marked region. Detection stays UNSUPPORTED (P12-F). MOCK tests only. A mix-up with high-voltage parts matters most here.',
+  }),
+  'lcw-coolant-reservoir': profile('lcw-coolant-reservoir', PROFILE_STATUS.EXPERIMENTAL, {
+    label: '저전도 냉각수 리저버',
+    crop: { margin: 0.4 },
+    identify: 'the low-conductivity coolant reservoir of an electrified car. Identify it only from a printed label or marking that says so; never from colour, shape or position. Without such a label, set partMatch to UNCERTAIN. A person marked this region; no detector proposed it.',
+    check: ['whether a label or marking identifies it as the low-conductivity coolant reservoir', 'whether the MIN and MAX marks and the liquid surface are clearly visible', 'only if both are clearly visible, whether the surface looks below MIN', 'clearly visible cracks, breaks or traces that look like leaks'],
+    never: ['telling it apart from the normal coolant reservoir without a label', 'the liquid composition, concentration or electrical conductivity', 'any refill, top-up or maintenance step'],
+    issues: ['LEVEL_BELOW_MIN_SUSPECTED', 'LEAK_TRACE_SUSPECTED', 'RESERVOIR_DAMAGE_SUSPECTED'],
+    claims: /전도도[가는이은]?\s*(\d|낮|높|적정|정상)|농도[가는이은]?\s*(\d|적정|정상|충분)|성분[이은가는]?\s*(정상|적정)|교체하세요|교환하세요/,
+    reason: 'P13-D: limited analysis from a marked region. Detection stays UNSUPPORTED: the model has no class for it (P12-F). MOCK tests only.',
+  }),
 });
 /** Korean names of the issue codes, for the page. Every code a profile allows has one (tested). */
 export const ISSUE_LABELS = Object.freeze({
   CAP_MISSING_SUSPECTED: '캡이 없어 보임', CAP_OPEN_SUSPECTED: '캡이 열려 보임', CAP_OR_NECK_DAMAGE_SUSPECTED: '캡·주입구 손상 의심',
   LEVEL_BELOW_MIN_SUSPECTED: '액면이 MIN 아래로 보임', LEAK_TRACE_SUSPECTED: '누출 흔적 의심', RESERVOIR_DAMAGE_SUSPECTED: '리저버 손상 의심',
-  COVER_MISSING_SUSPECTED: '덮개가 없어 보임', COVER_DAMAGE_SUSPECTED: '덮개 손상 의심',
+  COVER_MISSING_SUSPECTED: '덮개가 없어 보임', COVER_OPEN_SUSPECTED: '덮개가 열려 보임', COVER_OR_HOUSING_DAMAGE_SUSPECTED: '덮개·하우징 손상 의심',
+  CASE_DAMAGE_SUSPECTED: '배터리 케이스 손상 의심', TERMINAL_CORROSION_SUSPECTED: '단자 부식 의심',
 });
 export const analysisProfile = partId => (Object.hasOwn(ANALYSIS_PROFILES, partId) ? ANALYSIS_PROFILES[partId] : null);
 export const offersAnalysis = partId => analysisProfile(partId)?.status === PROFILE_STATUS.EXPERIMENTAL;
+/**
+ * P13-D: how each part may reach an analysis. Kept apart from detection: offersDetection() says whether the hosted detector may propose a region,
+ * offersAnalysis() whether the vision service may look at one. A part without detection is analysed only from a region the person marks.
+ *   regionModes: which region sources the page may offer and the server accepts. limited: no detector, so identification rests on the photo.
+ *   evidence: what has been run, as a fixed sentence for the page and the docs. No part has an accuracy figure.
+ */
+export const ANALYSIS_SUPPORT = Object.freeze(Object.fromEntries(Object.values(ANALYSIS_PROFILES).map(p => {
+  const detects = offersDetection(PART_DETECTION[p.partId]);
+  return [p.partId, Object.freeze({
+    partId: p.partId, status: p.status, offered: p.status === PROFILE_STATUS.EXPERIMENTAL,
+    regionModes: Object.freeze(detects ? ['AI_CANDIDATE', 'MANUAL'] : ['MANUAL']), limited: !detects,
+    evidence: p.partId === 'washer-fluid-cap' ? 'REAL_SMOKE_4_CALLS_NO_ACCURACY' : 'MOCK_ONLY',
+  })];
+})));
+export const regionAllowed = (partId, regionSource) => Boolean(ANALYSIS_SUPPORT[partId]?.offered && ANALYSIS_SUPPORT[partId].regionModes.includes(regionSource));
 
 // ---- What is sent to a provider. The same text and schema for every provider, so they can be compared.
 const RULES = [
@@ -157,6 +198,8 @@ export function validateAnalysisResult(partId, value) {
   if (retakeRequired !== (retakeInstructions.length > 0)) return no('RETAKE_INSTRUCTIONS');
   const all = [...observations, ...limitations, ...retakeInstructions, ...suspectedIssues.flatMap(i => [i.description, i.evidence])];
   if (all.some(t => FORBIDDEN_TEXT.test(t))) return no('FORBIDDEN_TEXT');
+  // Claims this part may never make (voltage, charge, conductivity, braking performance, inner fuses...). Refused, never repaired.
+  if (p.claims && all.some(t => p.claims.test(t))) return no('FORBIDDEN_CLAIM');
   const freeze = items => Object.freeze(items.map(i => (typeof i === 'string' ? i : Object.freeze({ code: i.code, description: i.description, evidence: i.evidence }))));
   return { ok: true, result: Object.freeze({ partId, partMatch, assessment, observations: freeze(observations), suspectedIssues: freeze(suspectedIssues), limitations: freeze(limitations), retakeRequired, retakeInstructions: freeze(retakeInstructions), requiresUserConfirmation: true }) };
 }

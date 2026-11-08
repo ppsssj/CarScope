@@ -41,6 +41,9 @@ jobs:
           java-version: '17'
           overwrite-settings: false
 
+      - name: Prepare verified Gradle cache
+        uses: ./.github/actions/prepare-gradle
+
       - name: Install exact Anatomy commit (no revision bypass)
         shell: bash
         run: |
