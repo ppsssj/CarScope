@@ -94,9 +94,8 @@ async function readJson(req) {
  */
 export function createSyncHandler({ service, history = new HistoryService({store:service.store}), historyAuthorizer = new DenyHistoryAuthorizer(), limiter = new RateLimiter(), authorizer = new ProductionSessionCreationAuthorizer(), log = () => {}, allowedOrigin = null, debugPage = false, tls = false, trustedEdgeSecure = null, partDetection = null, partAnalysis = null }) {
   const detect = partDetection ? createPartDetectionRoute(partDetection) : null;
-  // The analysis continues from the detection screen, so it never exists without it.
-  if (partAnalysis && !detect) throw new Error('PART_ANALYSIS_NEEDS_DETECTION');
-  const analyze = partAnalysis ? createPartAnalysisRoute(partAnalysis) : null;
+  // P13-E: a host without a detector accepts only regions marked by the person.
+  const analyze = partAnalysis ? createPartAnalysisRoute({ ...partAnalysis, manualOnly: !detect }) : null;
   const routes = [...ROUTES, ...(detect ? [DETECTION_ROUTE] : []), ...(analyze ? [ANALYSIS_ROUTE] : [])];
   return async (req, res) => {
     const started = Date.now();

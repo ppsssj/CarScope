@@ -45,10 +45,11 @@ function drawCandidates(target, source, candidates) {
  * `analysisOffered` (P13-D): the analysis module's word that this part may be analysed. A part with no detector then opens in manual mode:
  * the photo stays on the phone, no Roboflow consent is asked and no detection request is made, and the person marks the region.
  */
-export function mountPartDetection({ taskId, detector, introBefore, locationAfter, onOpen = () => {}, analysis = null, analysisOffered = false }) {
+export function mountPartDetection({ taskId, detector, introBefore, locationAfter, onOpen = () => {}, analysis = null, analysisOffered = false, detectionEnabled = true }) {
   const entry = detectionForTask(taskId);
   if (!entry || !detector) return null;
-  const manualOnly = !offersDetection(entry);
+  const manualOnly = !detectionEnabled || !offersDetection(entry);
+  let localChoice = manualOnly;
   if (manualOnly && !(analysis && analysisOffered)) return null;
   let state = initialDetection(entry.partId), source = null, original = null, historyPushed = false;
 
@@ -67,13 +68,16 @@ export function mountPartDetection({ taskId, detector, introBefore, locationAfte
   camera.id = 'part-detect-camera-input'; camera.setAttribute('capture', 'environment'); library.id = 'part-detect-library-input';
   const row = el('div', 'row'); row.append(take, gallery);
   if (manualOnly) consent.append(
-    el('p', 'lead', '이 부품은 AI 위치 찾기를 지원하지 않아요. 사진을 고른 뒤 부품이 있는 곳을 직접 눌러 주세요.'),
+    el('p', 'lead', 'AI 위치 찾기 없이 분석해요. 사진을 고른 뒤 부품이 있는 곳을 직접 눌러 주세요.'),
     el('p', 'card', '사진을 고르는 것만으로는 어디에도 보내지 않아요. 상태 분석을 시작할 때 따로 동의를 받고, 직접 지정한 부분만 잘라서 보내요.'),
     row, camera, library);
-  else consent.append(
+  const detectionInfo = el('div');
+  const direct = el('button', null, '탐지 없이 직접 영역 지정'); direct.type = 'button'; direct.id = 'part-detect-manual';
+  const localNote = el('p', 'card', '사진을 고르는 것만으로는 어디에도 보내지 않아요. 직접 지정한 영역의 Crop을 확인하고 분석 동의 후에만 보내요.');
+  if (!manualOnly) { detectionInfo.append(
     el('p', 'lead', '엔진룸 사진 한 장에서 부품 후보를 찾아 표시해요. 후보일 뿐이고, 부품을 확정하지 않아요.'),
     el('p', 'card warn', '이 사진은 CarScope 서버를 거쳐 외부 AI 서비스(Roboflow)로 보내져요. CarScope는 사진을 저장하지 않아요. 외부 서비스의 처리·보관 조건은 아직 확인하지 못했어요. 번호판이나 사람이 나오지 않게 해 주세요.'),
-    agreeLabel, row, camera, library);
+    agreeLabel); consent.append(detectionInfo, direct, localNote, row, camera, library); }
 
   const busy = el('p', 'part-detect-status', manualOnly ? '사진을 준비하고 있어요…' : '사진을 분석하고 있어요…'); busy.id = 'part-detect-busy'; busy.setAttribute('role', 'status');
   const result = el('section'); result.id = 'part-detect-result';
@@ -89,12 +93,15 @@ export function mountPartDetection({ taskId, detector, introBefore, locationAfte
   let extension = null;
 
   function render() {
+    body.querySelector('#part-detect-title').textContent = localChoice ? 'AI 부품 상태 분석 · 실험' : 'AI로 부품 위치 찾기 · 실험';
+    busy.textContent = localChoice ? '사진을 준비하고 있어요…' : '사진을 분석하고 있어요…';
     consent.hidden = state.phase !== PHASE.CONSENT;
     busy.hidden = state.phase !== PHASE.ANALYZING;
     const done = [PHASE.CANDIDATES, PHASE.NONE_FOUND, PHASE.FAILED, PHASE.LOCAL_ONLY].includes(state.phase);
     result.hidden = !done;
     agree.checked = state.consented;
-    take.disabled = gallery.disabled = !manualOnly && !state.consented;
+    take.disabled = gallery.disabled = !localChoice && !state.consented;
+    detectionInfo.hidden = localChoice; direct.hidden = localChoice || !analysisOffered; localNote.hidden = !localChoice;
     picture.hidden = state.phase !== PHASE.CANDIDATES;
     caution.hidden = state.phase !== PHASE.CANDIDATES;
     picture.setAttribute('aria-label', `선택한 사진. 후보 ${state.candidates.length}개가 표시되어 있습니다.`);
@@ -103,7 +110,7 @@ export function mountPartDetection({ taskId, detector, introBefore, locationAfte
       message.textContent = `AI가 찾은 후보 ${state.candidates.length}개예요. 확정된 위치가 아니에요. 어느 것이 맞는지, 맞는 것이 있는지는 직접 확인해 주세요.`;
     } else if (state.phase === PHASE.NONE_FOUND) message.textContent = '이 사진에서는 후보를 찾지 못했어요. 부품이 없다는 뜻은 아니에요. 그림 안내와 차량 설명서로 찾아 주세요.';
     else if (state.phase === PHASE.FAILED) message.textContent = `${FAILURE[state.code] ?? FAILURE.UNAVAILABLE} 그림 안내와 차량 설명서로 찾아 주세요.`;
-    else if (state.phase === PHASE.LOCAL_ONLY) message.textContent = '이 부품은 AI 위치 찾기를 지원하지 않아요. 아래 사진에서 부품이 있는 곳을 직접 눌러 주세요. 직접 지정한 영역만 분석해요.';
+    else if (state.phase === PHASE.LOCAL_ONLY) message.textContent = '아래 사진에서 부품이 있는 곳을 직접 눌러 주세요. 직접 지정한 영역만 분석해요.';
     extension?.show({ phase: state.phase, candidates: state.candidates, source, file: original });
   }
   const dispatch = event => { state = reduceDetection(state, event); render(); };
@@ -111,7 +118,7 @@ export function mountPartDetection({ taskId, detector, introBefore, locationAfte
   const release = () => { extension?.reset(); if (source) source.width = source.height = 0; source = null; original = null; picture.width = picture.height = 0; };
 
   async function analyze(file) {
-    if (manualOnly) return prepareLocal(file);
+    if (localChoice) return prepareLocal(file);
     // Late or scripted file events cannot get around the consent or the single request.
     if (!file || state.phase !== PHASE.CONSENT || !state.consented) return;
     dispatch({ type: 'PHOTO' });
@@ -141,8 +148,9 @@ export function mountPartDetection({ taskId, detector, introBefore, locationAfte
     } catch (error) { dispatch({ type: 'FAIL', attempt, code: error?.code ?? 'UNREADABLE' }); }
   }
   agree.addEventListener('change', () => dispatch({ type: 'CONSENT', value: agree.checked }));
-  take.addEventListener('click', () => { if (manualOnly || state.consented) camera.click(); });
-  gallery.addEventListener('click', () => { if (manualOnly || state.consented) library.click(); });
+  direct.addEventListener('click', () => { localChoice = true; render(); take.focus(); });
+  take.addEventListener('click', () => { if (localChoice || state.consented) camera.click(); });
+  gallery.addEventListener('click', () => { if (localChoice || state.consented) library.click(); });
   for (const input of [camera, library]) input.addEventListener('change', () => { const [file] = input.files; input.value = ''; void analyze(file); });
   again.addEventListener('click', () => { release(); dispatch({ type: 'AGAIN' }); });
   close.addEventListener('click', () => dialog.close());

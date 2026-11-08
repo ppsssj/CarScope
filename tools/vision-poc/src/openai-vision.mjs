@@ -72,12 +72,14 @@ export function openAiVisionProvider({ apiKey, model, fetchImpl = fetch, timeout
       const body = JSON.stringify(buildOpenAiRequest(input, { model, maxOutputTokens, detail }));
       const ctrl = new AbortController(), stop = () => ctrl.abort();
       signal?.addEventListener('abort', stop, { once: true });
+      if (signal?.aborted) stop();
       const timer = setTimeout(stop, timeoutMs);
       try {
         let response;
         try {
           response = await fetchImpl(OPENAI_RESPONSES_URL, { method: 'POST', signal: ctrl.signal, redirect: 'error', headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' }, body });
         } catch { fail(ctrl.signal.aborted ? 'OPENAI_ABORTED' : 'OPENAI_NETWORK'); }
+        if (ctrl.signal.aborted) fail('OPENAI_ABORTED');
         if (!response.ok) { await response.body?.cancel().catch(() => {}); fail(`OPENAI_HTTP_${response.status}`); }
         let text;
         try { text = await readLimited(response, maxResponseBytes); } catch (error) { fail(error?.code === 'OPENAI_RESPONSE_TOO_LARGE' ? error.code : 'OPENAI_NETWORK'); }

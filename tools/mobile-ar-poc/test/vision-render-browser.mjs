@@ -1,0 +1,174 @@
+// Real Render-shaped HTTP, real PostgreSQL/QR grants, Chrome mobile viewport and the real OpenAI adapter.
+// Only its outbound fetch is synthetic. No Render, phone, OpenAI or Roboflow is contacted.
+import assert from 'node:assert/strict';
+import { chromium } from 'playwright';
+import { PNG } from 'pngjs';
+import http from 'node:http';
+import path from 'node:path';
+import os from 'node:os';
+import { mkdir, writeFile } from 'node:fs/promises';
+import { startRenderVisionExperiment } from '../../inspection-sync-poc/src/render-vision-experiment.mjs';
+import { startRenderStateful } from '../../inspection-sync-poc/src/render-stateful.mjs';
+import { PostgreSQLVisionBudget } from '../../inspection-sync-poc/src/vision-budget.mjs';
+import { experimentVisionProvider } from '../../inspection-sync-poc/src/vision-providers.mjs';
+import { AvdSimulatorCredentialStore } from '../../inspection-sync-poc/src/avd-simulator-credentials.mjs';
+import { buildInviteFragment } from '../../inspection-sync-poc/src/protocol.mjs';
+import { visionDatabase, openAiFixture } from '../../inspection-sync-poc/test/vision-fixture.mjs';
+
+if (!process.env.PG_TEST_URL) throw new Error('PG_TEST_URL required; real PostgreSQL gate cannot skip');
+const ORIGIN = 'https://vision-experiment-test.onrender.com';
+const output = path.resolve(process.env.POC_EVIDENCE_DIR ?? path.join(os.tmpdir(), 'carscope-p13-e'));
+if (output.toLowerCase().startsWith(path.resolve('.').toLowerCase() + path.sep)) throw new Error('Evidence must be outside the repository');
+await mkdir(output, { recursive: true });
+const result = { kind: 'REAL_POSTGRES_QR_MOBILE_CHROME_MOCK_OUTBOUND_OPENAI', paidCalls: 0, render: 'NOT_RUN', realPhone: 'NOT_RUN', checks: [] };
+const pass = text => { result.checks.push(text); console.log('PASS ' + text); };
+const png = new PNG({ width: 1000, height: 800 }); png.data.fill(150);
+for (let i = 3; i < png.data.length; i += 4) png.data[i] = 255;
+const picture = { name: 'synthetic.png', mimeType: 'image/png', buffer: PNG.sync.write(png) };
+const PARTS = [['washer-fluid-cap','washer-fluid'], ['coolant-reservoir','coolant-reservoir'], ['brake-fluid-reservoir','brake-fluid'], ['fuse-box','fuse-box'], ['battery-12v','battery-12v'], ['lcw-coolant-reservoir','lcw-coolant-reservoir']];
+let browser;
+const fixtures = [];
+
+async function service({ daily = 20, baseline = false, partDetection = null } = {}) {
+  const db = await visionDatabase(), pool = db.pool(), mock = openAiFixture();
+  const budget = new PostgreSQLVisionBudget({ pool, daily, monthly: daily, expectedSchema: db.schema });
+  const provider = experimentVisionProvider({ env: { CARSCOPE_VISION_APPROVAL:'OPERATOR_APPROVED', OPENAI_API_KEY:'synthetic-server-key', OPENAI_VISION_MODEL:'synthetic-model' }, budget, fetchImpl: mock.fetch });
+  const app = await (baseline ? startRenderStateful : startRenderVisionExperiment)({ pool, publicOrigin: ORIGIN, expectedSchema: db.schema, enableAvdSimulation: true, provider, budget, partDetection });
+  const edge = http.createServer((req, res) => {
+    const up = http.request({ host:'127.0.0.1', port:app.server.address().port, method:req.method, path:req.url,
+      headers:{ ...req.headers, host:new URL(ORIGIN).host, 'x-forwarded-proto':'https', ...(req.headers.origin ? { origin: ORIGIN } : {}) } }, answer => { res.writeHead(answer.statusCode, answer.headers); answer.pipe(res); });
+    up.on('error', () => { if (!res.headersSent) res.writeHead(502); res.end(); });
+    res.on('close', () => { if (!res.writableFinished) up.destroy(); });
+    req.pipe(up);
+  });
+  await new Promise(resolve => edge.listen(0, '127.0.0.1', resolve));
+  const url = 'http://127.0.0.1:' + edge.address().port;
+  const registry = new AvdSimulatorCredentialStore({ pool });
+  const registration = await registry.register({ label:'synthetic-vision-browser', ttlMs:3_600_000 });
+  const { credential } = await registry.provision({ enrollmentProof:registration.enrollmentProof, apiOrigin:ORIGIN });
+  const api = async (route, { method = 'GET', token, body } = {}) => {
+    const response = await fetch(url + route, { method, headers:{ ...(token ? { Authorization:'Bearer ' + token } : {}), ...(body ? { 'Content-Type':'application/json' } : {}) }, ...(body ? { body:JSON.stringify(body) } : {}) });
+    return { status:response.status, data:await response.json().catch(() => null) };
+  };
+  const owned = { db, pool, mock, app, url, api, credential, async stop() { await new Promise(resolve => edge.close(resolve)); await app.stop(); await db.close(); } };
+  fixtures.push(owned); return owned;
+}
+
+async function phone(host, task) {
+  const created = await host.api('/v1/sessions', { method:'POST', token:host.credential, body:{ taskId:task } }); assert.equal(created.status, 201);
+  const session = created.data, context = await browser.newContext({ viewport:{ width:390, height:844 }, isMobile:true, hasTouch:true, deviceScaleFactor:2 });
+  const page = await context.newPage(); page.setDefaultTimeout(15_000);
+  const log = { requests:[], errors:[], failedResponses:[] };
+  page.on('pageerror', e => log.errors.push(e.message));
+  page.on('request', r => log.requests.push({ url:r.url(), method:r.method(), headers:r.headers() }));
+  page.on('response', r => { if (r.status() >= 400) log.failedResponses.push({ status:r.status(), path:new URL(r.url()).pathname }); });
+  await page.goto(host.url + '/' + buildInviteFragment(task, session.inviteToken));
+  await page.waitForFunction(() => window.__selfInspection || window.__checklistInspection);
+  await page.waitForFunction(() => document.getElementById('sync-claim').disabled && document.body.textContent.includes('연결됐어요'));
+  await page.waitForFunction(() => window.__partDetection);
+  return { page, context, log, session };
+}
+const state = page => page.evaluate(() => JSON.stringify((window.__checklistInspection ?? window.__selfInspection).state));
+const waitAnalysis = (page, phase) => page.waitForFunction(p => window.__partAnalysis.state.phase === p, phase);
+async function crop(page, skipDetection = false) {
+  await page.locator('#part-detect-open').click();
+  if (skipDetection) {
+    await page.locator('#part-detect-manual').click();
+    assert.equal(await page.locator('#part-detect-agree').isVisible(), false);
+  } else assert.equal(await page.locator('#part-detect-agree').count(), 0, 'no Roboflow consent in manual-only service');
+  await page.locator('#part-detect-library-input').setInputFiles(picture);
+  await waitAnalysis(page, 'REGION');
+  const picker = page.locator('#part-analysis-picker'); await picker.scrollIntoViewIfNeeded();
+  const rect = await picker.boundingBox(); await page.mouse.click(rect.x + rect.width / 2, rect.y + rect.height / 2);
+  await page.waitForFunction(() => window.__partAnalysis.state.cropReady);
+  assert.equal(await page.locator('#part-analysis-start').isEnabled(), false);
+  assert.match(await page.locator('#part-analysis-consent-text').innerText(), /OpenAI/);
+  assert.doesNotMatch(await page.locator('#part-analysis-consent-text').innerText(), /Roboflow/);
+}
+async function send(page) { await page.locator('#part-analysis-agree').check(); await page.locator('#part-analysis-start').click(); }
+
+try {
+  browser = await chromium.launch({ channel:process.env.POC_BROWSER_CHANNEL ?? 'chrome', headless:true });
+  const host = await service();
+  assert.equal((await host.api('/v1/sessions', { method:'POST', body:{ taskId:'washer-fluid' } })).status, 403);
+  assert.equal((await host.api('/v1/inspection-records', { token:host.credential })).status, 403);
+  for (const [part, task] of PARTS) {
+    const { page, context, log, session } = await phone(host, task), before = await state(page), calls = host.mock.calls.length;
+    await crop(page); assert.equal(host.mock.calls.length, calls, 'crop stays local before consent');
+    if (part === 'washer-fluid-cap') await page.screenshot({ path:path.join(output, 'washer-crop.png') });
+    await send(page); await waitAnalysis(page, 'RESULT');
+    assert.equal(host.mock.calls.at(-1).partId, part);
+    assert.equal(await page.locator('#part-analysis-continue').isEnabled(), false);
+    if (part === 'battery-12v') await page.screenshot({ path:path.join(output, 'battery-result.png') });
+    assert.equal(log.requests.filter(r => r.url.includes('/v1/part-detections/')).length, 0);
+    const posts = log.requests.filter(r => r.url.includes('/v1/part-analyses/'));
+    assert.equal(posts.length, 1); assert.equal(posts[0].headers['x-carscope-region-source'], 'MANUAL');
+    assert.ok(log.requests.every(r => r.url.startsWith(host.url)), 'phone contacts its own origin only');
+    assert.equal((await page.content()).includes('synthetic-server-key'), false);
+    await page.locator('#part-analysis-ack').check(); await page.locator('#part-analysis-continue').click();
+    assert.equal(await state(page), before, 'AI does not fill inspection answers');
+    assert.equal((await host.api('/v1/sessions/' + session.sessionId, { token:session.receiverToken })).data.sessionState, 'CLAIMED');
+    if (part === 'washer-fluid-cap') {
+      await page.click('#manual-start');
+      await page.locator('#checklist input').evaluateAll(boxes => boxes.forEach(box => box.click()));
+      await page.click('#primary'); await page.click('[data-status="NEEDS_REFILL"]'); await page.click('#primary'); await page.click('#primary');
+      await page.waitForSelector('body[data-step="done"]'); await page.click('#sync-send');
+      try { await page.waitForFunction(() => document.querySelector('#done-sync').dataset.syncState === 'SENT'); }
+      catch (error) {
+        const ui = await page.locator('#done-sync').evaluate(n => ({ state:n.dataset.syncState,text:n.textContent }));
+        const server = await host.api('/v1/sessions/' + session.sessionId, { token:session.receiverToken });
+        throw new Error('Submission did not complete: ' + JSON.stringify({ ui, serverState:server.data?.sessionState, failures:log.failedResponses }), { cause:error });
+      }
+      const received = await host.api('/v1/sessions/' + session.sessionId, { token:session.receiverToken });
+      assert.equal(received.data.sessionState, 'RESULT_SUBMITTED');
+      assert.equal((await host.api('/v1/sessions/' + session.sessionId + '/accept', { method:'POST', token:session.receiverToken, body:{ resultDigest:received.data.resultDigest } })).status, 200);
+      assert.equal(Number((await host.pool.query('SELECT count(*) AS n FROM cs_inspection_records')).rows[0].n), 1, 'existing accepted record is archived');
+    }
+    assert.deepEqual(log.errors, []); await context.close();
+  }
+  pass('six QR tasks: capture/manual region, local crop, explicit OpenAI consent, result acknowledgement; no Roboflow; existing submit/Accept/history preserved');
+
+  let detections = 0;
+  // A test-only injected detector proves the optional path without granting real Roboflow rights or enabling the CLI.
+  const optional = await service({ partDetection:{ provider:{ detect:async () => { detections++; throw new Error('must not call detector in manual flow'); } } } });
+  for (const [part, task] of PARTS.slice(0,4)) {
+    const { page, context, log } = await phone(optional, task); await crop(page,true); await send(page); await waitAnalysis(page,'RESULT');
+    assert.equal(optional.mock.calls.at(-1).partId,part);
+    assert.equal(log.requests.filter(r => r.url.includes('/v1/part-detections/')).length,0);
+    await context.close();
+  }
+  assert.equal(detections,0);
+  pass('four detection-capable parts can bypass an injected detector and its consent, and use only a manually marked crop');
+
+  const failures = await service({ daily:3 });
+  for (const mode of ['error','invalid','hold','budget']) {
+    failures.mock.mode = mode;
+    const { page, context } = await phone(failures, 'washer-fluid'); await crop(page); await send(page);
+    if (mode === 'hold') {
+      await page.waitForFunction(() => window.__partAnalysis.state.phase === 'ANALYZING');
+      await page.waitForTimeout(700); await page.locator('#part-analysis-cancel').click();
+      await waitAnalysis(page, 'PREVIEW');
+      for (let i = 0; i < 30 && !failures.mock.calls.at(-1)?.aborted; i++) await new Promise(r => setTimeout(r, 20));
+      assert.equal(failures.mock.calls.at(-1).aborted, true);
+    } else {
+      await waitAnalysis(page, 'FAILED');
+      if (mode === 'budget') assert.match(await page.locator('#part-analysis-error').innerText(), /사용 한도/);
+      else assert.match(await page.locator('#part-analysis-error').innerText(), /기존 점검은 그대로/);
+    }
+    await page.locator('#part-detect-close').click(); assert.equal((await state(page)).includes('intro'), true); await context.close();
+  }
+  assert.equal(failures.mock.calls.length, 3, 'budget exhaustion dispatches no fourth request; failures/cancel remain counted');
+  pass('OpenAI HTTP failure, invalid answer, cancellation and durable budget exhaustion leave the checklist usable');
+
+  const baseline = await service({ baseline:true });
+  const home = await (await fetch(baseline.url + '/')).text(); assert.doesNotMatch(home, /data-part-analysis/);
+  assert.equal((await fetch(baseline.url + '/v1/part-analyses/washer-fluid-cap', { method:'POST' })).status, 404);
+  assert.equal((await fetch(baseline.url + '/mobile-ar-poc/public/part-analysis-ui.mjs')).status, 404);
+  pass('existing Render entry remains OFF and serves neither the analysis route nor its modules');
+  result.status = 'PASS';
+} catch (error) { result.status = 'FAIL'; result.error = error.stack; process.exitCode = 1; }
+finally {
+  await browser?.close(); for (const f of fixtures.reverse()) await f.stop();
+  await writeFile(path.join(output, 'vision-mobile-results.json'), JSON.stringify(result, null, 2));
+  console.log(JSON.stringify(result, null, 2));
+}

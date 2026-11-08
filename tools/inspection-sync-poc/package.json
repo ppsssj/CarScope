@@ -8,6 +8,8 @@
     "node": ">=22.16.0"
   },
   "scripts": {
+    "serve:render-vision": "node src/render-vision-experiment.mjs",
+    "test:vision": "node --test test/vision-experiment.test.mjs test/vision-budget-postgres.test.mjs test/vision-runtime-postgres.test.mjs",
     "serve": "node src/server.mjs",
     "receiver": "node bin/receiver.mjs",
     "readiness:host": "node bin/host-readiness.mjs",

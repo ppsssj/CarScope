@@ -26,6 +26,7 @@ export const SQL_FILES = Object.freeze({
 const ENTRY = 'src/render-stateful.mjs';
 export const AVD_HISTORY_DEMO_ENTRY = 'src/render-avd-history-demo.mjs';
 export const WEBXR_EXPERIMENT_ENTRY = 'src/render-webxr-experiment.mjs';
+export const VISION_EXPERIMENT_ENTRY = 'src/render-vision-experiment.mjs';
 const WEBXR_DEVELOPMENT_HOSTS = ['src/mobile-dev-server.mjs', 'src/https-mobile-service.mjs'];
 /** The only variables the Render path may read. Anything else, e.g. a history switch, fails this gate. */
 export const ALLOWED_ENV = Object.freeze([
@@ -189,7 +190,7 @@ export function partDetectionGate(root = TOOL_ROOT) {
   const entry = readFileSync(resolve(root, ENTRY), 'utf8');
   if (/partDetection/.test(entry.slice(entry.indexOf(MAIN_MARKER)))) problems.push('default CLI passes a provider');
   if (!/partDetection = null/.test(entry.slice(0, entry.indexOf(MAIN_MARKER)))) problems.push('option is not off by default');
-  const HOSTS = ['src/render-stateful.mjs', 'src/mobile-dev-server.mjs', 'src/server.mjs', 'src/mobile-page.mjs'];
+  const HOSTS = ['src/render-stateful.mjs', 'src/mobile-dev-server.mjs', 'src/server.mjs', 'src/mobile-page.mjs', VISION_EXPERIMENT_ENTRY];
   for (const dir of ['src', 'bin']) {
     for (const name of readdirSync(resolve(root, dir)).filter((x) => x.endsWith('.mjs'))) {
       const file = dir + '/' + name, source = readFileSync(resolve(root, file), 'utf8');
@@ -217,7 +218,7 @@ export function partAnalysisGate(root = TOOL_ROOT) {
   const entry = readFileSync(resolve(root, ENTRY), 'utf8');
   if (/partAnalysis/.test(entry)) problems.push('the Render entry names partAnalysis');
   if (!/partAnalysis = null/.test(readFileSync(resolve(root, 'src/server.mjs'), 'utf8'))) problems.push('option is not off by default');
-  const HOSTS = ['src/mobile-dev-server.mjs', 'src/server.mjs', 'src/mobile-page.mjs'];
+  const HOSTS = ['src/mobile-dev-server.mjs', 'src/server.mjs', 'src/mobile-page.mjs', VISION_EXPERIMENT_ENTRY];
   for (const dir of ['src', 'bin']) {
     for (const name of readdirSync(resolve(root, dir)).filter((x) => x.endsWith('.mjs'))) {
       const file = dir + '/' + name, source = readFileSync(resolve(root, file), 'utf8');
@@ -231,7 +232,25 @@ export function partAnalysisGate(root = TOOL_ROOT) {
   for (const file of closure) if (/api\.openai\.com|OPENAI_|from 'openai'|anthropic/i.test(readFileSync(resolve(root, file), 'utf8'))) problems.push(file + ' names a vision service or a key');
   return problems.length
     ? check('PART_ANALYSIS_OFF', 'FAIL', problems.join('; '))
-    : check('PART_ANALYSIS_OFF', 'PASS', 'Render does not name it, no command passes a provider, and no vision client or key is in the Render closure');
+    : check('PART_ANALYSIS_OFF', 'PASS', 'default Render stays off with no vision client/key in its closure; only the separately checked experiment may pass a provider');
+}
+
+/** The default OFF gates stay scoped to their original entry. The only exception is reviewed here. */
+export function visionExperimentGate(root = TOOL_ROOT) {
+  const problems = [], base = importGraph(ENTRY, root), graph = importGraph(VISION_EXPERIMENT_ENTRY, root);
+  const entry = readFileSync(resolve(root, VISION_EXPERIMENT_ENTRY), 'utf8');
+  const cli = entry.slice(entry.indexOf(MAIN_MARKER));
+  if (base.includes(VISION_EXPERIMENT_ENTRY) || base.some(f => /vision-budget|vision-providers/.test(f))) problems.push('default imports experiment');
+  if (graph.some(f => /^(test|preflight)\/|washer-eval|\/review\/|\/scripts\//.test(f))) problems.push('experiment imports test/evaluation code');
+  const allowed = ['CARSCOPE_DB_SCHEMA', 'CARSCOPE_VISION_APPROVAL', 'OPENAI_API_KEY', 'OPENAI_VISION_MODEL', 'CARSCOPE_VISION_DAILY_CALL_LIMIT', 'CARSCOPE_VISION_MONTHLY_CALL_LIMIT'];
+  for (const f of graph.filter(f => !base.includes(f))) {
+    const reads = environmentReads(readFileSync(resolve(root, f), 'utf8'), { isEntry: f === VISION_EXPERIMENT_ENTRY });
+    if (reads.dynamic || reads.names.some(n => !allowed.includes(n))) problems.push(f + ' unexpected environment');
+  }
+  if (!/visionEnvironment\(\)/.test(cli) || !/PostgreSQLVisionBudget/.test(cli) || !/experimentVisionProvider/.test(cli) || /partDetection\s*:|approvedDetectionProvider|LocalTest|createMock/.test(cli)) problems.push('unsafe experiment bootstrap');
+  if (!/partDetection = null/.test(entry) || !/new ProductionSessionCreationAuthorizer/.test(entry)) problems.push('default authority/detection changed');
+  return problems.length ? check('VISION_EXPERIMENT_ENTRY_ONLY', 'FAIL', problems.join('; '))
+    : check('VISION_EXPERIMENT_ENTRY_ONLY', 'PASS', 'separate experiment, explicit approval and durable budgets, default Render OFF; detection remains off in its CLI');
 }
 
 export function ddlGate(root = TOOL_ROOT) {
@@ -441,6 +460,7 @@ export async function runStaticGates() {
     ['WEBXR_EXPERIMENT_ENTRY_ONLY', () => webxrExperimentGate()],
     ['PART_DETECTION_OFF', () => partDetectionGate()],
     ['PART_ANALYSIS_OFF', () => partAnalysisGate()],
+    ['VISION_EXPERIMENT_ENTRY_ONLY', () => visionExperimentGate()],
     ['UNVERIFIED_AUTHORITY_BLOCKED', () => unverifiedAuthorityGate()],
     ['RENDER_CLI_REFUSES_UNSAFE_CONFIG', () => cliRefusalGate()],
     ['TEST_PROD_CREDENTIAL_SEPARATION', () => credentialSeparationGate()],

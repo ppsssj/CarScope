@@ -8,6 +8,7 @@ import { detectionForTask } from './part-detection.mjs';
 const el = (tag, className, text) => { const node = document.createElement(tag); if (className) node.className = className; if (text != null) node.textContent = text; return node; };
 const button = (id, text, className) => { const b = el('button', className, text); b.id = id; b.type = 'button'; return b; };
 const FAILURE = Object.freeze({
+  BUDGET_EXHAUSTED: 'AI 분석의 오늘 또는 이번 달 사용 한도에 도달했어요. 직접 점검을 이어가 주세요.',
   RATE_LIMITED: '요청이 많아요. 잠시 후 다시 시도해 주세요.',
   BUSY: '이미 분석 중인 요청이 있어요. 잠시 후 다시 시도해 주세요.',
   TOO_LARGE: '이 사진을 보내지 못했어요. 다시 촬영해 주세요.',
@@ -74,7 +75,7 @@ export function createPartAnalysis({ slot, entry, analyzer, serviceId, retake, c
   const cropView = el('canvas', 'part-analysis-crop'); cropView.id = 'part-analysis-crop'; cropView.setAttribute('aria-label', '분석에 보낼 잘라낸 사진');
   const regionNote = el('p', 'fine'); regionNote.id = 'part-analysis-region-note';
   const cropBusy = el('p', 'part-detect-status', '분석할 영역을 자르고 있어요…'); cropBusy.id = 'part-analysis-cropping';
-  const consentCard = el('p', 'card warn', `잘라낸 이 사진 한 장만 CarScope 서버를 거쳐 외부 AI 서비스(${service})로 보내져요. 위치 찾기에 쓴 서비스(Roboflow)와 다른 곳이에요. 처음 고른 사진 전체는 보내지 않아요. CarScope는 사진과 분석 결과를 저장하지 않아요. ${service}의 처리·보관 조건은 CarScope가 확인하지 못했어요. 번호판이나 사람이 나오지 않게 해 주세요.`);
+  const consentCard = el('p', 'card warn');
   consentCard.id = 'part-analysis-consent-text';
   const agree = el('input'); agree.type = 'checkbox'; agree.id = 'part-analysis-agree';
   const agreeLabel = el('label', 'safety'); agreeLabel.append(agree, el('span', null, '내용을 확인했고, 잘라낸 사진 한 장을 보내는 데 동의해요'));
@@ -132,6 +133,8 @@ export function createPartAnalysis({ slot, entry, analyzer, serviceId, retake, c
     const visible = state.phase !== APHASE.IDLE;
     section.hidden = !visible;
     if (!visible) return;
+    const detectionNotice = ctx.phase === 'LOCAL_ONLY' ? '이 사진은 위치 찾기 서비스로 보내지 않았어요.' : '위치 찾기에 쓴 서비스(Roboflow)와 다른 곳이에요.';
+    consentCard.textContent = `잘라낸 이 사진 한 장만 CarScope 서버를 거쳐 외부 AI 서비스(${service})로 보내져요. ${detectionNotice} 처음 고른 사진 전체는 보내지 않아요. CarScope는 사진과 분석 결과를 저장하지 않아요. ${service}의 처리·보관 조건은 CarScope가 확인하지 못했어요. 번호판이나 사람이 나오지 않게 해 주세요.`;
     region.hidden = ![APHASE.REGION, APHASE.PREVIEW, APHASE.FAILED].includes(state.phase);
     choices.replaceChildren(...ctx.candidates.map((candidate, index) => {
       const b = button(`part-analysis-candidate-${index + 1}`, `후보 ${index + 1} 분석하기`);

@@ -7,6 +7,7 @@
     "node": ">=22"
   },
   "scripts": {
+    "test:browser:vision:render": "node test/vision-render-browser.mjs",
     "serve": "node server.mjs",
     "build:staging": "node staging/build.mjs",
     "build:guide-art": "node build-guide-art.mjs",

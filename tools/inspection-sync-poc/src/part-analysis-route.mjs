@@ -29,7 +29,7 @@ export function parseTargetBox(header) {
   return w > 0 && h > 0 && l + w <= 1 + 1e-6 && t + h <= 1 + 1e-6 ? box : null;
 }
 
-export function createPartAnalysisRoute({ provider, limits = ANALYSIS_LIMITS, clock = () => new Date() }) {
+export function createPartAnalysisRoute({ provider, limits = ANALYSIS_LIMITS, clock = () => new Date(), manualOnly = false, admission = null }) {
   assertVisionProvider(provider);
   let inFlight = 0;
   const busy = new Set(); // phone credentials with an analysis under way: one at a time each
@@ -40,7 +40,7 @@ export function createPartAnalysisRoute({ provider, limits = ANALYSIS_LIMITS, cl
     const regionSource = req.headers['x-carscope-region-source'];
     if (!targetInCrop || !Object.values(REGION_SOURCE).includes(regionSource)) throw new SyncError(ERRORS.BAD_REQUEST, 400);
     // P13-D: a part the detector does not support can only have been marked by the person. An AI_CANDIDATE claim for it is refused.
-    if (!regionAllowed(partId, regionSource)) throw new SyncError(ERRORS.BAD_REQUEST, 400);
+    if (!regionAllowed(partId, regionSource) || manualOnly && regionSource !== REGION_SOURCE.MANUAL) throw new SyncError(ERRORS.BAD_REQUEST, 400);
     const scope = await service.detectionScope(token);
     if (scope.taskId !== analysisTask(partId)) throw new SyncError(ERRORS.FORBIDDEN, 403);
     if (scope.sessionState !== 'CLAIMED') throw new SyncError(ERRORS.INVALID_STATE, 409);
@@ -51,16 +51,20 @@ export function createPartAnalysisRoute({ provider, limits = ANALYSIS_LIMITS, cl
     inFlight++; busy.add(token);
     // A phone that cancels or leaves drops its connection. The provider is told, so an unneeded call can stop.
     const abort = new AbortController(), stop = () => abort.abort();
+    let lease;
     req.socket?.once('close', stop);
     try {
+      lease = await admission?.acquire(token);
       const image = await readImage(req, limits.maxBytes);
       const size = jpegSize(image);
       if (!size || size.width < limits.minSide || size.height < limits.minSide || size.width > limits.maxSide || size.height > limits.maxSide) throw new SyncError(ANALYSIS_CODES.IMAGE, 422);
       const prompt = buildAnalysisPrompt(partId, { targetInCrop, regionSource });
+      const current = await service.detectionScope(token);
+      if (current.taskId !== scope.taskId || current.sessionState !== 'CLAIMED' || abort.signal.aborted) throw new SyncError(ERRORS.INVALID_STATE, 409);
       let raw;
       // An upstream message could quote the request or the key, so no part of a failure leaves here.
       try { raw = await withTimeout(Promise.resolve(provider.analyzePart({ partId, image, imageSize: size, targetInCrop, regionSource, ...prompt }, { signal: abort.signal })), limits.timeoutMs); }
-      catch { throw new SyncError(ANALYSIS_CODES.UNAVAILABLE, 503); }
+      catch (error) { if (error?.code === 'VISION_BUDGET_EXHAUSTED') throw new SyncError('VISION_BUDGET_EXHAUSTED', 429); throw new SyncError(ANALYSIS_CODES.UNAVAILABLE, 503); }
       const checked = validateAnalysisResult(partId, raw);
       if (!checked.ok) throw new SyncError(ANALYSIS_CODES.INVALID, 502);
       return {
@@ -68,6 +72,8 @@ export function createPartAnalysisRoute({ provider, limits = ANALYSIS_LIMITS, cl
         analysis: { provider: provider.id, model: provider.model, promptVersion: prompt.promptVersion, regionSource, targetInCrop, image: size, analyzedAt: clock().toISOString() },
       };
     } finally {
+      abort.abort(); // Also stop a provider when the route's deadline wins.
+      await lease?.release().catch(() => {}); // A DB outage leaves the bounded lease to expire; never logs a token.
       inFlight--; busy.delete(token);
       req.socket?.off('close', stop);
     }
