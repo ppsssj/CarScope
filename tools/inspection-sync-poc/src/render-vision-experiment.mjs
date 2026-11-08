@@ -17,6 +17,7 @@ import { experimentVisionProvider, experimentDetectionProvider, detectionEnviron
 import { DETECTION_MODEL_ID } from '../../mobile-ar-poc/public/part-detection.mjs';
 import { assertVisionProvider } from './part-analysis-route.mjs';
 import { assertPrivateSchemaName } from './database-config.mjs';
+import { probeVisionDatabase } from './vision-health.mjs';
 
 export function visionEnvironment(env = process.env) {
   detectionEnvironment(env); // Refuse incomplete or misspelled detector approval before opening a database.
@@ -29,7 +30,7 @@ export function visionEnvironment(env = process.env) {
 }
 
 export async function startRenderVisionExperiment({ pool, publicOrigin, provider, budget, host = '127.0.0.1', port = 0,
-  sweepMs = 30_000, expectedSchema = null, enableAvdSimulation = false, partDetection = null } = {}) {
+  sweepMs = 30_000, expectedSchema = null, enableAvdSimulation = false, partDetection = null, healthLog = () => {} } = {}) {
   const origin = httpsOrigin(publicOrigin);
   assertVisionProvider(provider);
   if (typeof budget?.initialize !== 'function' || typeof budget?.acquire !== 'function' || !Number.isSafeInteger(port) || port < 0 || port > 65535 || !Number.isSafeInteger(sweepMs) || sweepMs < 1000) throw new Error('INVALID_VISION_EXPERIMENT_CONFIG');
@@ -50,8 +51,16 @@ export async function startRenderVisionExperiment({ pool, publicOrigin, provider
       const headers = { ...MOBILE_HEADERS, 'Strict-Transport-Security': 'max-age=31536000' };
       try {
         if (req.method === 'GET' && req.url === '/healthz') {
-          const reached = await pool.query('SELECT current_schema() AS name');
-          if (expectedSchema !== null && reached.rows[0]?.name !== expectedSchema) throw new Error('DATABASE_SCHEMA_MISMATCH');
+          // Fixed categories only: no URL, credential, SQL parameter or exception text.
+          const report = code => { try { healthLog(code); } catch {} };
+          report('VISION_HEALTH_REQUEST');
+          const reached = await probeVisionDatabase(pool, expectedSchema);
+          if (!reached.ok) {
+            report('VISION_HEALTH_' + reached.code);
+            res.writeHead(503, { ...headers, 'Content-Type':'application/json' });
+            res.end(JSON.stringify({ status:'DOWN', code:reached.code })); return;
+          }
+          report('VISION_HEALTH_PASS');
           res.writeHead(200, { ...headers, 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ status: 'UP', mode: simStore ? 'STATEFUL_AVD_SIMULATION' : 'STATEFUL_DENY_DEFAULT',
             sessionCreation: simStore ? 'OPERATOR_APPROVED_AVD_ONLY' : 'DENIED', vision: 'EXPERIMENT', detection: partDetection ? 'EXPERIMENT' : 'OFF',
@@ -91,7 +100,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     const provider = experimentVisionProvider({ env: process.env, budget });
     const detector = experimentDetectionProvider({ env: process.env, budget });
     const app = await startRenderVisionExperiment({ pool, provider, budget, publicOrigin: base.publicOrigin,
-      partDetection: detector ? { provider: detector, admission: budget } : null,
+      partDetection: detector ? { provider: detector, admission: budget } : null, healthLog: code => console.log(code),
       host: '0.0.0.0', port: base.port, expectedSchema: base.expectedSchema, enableAvdSimulation: base.enableAvdSimulation });
     console.log('CarScope Vision experiment ready; detection=' + (detector ? 'EXPERIMENT' : 'OFF') + '; existing session authority unchanged');
     stopOnSignal(app);
