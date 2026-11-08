@@ -22,6 +22,7 @@ import { ProductionSessionCreationAuthorizer, LocalTestSessionCreationAuthorizer
 import { HistoryService, HistoryError } from './history.mjs';
 import { DenyHistoryAuthorizer, assertHistoryAuthorizerDeployable } from './history-authorizer.mjs';
 import { createPartDetectionRoute } from './part-detection-route.mjs';
+import { createPartAnalysisRoute } from './part-analysis-route.mjs';
 
 export const MAX_BODY_BYTES = 16 * 1024;
 const API_HEADERS = {
@@ -60,6 +61,8 @@ const ROUTES = [
 
 // Exists only on a service given a provider. Elsewhere the path answers like any unknown one.
 const DETECTION_ROUTE = ['POST', /^\/v1\/part-detections\/([A-Za-z0-9.-]{1,64})$/, 'detect', 'POST /v1/part-detections/:partId'];
+// P13-A: the same rule. Only a service given a vision provider (and a detector) has it.
+const ANALYSIS_ROUTE = ['POST', /^\/v1\/part-analyses\/([A-Za-z0-9.-]{1,64})$/, 'analyze', 'POST /v1/part-analyses/:partId'];
 
 function bearer(req) {
   const m = /^Bearer ([A-Za-z0-9_-]{1,128})$/.exec(req.headers.authorization ?? '');
@@ -89,9 +92,12 @@ async function readJson(req) {
  * @param {boolean} [o.debugPage]         serve the debug page and its modules
  * @param {boolean} [o.tls]               add HSTS when served over TLS
  */
-export function createSyncHandler({ service, history = new HistoryService({store:service.store}), historyAuthorizer = new DenyHistoryAuthorizer(), limiter = new RateLimiter(), authorizer = new ProductionSessionCreationAuthorizer(), log = () => {}, allowedOrigin = null, debugPage = false, tls = false, trustedEdgeSecure = null, partDetection = null }) {
+export function createSyncHandler({ service, history = new HistoryService({store:service.store}), historyAuthorizer = new DenyHistoryAuthorizer(), limiter = new RateLimiter(), authorizer = new ProductionSessionCreationAuthorizer(), log = () => {}, allowedOrigin = null, debugPage = false, tls = false, trustedEdgeSecure = null, partDetection = null, partAnalysis = null }) {
   const detect = partDetection ? createPartDetectionRoute(partDetection) : null;
-  const routes = detect ? [...ROUTES, DETECTION_ROUTE] : ROUTES;
+  // The analysis continues from the detection screen, so it never exists without it.
+  if (partAnalysis && !detect) throw new Error('PART_ANALYSIS_NEEDS_DETECTION');
+  const analyze = partAnalysis ? createPartAnalysisRoute(partAnalysis) : null;
+  const routes = [...ROUTES, ...(detect ? [DETECTION_ROUTE] : []), ...(analyze ? [ANALYSIS_ROUTE] : [])];
   return async (req, res) => {
     const started = Date.now();
     const url = new URL(req.url, 'http://localhost');
@@ -175,6 +181,7 @@ export function createSyncHandler({ service, history = new HistoryService({store
         }
         case 'GET /v1/submissions/status': send(200, await service.status(bearer(req))); return;
         case 'POST /v1/part-detections/:partId': send(200, await detect({ req, partId: id, token: bearer(req), service, limiter })); return;
+        case 'POST /v1/part-analyses/:partId': send(200, await analyze({ req, partId: id, token: bearer(req), service, limiter })); return;
       }
     } catch (error) {
       if (error instanceof SyncError || error instanceof HistoryError) send(error.status, { error: { code: error.code } });
@@ -186,7 +193,7 @@ export function createSyncHandler({ service, history = new HistoryService({store
 }
 
 /** Start a server; returns { server, service, stop }. */
-export async function startSyncServer({ host = '127.0.0.1', port = 4180, store = new MemorySessionStore(), now, limits, rates, limiter, authorizer = new ProductionSessionCreationAuthorizer(), historyAuthorizer = new DenyHistoryAuthorizer(), tlsCert, tlsKey, allowedOrigin = null, debugPage = false, log = console.log, sweepMs = 30_000, partDetection = null } = {}) {
+export async function startSyncServer({ host = '127.0.0.1', port = 4180, store = new MemorySessionStore(), now, limits, rates, limiter, authorizer = new ProductionSessionCreationAuthorizer(), historyAuthorizer = new DenyHistoryAuthorizer(), tlsCert, tlsKey, allowedOrigin = null, debugPage = false, log = console.log, sweepMs = 30_000, partDetection = null, partAnalysis = null } = {}) {
   const loopbackHost = ['127.0.0.1', '::1', 'localhost'].includes(host);
   if (!loopbackHost && !(tlsCert && tlsKey)) throw new Error('Refusing a non-loopback bind without TLS (set SYNC_TLS_CERT and SYNC_TLS_KEY)');
   if (Boolean(tlsCert) !== Boolean(tlsKey)) throw new Error('Both TLS certificate and key are required');
@@ -194,7 +201,7 @@ export async function startSyncServer({ host = '127.0.0.1', port = 4180, store =
   assertHistoryAuthorizerDeployable(historyAuthorizer, { host });
   const service = new SessionService({ store, now, limits });
   await service.sweep(); // reconcile overdue/retained rows before accepting any request after restart
-  const handler = createSyncHandler({ service, limiter: limiter ?? new RateLimiter({ rates, now }), authorizer, historyAuthorizer, log, allowedOrigin, debugPage, tls: Boolean(tlsCert), partDetection });
+  const handler = createSyncHandler({ service, limiter: limiter ?? new RateLimiter({ rates, now }), authorizer, historyAuthorizer, log, allowedOrigin, debugPage, tls: Boolean(tlsCert), partDetection, partAnalysis });
   const server = tlsCert ? https.createServer({ cert: await readFile(tlsCert), key: await readFile(tlsKey) }, handler) : http.createServer(handler);
   server.headersTimeout = 10_000; server.requestTimeout = 15_000;
   await new Promise((resolve, reject) => { server.once('error', reject); server.listen(port, host, resolve); });

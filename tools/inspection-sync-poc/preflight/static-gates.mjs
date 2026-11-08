@@ -208,6 +208,32 @@ export function partDetectionGate(root = TOOL_ROOT) {
     : check('PART_DETECTION_OFF', 'PASS', 'no command passes a provider, no variable reaches one, and no model runtime is in the Render closure');
 }
 
+/**
+ * P13-A: part state analysis stays off. Render's entry never names it, only the local hosts take it as a parameter, and no vision client,
+ * provider name or key variable is inside the Render closure. A real entrypoint is a later, separately approved change.
+ */
+export function partAnalysisGate(root = TOOL_ROOT) {
+  const problems = [];
+  const entry = readFileSync(resolve(root, ENTRY), 'utf8');
+  if (/partAnalysis/.test(entry)) problems.push('the Render entry names partAnalysis');
+  if (!/partAnalysis = null/.test(readFileSync(resolve(root, 'src/server.mjs'), 'utf8'))) problems.push('option is not off by default');
+  const HOSTS = ['src/mobile-dev-server.mjs', 'src/server.mjs', 'src/mobile-page.mjs'];
+  for (const dir of ['src', 'bin']) {
+    for (const name of readdirSync(resolve(root, dir)).filter((x) => x.endsWith('.mjs'))) {
+      const file = dir + '/' + name, source = readFileSync(resolve(root, file), 'utf8');
+      const cli = source.includes(MAIN_MARKER) ? source.slice(source.indexOf(MAIN_MARKER)) : '';
+      if (!HOSTS.includes(file) && /partAnalysis\s*:/.test(source)) problems.push(file + ' passes a vision provider');
+      if (/partAnalysis/.test(cli)) problems.push(file + ' CLI passes a vision provider');
+    }
+  }
+  const closure = importGraph(ENTRY, root);
+  if (closure.some((f) => /openai|vision-poc|mock-vision/i.test(f))) problems.push('a vision client is inside the Render closure');
+  for (const file of closure) if (/api\.openai\.com|OPENAI_|from 'openai'|anthropic/i.test(readFileSync(resolve(root, file), 'utf8'))) problems.push(file + ' names a vision service or a key');
+  return problems.length
+    ? check('PART_ANALYSIS_OFF', 'FAIL', problems.join('; '))
+    : check('PART_ANALYSIS_OFF', 'PASS', 'Render does not name it, no command passes a provider, and no vision client or key is in the Render closure');
+}
+
 export function ddlGate(root = TOOL_ROOT) {
   const inventory = schemaInventory(root);
   const bad = Object.values(inventory).flatMap((x) => x.nonAdditive.map((s) => `${x.file}: ${s}`));
@@ -414,6 +440,7 @@ export async function runStaticGates() {
     ['AVD_HISTORY_DEMO_REFUSES_UNSAFE_CONFIG', () => avdHistoryDemoRefusalGate()],
     ['WEBXR_EXPERIMENT_ENTRY_ONLY', () => webxrExperimentGate()],
     ['PART_DETECTION_OFF', () => partDetectionGate()],
+    ['PART_ANALYSIS_OFF', () => partAnalysisGate()],
     ['UNVERIFIED_AUTHORITY_BLOCKED', () => unverifiedAuthorityGate()],
     ['RENDER_CLI_REFUSES_UNSAFE_CONFIG', () => cliRefusalGate()],
     ['TEST_PROD_CREDENTIAL_SEPARATION', () => credentialSeparationGate()],

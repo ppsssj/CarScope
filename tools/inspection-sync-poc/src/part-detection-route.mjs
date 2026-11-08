@@ -22,7 +22,7 @@ export function jpegSize(bytes) {
   return null;
 }
 
-async function readImage(req, maxBytes) {
+export async function readImage(req, maxBytes) {
   if (!/^image\/jpeg$/i.test((req.headers['content-type'] ?? '').trim())) throw new SyncError(ERRORS.UNSUPPORTED_MEDIA_TYPE, 415);
   const declared = Number(req.headers['content-length']);
   if (Number.isFinite(declared) && declared > maxBytes) throw new SyncError(ERRORS.PAYLOAD_TOO_LARGE, 413);
@@ -34,7 +34,7 @@ async function readImage(req, maxBytes) {
   }
   return Buffer.concat(chunks);
 }
-function withTimeout(work, ms) {
+export function withTimeout(work, ms) {
   let timer;
   return Promise.race([work, new Promise((_, reject) => { timer = setTimeout(() => reject(new Error('timeout')), ms); })]).finally(() => clearTimeout(timer));
 }

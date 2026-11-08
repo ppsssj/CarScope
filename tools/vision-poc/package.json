@@ -9,7 +9,7 @@
   },
   "scripts": {
     "serve": "node server.mjs",
-    "check": "node --check server.mjs && node --check src/detection-contract.mjs && node --check src/dataset.mjs && node --check src/evaluate.mjs && node --check public/poc.mjs && node --check public/detector-runtime.mjs && node --check scripts/dataset-status.mjs && node --check scripts/evaluate.mjs && node --check src/roboflow-adapter.mjs && node --check src/roboflow-client.mjs && node --check src/exploratory.mjs && node --check scripts/roboflow-infer.mjs && node --check scripts/exploratory-evaluate.mjs && node --check scripts/color-baseline-run.mjs && node --check scripts/fetch-exploratory.mjs && node --check src/exploratory-alias.mjs && node --check scripts/exploratory-alias-analysis.mjs && node --check src/call-ledger.mjs && node --check src/part-evaluation.mjs && node --check scripts/part-eval-infer.mjs && node --check scripts/part-eval-report.mjs && node --check scripts/part-detection-local.mjs && node --check review/review-model.mjs && node --check review/review-data.mjs && node --check review/review-evaluate.mjs && node --check review/review-server.mjs && node --check review/public/review.mjs && node --check scripts/review-report.mjs && node --check review/assisted-model.mjs && node --check review/assisted-data.mjs && node --check scripts/assisted-report.mjs",
+    "check": "node --check server.mjs && node --check src/detection-contract.mjs && node --check src/dataset.mjs && node --check src/evaluate.mjs && node --check public/poc.mjs && node --check public/detector-runtime.mjs && node --check scripts/dataset-status.mjs && node --check scripts/evaluate.mjs && node --check src/roboflow-adapter.mjs && node --check src/roboflow-client.mjs && node --check src/exploratory.mjs && node --check scripts/roboflow-infer.mjs && node --check scripts/exploratory-evaluate.mjs && node --check scripts/color-baseline-run.mjs && node --check scripts/fetch-exploratory.mjs && node --check src/exploratory-alias.mjs && node --check scripts/exploratory-alias-analysis.mjs && node --check src/call-ledger.mjs && node --check src/part-evaluation.mjs && node --check scripts/part-eval-infer.mjs && node --check scripts/part-eval-report.mjs && node --check scripts/part-detection-local.mjs && node --check review/review-model.mjs && node --check review/review-data.mjs && node --check review/review-evaluate.mjs && node --check review/review-server.mjs && node --check review/public/review.mjs && node --check scripts/review-report.mjs && node --check review/assisted-model.mjs && node --check review/assisted-data.mjs && node --check scripts/assisted-report.mjs && node --check src/openai-vision.mjs && node --check src/mock-vision-provider.mjs && node --check scripts/part-analysis-local.mjs",
     "test": "node --test test/*.test.mjs",
     "test:browser": "node test/poc-browser.mjs",
     "measure:runtime": "node test/runtime-smoke.mjs",
@@ -21,6 +21,7 @@
     "parts:infer": "node scripts/part-eval-infer.mjs",
     "parts:report": "node scripts/part-eval-report.mjs",
     "parts:local": "node scripts/part-detection-local.mjs",
+    "analysis:local": "node scripts/part-analysis-local.mjs",
     "review": "node review/review-server.mjs",
     "review:report": "node scripts/review-report.mjs",
     "test:browser:review": "node test/review-browser.mjs",

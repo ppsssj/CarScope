@@ -9,6 +9,9 @@ export const DEFAULT_RATES = Object.freeze({
   static: { limit: 240, windowMs: 60_000 },
   detect: { limit: 10, windowMs: 60_000 },
   'detect-session': { limit: 12, windowMs: 600_000 },
+  // P13-A: each analysis is a paid outside call on a person's photo. Fewer than detection.
+  analyze: { limit: 6, windowMs: 60_000 },
+  'analyze-session': { limit: 6, windowMs: 600_000 },
 });
 
 export class RateLimiter {
