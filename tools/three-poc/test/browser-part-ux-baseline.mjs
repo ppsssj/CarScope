@@ -12,6 +12,9 @@ import {fileURLToPath} from 'node:url';
 import {PART_UX_ISSUES} from './part-ux-known-issues.mjs';
 import {partById,partLabel} from '../inspection-parts.mjs';
 import {FRAMING} from '../inspection-camera.mjs';
+import {wireResult} from './result-fixtures.mjs';
+import {MOBILE_TARGETS} from '../mobile-result-contract.mjs';
+import {SELECTION_RESULT_SHARE,accentLuminance,luminance} from '../part-labels.mjs';
 import {ALL_PARTS,BATTERY_PART,CHARGE_PARTS,HOOD_PARTS,LIGHT_PARTS,MIN_TOUCH_PX,POSE_TOLERANCE_M,TIRE_PARTS,VIEWPORTS,WIPER_PARTS,classifyIssue,compareBaseline,distanceBetween,framesInsideVehicle,internalWords,spread,withinBand} from './part-ux-metrics.mjs';
 
 const require=createRequire(new URL('../../mobile-ar-poc/package.json',import.meta.url)),{chromium}=require('playwright');
@@ -72,16 +75,36 @@ const scanPart=(page,id,cells=15)=>page.evaluate(({id,cells})=>{
 },{id,cells});
 
 const panelFacts=page=>page.evaluate(()=>{
-  const panel=document.getElementById('panel'),label=document.getElementById('capLabel'),h2=panel.querySelector('h2'),toast=document.getElementById('toast');
+  const panel=document.getElementById('panel'),h2=panel.querySelector('h2'),toast=document.getElementById('toast'),component=window.__inspect.state.component;
   const css=h2&&getComputedStyle(h2),box=panel.getBoundingClientRect(),toastBox=toast.getBoundingClientRect();
   return {title:h2?.textContent.trim()??null,crumb:document.getElementById('crumb').textContent,text:panel.innerText,badge:panel.querySelector('.badge')?.textContent??null,
     backButtons:[...panel.querySelectorAll('[data-action="back"]')].map(b=>b.textContent.trim()),
-    label:getComputedStyle(label).display!=='none'&&label.dataset.hidden===undefined,
+    label:window.__inspect.labelInfo().some(l=>l.id===component&&l.shown),
     focusOutline:h2&&document.activeElement===h2?parseFloat(css.outlineWidth)>0&&css.outlineStyle!=='none':false,
     hasMobile:!!panel.querySelector('[data-action="request-mobile"]'),
     toastCenter:toastBox.left+toastBox.width/2,panelLeft:box.left,panelWidth:box.width};
 });
 
+// P2-6: every label claim is checked with an independent ray at its own anchor. A shown, unmarked label must sit on its
+// part; a label marked or hidden as occluded must not. Returns the mismatches and how many labels were checked.
+const labelOcclusion=page=>page.evaluate(()=>{
+  const I=window.__inspect,idOf=h=>!h?null:h.kind==='hood'?'hood':h.kind==='washer'?'washer-fluid-cap':h.id??null;
+  const checked=[],wrong=[];
+  for(const l of I.labelInfo()){
+    if(!l.anchor||!(l.shown||l.reason==='OCCLUDED'))continue;
+    const onPart=idOf(I.hitAt(l.anchor.x,l.anchor.y))===l.anchorPart,claimVisible=l.shown&&!l.occluded;
+    checked.push(l.id);if(onPart!==claimVisible)wrong.push(`${l.id}:${claimVisible?'shown-but-covered':'marked-occluded-but-visible'}`);
+  }
+  return {checked:checked.length,wrong,shown:I.labelInfo().filter(l=>l.shown).map(l=>l.id)};
+});
+// P1-13: the target a finger really has. The 3D run is the longest row and column through the part's middle hit cell
+// where a touch (with the page's slop) selects this part; the label is the button that selects it, if one is shown.
+const touchTarget=(page,id,cell)=>page.evaluate(({id,cell})=>{
+  const I=window.__inspect,mine=e=>!!e&&(e.id===id||e.partId===id||(id==='washer-fluid-cap'&&e.id==='washer-fluid-cap'));
+  const run=(dx,dy)=>{if(!cell)return 0;let n=0;for(const s of [1,-1])for(let k=s>0?0:1;k<60;k++){const x=cell[0]+s*k*2*dx,y=cell[1]+s*k*2*dy;if(!mine(I.pickAt(x,y)))break;n++;}return n*2;};
+  const label=I.labelInfo().find(l=>l.shown&&l.actionable&&mine(l.event));
+  return {pick:[run(1,0),run(0,1)],label:label?.button?[Math.round(label.button.w),Math.round(label.button.h)]:null,labelId:label?.id??null};
+},{id,cell});
 const simplifyScan=s=>{
   if(s.bounds===null)return {distance:round(s.distance),polar:round(s.polar,1),azimuth:round(s.azimuth,1),position:s.position.map(v=>round(v)),target:s.target.map(v=>round(v)),bounds:null};
   return {distance:round(s.distance),azimuth:round(s.azimuth,1),polar:round(s.polar,1),position:s.position.map(v=>round(v)),target:s.target.map(v=>round(v)),sizeCm:s.sizeCm.map(v=>round(v,1)),
@@ -118,6 +141,7 @@ async function measureViewport(browser,viewport){
   R.geometry.idle={charge:await page.evaluate(()=>window.__inspect.chargeGeometry().visible),wiperHits:(await scanPart(page,WIPER_PARTS[0],11)).mineCells};
   await t.dispatch({type:'START'});await t.until('INSPECTION_OVERVIEW');await t.settle();await shot('overview');
   R.home.overview=await page.evaluate(()=>window.__inspect.view());
+  R.labels={overview:await labelOcclusion(page)};
   const overviewFacts=await panelFacts(page);R.overviewFacts={text:/강조된 부위/.test(overviewFacts.text),legendTires:/타이어 4개/.test(overviewFacts.text),toastCenter:Math.round(overviewFacts.toastCenter),usableCenter:Math.round(overviewFacts.panelLeft>viewport.width*.3?overviewFacts.panelLeft/2:viewport.width/2),
     batteryTag:await page.evaluate(()=>document.querySelector('[data-action="area"][data-id="ev-battery"] .tag')?.textContent??null)};
   R.geometry.overview={charge:await page.evaluate(()=>window.__inspect.chargeGeometry().visible),wiperHits:(await scanPart(page,WIPER_PARTS[0],11)).mineCells};
@@ -130,6 +154,7 @@ async function measureViewport(browser,viewport){
     if(!entered||['COMPONENT_SELECTION'].includes((await t.state()).name)){R.preview[id]={selectable:false,state:(await t.state()).name};continue;}
     await t.settle();
     const scan=await scanPart(page,id),facts=await panelFacts(page),current=await t.state();
+    R.labels['preview:'+id]=await labelOcclusion(page);
     await shot('preview-'+id);
     const listName=await page.evaluate(id=>{const b=document.querySelector(`#panel button.item[data-id="${id}"]`);return b?.firstChild?.textContent.trim()??null;},id);
     const entry={selectable:true,title:facts.title,crumb:facts.crumb,listName,state:current.name,...simplifyScan(scan),color:scan.color?.map(v=>Math.round(v))??null,selectionIntensity:scan.selectionIntensity,
@@ -147,8 +172,18 @@ async function measureViewport(browser,viewport){
     if(HOOD_PARTS.includes(id)){await t.dispatch({type:'SELECT_AREA',id:'hood'});await t.until('COMPONENT_SELECTION');}
     else if(TIRE_PARTS.includes(id)){await t.dispatch({type:'SELECT_AREA',id:'tires'});await t.until('TIRE_SELECTION');}
     await t.settle();
-    const scan=await scanPart(page,id,11);
-    R.select3d[id]={...(await clickPart(page,t,scan,id)),touchPx:(scan.touchPx??[0,0]).map(v=>Math.round(v)),fromState:HOOD_PARTS.includes(id)?'COMPONENT_SELECTION':TIRE_PARTS.includes(id)?'TIRE_SELECTION':'INSPECTION_OVERVIEW'};
+    const scan=await scanPart(page,id,11),touch=await touchTarget(page,id,scan.hitCells?.[Math.floor((scan.hitCells.length-1)/2)]);
+    if(HOOD_PARTS.includes(id)||TIRE_PARTS.includes(id))R.labels[(HOOD_PARTS.includes(id)?'bay':'tires')]??=await labelOcclusion(page);
+    R.select3d[id]={...(await clickPart(page,t,scan,id)),touchPx:(scan.touchPx??[0,0]).map(v=>Math.round(v)),touch,fromState:HOOD_PARTS.includes(id)?'COMPONENT_SELECTION':TIRE_PARTS.includes(id)?'TIRE_SELECTION':'INSPECTION_OVERVIEW'};
+    if(touch.labelId){
+      // The same parent view again, then a real click on the label button.
+      await t.toOverview();
+      if(HOOD_PARTS.includes(id)){await t.dispatch({type:'SELECT_AREA',id:'hood'});await t.until('COMPONENT_SELECTION');}
+      else if(TIRE_PARTS.includes(id)){await t.dispatch({type:'SELECT_AREA',id:'tires'});await t.until('TIRE_SELECTION');}
+      await t.settle();await page.waitForTimeout(200);
+      await page.locator(`.part-label[data-part-label="${touch.labelId}"][data-shown="true"] button`).click();await page.waitForTimeout(60);await t.settle();
+      const s=await t.state();R.select3d[id].labelClickSelected=s.component===id;R.select3d[id].labelClickState=s.name;
+    }
   }
 
   // ---- result route for the 17 result parts
@@ -293,8 +328,62 @@ async function measureMobileProtection(browser){
   return R;
 }
 
+// ---- P1-5: result color and selection on the real page. Results arrive through the scripted adapter (not Native).
+// Each part gets a reported result, is then selected, and the page's own material values and pixels are read.
+const ROLE_RESULTS=[['washer-fluid-cap','FOUND'],['coolant-reservoir','UNABLE'],['tire.front-left','NOT_FOUND'],['wiper.front.left','FOUND'],['light-low-beam-left-0','NOT_FOUND'],['ev-charge.port','UNABLE']];
+async function measureRoles(browser){
+  const context=await browser.newContext({viewport:{width:1224,height:880},reducedMotion:'reduce'}),page=await context.newPage(),t=pageTools(page),errors=[];
+  page.on('pageerror',e=>errors.push(e.message));
+  await page.route('**/inspect.js',async route=>{
+    const response=await route.fetch(),source=await response.text();assert.ok(source.includes(REAL));
+    await route.fulfill({response,body:`import {fixtureAdapter} from './test/native-results-browser-fixture.mjs';\n`+source.replace(REAL,'createNativeInspectionResults({adapter:fixtureAdapter})')});
+  });
+  await page.goto(url);await page.waitForFunction(()=>window.__inspectReady===true,null,{timeout:90000});await t.settle();
+  await t.dispatch({type:'START'});await t.until('INSPECTION_OVERVIEW');await t.settle();
+  const publish=(id,value,n)=>{const task=MOBILE_TARGETS.find(x=>x.partId===id).taskId;return page.evaluate(`import('./test/native-results-browser-fixture.mjs').then(f=>f.publish(${JSON.stringify(wireResult(task,value,`3${String(n).padStart(7,'0')}-1111-4111-8111-111111111111`))},${JSON.stringify(id)}))`);};
+  for(const [i,[id,value]] of ROLE_RESULTS.entries())await publish(id,value,i);
+  await page.waitForTimeout(100);
+  const read=id=>page.evaluate(id=>{const I=window.__inspect,h=I.highlightInfo(id),label=I.labelInfo().find(l=>l.id===id),badge=document.querySelector(`#panel button.item[data-id="${id}"] [data-inspection-state]`);
+    const text=label?document.querySelector(`.part-label[data-part-label="${id}"] button`).textContent:null;return {...h,label:label?{shown:label.shown,text}:null,listState:badge?.dataset.inspectionState??null,state:I.state.name,component:I.state.component};},id);
+  const R={parts:{},live:null,others:{}};
+  for(const [id] of ROLE_RESULTS){
+    await enterPreview(page,t,id);await t.settle();await page.waitForTimeout(200);
+    const seen=await read(id),scan=await scanPart(page,id);
+    R.parts[id]={...seen,pixel:scan.color?.map(v=>Math.round(v))??null};
+  }
+  // Another result part on the same screen keeps its color and gets no selection.
+  await enterPreview(page,t,'coolant-reservoir');await t.settle();R.others['washer-fluid-cap']=await read('washer-fluid-cap');
+  // A result that arrives while a part is selected changes its color and keeps the selection.
+  await enterPreview(page,t,'brake-fluid-reservoir');await t.settle();const before=await read('brake-fluid-reservoir');
+  await publish('brake-fluid-reservoir','FOUND',9);await page.waitForTimeout(150);
+  R.live={before,after:await read('brake-fluid-reservoir')};
+  R.errors=errors;await context.close();return R;
+}
+/** P1-5 rule: the selected part shows its result color, carries the outline, and its emissive adds at most half the result's luminance. */
+function rolesHold(roles){
+  const wrong=[];
+  const check=(id,x,selected)=>{
+    if(!x.result||x.result.status==='NOT_INSPECTED'){wrong.push(`${id}: no result`);return;}
+    if(x.role!==(selected?'SELECTED':'NONE'))wrong.push(`${id}: role ${x.role}`);
+    if(x.listState!==null&&x.listState!==x.result.status)wrong.push(`${id}: list ${x.listState}`);
+    for(const [i,m] of x.meshes.entries()){
+      if(m.color!==x.result.color)wrong.push(`${id}#${i}: color ${m.color.toString(16)} not result ${x.result.color.toString(16)}`);
+      if(selected&&!m.outline)wrong.push(`${id}#${i}: no outline`);
+      if(selected&&m.intensity*accentLuminance>SELECTION_RESULT_SHARE*luminance(m.colorLinear)+1e-6)wrong.push(`${id}#${i}: selection ${m.intensity.toFixed(2)} covers the result`);
+      if(!selected&&m.intensity!==0)wrong.push(`${id}#${i}: unselected emissive ${m.intensity}`);
+    }
+    if(selected&&!(x.label?.shown&&x.label.text.includes(x.result.symbol)))wrong.push(`${id}: label without result symbol`);
+  };
+  for(const [id,x] of Object.entries(roles.parts))check(id,x,true);
+  for(const [id,x] of Object.entries(roles.others))check(id,x,false);
+  const {before,after}=roles.live;
+  if(!(before.result.status==='NOT_INSPECTED'&&after.result.status==='FINDINGS_REPORTED'&&after.component==='brake-fluid-reservoir'&&after.state===before.state))wrong.push('live result changed the selection or the state');
+  else check('brake-fluid-reservoir(live)',after,true);
+  return wrong;
+}
+
 // ---- The conditions that mean "fixed". null: nothing measured this run.
-function evaluateIssues(runs,paths,mobile){
+function evaluateIssues(runs,paths,mobile,roles){
   const views=Object.keys(runs),allPreview=(fn)=>views.every(v=>fn(runs[v].preview,runs[v]));
   const anyView=runs[views[0]];
   const tireFrames=Object.values(paths).flatMap(p=>Object.values(p.tires).map(x=>x.inside));
@@ -314,7 +403,7 @@ function evaluateIssues(runs,paths,mobile){
     'P1-2':{met:null,value:'VISUAL: preview captures of hood parts'},
     'P1-3':{met:allPreview(p=>visibleModeled.every(id=>p[id].label)),value:Object.fromEntries(views.map(v=>[v,visibleModeled.filter(id=>runs[v].preview[id]?.label)]))},
     'P1-4':{met:spread(colors)<=0.25,value:{luminanceSpread:round(spread(colors)),min:round(Math.min(...colors)),max:round(Math.max(...colors)),note:'Mean of the rendered pixels of the selected part. Also depends on lighting and view.'}},
-    'P1-5':{met:null,value:'NEEDS_P10: the page exposes selection emissive only for tires'},
+    'P1-5':(()=>{const wrong=rolesHold(roles);return {met:wrong.length===0,value:{wrong,parts:Object.fromEntries(Object.entries(roles.parts).map(([id,x])=>[id,{status:x.result?.status,role:x.role,intensity:x.meshes.map(m=>+m.intensity.toFixed(3)),pixel:x.pixel,label:x.label?.text??null}])),note:'Scripted adapter results, not Native. Pixels depend on light and view.'}};})(),
     'P1-6':{met:anyView.paint.tiresTinted===false,value:anyView.paint},
     'P1-7':{met:views.every(v=>!runs[v].overviewFacts.legendTires),value:Object.fromEntries(views.map(v=>[v,runs[v].overviewFacts.legendTires]))},
     'P1-8':{met:views.every(v=>runs[v].flows.crossArea?.changed===true),value:Object.fromEntries(views.map(v=>[v,runs[v].flows.crossArea]))},
@@ -322,7 +411,12 @@ function evaluateIssues(runs,paths,mobile){
     'P1-10':{met:views.every(v=>runs[v].overviewFacts.batteryTag!=='점검 가능'),value:Object.fromEntries(views.map(v=>[v,runs[v].overviewFacts.batteryTag]))},
     'P1-11':{met:anyView.lcwListClass?.preview===true,value:anyView.lcwListClass},
     'P1-12':{met:allPreview(p=>HOOD_PARTS.filter(id=>p[id]?.selectable).every(id=>!(p[id].noProcedureText&&p[id].hasMobile))),value:Object.fromEntries(HOOD_PARTS.filter(id=>anyView.preview[id]?.selectable).map(id=>[id,{noProcedureText:anyView.preview[id].noProcedureText,hasMobile:anyView.preview[id].hasMobile}]))},
-    'P1-13':{met:views.every(v=>[...WIPER_PARTS,...LIGHT_PARTS,...CHARGE_PARTS,...HOOD_PARTS].filter(id=>runs[v].select3d[id]?.clickable).every(id=>Math.min(...runs[v].select3d[id].touchPx)>=MIN_TOUCH_PX)),value:Object.fromEntries(views.map(v=>[v,Object.fromEntries([...WIPER_PARTS,...LIGHT_PARTS,...CHARGE_PARTS,...HOOD_PARTS].map(id=>[id,runs[v].select3d[id]?.touchPx]))]))},
+    // Same parts and parent views as P10-0. A part counts when the touch area (with slop) or its shown label button is
+    // at least 44px both ways and actually selects it. A part with no visible target in its parent view does not count.
+    'P1-13':(()=>{const thin=[...WIPER_PARTS,...LIGHT_PARTS,...CHARGE_PARTS,...HOOD_PARTS].filter(id=>id!=='lcw-coolant-reservoir');
+      const ok=x=>!!x&&(Math.min(...x.touch.pick)>=MIN_TOUCH_PX&&x.selected||!!x.touch.label&&Math.min(...x.touch.label)>=MIN_TOUCH_PX&&x.labelClickSelected===true);
+      const small=v=>thin.filter(id=>!ok(runs[v].select3d[id]));
+      return {met:views.every(v=>small(v).length===0),value:Object.fromEntries(views.map(v=>[v,{small:small(v),targets:Object.fromEntries(thin.map(id=>[id,{mesh:runs[v].select3d[id]?.touchPx,pick:runs[v].select3d[id]?.touch.pick,label:runs[v].select3d[id]?.touch.label,labelClick:runs[v].select3d[id]?.labelClickSelected??null}]))}]))};})(),
     'P1-14':(()=>{
       const wrong=views.flatMap(v=>[
         ...ALL_PARTS.filter(id=>runs[v].preview[id]?.selectable).flatMap(id=>[['preview title',runs[v].preview[id].title],['preview list',runs[v].preview[id].listName]].filter(([,name])=>name!==null&&name!==partLabel(id)).map(([where,name])=>`${v} ${id} ${where}: ${name}`)),
@@ -336,7 +430,8 @@ function evaluateIssues(runs,paths,mobile){
     'P2-3':{met:allPreview(p=>Object.values(p).every(x=>!x.internalWords?.length)),value:Object.fromEntries(ALL_PARTS.filter(id=>anyView.preview[id]?.internalWords?.length).map(id=>[id,anyView.preview[id].internalWords]))},
     'P2-4':{met:views.every(v=>LIGHT_PARTS.every(id=>Math.abs(runs[v].result[id].polar-runs[v].preview[id].polar)<=0.5)),value:Object.fromEntries(LIGHT_PARTS.map(id=>[id,{preview:anyView.preview[id].polar,result:anyView.result[id].polar}]))},
     'P2-5':{met:views.every(v=>Math.abs(runs[v].overviewFacts.toastCenter-runs[v].overviewFacts.usableCenter)<=4),value:Object.fromEntries(views.map(v=>[v,{toastCenter:runs[v].overviewFacts.toastCenter,usableCenter:runs[v].overviewFacts.usableCenter}]))},
-    'P2-6':{met:null,value:'NEEDS_P10: the page exposes no label occlusion value'},
+    'P2-6':(()=>{const all=views.flatMap(v=>Object.entries(runs[v].labels).map(([k,x])=>({k:`${v} ${k}`,...x})));const checked=all.reduce((n,x)=>n+x.checked,0),wrong=all.flatMap(x=>x.wrong.map(w=>`${x.k} ${w}`));
+      return {met:checked>0&&wrong.length===0,value:{checked,wrong:wrong.slice(0,20),note:'Each label claim checked with a separate ray at its anchor. Sampled screens, not every pose.'}};})(),
     'P2-7':{met:allPreview(p=>Object.values(p).every(x=>!x.focusOutline)),value:{note:'Script input. Whether a finger shows it is NOT_RUN.',parts:ALL_PARTS.filter(id=>anyView.preview[id]?.focusOutline).length}},
     'P2-8':{met:null,value:'VISUAL: preview-ev-battery.pack capture'},
     'P2-9':{met:null,value:'NODE: test/part-ux-known-issues.test.mjs'},
@@ -365,7 +460,9 @@ try{
     paths[key(viewport)]=await measurePaths(browser,viewport);
   }
   const mobile=await measureMobileProtection(browser);summary.errors.push(...mobile.errors.map(e=>`mobile: ${e}`));delete mobile.errors;
-  const evaluated=evaluateIssues(runs,paths,mobile);
+  const roles=await measureRoles(browser);summary.errors.push(...roles.errors.map(e=>`roles: ${e}`));delete roles.errors;
+  await writeFile(path.join(out,'roles.json'),JSON.stringify(roles,null,1));
+  const evaluated=evaluateIssues(runs,paths,mobile,roles);
   for(const issue of PART_UX_ISSUES){
     const result=evaluated[issue.id],{outcome,blocking}=classifyIssue(issue,result);
     summary.issues[issue.id]={severity:issue.severity,title:issue.title,fixIn:issue.fixIn,measure:issue.measure,outcome,value:result?.value??null};

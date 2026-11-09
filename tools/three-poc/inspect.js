@@ -40,10 +40,12 @@ import { sourceWorldParts } from './charge-port-model.mjs';
 import { measureEvChargePortSupport, buildEvChargePort, EV_CHARGE_IDS } from "./ioniq5-asset/ev-charge-port.mjs";
 import { resolveTireTargets, tireCameraDirection } from "./tire-targets.mjs";
 import { STATES, EVENTS, INSPECTION_AREAS, initialState, transition, hoodTarget, cameraGoal, areaOf, isHistoryState, HOOD_OPEN_DEG } from "./inspection-flow.mjs";
+import { labelPlan, layoutLabels, areaEvent, touchProbes, chooseTouch, usesTouchSlop, receiverLocked, hintTargets, selectionIntensity, SELECTION_COLOR, HINT_COLOR } from './part-labels.mjs';
 
 const params = new URLSearchParams(location.search);
 const $ = (id) => document.getElementById(id);
-const ACCENT = 0x3ec6e0;
+// Cyan is the selection role only (part-labels.mjs). Hints use a neutral color so they never read as a selection.
+const ACCENT = SELECTION_COLOR;
 const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
 const ms = (v) => (reducedMotion ? 1 : v);
 window.__inspectLog = [];
@@ -94,6 +96,8 @@ M.chargeInfo = { status: 'UNAVAILABLE', sourceMeshCount: 0, sourceUnchanged: fal
 M.wipers=new THREE.Group();M.wipers.visible=false;scene.add(M.wipers);
 M.wiperInfo={status:'UNAVAILABLE'};M.lights=new Map();
 function* targetGroups() { yield* M.components; for (const [id, t] of M.tires) yield [id, t.meshes]; }
+// Selection and hint cover what a touch selects: a tire's rubber and its wheel. The result color stays on the rubber.
+function* highlightGroups() { yield* M.components; for (const [id, t] of M.tires) yield [id, [...new Set([...t.meshes, ...t.pickMeshes])]]; }
 M.bay.name = "__p3a4_bay"; M.bay.visible = false; scene.add(M.bay);
 
 function hoodTriangles(root) {
@@ -112,8 +116,8 @@ function outlineOf(mesh) {
   for (let i = 0; i < idx.length; i++) { T[3 * i] = pos.getX(idx[i]); T[3 * i + 1] = pos.getY(idx[i]); T[3 * i + 2] = pos.getZ(idx[i]); }
   const geo = new THREE.BufferGeometry();
   geo.setAttribute("position", new THREE.Float32BufferAttribute(H.boundaryEdges(T).flatMap(([a, b]) => [...a, ...b]), 3));
-  const lines = new THREE.LineSegments(geo, new THREE.LineBasicMaterial({ color: ACCENT, transparent: true, opacity: 0.9, depthTest: false }));
-  lines.renderOrder = 10; lines.visible = false; lines.userData.synthetic = true;
+  const lines = new THREE.LineSegments(geo, new THREE.LineBasicMaterial({ color: HINT_COLOR, transparent: true, opacity: 0.9, depthTest: false }));
+  lines.renderOrder = 10; lines.visible = false; lines.userData.synthetic = true; lines.raycast = () => {};
   mesh.add(lines);
   return lines;
 }
@@ -296,7 +300,7 @@ function enter(prev) {
   floor.visible = ring.visible = !underbody;
   for (const mesh of M.components.get(EV_BATTERY_ID) ?? []) mesh.visible = underbody;
   controls.maxPolarAngle = Math.PI * (underbody ? 0.92 : state.area==='lights'&&state.component?0.7:0.48);
-  hovered = false;
+  hovered = null;
   driveHood(hoodTarget(state));
   render();
   if ([STATES.HISTORY_LIST,STATES.HISTORY_DETAIL,STATES.PART_RESULT,STATES.VISIBILITY_PREVIEW, STATES.CHARGE_PORT_PREVIEW, STATES.EV_BATTERY_PREVIEW, STATES.COMPONENT_PREVIEW, STATES.WASHER_SELECTED, STATES.TIRE_PREVIEW, STATES.INSPECTION_SUMMARY, STATES.TIRE_SUMMARY].includes(state.name)) {
@@ -502,6 +506,7 @@ function render() {
   if (state.name === STATES.CHARGE_PORT_PREVIEW) $('crumb').textContent = '차량 점검 › EV 충전구';
   if(state.name===STATES.VISIBILITY_PREVIEW)$('crumb').textContent='차량 점검 › '+(state.area==='wipers'?'전면 와이퍼':'전조등');
   showToast(hints[state.name]);
+  syncLabels();
 }
 tireStatus.subscribe(() => {
   refreshResultSdk();
@@ -584,7 +589,13 @@ $('panel').addEventListener('change',e=>{
 $('panel').addEventListener('submit',e=>{if(e.target.id==='historyFilterForm')e.preventDefault();});
 $("start").addEventListener("click", () => dispatch({ type: EVENTS.START }));
 $("back").addEventListener("click", () => dispatch({ type: EVENTS.BACK }));
-$("capButton").addEventListener("click", () => dispatch({ type: EVENTS.SELECT_COMPONENT, id: "washer-fluid-cap" }));
+// A label sends the same event a touch on its part sends on this screen; a selected or locked label sends nothing.
+$('partLabels').addEventListener('click', (e) => {
+  const el = e.target.closest('.part-label[data-shown="true"]');
+  const entry = el && labels.items.find(x => x.id === el.dataset.partLabel);
+  const event = entry && areaEvent(entry, labels.anchorPart.get(entry.id));
+  if (event) { log('label-select', { id: entry.id, event: event.type }); dispatch(event); }
+});
 addEventListener("keydown", (e) => {
   if (e.key === "Escape") dispatch({ type: EVENTS.BACK });
   if (e.key === "`") $("dev").hidden = !$("dev").hidden;
@@ -607,7 +618,33 @@ function hitAt(x, y) {
   if (hit.object.userData.inspectionTarget) return { kind: 'component', id: hit.object.userData.inspectionTarget };
   return { kind: "other" };
 }
-function pickTarget(x, y) {
+/** The inspection part (or 'hood') a ray hit belongs to, or null for the body, floor and everything else. */
+function hitPartId(object) {
+  const u = object?.userData ?? {};
+  if (u.visibilityPartId) return u.visibilityPartId;
+  if (Object.values(EV_CHARGE_IDS).includes(u.partId)) return u.partId;
+  if (u.inspectionTire) return u.inspectionTire;
+  if (u.isHood) return 'hood';
+  if (u.washer) return 'washer-fluid-cap';
+  return u.inspectionTarget ?? null;
+}
+// Touch slop (finger input only): when the exact point selects nothing, points up to TOUCH_SLOP_PX away are probed with
+// real rays and chooseTouch decides: exact first, one specific part only, never an area-wide surface, nothing when
+// ambiguous. Mouse, pen and hover keep the exact point.
+let lastTouch = null;
+function touchDecision(x, y) {
+  const exact = pickExact(x, y);
+  if (exact) return chooseTouch(exact);
+  const found = [];
+  for (const p of touchProbes(x, y).slice(1)) { const event = pickExact(p.x, p.y); if (event) found.push({ r: p.r, event }); }
+  return chooseTouch(null, found);
+}
+function pickTarget(x, y, { slop = false } = {}) {
+  if (!slop) return pickExact(x, y);
+  const d = touchDecision(x, y); lastTouch = { x, y, reason: d.reason, event: d.event };
+  return d.event;
+}
+function pickExact(x, y) {
   const h = hitAt(x, y);
   if(state.name===STATES.PART_RESULT){const id=h?.kind==='washer'?'washer-fluid-cap':h?.id;if(targetForPart(id))return {type:EVENTS.OPEN_RESULT,id};}
   if([STATES.INSPECTION_OVERVIEW,STATES.INSPECTION_SUMMARY].includes(state.name)&&h?.kind==='visibility')return {type:EVENTS.SELECT_AREA,id:WIPER_PARTS.includes(h.id)?'wipers':'lights',partId:h.id};
@@ -622,17 +659,22 @@ function pickTarget(x, y) {
   }
   return null;
 }
-let downAt = null, hovered = false;
+let downAt = null, hovered = null;
 renderer.domElement.addEventListener("pointerdown", (e) => { downAt = [e.clientX, e.clientY]; });
 renderer.domElement.addEventListener("pointerup", (e) => {
-  if (downAt && Math.hypot(e.clientX - downAt[0], e.clientY - downAt[1]) < 5) { const ev = pickTarget(e.clientX, e.clientY); if (ev) dispatch(ev); }
+  if (downAt && Math.hypot(e.clientX - downAt[0], e.clientY - downAt[1]) < 5) {
+    const slop = usesTouchSlop(e.pointerType), ev = pickTarget(e.clientX, e.clientY, { slop });
+    log('pick', { pointerType: e.pointerType, slop, reason: slop ? lastTouch?.reason : ev ? 'EXACT' : 'NONE' });
+    if (ev) dispatch(ev);
+  }
   downAt = null;
 });
 renderer.domElement.addEventListener('pointercancel', () => { downAt = null; });
 renderer.domElement.addEventListener("pointermove", (e) => {
   if (e.buttons || !M.pivot) return;
-  hovered = Boolean(pickTarget(e.clientX, e.clientY));
-  renderer.domElement.style.cursor = hovered ? "pointer" : "";
+  const ev = pickTarget(e.clientX, e.clientY);
+  hovered = ev ? (ev.type === EVENTS.SELECT_AREA ? ev.partId ?? ev.id : ev.id) : null;
+  renderer.domElement.style.cursor = ev ? "pointer" : "";
 });
 
 // ---------- layout: keep the car centred in the space the panel leaves ----------
@@ -658,18 +700,19 @@ addEventListener("resize", () => {
   }, 180);
 });
 
-// The map tints existing cloned rubber materials only. Selection keeps its independent cyan emissive.
+// Result role: a reported result sets the material's base color; NOT_INSPECTED keeps the original material on every
+// part, tires included. Selection (cyan emissive + outline) and hint (neutral emissive) are separate roles on top.
 let inspectionMap=projectInspectionResults(userInspection,mobileResults.snapshot);
 const resultBaseColors=new WeakMap();
 function syncInspectionMap() {
   inspectionMap=projectInspectionResults(userInspection,mobileResults.snapshot);
   for(const row of inspectionMap)for(const mesh of targetMeshes(row.partId)??[]){
     if(!resultBaseColors.has(mesh.material))resultBaseColors.set(mesh.material,mesh.userData.inspectionBaseColor??mesh.material.color.getHex());
-    mesh.material.color.setHex(state.name===STATES.IDLE||!M.tires.has(row.partId)&&row.status==='NOT_INSPECTED'?resultBaseColors.get(mesh.material):row.color);
+    mesh.material.color.setHex(state.name===STATES.IDLE||row.status==='NOT_INSPECTED'?resultBaseColors.get(mesh.material):row.color);
   }
 }
 // Local and mobile changes end here, so the 3D colors, card, summary and badges come from the same records at the same moment.
-function syncResultSurfaces(){syncInspectionMap();if(window.__inspectReady)refreshResultRegions($('panel'),{local:userInspection,mobile:mobileResults.snapshot,partId:state.component});syncQrSlot();}
+function syncResultSurfaces(){syncInspectionMap();if(window.__inspectReady)refreshResultRegions($('panel'),{local:userInspection,mobile:mobileResults.snapshot,partId:state.component});syncQrSlot();syncLabels();}
 mobileResults.subscribe(()=>{syncResultSurfaces();if(window.__inspectReady&&isHistoryState(state))refreshHistory();});
 inspectionHistory.subscribe(refreshHistory);
 // Access can change while the screen is away, so paused or hidden pages keep no records (same fixed signals as SDK status).
@@ -686,26 +729,161 @@ function screenPoint(obj, top = true) {
   const r = renderer.domElement.getBoundingClientRect();
   return { x: r.left + ((_v.x + 1) * r.width) / 2, y: r.top + ((1 - _v.y) * r.height) / 2, inFront: _v.z < 1 };
 }
+// Selection outline: the cyan edges of the selected part, built once per mesh on first selection. Never picked.
+const selectionOutlines = new Map();
+function selectionOutline(mesh) {
+  let lines = selectionOutlines.get(mesh);
+  if (!lines) {
+    lines = new THREE.LineSegments(new THREE.EdgesGeometry(mesh.geometry, 35), new THREE.LineBasicMaterial({ color: ACCENT, transparent: true, opacity: 0.85 }));
+    lines.raycast = () => {}; lines.renderOrder = 5; lines.userData.synthetic = true; lines.userData.selectionOutline = true;
+    mesh.add(lines); selectionOutlines.set(mesh, lines);
+  }
+  return lines;
+}
+const resultRow = (id) => inspectionMap.find(r => r.partId === id);
+const hasMeshes = (id) => id === 'hood' ? M.hoodMeshes.length > 0 : !!targetMeshes(id)?.length;
+/** Which role paints a part now: SELECTED, HINT or NONE. One rule for every part and material. */
+function highlightRole(id, hints) {
+  if (state.component === id && state.name !== STATES.IDLE) return 'SELECTED';
+  return hints.has(id) ? 'HINT' : 'NONE';
+}
 function paintHighlight(now) {
   const pulse = 0.5 + 0.5 * Math.sin(now / 380);
-  const hoodOn = state.name === STATES.INSPECTION_OVERVIEW;
-  for (const m of M.hoodMeshes) { m.material.emissive.setHex(hoodOn ? ACCENT : 0); m.material.emissiveIntensity = hoodOn ? 0.12 + 0.18 * pulse + (hovered ? 0.2 : 0) : 0; }
-  for (const l of M.outline) l.visible = hoodOn;
-  const capOn = [STATES.COMPONENT_SELECTION, STATES.WASHER_SELECTED, STATES.MOBILE_HANDOFF_READY].includes(state.name);
-  for (const [id, meshes] of targetGroups()) for (const m of meshes) {
-    const selected = state.component === id;
-    const washerHint = id === 'washer-fluid-cap' && capOn && m === M.cap;
-    if(m.userData.originalLight){if(selected)m.material.emissive.setHex(ACCENT);else m.material.emissive.copy(m.userData.originalLight.emissive);m.material.emissiveIntensity=selected?0.6:m.userData.originalLight.intensity;continue;}
-    m.material.emissive.setHex(selected || washerHint ? ACCENT : 0);
-    const confirmedTire=M.tires.has(id)&&inspectionMap.some(r=>r.partId===id&&r.completedAt!==null);
-    m.material.emissiveIntensity = selected ? (confirmedTire ? 0.12 : 0.6) : washerHint ? 0.25 + 0.45 * pulse : 0;
+  const hints = new Set(hintTargets(state, { modeled: hasMeshes }));
+  const hintLevel = (id) => (reducedMotion ? 0.16 : 0.1 + 0.1 * pulse) + (hovered === id ? 0.12 : 0);
+  const hoodHint = hints.has('hood');
+  for (const m of M.hoodMeshes) { m.material.emissive.setHex(hoodHint ? HINT_COLOR : 0); m.material.emissiveIntensity = hoodHint ? hintLevel('hood') : 0; }
+  for (const l of M.outline) l.visible = hoodHint;
+  for (const [id, meshes] of highlightGroups()) {
+    const role = highlightRole(id, hints), row = resultRow(id), hasResult = !!row && row.status !== 'NOT_INSPECTED';
+    for (const m of meshes) {
+      const mat = m.material;
+      if (role === 'SELECTED') {
+        mat.emissive.setHex(ACCENT);
+        mat.emissiveIntensity = selectionIntensity([mat.color.r, mat.color.g, mat.color.b], { hasResult });
+        selectionOutline(m).visible = true;
+      } else {
+        const outline = selectionOutlines.get(m); if (outline) outline.visible = false;
+        if (role === 'HINT') { mat.emissive.setHex(HINT_COLOR); mat.emissiveIntensity = hintLevel(id); }
+        else if (m.userData.originalLight) { mat.emissive.copy(m.userData.originalLight.emissive); mat.emissiveIntensity = m.userData.originalLight.intensity; }
+        else { mat.emissive.setHex(0); mat.emissiveIntensity = 0; }
+      }
+    }
   }
-  const label = $("capLabel");
-  if (capOn && M.cap && M.bay.visible) {
-    const p = screenPoint(M.cap);
-    const off = !p.inFront || p.x < 0 || p.y < 0 || p.x > innerWidth || p.y > innerHeight;
-    if (off) label.dataset.hidden = ""; else { delete label.dataset.hidden; label.style.left = `${p.x}px`; label.style.top = `${p.y}px`; }
-  } else label.dataset.hidden = "";
+  paintLabels(now);
+}
+
+// ---------- PartLabel: one label system for every modeled part (rules in part-labels.mjs) ----------
+const labels = { items: [], key: '', els: new Map(), sizes: new Map(), anchorPart: new Map(), anchors: new Map(), info: [], checkedAt: -1e9, pose: '', lines: '', samples: new WeakMap() };
+const meshShown = (m) => { for (let n = m; n; n = n.parent) if (!n.visible) return false; return true; };
+const labelMeshes = (id) => id === 'hood' ? M.hoodMeshes : id === 'washer-fluid-cap' ? [M.cap, ...M.washerMeshes.filter(m => m !== M.cap)].filter(Boolean) : (M.tires.get(id)?.pickMeshes ?? targetMeshes(id) ?? []);
+const labelLocked = () => receiverLocked(mobileResults.snapshot.receiver);
+function syncLabels() {
+  const locked = labelLocked();
+  const items = labelPlan(state, { modeled: hasMeshes, locked });
+  const rows = items.map(x => { const r = x.kind === 'PART' ? resultRow(x.id) : null; return [x.id, x.selected, !!x.event, r?.status ?? null]; });
+  const key = JSON.stringify([state.name, locked, rows]);
+  labels.items = items;
+  if (key === labels.key) return;
+  labels.key = key; labels.checkedAt = -1e9;
+  const layer = $('partLabels');
+  layer.innerHTML = items.map(x => {
+    const r = x.kind === 'PART' ? resultRow(x.id) : null;
+    const status = r ? `<span class="label-state" data-inspection-state="${r.status}">${r.symbol}${x.selected ? ' ' + esc(r.label) : ''}</span>` : '';
+    const name = r ? `${x.text}, ${r.label}` : x.text;
+    return `<div class="part-label" data-part-label="${esc(x.id)}" data-kind="${x.kind}" data-selected="${x.selected}" data-actionable="${!!x.event || x.kind === 'AREA'}" data-shown="false" data-occluded="false"><button type="button" aria-pressed="${x.selected}" aria-label="${esc(name)}"${x.event || x.kind === 'AREA' ? '' : ' aria-disabled="true"'}>${esc(x.text)}${status}<span class="label-note" hidden>· 가려짐</span></button></div>`;
+  }).join('');
+  labels.els = new Map([...layer.querySelectorAll('.part-label')].map(el => [el.dataset.partLabel, el]));
+  // Measure each box once while invisible; the layout keeps at least the 44px touch size.
+  for (const [id, el] of labels.els) { el.style.visibility = 'hidden'; el.dataset.shown = 'true'; labels.sizes.set(id, { w: el.offsetWidth, h: el.offsetHeight }); el.dataset.shown = 'false'; el.style.visibility = ''; }
+}
+// World points to try on a part, in order: the part's center, then spread vertices. Cached per mesh in local space.
+function localSamples(mesh) {
+  let s = labels.samples.get(mesh);
+  if (!s) {
+    const g = mesh.geometry, pos = g.attributes.position; g.computeBoundingBox();
+    s = [g.boundingBox.getCenter(new THREE.Vector3())];
+    const step = Math.max(1, Math.floor(pos.count / 7));
+    for (let i = Math.floor(step / 2); i < pos.count && s.length < 8; i += step) s.push(new THREE.Vector3().fromBufferAttribute(pos, i));
+    labels.samples.set(mesh, s);
+  }
+  return s;
+}
+const occlusionRay = new THREE.Raycaster();
+/** The point a touch at this sample's pixel reaches if that is the part itself, or null if another mesh comes first.
+ *  The same screen ray as a touch, so a label marked visible sits where a touch selects its part. */
+function visiblePoint(id, world) {
+  const v = world.clone().project(camera);
+  if (v.z <= -1 || v.z >= 1) return null;
+  occlusionRay.setFromCamera(new THREE.Vector2(v.x, v.y), camera);
+  const hit = nearestInspectionHit(occlusionRay.intersectObjects(scene.children, true));
+  return hit && hitPartId(hit.object) === id ? hit.point.clone() : null;
+}
+/** Anchor of one part: a visible point if one exists (occluded:false), else its center marked occluded. */
+function partAnchor(id) {
+  const meshes = labelMeshes(id).filter(meshShown);
+  if (!meshes.length) return null;
+  const points = [];
+  for (const m of meshes) for (const p of localSamples(m)) { points.push(p.clone().applyMatrix4(m.matrixWorld)); if (points.length >= 14) break; }
+  const box = new THREE.Box3(); for (const m of meshes) box.union(new THREE.Box3().setFromObject(m));
+  const center = new THREE.Box3().setFromPoints(points).getCenter(new THREE.Vector3());
+  for (const p of [center, ...points]) { const seen = visiblePoint(id, p); if (seen) return { world: seen, box, occluded: false }; }
+  return { world: center, box, occluded: true };
+}
+function refreshAnchors() {
+  scene.updateMatrixWorld(true); camera.updateMatrixWorld();
+  labels.anchors = new Map(); labels.anchorPart = new Map(); labels.partBoxes = new Map();
+  for (const item of labels.items) {
+    let chosen = null, part = item.anchors[0];
+    for (const id of item.anchors) { const a = partAnchor(id); if (!a) continue; labels.partBoxes.set(id, a.box); if (!chosen) { chosen = a; part = id; } if (!a.occluded) { chosen = a; part = id; break; } }
+    labels.anchors.set(item.id, chosen); labels.anchorPart.set(item.id, part);
+  }
+}
+function labelObstacles() {
+  const out = [], pad = 6;
+  for (const el of [state.name !== STATES.IDLE ? $('panel') : null, document.querySelector('.topbar'), $('androidZoom'), $('dev')?.hidden ? null : $('dev')]) {
+    if (!el) continue; const r = el.getBoundingClientRect();
+    if (r.width && r.height) out.push({ x: r.left - pad, y: r.top - pad, w: r.width + 2 * pad, h: r.height + 2 * pad });
+  }
+  return out;
+}
+/** Screen rectangle of a world box; undefined when part of it is behind the camera (no meaningful rectangle). */
+function screenBox(box3, r) {
+  const xs = [], ys = [];
+  for (const x of [box3.min.x, box3.max.x]) for (const y of [box3.min.y, box3.max.y]) for (const z of [box3.min.z, box3.max.z]) {
+    const p = new THREE.Vector3(x, y, z).project(camera); if (p.z >= 1 || p.z <= -1) return undefined;
+    xs.push(r.left + (p.x + 1) * r.width / 2); ys.push(r.top + (1 - p.y) * r.height / 2);
+  }
+  return { x: Math.min(...xs), y: Math.min(...ys), w: Math.max(...xs) - Math.min(...xs), h: Math.max(...ys) - Math.min(...ys) };
+}
+function paintLabels(now) {
+  if (!labels.items.length) { if (labels.info.length || labels.lines) { labels.info = []; labels.lines = ''; $('partLabelLines').innerHTML = ''; } return; }
+  const c = camera.position, t = controls.target;
+  const pose = [c.x, c.y, c.z, t.x, t.y, t.z, M.angle, innerWidth, innerHeight].map(v => v.toFixed(3)).join();
+  // Occlusion is re-checked when the view changes, at most every 150ms, and at once after a screen change.
+  if (pose !== labels.pose && now - labels.checkedAt > 150 || labels.checkedAt < 0) { refreshAnchors(); labels.pose = pose; labels.checkedAt = now; }
+  camera.updateMatrixWorld();
+  const r = renderer.domElement.getBoundingClientRect();
+  const input = labels.items.map(item => {
+    const a = labels.anchors.get(item.id), size = labels.sizes.get(item.id) ?? { w: 0, h: 0 };
+    if (!a) return { id: item.id, anchor: null, selected: item.selected, ...size };
+    const v = a.world.clone().project(camera);
+    return { id: item.id, parts: item.anchors, anchor: { x: r.left + (v.x + 1) * r.width / 2, y: r.top + (1 - v.y) * r.height / 2, inFront: v.z < 1 && v.z > -1 }, box: screenBox(a.box, r), occluded: a.occluded, selected: item.selected, ...size };
+  });
+  const targets = [];
+  for (const [id, box3] of labels.partBoxes ?? []) { const b = screenBox(box3, r); if (b) targets.push({ id, box: b }); }
+  labels.info = layoutLabels(input, { width: innerWidth, height: innerHeight, obstacles: labelObstacles(), targets });
+  let lines = '';
+  for (const entry of labels.info) {
+    const el = labels.els.get(entry.id); if (!el) continue;
+    el.dataset.shown = String(entry.shown); el.dataset.occluded = String(entry.occluded);
+    el.querySelector('.label-note').hidden = !entry.occluded;
+    if (!entry.shown) continue;
+    el.style.transform = `translate(${Math.round(entry.rect.x)}px,${Math.round(entry.rect.y)}px)`;
+    const { x, y, w, h } = entry.rect, ex = Math.min(Math.max(entry.anchor.x, x), x + w), ey = Math.min(Math.max(entry.anchor.y, y), y + h);
+    lines += `<line data-selected="${entry.selected}" data-occluded="${entry.occluded}" x1="${entry.anchor.x.toFixed(1)}" y1="${entry.anchor.y.toFixed(1)}" x2="${ex.toFixed(1)}" y2="${ey.toFixed(1)}"/><circle data-selected="${entry.selected}" cx="${entry.anchor.x.toFixed(1)}" cy="${entry.anchor.y.toFixed(1)}" r="3"/>`;
+  }
+  if (lines !== labels.lines) { labels.lines = lines; $('partLabelLines').innerHTML = lines; }
 }
 
 // ---------- frame loop ----------
@@ -799,6 +977,10 @@ new GLTFLoader().load(params.get("model") ?? "./external/ioniq5.glb", (gltf) => 
     M.components.set(EV_BATTERY_ID, [mesh]);
   }
   setHoodAngle(0);
+  // Build every selection outline once now, so selecting or reporting never allocates GPU geometry later.
+  const outlineStart = performance.now();
+  for (const [, meshes] of highlightGroups()) for (const m of meshes) selectionOutline(m).visible = false;
+  log('selection-outlines', { count: selectionOutlines.size, ms: Math.round(performance.now() - outlineStart) });
   $("status").remove();
   $("start").disabled = false;
   window.__inspectReady = true;
@@ -885,6 +1067,20 @@ window.__inspect = {
   hoodPoint: () => screenPoint(M.hoodMeshes[0], false),
   capPoint: () => screenPoint(M.cap),
   hitAt,
+  // What a real touch at (x,y) selects, with the 16px slop. null: nothing (an empty touch).
+  pickAt: (x, y) => pickTarget(x, y, { slop: true }),
+  // The touch decision with its reason (EXACT, SLOP, AMBIGUOUS, AREA_ONLY, NONE), and what a mouse click selects.
+  touchAt: (x, y) => touchDecision(x, y),
+  clickAt: (x, y) => pickExact(x, y),
+  // Shown and hidden labels with the reason, anchor, box and the part the anchor sits on (P1-3, P1-13, P2-6).
+  labelInfo: () => labels.info.map(e => { const item = labels.items.find(x => x.id === e.id), el = labels.els.get(e.id), b = el?.querySelector('button')?.getBoundingClientRect();
+    return { ...e, kind: item?.kind, anchorPart: labels.anchorPart.get(e.id) ?? null, text: item?.text, actionable: !!(item && (item.event || item.kind === 'AREA')), event: item ? areaEvent(item, labels.anchorPart.get(e.id)) : null,
+      button: e.shown && b ? { x: b.left, y: b.top, w: b.width, h: b.height } : null }; }),
+  // The three roles of one part: result color, selection and hint (P1-4, P1-5, P1-6).
+  highlightInfo: (id) => { const row = resultRow(id), hints = new Set(hintTargets(state, { modeled: hasMeshes }));
+    return { id, role: highlightRole(id, hints), result: row ? { status: row.status, color: row.color, symbol: row.symbol } : null,
+      meshes: (targetMeshes(id) ?? []).map(m => ({ color: m.material.color.getHex(), base: resultBaseColors.get(m.material) ?? m.userData.inspectionBaseColor ?? null, colorLinear: [m.material.color.r, m.material.color.g, m.material.color.b],
+        emissive: m.material.emissive.getHex(), intensity: m.material.emissiveIntensity, outline: !!selectionOutlines.get(m)?.visible })) }; },
   componentPoint: (id) => { const v = componentBounds(id).getCenter(new THREE.Vector3()).project(camera); return { x: (v.x+1)*innerWidth/2, y: (1-v.y)*innerHeight/2, inFront: v.z<1 }; },
   componentInfo: () => [...M.components].map(([id, meshes]) => ({ id, meshes: meshes.map(m => ({ id: m.name, target: m.userData.inspectionTarget, highlighted: m.material.emissiveIntensity > 0, meta: m.userData.meta })), bounds: { min: componentBounds(id).min.toArray(), max: componentBounds(id).max.toArray() } })),
   tireInfo: () => [...M.tires].map(([id, t]) => ({ id, node: t.node, panel: tireStatus.forTire(id), meshes: t.meshes.map(m => ({ name: m.name, material: m.material.name, selectionIntensity:m.material.emissiveIntensity, highlighted: m.material.emissiveIntensity > 0 && m.material.emissive.getHex() !== 0 })), wheelMeshes: t.pickMeshes.map(m => ({ name: m.name, material: m.material.name, highlighted: m.material.emissiveIntensity > 0 && m.material.emissive.getHex() !== 0 })), bounds: { min: t.bounds.min.toArray(), max: t.bounds.max.toArray() } })),

@@ -98,7 +98,9 @@ test('the page takes part names from the registry instead of writing them again'
   for(const old of ['충전구 외곽','차량 좌측 전면','차량 우측 전면','브레이크액 리저버','하향등 표식','상향등 표식'])for(const source of [page,flow,read('../visibility-parts.mjs')])assert.ok(!source.includes(old),old);
   assert.ok(!page.includes('<h2>워셔액 점검</h2>'));
   assert.match(page,/partLabel\('washer-fluid-cap'\)/);
-  assert.match(read('../inspect.html'),new RegExp(`id="capButton">${partLabel('washer-fluid-cap')}<`),'the static label button matches');
+  // 3D labels take their text from the registry too (part-labels.mjs); no label text is written in the page.
+  assert.doesNotMatch(read('../inspect.html'),/capButton|>워셔액</,'no static label button');
+  assert.match(read('../part-labels.mjs'),/text:partLabel\(id\)/);
 });
 
 test('dropping "marker" from a light name does not drop the warning that it is only a marker',()=>{
