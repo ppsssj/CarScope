@@ -99,7 +99,7 @@ function targets() {
     start: q("#start"), back: q("#back"), close: q("#androidClose"), zoomIn: q("#androidZoomIn"), zoomOut: q("#androidZoomOut"),
     areaHood: q('[data-action="area"][data-id="hood"]'), componentWasher: q('[data-action="component"][data-id="washer-fluid-cap"]'),
     handoff: q('[data-action="handoff"]'), panelBack: q('#panel [data-action="back"]'), exit: q('#panel [data-action="exit"]'),
-    capLabel: q("#capButton"), qr: q(".qr img"), handoffLink: document.getElementById("handoffLink")?.getAttribute("href") ?? null,
+    capLabel: q('.part-label[data-part-label="washer-fluid-cap"][data-shown="true"] button'), qr: q(".qr img"), handoffLink: document.getElementById("handoffLink")?.getAttribute("href") ?? null,
     hood: api && window.__inspectReady ? pt(api.hoodPoint()) : null, cap: api && window.__inspectReady && api.state.name !== "IDLE" ? pt(api.capPoint()) : null,
     planned: [...document.querySelectorAll('#panel .item[aria-disabled="true"]')].length,
     components: Object.fromEntries([...document.querySelectorAll('[data-action="component"]')].map(el => [el.dataset.id, rect(el)])),

@@ -68,7 +68,7 @@
       50,
       113
      ],
-     "highlightedMeshes": 0
+     "highlightedMeshes": 1
     },
     "tire.front-right": {
      "mineCells": 0,
@@ -76,7 +76,7 @@
       0,
       0
      ],
-     "highlightedMeshes": 0
+     "highlightedMeshes": 1
     },
     "tire.rear-left": {
      "mineCells": 18,
@@ -84,7 +84,7 @@
       22,
       70
      ],
-     "highlightedMeshes": 0
+     "highlightedMeshes": 1
     },
     "tire.rear-right": {
      "mineCells": 0,
@@ -92,7 +92,7 @@
       0,
       0
      ],
-     "highlightedMeshes": 0
+     "highlightedMeshes": 1
     },
     "ev-battery.pack": {
      "mineCells": 0,
@@ -108,7 +108,7 @@
       0,
       0
      ],
-     "highlightedMeshes": 0
+     "highlightedMeshes": 1
     },
     "ev-charge.flap": {
      "mineCells": 0,
@@ -116,7 +116,7 @@
       0,
       0
      ],
-     "highlightedMeshes": 0
+     "highlightedMeshes": 1
     },
     "wiper.front.left": {
      "mineCells": 11,
@@ -124,7 +124,7 @@
       19,
       9
      ],
-     "highlightedMeshes": 0
+     "highlightedMeshes": 1
     },
     "wiper.front.right": {
      "mineCells": 11,
@@ -132,7 +132,7 @@
       24,
       8
      ],
-     "highlightedMeshes": 0
+     "highlightedMeshes": 1
     },
     "light-low-beam-left-0": {
      "mineCells": 4,
@@ -210,9 +210,9 @@
      "meshes": 2,
      "highlightedMeshes": 2,
      "color": [
-      152,
-      211,
-      227
+      141,
+      202,
+      222
      ],
      "selectionIntensity": null,
      "label": true,
@@ -269,12 +269,12 @@
      "meshes": 2,
      "highlightedMeshes": 2,
      "color": [
-      203,
-      220,
-      222
+      200,
+      210,
+      206
      ],
      "selectionIntensity": null,
-     "label": false,
+     "label": true,
      "badge": "추정 모델 · 점검 절차 미제공",
      "backButtons": [
       "점검 목록과 이전 시점으로"
@@ -332,12 +332,12 @@
      "meshes": 2,
      "highlightedMeshes": 2,
      "color": [
-      195,
-      216,
-      219
+      191,
+      205,
+      202
      ],
      "selectionIntensity": null,
-     "label": false,
+     "label": true,
      "badge": "추정 모델 · 점검 절차 미제공",
      "backButtons": [
       "점검 목록과 이전 시점으로"
@@ -391,12 +391,12 @@
      "meshes": 4,
      "highlightedMeshes": 4,
      "color": [
-      139,
-      195,
-      207
+      145,
+      199,
+      210
      ],
      "selectionIntensity": null,
-     "label": false,
+     "label": true,
      "badge": "추정 모델 · 점검 절차 미제공",
      "backButtons": [
       "점검 목록과 이전 시점으로"
@@ -450,12 +450,12 @@
      "meshes": 2,
      "highlightedMeshes": 2,
      "color": [
-      138,
-      195,
-      207
+      143,
+      199,
+      210
      ],
      "selectionIntensity": null,
-     "label": false,
+     "label": true,
      "badge": "추정 모델 · 점검 절차 미제공",
      "backButtons": [
       "점검 목록과 이전 시점으로"
@@ -509,12 +509,12 @@
      "meshes": 1,
      "highlightedMeshes": 1,
      "color": [
-      72,
-      109,
-      116
+      92,
+      172,
+      184
      ],
-     "selectionIntensity": 0.6,
-     "label": false,
+     "selectionIntensity": 0.8114512059100857,
+     "label": true,
      "badge": "상태만 표시 · 수치 및 진단 미제공",
      "backButtons": [
       "선택 해제 · 이전 시점으로"
@@ -570,12 +570,12 @@
      "meshes": 1,
      "highlightedMeshes": 1,
      "color": [
-      107,
-      132,
-      139
+      113,
+      180,
+      191
      ],
-     "selectionIntensity": 0.6,
-     "label": false,
+     "selectionIntensity": 0.8114512059100857,
+     "label": true,
      "badge": "상태만 표시 · 수치 및 진단 미제공",
      "backButtons": [
       "선택 해제 · 이전 시점으로"
@@ -631,12 +631,12 @@
      "meshes": 1,
      "highlightedMeshes": 1,
      "color": [
-      68,
-      106,
-      114
+      89,
+      169,
+      181
      ],
-     "selectionIntensity": 0.6,
-     "label": false,
+     "selectionIntensity": 0.8114512059100857,
+     "label": true,
      "badge": "상태만 표시 · 수치 및 진단 미제공",
      "backButtons": [
       "선택 해제 · 이전 시점으로"
@@ -692,12 +692,12 @@
      "meshes": 1,
      "highlightedMeshes": 1,
      "color": [
-      108,
-      134,
-      140
+      115,
+      182,
+      193
      ],
-     "selectionIntensity": 0.6,
-     "label": false,
+     "selectionIntensity": 0.8114512059100857,
+     "label": true,
      "badge": "상태만 표시 · 수치 및 진단 미제공",
      "backButtons": [
       "선택 해제 · 이전 시점으로"
@@ -753,12 +753,12 @@
      "meshes": 1,
      "highlightedMeshes": 1,
      "color": [
-      64,
-      172,
-      187
+      65,
+      173,
+      189
      ],
      "selectionIntensity": null,
-     "label": false,
+     "label": true,
      "badge": "ESTIMATED_GEOMETRY · 추정 외함",
      "backButtons": [
       "점검 부위로"
@@ -817,12 +817,12 @@
      "meshes": 1,
      "highlightedMeshes": 1,
      "color": [
-      97,
-      182,
-      196
+      116,
+      197,
+      209
      ],
      "selectionIntensity": null,
-     "label": false,
+     "label": true,
      "badge": "ESTIMATED_GEOMETRY · 정적 닫힌 형상",
      "backButtons": [
       "뒤로 · 차량 전체 보기"
@@ -881,12 +881,12 @@
      "meshes": 1,
      "highlightedMeshes": 1,
      "color": [
-      138,
+      137,
       194,
       206
      ],
      "selectionIntensity": null,
-     "label": false,
+     "label": true,
      "badge": "ESTIMATED_GEOMETRY · 정적 닫힌 형상",
      "backButtons": [
       "뒤로 · 차량 전체 보기"
@@ -945,12 +945,12 @@
      "meshes": 1,
      "highlightedMeshes": 1,
      "color": [
-      105,
-      179,
-      191
+      125,
+      198,
+      209
      ],
      "selectionIntensity": null,
-     "label": false,
+     "label": true,
      "badge": "ESTIMATED_GEOMETRY · 정적 휴지 자세",
      "backButtons": [
       "뒤로 · 차량 전체 보기"
@@ -1009,12 +1009,12 @@
      "meshes": 1,
      "highlightedMeshes": 1,
      "color": [
-      104,
-      182,
-      195
+      124,
+      198,
+      210
      ],
      "selectionIntensity": null,
-     "label": false,
+     "label": true,
      "badge": "ESTIMATED_GEOMETRY · 정적 휴지 자세",
      "backButtons": [
       "뒤로 · 차량 전체 보기"
@@ -1073,12 +1073,12 @@
      "meshes": 1,
      "highlightedMeshes": 1,
      "color": [
-      52,
-      130,
-      142
+      0,
+      46,
+      55
      ],
      "selectionIntensity": null,
-     "label": false,
+     "label": true,
      "badge": "기존 커뮤니티 GLB 표식 · OEM 광학 구조 미검증",
      "backButtons": [
       "뒤로 · 차량 전체 보기"
@@ -1136,12 +1136,12 @@
      "meshes": 1,
      "highlightedMeshes": 1,
      "color": [
-      52,
-      130,
-      142
+      1,
+      46,
+      55
      ],
      "selectionIntensity": null,
-     "label": false,
+     "label": true,
      "badge": "기존 커뮤니티 GLB 표식 · OEM 광학 구조 미검증",
      "backButtons": [
       "뒤로 · 차량 전체 보기"
@@ -1199,12 +1199,12 @@
      "meshes": 1,
      "highlightedMeshes": 1,
      "color": [
-      52,
-      130,
-      142
+      1,
+      46,
+      55
      ],
      "selectionIntensity": null,
-     "label": false,
+     "label": true,
      "badge": "기존 커뮤니티 GLB 표식 · OEM 광학 구조 미검증",
      "backButtons": [
       "뒤로 · 차량 전체 보기"
@@ -1262,12 +1262,12 @@
      "meshes": 1,
      "highlightedMeshes": 1,
      "color": [
-      53,
-      130,
-      142
+      2,
+      46,
+      55
      ],
      "selectionIntensity": null,
-     "label": false,
+     "label": true,
      "badge": "기존 커뮤니티 GLB 표식 · OEM 광학 구조 미검증",
      "backButtons": [
       "뒤로 · 차량 전체 보기"
@@ -2048,7 +2048,7 @@
     }
    },
    "flows": {
-    "bayLabel": true,
+    "bayLabel": false,
     "hoodListNames": {
      "washer-fluid-cap": "워셔액",
      "coolant-reservoir": "냉각수 리저버",
@@ -2134,6 +2134,169 @@
      "charge": false
     }
    },
+   "labels": {
+    "overview": {
+     "checked": 4,
+     "wrong": [],
+     "shown": [
+      "area:hood",
+      "area:tires"
+     ]
+    },
+    "preview:washer-fluid-cap": {
+     "checked": 1,
+     "wrong": [],
+     "shown": [
+      "washer-fluid-cap"
+     ]
+    },
+    "preview:coolant-reservoir": {
+     "checked": 2,
+     "wrong": [],
+     "shown": [
+      "coolant-reservoir",
+      "washer-fluid-cap"
+     ]
+    },
+    "preview:brake-fluid-reservoir": {
+     "checked": 2,
+     "wrong": [],
+     "shown": [
+      "brake-fluid-reservoir",
+      "fuse-box"
+     ]
+    },
+    "preview:battery-12v": {
+     "checked": 2,
+     "wrong": [],
+     "shown": [
+      "battery-12v",
+      "fuse-box"
+     ]
+    },
+    "preview:fuse-box": {
+     "checked": 3,
+     "wrong": [],
+     "shown": [
+      "fuse-box",
+      "brake-fluid-reservoir",
+      "battery-12v"
+     ]
+    },
+    "preview:tire.front-left": {
+     "checked": 2,
+     "wrong": [],
+     "shown": [
+      "tire.front-left"
+     ]
+    },
+    "preview:tire.front-right": {
+     "checked": 2,
+     "wrong": [],
+     "shown": [
+      "tire.front-right"
+     ]
+    },
+    "preview:tire.rear-left": {
+     "checked": 2,
+     "wrong": [],
+     "shown": [
+      "tire.rear-left"
+     ]
+    },
+    "preview:tire.rear-right": {
+     "checked": 2,
+     "wrong": [],
+     "shown": [
+      "tire.rear-right"
+     ]
+    },
+    "preview:ev-battery.pack": {
+     "checked": 1,
+     "wrong": [],
+     "shown": [
+      "ev-battery.pack"
+     ]
+    },
+    "preview:ev-charge.port": {
+     "checked": 1,
+     "wrong": [],
+     "shown": [
+      "ev-charge.port"
+     ]
+    },
+    "preview:ev-charge.flap": {
+     "checked": 2,
+     "wrong": [],
+     "shown": [
+      "ev-charge.flap",
+      "ev-charge.port"
+     ]
+    },
+    "preview:wiper.front.left": {
+     "checked": 2,
+     "wrong": [],
+     "shown": [
+      "wiper.front.left",
+      "wiper.front.right"
+     ]
+    },
+    "preview:wiper.front.right": {
+     "checked": 2,
+     "wrong": [],
+     "shown": [
+      "wiper.front.right",
+      "wiper.front.left"
+     ]
+    },
+    "preview:light-low-beam-left-0": {
+     "checked": 1,
+     "wrong": [],
+     "shown": [
+      "light-low-beam-left-0"
+     ]
+    },
+    "preview:light-low-beam-right-0": {
+     "checked": 1,
+     "wrong": [],
+     "shown": [
+      "light-low-beam-right-0"
+     ]
+    },
+    "preview:light-high-beam-left-0": {
+     "checked": 1,
+     "wrong": [],
+     "shown": [
+      "light-high-beam-left-0"
+     ]
+    },
+    "preview:light-high-beam-right-0": {
+     "checked": 1,
+     "wrong": [],
+     "shown": [
+      "light-high-beam-right-0"
+     ]
+    },
+    "bay": {
+     "checked": 5,
+     "wrong": [],
+     "shown": [
+      "washer-fluid-cap",
+      "coolant-reservoir",
+      "brake-fluid-reservoir",
+      "battery-12v",
+      "fuse-box"
+     ]
+    },
+    "tires": {
+     "checked": 4,
+     "wrong": [],
+     "shown": [
+      "tire.front-left",
+      "tire.rear-left"
+     ]
+    }
+   },
    "overviewFacts": {
     "text": true,
     "legendTires": true,
@@ -2150,7 +2313,20 @@
       69,
       112
      ],
-     "fromState": "COMPONENT_SELECTION"
+     "touch": {
+      "pick": [
+       80,
+       128
+      ],
+      "label": [
+       77,
+       44
+      ],
+      "labelId": "washer-fluid-cap"
+     },
+     "fromState": "COMPONENT_SELECTION",
+     "labelClickSelected": true,
+     "labelClickState": "WASHER_SELECTED"
     },
     "coolant-reservoir": {
      "clickable": true,
@@ -2160,7 +2336,20 @@
       140,
       133
      ],
-     "fromState": "COMPONENT_SELECTION"
+     "touch": {
+      "pick": [
+       176,
+       162
+      ],
+      "label": [
+       114,
+       44
+      ],
+      "labelId": "coolant-reservoir"
+     },
+     "fromState": "COMPONENT_SELECTION",
+     "labelClickSelected": true,
+     "labelClickState": "COMPONENT_PREVIEW"
     },
     "lcw-coolant-reservoir": {
      "clickable": false,
@@ -2169,6 +2358,14 @@
       0,
       0
      ],
+     "touch": {
+      "pick": [
+       0,
+       0
+      ],
+      "label": null,
+      "labelId": null
+     },
      "fromState": "COMPONENT_SELECTION"
     },
     "brake-fluid-reservoir": {
@@ -2179,7 +2376,20 @@
       99,
       74
      ],
-     "fromState": "COMPONENT_SELECTION"
+     "touch": {
+      "pick": [
+       124,
+       80
+      ],
+      "label": [
+       100,
+       44
+      ],
+      "labelId": "brake-fluid-reservoir"
+     },
+     "fromState": "COMPONENT_SELECTION",
+     "labelClickSelected": true,
+     "labelClickState": "COMPONENT_PREVIEW"
     },
     "battery-12v": {
      "clickable": true,
@@ -2189,7 +2399,20 @@
       151,
       238
      ],
-     "fromState": "COMPONENT_SELECTION"
+     "touch": {
+      "pick": [
+       168,
+       216
+      ],
+      "label": [
+       129,
+       44
+      ],
+      "labelId": "battery-12v"
+     },
+     "fromState": "COMPONENT_SELECTION",
+     "labelClickSelected": true,
+     "labelClickState": "COMPONENT_PREVIEW"
     },
     "fuse-box": {
      "clickable": true,
@@ -2199,7 +2422,20 @@
       142,
       102
      ],
-     "fromState": "COMPONENT_SELECTION"
+     "touch": {
+      "pick": [
+       110,
+       96
+      ],
+      "label": [
+       125,
+       44
+      ],
+      "labelId": "fuse-box"
+     },
+     "fromState": "COMPONENT_SELECTION",
+     "labelClickSelected": true,
+     "labelClickState": "COMPONENT_PREVIEW"
     },
     "tire.front-left": {
      "clickable": true,
@@ -2209,7 +2445,20 @@
       189,
       194
      ],
-     "fromState": "TIRE_SELECTION"
+     "touch": {
+      "pick": [
+       162,
+       150
+      ],
+      "label": [
+       117,
+       44
+      ],
+      "labelId": "tire.front-left"
+     },
+     "fromState": "TIRE_SELECTION",
+     "labelClickSelected": true,
+     "labelClickState": "TIRE_PREVIEW"
     },
     "tire.front-right": {
      "clickable": false,
@@ -2218,6 +2467,14 @@
       0,
       0
      ],
+     "touch": {
+      "pick": [
+       0,
+       0
+      ],
+      "label": null,
+      "labelId": null
+     },
      "fromState": "TIRE_SELECTION"
     },
     "tire.rear-left": {
@@ -2228,7 +2485,20 @@
       163,
       176
      ],
-     "fromState": "TIRE_SELECTION"
+     "touch": {
+      "pick": [
+       172,
+       162
+      ],
+      "label": [
+       117,
+       44
+      ],
+      "labelId": "tire.rear-left"
+     },
+     "fromState": "TIRE_SELECTION",
+     "labelClickSelected": true,
+     "labelClickState": "TIRE_PREVIEW"
     },
     "tire.rear-right": {
      "clickable": false,
@@ -2237,6 +2507,14 @@
       0,
       0
      ],
+     "touch": {
+      "pick": [
+       0,
+       0
+      ],
+      "label": null,
+      "labelId": null
+     },
      "fromState": "TIRE_SELECTION"
     },
     "ev-battery.pack": {
@@ -2246,6 +2524,14 @@
       0,
       0
      ],
+     "touch": {
+      "pick": [
+       0,
+       0
+      ],
+      "label": null,
+      "labelId": null
+     },
      "fromState": "INSPECTION_OVERVIEW"
     },
     "ev-charge.port": {
@@ -2255,6 +2541,14 @@
       0,
       0
      ],
+     "touch": {
+      "pick": [
+       0,
+       0
+      ],
+      "label": null,
+      "labelId": null
+     },
      "fromState": "INSPECTION_OVERVIEW"
     },
     "ev-charge.flap": {
@@ -2264,6 +2558,14 @@
       0,
       0
      ],
+     "touch": {
+      "pick": [
+       0,
+       0
+      ],
+      "label": null,
+      "labelId": null
+     },
      "fromState": "INSPECTION_OVERVIEW"
     },
     "wiper.front.left": {
@@ -2274,6 +2576,14 @@
       19,
       9
      ],
+     "touch": {
+      "pick": [
+       102,
+       46
+      ],
+      "label": null,
+      "labelId": null
+     },
      "fromState": "INSPECTION_OVERVIEW"
     },
     "wiper.front.right": {
@@ -2284,6 +2594,14 @@
       24,
       8
      ],
+     "touch": {
+      "pick": [
+       98,
+       40
+      ],
+      "label": null,
+      "labelId": null
+     },
      "fromState": "INSPECTION_OVERVIEW"
     },
     "light-low-beam-left-0": {
@@ -2294,16 +2612,32 @@
       8,
       3
      ],
+     "touch": {
+      "pick": [
+       40,
+       8
+      ],
+      "label": null,
+      "labelId": null
+     },
      "fromState": "INSPECTION_OVERVIEW"
     },
     "light-low-beam-right-0": {
      "clickable": true,
      "selected": false,
-     "state": "INSPECTION_OVERVIEW",
+     "state": "COMPONENT_SELECTION",
      "touchPx": [
       3,
       2
      ],
+     "touch": {
+      "pick": [
+       0,
+       0
+      ],
+      "label": null,
+      "labelId": null
+     },
      "fromState": "INSPECTION_OVERVIEW"
     },
     "light-high-beam-left-0": {
@@ -2313,6 +2647,14 @@
       0,
       0
      ],
+     "touch": {
+      "pick": [
+       0,
+       0
+      ],
+      "label": null,
+      "labelId": null
+     },
      "fromState": "INSPECTION_OVERVIEW"
     },
     "light-high-beam-right-0": {
@@ -2322,6 +2664,14 @@
       0,
       0
      ],
+     "touch": {
+      "pick": [
+       0,
+       0
+      ],
+      "label": null,
+      "labelId": null
+     },
      "fromState": "INSPECTION_OVERVIEW"
     }
    },
@@ -2330,7 +2680,7 @@
     "tires": 70
    },
    "paint": {
-    "tiresTinted": true,
+    "tiresTinted": false,
     "othersKeepMaterial": true,
     "legendCounts": 4
    },
@@ -2407,7 +2757,7 @@
       41,
       92
      ],
-     "highlightedMeshes": 0
+     "highlightedMeshes": 1
     },
     "tire.front-right": {
      "mineCells": 0,
@@ -2415,7 +2765,7 @@
       0,
       0
      ],
-     "highlightedMeshes": 0
+     "highlightedMeshes": 1
     },
     "tire.rear-left": {
      "mineCells": 21,
@@ -2423,7 +2773,7 @@
       25,
       70
      ],
-     "highlightedMeshes": 0
+     "highlightedMeshes": 1
     },
     "tire.rear-right": {
      "mineCells": 0,
@@ -2431,7 +2781,7 @@
       0,
       0
      ],
-     "highlightedMeshes": 0
+     "highlightedMeshes": 1
     },
     "ev-battery.pack": {
      "mineCells": 0,
@@ -2447,7 +2797,7 @@
       0,
       0
      ],
-     "highlightedMeshes": 0
+     "highlightedMeshes": 1
     },
     "ev-charge.flap": {
      "mineCells": 0,
@@ -2455,7 +2805,7 @@
       0,
       0
      ],
-     "highlightedMeshes": 0
+     "highlightedMeshes": 1
     },
     "wiper.front.left": {
      "mineCells": 11,
@@ -2463,7 +2813,7 @@
       15,
       7
      ],
-     "highlightedMeshes": 0
+     "highlightedMeshes": 1
     },
     "wiper.front.right": {
      "mineCells": 11,
@@ -2471,7 +2821,7 @@
       20,
       6
      ],
-     "highlightedMeshes": 0
+     "highlightedMeshes": 1
     },
     "light-low-beam-left-0": {
      "mineCells": 5,
@@ -2549,9 +2899,9 @@
      "meshes": 2,
      "highlightedMeshes": 2,
      "color": [
-      152,
-      211,
-      227
+      141,
+      202,
+      222
      ],
      "selectionIntensity": null,
      "label": true,
@@ -2608,12 +2958,12 @@
      "meshes": 2,
      "highlightedMeshes": 2,
      "color": [
-      203,
-      220,
-      222
+      198,
+      210,
+      206
      ],
      "selectionIntensity": null,
-     "label": false,
+     "label": true,
      "badge": "추정 모델 · 점검 절차 미제공",
      "backButtons": [
       "점검 목록과 이전 시점으로"
@@ -2671,12 +3021,12 @@
      "meshes": 2,
      "highlightedMeshes": 2,
      "color": [
-      194,
-      216,
-      219
+      192,
+      205,
+      202
      ],
      "selectionIntensity": null,
-     "label": false,
+     "label": true,
      "badge": "추정 모델 · 점검 절차 미제공",
      "backButtons": [
       "점검 목록과 이전 시점으로"
@@ -2730,12 +3080,12 @@
      "meshes": 4,
      "highlightedMeshes": 4,
      "color": [
-      138,
-      194,
-      206
+      144,
+      199,
+      209
      ],
      "selectionIntensity": null,
-     "label": false,
+     "label": true,
      "badge": "추정 모델 · 점검 절차 미제공",
      "backButtons": [
       "점검 목록과 이전 시점으로"
@@ -2789,12 +3139,12 @@
      "meshes": 2,
      "highlightedMeshes": 2,
      "color": [
-      137,
-      194,
-      206
+      143,
+      199,
+      210
      ],
      "selectionIntensity": null,
-     "label": false,
+     "label": true,
      "badge": "추정 모델 · 점검 절차 미제공",
      "backButtons": [
       "점검 목록과 이전 시점으로"
@@ -2848,12 +3198,12 @@
      "meshes": 1,
      "highlightedMeshes": 1,
      "color": [
-      73,
-      111,
-      118
+      93,
+      173,
+      185
      ],
-     "selectionIntensity": 0.6,
-     "label": false,
+     "selectionIntensity": 0.8114512059100857,
+     "label": true,
      "badge": "상태만 표시 · 수치 및 진단 미제공",
      "backButtons": [
       "선택 해제 · 이전 시점으로"
@@ -2909,12 +3259,12 @@
      "meshes": 1,
      "highlightedMeshes": 1,
      "color": [
-      108,
-      133,
-      139
+      113,
+      181,
+      191
      ],
-     "selectionIntensity": 0.6,
-     "label": false,
+     "selectionIntensity": 0.8114512059100857,
+     "label": true,
      "badge": "상태만 표시 · 수치 및 진단 미제공",
      "backButtons": [
       "선택 해제 · 이전 시점으로"
@@ -2970,12 +3320,12 @@
      "meshes": 1,
      "highlightedMeshes": 1,
      "color": [
-      69,
-      107,
-      114
+      89,
+      169,
+      181
      ],
-     "selectionIntensity": 0.6,
-     "label": false,
+     "selectionIntensity": 0.8114512059100857,
+     "label": true,
      "badge": "상태만 표시 · 수치 및 진단 미제공",
      "backButtons": [
       "선택 해제 · 이전 시점으로"
@@ -3031,12 +3381,12 @@
      "meshes": 1,
      "highlightedMeshes": 1,
      "color": [
-      109,
-      136,
-      142
+      115,
+      183,
+      193
      ],
-     "selectionIntensity": 0.6,
-     "label": false,
+     "selectionIntensity": 0.8114512059100857,
+     "label": true,
      "badge": "상태만 표시 · 수치 및 진단 미제공",
      "backButtons": [
       "선택 해제 · 이전 시점으로"
@@ -3092,12 +3442,12 @@
      "meshes": 1,
      "highlightedMeshes": 1,
      "color": [
-      64,
-      172,
-      188
+      66,
+      174,
+      189
      ],
      "selectionIntensity": null,
-     "label": false,
+     "label": true,
      "badge": "ESTIMATED_GEOMETRY · 추정 외함",
      "backButtons": [
       "점검 부위로"
@@ -3156,12 +3506,12 @@
      "meshes": 1,
      "highlightedMeshes": 1,
      "color": [
-      93,
-      180,
-      194
+      115,
+      197,
+      209
      ],
      "selectionIntensity": null,
-     "label": false,
+     "label": true,
      "badge": "ESTIMATED_GEOMETRY · 정적 닫힌 형상",
      "backButtons": [
       "뒤로 · 차량 전체 보기"
@@ -3225,7 +3575,7 @@
       206
      ],
      "selectionIntensity": null,
-     "label": false,
+     "label": true,
      "badge": "ESTIMATED_GEOMETRY · 정적 닫힌 형상",
      "backButtons": [
       "뒤로 · 차량 전체 보기"
@@ -3284,12 +3634,12 @@
      "meshes": 1,
      "highlightedMeshes": 1,
      "color": [
-      105,
-      182,
-      195
+      125,
+      199,
+      210
      ],
      "selectionIntensity": null,
-     "label": false,
+     "label": true,
      "badge": "ESTIMATED_GEOMETRY · 정적 휴지 자세",
      "backButtons": [
       "뒤로 · 차량 전체 보기"
@@ -3348,12 +3698,12 @@
      "meshes": 1,
      "highlightedMeshes": 1,
      "color": [
-      104,
-      177,
-      189
+      123,
+      195,
+      205
      ],
      "selectionIntensity": null,
-     "label": false,
+     "label": true,
      "badge": "ESTIMATED_GEOMETRY · 정적 휴지 자세",
      "backButtons": [
       "뒤로 · 차량 전체 보기"
@@ -3412,12 +3762,12 @@
      "meshes": 1,
      "highlightedMeshes": 1,
      "color": [
-      53,
-      130,
-      142
+      1,
+      47,
+      56
      ],
      "selectionIntensity": null,
-     "label": false,
+     "label": true,
      "badge": "기존 커뮤니티 GLB 표식 · OEM 광학 구조 미검증",
      "backButtons": [
       "뒤로 · 차량 전체 보기"
@@ -3475,12 +3825,12 @@
      "meshes": 1,
      "highlightedMeshes": 1,
      "color": [
-      53,
-      130,
-      142
+      2,
+      47,
+      56
      ],
      "selectionIntensity": null,
-     "label": false,
+     "label": true,
      "badge": "기존 커뮤니티 GLB 표식 · OEM 광학 구조 미검증",
      "backButtons": [
       "뒤로 · 차량 전체 보기"
@@ -3538,12 +3888,12 @@
      "meshes": 1,
      "highlightedMeshes": 1,
      "color": [
-      52,
-      130,
-      142
+      1,
+      46,
+      55
      ],
      "selectionIntensity": null,
-     "label": false,
+     "label": true,
      "badge": "기존 커뮤니티 GLB 표식 · OEM 광학 구조 미검증",
      "backButtons": [
       "뒤로 · 차량 전체 보기"
@@ -3601,12 +3951,12 @@
      "meshes": 1,
      "highlightedMeshes": 1,
      "color": [
-      53,
-      130,
-      142
+      2,
+      46,
+      56
      ],
      "selectionIntensity": null,
-     "label": false,
+     "label": true,
      "badge": "기존 커뮤니티 GLB 표식 · OEM 광학 구조 미검증",
      "backButtons": [
       "뒤로 · 차량 전체 보기"
@@ -4387,7 +4737,7 @@
     }
    },
    "flows": {
-    "bayLabel": true,
+    "bayLabel": false,
     "hoodListNames": {
      "washer-fluid-cap": "워셔액",
      "coolant-reservoir": "냉각수 리저버",
@@ -4473,6 +4823,172 @@
      "charge": false
     }
    },
+   "labels": {
+    "overview": {
+     "checked": 5,
+     "wrong": [],
+     "shown": [
+      "area:hood",
+      "area:tires",
+      "area:wipers"
+     ]
+    },
+    "preview:washer-fluid-cap": {
+     "checked": 2,
+     "wrong": [],
+     "shown": [
+      "washer-fluid-cap",
+      "coolant-reservoir"
+     ]
+    },
+    "preview:coolant-reservoir": {
+     "checked": 2,
+     "wrong": [],
+     "shown": [
+      "coolant-reservoir",
+      "washer-fluid-cap"
+     ]
+    },
+    "preview:brake-fluid-reservoir": {
+     "checked": 2,
+     "wrong": [],
+     "shown": [
+      "brake-fluid-reservoir",
+      "fuse-box"
+     ]
+    },
+    "preview:battery-12v": {
+     "checked": 3,
+     "wrong": [],
+     "shown": [
+      "battery-12v",
+      "brake-fluid-reservoir",
+      "fuse-box"
+     ]
+    },
+    "preview:fuse-box": {
+     "checked": 3,
+     "wrong": [],
+     "shown": [
+      "fuse-box",
+      "brake-fluid-reservoir",
+      "battery-12v"
+     ]
+    },
+    "preview:tire.front-left": {
+     "checked": 2,
+     "wrong": [],
+     "shown": [
+      "tire.front-left"
+     ]
+    },
+    "preview:tire.front-right": {
+     "checked": 2,
+     "wrong": [],
+     "shown": [
+      "tire.front-right"
+     ]
+    },
+    "preview:tire.rear-left": {
+     "checked": 2,
+     "wrong": [],
+     "shown": [
+      "tire.rear-left"
+     ]
+    },
+    "preview:tire.rear-right": {
+     "checked": 2,
+     "wrong": [],
+     "shown": [
+      "tire.rear-right"
+     ]
+    },
+    "preview:ev-battery.pack": {
+     "checked": 1,
+     "wrong": [],
+     "shown": [
+      "ev-battery.pack"
+     ]
+    },
+    "preview:ev-charge.port": {
+     "checked": 1,
+     "wrong": [],
+     "shown": [
+      "ev-charge.port"
+     ]
+    },
+    "preview:ev-charge.flap": {
+     "checked": 2,
+     "wrong": [],
+     "shown": [
+      "ev-charge.flap",
+      "ev-charge.port"
+     ]
+    },
+    "preview:wiper.front.left": {
+     "checked": 2,
+     "wrong": [],
+     "shown": [
+      "wiper.front.left",
+      "wiper.front.right"
+     ]
+    },
+    "preview:wiper.front.right": {
+     "checked": 2,
+     "wrong": [],
+     "shown": [
+      "wiper.front.right",
+      "wiper.front.left"
+     ]
+    },
+    "preview:light-low-beam-left-0": {
+     "checked": 1,
+     "wrong": [],
+     "shown": [
+      "light-low-beam-left-0"
+     ]
+    },
+    "preview:light-low-beam-right-0": {
+     "checked": 1,
+     "wrong": [],
+     "shown": [
+      "light-low-beam-right-0"
+     ]
+    },
+    "preview:light-high-beam-left-0": {
+     "checked": 1,
+     "wrong": [],
+     "shown": [
+      "light-high-beam-left-0"
+     ]
+    },
+    "preview:light-high-beam-right-0": {
+     "checked": 1,
+     "wrong": [],
+     "shown": [
+      "light-high-beam-right-0"
+     ]
+    },
+    "bay": {
+     "checked": 5,
+     "wrong": [],
+     "shown": [
+      "washer-fluid-cap",
+      "coolant-reservoir",
+      "brake-fluid-reservoir",
+      "battery-12v",
+      "fuse-box"
+     ]
+    },
+    "tires": {
+     "checked": 4,
+     "wrong": [],
+     "shown": [
+      "tire.front-left",
+      "tire.rear-left"
+     ]
+    }
+   },
    "overviewFacts": {
     "text": true,
     "legendTires": true,
@@ -4489,7 +5005,20 @@
       47,
       78
      ],
-     "fromState": "COMPONENT_SELECTION"
+     "touch": {
+      "pick": [
+       74,
+       96
+      ],
+      "label": [
+       77,
+       44
+      ],
+      "labelId": "washer-fluid-cap"
+     },
+     "fromState": "COMPONENT_SELECTION",
+     "labelClickSelected": true,
+     "labelClickState": "WASHER_SELECTED"
     },
     "coolant-reservoir": {
      "clickable": true,
@@ -4499,7 +5028,20 @@
       95,
       93
      ],
-     "fromState": "COMPONENT_SELECTION"
+     "touch": {
+      "pick": [
+       132,
+       120
+      ],
+      "label": [
+       114,
+       44
+      ],
+      "labelId": "coolant-reservoir"
+     },
+     "fromState": "COMPONENT_SELECTION",
+     "labelClickSelected": true,
+     "labelClickState": "COMPONENT_PREVIEW"
     },
     "lcw-coolant-reservoir": {
      "clickable": false,
@@ -4508,6 +5050,14 @@
       0,
       0
      ],
+     "touch": {
+      "pick": [
+       0,
+       0
+      ],
+      "label": null,
+      "labelId": null
+     },
      "fromState": "COMPONENT_SELECTION"
     },
     "brake-fluid-reservoir": {
@@ -4518,7 +5068,20 @@
       68,
       51
      ],
-     "fromState": "COMPONENT_SELECTION"
+     "touch": {
+      "pick": [
+       96,
+       62
+      ],
+      "label": [
+       100,
+       44
+      ],
+      "labelId": "brake-fluid-reservoir"
+     },
+     "fromState": "COMPONENT_SELECTION",
+     "labelClickSelected": true,
+     "labelClickState": "COMPONENT_PREVIEW"
     },
     "battery-12v": {
      "clickable": true,
@@ -4528,7 +5091,20 @@
       102,
       147
      ],
-     "fromState": "COMPONENT_SELECTION"
+     "touch": {
+      "pick": [
+       128,
+       152
+      ],
+      "label": [
+       129,
+       44
+      ],
+      "labelId": "battery-12v"
+     },
+     "fromState": "COMPONENT_SELECTION",
+     "labelClickSelected": true,
+     "labelClickState": "COMPONENT_PREVIEW"
     },
     "fuse-box": {
      "clickable": true,
@@ -4538,7 +5114,20 @@
       97,
       70
      ],
-     "fromState": "COMPONENT_SELECTION"
+     "touch": {
+      "pick": [
+       102,
+       66
+      ],
+      "label": [
+       125,
+       44
+      ],
+      "labelId": "fuse-box"
+     },
+     "fromState": "COMPONENT_SELECTION",
+     "labelClickSelected": true,
+     "labelClickState": "COMPONENT_PREVIEW"
     },
     "tire.front-left": {
      "clickable": true,
@@ -4548,7 +5137,20 @@
       126,
       131
      ],
-     "fromState": "TIRE_SELECTION"
+     "touch": {
+      "pick": [
+       122,
+       144
+      ],
+      "label": [
+       117,
+       44
+      ],
+      "labelId": "tire.front-left"
+     },
+     "fromState": "TIRE_SELECTION",
+     "labelClickSelected": true,
+     "labelClickState": "TIRE_PREVIEW"
     },
     "tire.front-right": {
      "clickable": false,
@@ -4557,6 +5159,14 @@
       0,
       0
      ],
+     "touch": {
+      "pick": [
+       0,
+       0
+      ],
+      "label": null,
+      "labelId": null
+     },
      "fromState": "TIRE_SELECTION"
     },
     "tire.rear-left": {
@@ -4567,7 +5177,20 @@
       111,
       121
      ],
-     "fromState": "TIRE_SELECTION"
+     "touch": {
+      "pick": [
+       138,
+       134
+      ],
+      "label": [
+       117,
+       44
+      ],
+      "labelId": "tire.rear-left"
+     },
+     "fromState": "TIRE_SELECTION",
+     "labelClickSelected": true,
+     "labelClickState": "TIRE_PREVIEW"
     },
     "tire.rear-right": {
      "clickable": false,
@@ -4576,6 +5199,14 @@
       0,
       0
      ],
+     "touch": {
+      "pick": [
+       0,
+       0
+      ],
+      "label": null,
+      "labelId": null
+     },
      "fromState": "TIRE_SELECTION"
     },
     "ev-battery.pack": {
@@ -4585,6 +5216,14 @@
       0,
       0
      ],
+     "touch": {
+      "pick": [
+       0,
+       0
+      ],
+      "label": null,
+      "labelId": null
+     },
      "fromState": "INSPECTION_OVERVIEW"
     },
     "ev-charge.port": {
@@ -4594,6 +5233,14 @@
       0,
       0
      ],
+     "touch": {
+      "pick": [
+       0,
+       0
+      ],
+      "label": null,
+      "labelId": null
+     },
      "fromState": "INSPECTION_OVERVIEW"
     },
     "ev-charge.flap": {
@@ -4603,6 +5250,14 @@
       0,
       0
      ],
+     "touch": {
+      "pick": [
+       0,
+       0
+      ],
+      "label": null,
+      "labelId": null
+     },
      "fromState": "INSPECTION_OVERVIEW"
     },
     "wiper.front.left": {
@@ -4613,7 +5268,20 @@
       15,
       7
      ],
-     "fromState": "INSPECTION_OVERVIEW"
+     "touch": {
+      "pick": [
+       82,
+       42
+      ],
+      "label": [
+       85,
+       44
+      ],
+      "labelId": "area:wipers"
+     },
+     "fromState": "INSPECTION_OVERVIEW",
+     "labelClickSelected": true,
+     "labelClickState": "VISIBILITY_PREVIEW"
     },
     "wiper.front.right": {
      "clickable": true,
@@ -4623,6 +5291,14 @@
       20,
       6
      ],
+     "touch": {
+      "pick": [
+       80,
+       38
+      ],
+      "label": null,
+      "labelId": null
+     },
      "fromState": "INSPECTION_OVERVIEW"
     },
     "light-low-beam-left-0": {
@@ -4633,16 +5309,32 @@
       7,
       3
      ],
+     "touch": {
+      "pick": [
+       34,
+       8
+      ],
+      "label": null,
+      "labelId": null
+     },
      "fromState": "INSPECTION_OVERVIEW"
     },
     "light-low-beam-right-0": {
      "clickable": true,
      "selected": false,
-     "state": "INSPECTION_OVERVIEW",
+     "state": "COMPONENT_SELECTION",
      "touchPx": [
       2,
       1
      ],
+     "touch": {
+      "pick": [
+       0,
+       0
+      ],
+      "label": null,
+      "labelId": null
+     },
      "fromState": "INSPECTION_OVERVIEW"
     },
     "light-high-beam-left-0": {
@@ -4652,6 +5344,14 @@
       0,
       0
      ],
+     "touch": {
+      "pick": [
+       0,
+       0
+      ],
+      "label": null,
+      "labelId": null
+     },
      "fromState": "INSPECTION_OVERVIEW"
     },
     "light-high-beam-right-0": {
@@ -4661,6 +5361,14 @@
       0,
       0
      ],
+     "touch": {
+      "pick": [
+       0,
+       0
+      ],
+      "label": null,
+      "labelId": null
+     },
      "fromState": "INSPECTION_OVERVIEW"
     }
    },
@@ -4669,7 +5377,7 @@
     "tires": 70
    },
    "paint": {
-    "tiresTinted": true,
+    "tiresTinted": false,
     "othersKeepMaterial": true,
     "legendCounts": 4
    },
@@ -4746,7 +5454,7 @@
       30,
       68
      ],
-     "highlightedMeshes": 0
+     "highlightedMeshes": 1
     },
     "tire.front-right": {
      "mineCells": 0,
@@ -4754,7 +5462,7 @@
       0,
       0
      ],
-     "highlightedMeshes": 0
+     "highlightedMeshes": 1
     },
     "tire.rear-left": {
      "mineCells": 18,
@@ -4762,7 +5470,7 @@
       13,
       42
      ],
-     "highlightedMeshes": 0
+     "highlightedMeshes": 1
     },
     "tire.rear-right": {
      "mineCells": 0,
@@ -4770,7 +5478,7 @@
       0,
       0
      ],
-     "highlightedMeshes": 0
+     "highlightedMeshes": 1
     },
     "ev-battery.pack": {
      "mineCells": 0,
@@ -4786,7 +5494,7 @@
       0,
       0
      ],
-     "highlightedMeshes": 0
+     "highlightedMeshes": 1
     },
     "ev-charge.flap": {
      "mineCells": 0,
@@ -4794,7 +5502,7 @@
       0,
       0
      ],
-     "highlightedMeshes": 0
+     "highlightedMeshes": 1
     },
     "wiper.front.left": {
      "mineCells": 11,
@@ -4802,7 +5510,7 @@
       11,
       5
      ],
-     "highlightedMeshes": 0
+     "highlightedMeshes": 1
     },
     "wiper.front.right": {
      "mineCells": 11,
@@ -4810,7 +5518,7 @@
       15,
       5
      ],
-     "highlightedMeshes": 0
+     "highlightedMeshes": 1
     },
     "light-low-beam-left-0": {
      "mineCells": 4,
@@ -4888,9 +5596,9 @@
      "meshes": 2,
      "highlightedMeshes": 2,
      "color": [
-      153,
-      211,
-      228
+      141,
+      202,
+      222
      ],
      "selectionIntensity": null,
      "label": true,
@@ -4947,12 +5655,12 @@
      "meshes": 2,
      "highlightedMeshes": 2,
      "color": [
-      202,
-      219,
-      220
+      196,
+      209,
+      206
      ],
      "selectionIntensity": null,
-     "label": false,
+     "label": true,
      "badge": "추정 모델 · 점검 절차 미제공",
      "backButtons": [
       "점검 목록과 이전 시점으로"
@@ -5010,12 +5718,12 @@
      "meshes": 2,
      "highlightedMeshes": 2,
      "color": [
-      195,
-      215,
-      218
+      191,
+      205,
+      202
      ],
      "selectionIntensity": null,
-     "label": false,
+     "label": true,
      "badge": "추정 모델 · 점검 절차 미제공",
      "backButtons": [
       "점검 목록과 이전 시점으로"
@@ -5069,12 +5777,12 @@
      "meshes": 4,
      "highlightedMeshes": 4,
      "color": [
-      138,
-      194,
-      206
+      144,
+      199,
+      209
      ],
      "selectionIntensity": null,
-     "label": false,
+     "label": true,
      "badge": "추정 모델 · 점검 절차 미제공",
      "backButtons": [
       "점검 목록과 이전 시점으로"
@@ -5128,12 +5836,12 @@
      "meshes": 2,
      "highlightedMeshes": 2,
      "color": [
-      138,
-      194,
-      206
+      143,
+      199,
+      210
      ],
      "selectionIntensity": null,
-     "label": false,
+     "label": true,
      "badge": "추정 모델 · 점검 절차 미제공",
      "backButtons": [
       "점검 목록과 이전 시점으로"
@@ -5187,12 +5895,12 @@
      "meshes": 1,
      "highlightedMeshes": 1,
      "color": [
-      73,
-      111,
-      118
+      93,
+      174,
+      186
      ],
-     "selectionIntensity": 0.6,
-     "label": false,
+     "selectionIntensity": 0.8114512059100857,
+     "label": true,
      "badge": "상태만 표시 · 수치 및 진단 미제공",
      "backButtons": [
       "선택 해제 · 이전 시점으로"
@@ -5248,12 +5956,12 @@
      "meshes": 1,
      "highlightedMeshes": 1,
      "color": [
-      107,
-      132,
-      138
+      112,
+      180,
+      191
      ],
-     "selectionIntensity": 0.6,
-     "label": false,
+     "selectionIntensity": 0.8114512059100857,
+     "label": true,
      "badge": "상태만 표시 · 수치 및 진단 미제공",
      "backButtons": [
       "선택 해제 · 이전 시점으로"
@@ -5309,12 +6017,12 @@
      "meshes": 1,
      "highlightedMeshes": 1,
      "color": [
-      68,
-      105,
-      113
+      88,
+      169,
+      181
      ],
-     "selectionIntensity": 0.6,
-     "label": false,
+     "selectionIntensity": 0.8114512059100857,
+     "label": true,
      "badge": "상태만 표시 · 수치 및 진단 미제공",
      "backButtons": [
       "선택 해제 · 이전 시점으로"
@@ -5370,12 +6078,12 @@
      "meshes": 1,
      "highlightedMeshes": 1,
      "color": [
-      108,
-      135,
-      141
+      114,
+      183,
+      194
      ],
-     "selectionIntensity": 0.6,
-     "label": false,
+     "selectionIntensity": 0.8114512059100857,
+     "label": true,
      "badge": "상태만 표시 · 수치 및 진단 미제공",
      "backButtons": [
       "선택 해제 · 이전 시점으로"
@@ -5436,7 +6144,7 @@
       190
      ],
      "selectionIntensity": null,
-     "label": false,
+     "label": true,
      "badge": "ESTIMATED_GEOMETRY · 추정 외함",
      "backButtons": [
       "점검 부위로"
@@ -5495,12 +6203,12 @@
      "meshes": 1,
      "highlightedMeshes": 1,
      "color": [
-      97,
-      182,
-      196
+      116,
+      197,
+      209
      ],
      "selectionIntensity": null,
-     "label": false,
+     "label": true,
      "badge": "ESTIMATED_GEOMETRY · 정적 닫힌 형상",
      "backButtons": [
       "뒤로 · 차량 전체 보기"
@@ -5559,12 +6267,12 @@
      "meshes": 1,
      "highlightedMeshes": 1,
      "color": [
-      138,
+      137,
       194,
       206
      ],
      "selectionIntensity": null,
-     "label": false,
+     "label": true,
      "badge": "ESTIMATED_GEOMETRY · 정적 닫힌 형상",
      "backButtons": [
       "뒤로 · 차량 전체 보기"
@@ -5623,12 +6331,12 @@
      "meshes": 1,
      "highlightedMeshes": 1,
      "color": [
-      105,
-      182,
-      195
+      125,
+      199,
+      210
      ],
      "selectionIntensity": null,
-     "label": false,
+     "label": true,
      "badge": "ESTIMATED_GEOMETRY · 정적 휴지 자세",
      "backButtons": [
       "뒤로 · 차량 전체 보기"
@@ -5687,12 +6395,12 @@
      "meshes": 1,
      "highlightedMeshes": 1,
      "color": [
-      103,
-      176,
-      189
+      122,
+      193,
+      204
      ],
      "selectionIntensity": null,
-     "label": false,
+     "label": true,
      "badge": "ESTIMATED_GEOMETRY · 정적 휴지 자세",
      "backButtons": [
       "뒤로 · 차량 전체 보기"
@@ -5751,12 +6459,12 @@
      "meshes": 1,
      "highlightedMeshes": 1,
      "color": [
-      52,
-      130,
-      142
+      0,
+      46,
+      55
      ],
      "selectionIntensity": null,
-     "label": false,
+     "label": true,
      "badge": "기존 커뮤니티 GLB 표식 · OEM 광학 구조 미검증",
      "backButtons": [
       "뒤로 · 차량 전체 보기"
@@ -5814,12 +6522,12 @@
      "meshes": 1,
      "highlightedMeshes": 1,
      "color": [
-      52,
-      130,
-      142
+      1,
+      46,
+      55
      ],
      "selectionIntensity": null,
-     "label": false,
+     "label": true,
      "badge": "기존 커뮤니티 GLB 표식 · OEM 광학 구조 미검증",
      "backButtons": [
       "뒤로 · 차량 전체 보기"
@@ -5877,12 +6585,12 @@
      "meshes": 1,
      "highlightedMeshes": 1,
      "color": [
-      52,
-      130,
-      142
+      1,
+      46,
+      55
      ],
      "selectionIntensity": null,
-     "label": false,
+     "label": true,
      "badge": "기존 커뮤니티 GLB 표식 · OEM 광학 구조 미검증",
      "backButtons": [
       "뒤로 · 차량 전체 보기"
@@ -5940,12 +6648,12 @@
      "meshes": 1,
      "highlightedMeshes": 1,
      "color": [
-      53,
-      130,
-      142
+      2,
+      46,
+      55
      ],
      "selectionIntensity": null,
-     "label": false,
+     "label": true,
      "badge": "기존 커뮤니티 GLB 표식 · OEM 광학 구조 미검증",
      "backButtons": [
       "뒤로 · 차량 전체 보기"
@@ -6726,7 +7434,7 @@
     }
    },
    "flows": {
-    "bayLabel": true,
+    "bayLabel": false,
     "hoodListNames": {
      "washer-fluid-cap": "워셔액",
      "coolant-reservoir": "냉각수 리저버",
@@ -6812,6 +7520,169 @@
      "charge": false
     }
    },
+   "labels": {
+    "overview": {
+     "checked": 5,
+     "wrong": [],
+     "shown": [
+      "area:hood",
+      "area:tires",
+      "area:wipers"
+     ]
+    },
+    "preview:washer-fluid-cap": {
+     "checked": 1,
+     "wrong": [],
+     "shown": [
+      "washer-fluid-cap"
+     ]
+    },
+    "preview:coolant-reservoir": {
+     "checked": 2,
+     "wrong": [],
+     "shown": [
+      "coolant-reservoir",
+      "washer-fluid-cap"
+     ]
+    },
+    "preview:brake-fluid-reservoir": {
+     "checked": 2,
+     "wrong": [],
+     "shown": [
+      "brake-fluid-reservoir",
+      "fuse-box"
+     ]
+    },
+    "preview:battery-12v": {
+     "checked": 2,
+     "wrong": [],
+     "shown": [
+      "battery-12v",
+      "fuse-box"
+     ]
+    },
+    "preview:fuse-box": {
+     "checked": 3,
+     "wrong": [],
+     "shown": [
+      "fuse-box",
+      "brake-fluid-reservoir",
+      "battery-12v"
+     ]
+    },
+    "preview:tire.front-left": {
+     "checked": 2,
+     "wrong": [],
+     "shown": [
+      "tire.front-left"
+     ]
+    },
+    "preview:tire.front-right": {
+     "checked": 2,
+     "wrong": [],
+     "shown": [
+      "tire.front-right"
+     ]
+    },
+    "preview:tire.rear-left": {
+     "checked": 2,
+     "wrong": [],
+     "shown": [
+      "tire.rear-left"
+     ]
+    },
+    "preview:tire.rear-right": {
+     "checked": 2,
+     "wrong": [],
+     "shown": [
+      "tire.rear-right"
+     ]
+    },
+    "preview:ev-battery.pack": {
+     "checked": 1,
+     "wrong": [],
+     "shown": [
+      "ev-battery.pack"
+     ]
+    },
+    "preview:ev-charge.port": {
+     "checked": 1,
+     "wrong": [],
+     "shown": [
+      "ev-charge.port"
+     ]
+    },
+    "preview:ev-charge.flap": {
+     "checked": 2,
+     "wrong": [],
+     "shown": [
+      "ev-charge.flap",
+      "ev-charge.port"
+     ]
+    },
+    "preview:wiper.front.left": {
+     "checked": 2,
+     "wrong": [],
+     "shown": [
+      "wiper.front.left",
+      "wiper.front.right"
+     ]
+    },
+    "preview:wiper.front.right": {
+     "checked": 2,
+     "wrong": [],
+     "shown": [
+      "wiper.front.right",
+      "wiper.front.left"
+     ]
+    },
+    "preview:light-low-beam-left-0": {
+     "checked": 1,
+     "wrong": [],
+     "shown": [
+      "light-low-beam-left-0"
+     ]
+    },
+    "preview:light-low-beam-right-0": {
+     "checked": 1,
+     "wrong": [],
+     "shown": [
+      "light-low-beam-right-0"
+     ]
+    },
+    "preview:light-high-beam-left-0": {
+     "checked": 1,
+     "wrong": [],
+     "shown": [
+      "light-high-beam-left-0"
+     ]
+    },
+    "preview:light-high-beam-right-0": {
+     "checked": 1,
+     "wrong": [],
+     "shown": [
+      "light-high-beam-right-0"
+     ]
+    },
+    "bay": {
+     "checked": 4,
+     "wrong": [],
+     "shown": [
+      "washer-fluid-cap",
+      "coolant-reservoir",
+      "brake-fluid-reservoir",
+      "battery-12v"
+     ]
+    },
+    "tires": {
+     "checked": 4,
+     "wrong": [],
+     "shown": [
+      "tire.front-left",
+      "tire.rear-left"
+     ]
+    }
+   },
    "overviewFacts": {
     "text": true,
     "legendTires": true,
@@ -6828,7 +7699,20 @@
       36,
       59
      ],
-     "fromState": "COMPONENT_SELECTION"
+     "touch": {
+      "pick": [
+       62,
+       76
+      ],
+      "label": [
+       77,
+       44
+      ],
+      "labelId": "washer-fluid-cap"
+     },
+     "fromState": "COMPONENT_SELECTION",
+     "labelClickSelected": true,
+     "labelClickState": "WASHER_SELECTED"
     },
     "coolant-reservoir": {
      "clickable": true,
@@ -6838,7 +7722,20 @@
       73,
       70
      ],
-     "fromState": "COMPONENT_SELECTION"
+     "touch": {
+      "pick": [
+       106,
+       96
+      ],
+      "label": [
+       114,
+       44
+      ],
+      "labelId": "coolant-reservoir"
+     },
+     "fromState": "COMPONENT_SELECTION",
+     "labelClickSelected": true,
+     "labelClickState": "COMPONENT_PREVIEW"
     },
     "lcw-coolant-reservoir": {
      "clickable": false,
@@ -6847,6 +7744,14 @@
       0,
       0
      ],
+     "touch": {
+      "pick": [
+       0,
+       0
+      ],
+      "label": null,
+      "labelId": null
+     },
      "fromState": "COMPONENT_SELECTION"
     },
     "brake-fluid-reservoir": {
@@ -6857,7 +7762,20 @@
       52,
       39
      ],
-     "fromState": "COMPONENT_SELECTION"
+     "touch": {
+      "pick": [
+       80,
+       50
+      ],
+      "label": [
+       100,
+       44
+      ],
+      "labelId": "brake-fluid-reservoir"
+     },
+     "fromState": "COMPONENT_SELECTION",
+     "labelClickSelected": true,
+     "labelClickState": "COMPONENT_PREVIEW"
     },
     "battery-12v": {
      "clickable": true,
@@ -6867,7 +7785,20 @@
       78,
       111
      ],
-     "fromState": "COMPONENT_SELECTION"
+     "touch": {
+      "pick": [
+       106,
+       132
+      ],
+      "label": [
+       129,
+       44
+      ],
+      "labelId": "battery-12v"
+     },
+     "fromState": "COMPONENT_SELECTION",
+     "labelClickSelected": true,
+     "labelClickState": "COMPONENT_PREVIEW"
     },
     "fuse-box": {
      "clickable": true,
@@ -6877,6 +7808,14 @@
       74,
       53
      ],
+     "touch": {
+      "pick": [
+       90,
+       50
+      ],
+      "label": null,
+      "labelId": null
+     },
      "fromState": "COMPONENT_SELECTION"
     },
     "tire.front-left": {
@@ -6887,7 +7826,20 @@
       97,
       100
      ],
-     "fromState": "TIRE_SELECTION"
+     "touch": {
+      "pick": [
+       102,
+       120
+      ],
+      "label": [
+       117,
+       44
+      ],
+      "labelId": "tire.front-left"
+     },
+     "fromState": "TIRE_SELECTION",
+     "labelClickSelected": true,
+     "labelClickState": "TIRE_PREVIEW"
     },
     "tire.front-right": {
      "clickable": false,
@@ -6896,6 +7848,14 @@
       0,
       0
      ],
+     "touch": {
+      "pick": [
+       0,
+       0
+      ],
+      "label": null,
+      "labelId": null
+     },
      "fromState": "TIRE_SELECTION"
     },
     "tire.rear-left": {
@@ -6906,7 +7866,20 @@
       85,
       92
      ],
-     "fromState": "TIRE_SELECTION"
+     "touch": {
+      "pick": [
+       108,
+       110
+      ],
+      "label": [
+       117,
+       44
+      ],
+      "labelId": "tire.rear-left"
+     },
+     "fromState": "TIRE_SELECTION",
+     "labelClickSelected": true,
+     "labelClickState": "TIRE_PREVIEW"
     },
     "tire.rear-right": {
      "clickable": false,
@@ -6915,6 +7888,14 @@
       0,
       0
      ],
+     "touch": {
+      "pick": [
+       0,
+       0
+      ],
+      "label": null,
+      "labelId": null
+     },
      "fromState": "TIRE_SELECTION"
     },
     "ev-battery.pack": {
@@ -6924,6 +7905,14 @@
       0,
       0
      ],
+     "touch": {
+      "pick": [
+       0,
+       0
+      ],
+      "label": null,
+      "labelId": null
+     },
      "fromState": "INSPECTION_OVERVIEW"
     },
     "ev-charge.port": {
@@ -6933,6 +7922,14 @@
       0,
       0
      ],
+     "touch": {
+      "pick": [
+       0,
+       0
+      ],
+      "label": null,
+      "labelId": null
+     },
      "fromState": "INSPECTION_OVERVIEW"
     },
     "ev-charge.flap": {
@@ -6942,17 +7939,38 @@
       0,
       0
      ],
+     "touch": {
+      "pick": [
+       0,
+       0
+      ],
+      "label": null,
+      "labelId": null
+     },
      "fromState": "INSPECTION_OVERVIEW"
     },
     "wiper.front.left": {
      "clickable": true,
-     "selected": false,
-     "state": "INSPECTION_OVERVIEW",
+     "selected": true,
+     "state": "VISIBILITY_PREVIEW",
      "touchPx": [
       11,
       5
      ],
-     "fromState": "INSPECTION_OVERVIEW"
+     "touch": {
+      "pick": [
+       62,
+       32
+      ],
+      "label": [
+       85,
+       44
+      ],
+      "labelId": "area:wipers"
+     },
+     "fromState": "INSPECTION_OVERVIEW",
+     "labelClickSelected": true,
+     "labelClickState": "VISIBILITY_PREVIEW"
     },
     "wiper.front.right": {
      "clickable": true,
@@ -6962,6 +7980,14 @@
       15,
       5
      ],
+     "touch": {
+      "pick": [
+       54,
+       32
+      ],
+      "label": null,
+      "labelId": null
+     },
      "fromState": "INSPECTION_OVERVIEW"
     },
     "light-low-beam-left-0": {
@@ -6972,16 +7998,32 @@
       5,
       2
      ],
+     "touch": {
+      "pick": [
+       14,
+       2
+      ],
+      "label": null,
+      "labelId": null
+     },
      "fromState": "INSPECTION_OVERVIEW"
     },
     "light-low-beam-right-0": {
      "clickable": true,
      "selected": false,
-     "state": "INSPECTION_OVERVIEW",
+     "state": "COMPONENT_SELECTION",
      "touchPx": [
       2,
       1
      ],
+     "touch": {
+      "pick": [
+       0,
+       0
+      ],
+      "label": null,
+      "labelId": null
+     },
      "fromState": "INSPECTION_OVERVIEW"
     },
     "light-high-beam-left-0": {
@@ -6991,6 +8033,14 @@
       0,
       0
      ],
+     "touch": {
+      "pick": [
+       0,
+       0
+      ],
+      "label": null,
+      "labelId": null
+     },
      "fromState": "INSPECTION_OVERVIEW"
     },
     "light-high-beam-right-0": {
@@ -7000,6 +8050,14 @@
       0,
       0
      ],
+     "touch": {
+      "pick": [
+       0,
+       0
+      ],
+      "label": null,
+      "labelId": null
+     },
      "fromState": "INSPECTION_OVERVIEW"
     }
    },
@@ -7008,7 +8066,7 @@
     "tires": 70
    },
    "paint": {
-    "tiresTinted": true,
+    "tiresTinted": false,
     "othersKeepMaterial": true,
     "legendCounts": 4
    },
@@ -7085,7 +8143,7 @@
       21,
       48
      ],
-     "highlightedMeshes": 0
+     "highlightedMeshes": 1
     },
     "tire.front-right": {
      "mineCells": 0,
@@ -7093,7 +8151,7 @@
       0,
       0
      ],
-     "highlightedMeshes": 0
+     "highlightedMeshes": 1
     },
     "tire.rear-left": {
      "mineCells": 25,
@@ -7101,7 +8159,7 @@
       15,
       41
      ],
-     "highlightedMeshes": 0
+     "highlightedMeshes": 1
     },
     "tire.rear-right": {
      "mineCells": 0,
@@ -7109,7 +8167,7 @@
       0,
       0
      ],
-     "highlightedMeshes": 0
+     "highlightedMeshes": 1
     },
     "ev-battery.pack": {
      "mineCells": 0,
@@ -7125,7 +8183,7 @@
       0,
       0
      ],
-     "highlightedMeshes": 0
+     "highlightedMeshes": 1
     },
     "ev-charge.flap": {
      "mineCells": 0,
@@ -7133,7 +8191,7 @@
       0,
       0
      ],
-     "highlightedMeshes": 0
+     "highlightedMeshes": 1
     },
     "wiper.front.left": {
      "mineCells": 11,
@@ -7141,7 +8199,7 @@
       8,
       4
      ],
-     "highlightedMeshes": 0
+     "highlightedMeshes": 1
     },
     "wiper.front.right": {
      "mineCells": 11,
@@ -7149,7 +8207,7 @@
       11,
       3
      ],
-     "highlightedMeshes": 0
+     "highlightedMeshes": 1
     },
     "light-low-beam-left-0": {
      "mineCells": 12,
@@ -7227,9 +8285,9 @@
      "meshes": 2,
      "highlightedMeshes": 2,
      "color": [
-      149,
-      210,
-      227
+      137,
+      200,
+      221
      ],
      "selectionIntensity": null,
      "label": true,
@@ -7286,12 +8344,12 @@
      "meshes": 2,
      "highlightedMeshes": 2,
      "color": [
-      205,
-      221,
-      223
+      201,
+      210,
+      206
      ],
      "selectionIntensity": null,
-     "label": false,
+     "label": true,
      "badge": "추정 모델 · 점검 절차 미제공",
      "backButtons": [
       "점검 목록과 이전 시점으로"
@@ -7349,12 +8407,12 @@
      "meshes": 2,
      "highlightedMeshes": 2,
      "color": [
-      193,
-      215,
-      218
+      188,
+      203,
+      200
      ],
      "selectionIntensity": null,
-     "label": false,
+     "label": true,
      "badge": "추정 모델 · 점검 절차 미제공",
      "backButtons": [
       "점검 목록과 이전 시점으로"
@@ -7408,12 +8466,12 @@
      "meshes": 4,
      "highlightedMeshes": 4,
      "color": [
-      136,
-      194,
-      206
+      142,
+      199,
+      210
      ],
      "selectionIntensity": null,
-     "label": false,
+     "label": true,
      "badge": "추정 모델 · 점검 절차 미제공",
      "backButtons": [
       "점검 목록과 이전 시점으로"
@@ -7467,12 +8525,12 @@
      "meshes": 2,
      "highlightedMeshes": 2,
      "color": [
-      135,
-      193,
-      205
+      141,
+      199,
+      210
      ],
      "selectionIntensity": null,
-     "label": false,
+     "label": true,
      "badge": "추정 모델 · 점검 절차 미제공",
      "backButtons": [
       "점검 목록과 이전 시점으로"
@@ -7526,12 +8584,12 @@
      "meshes": 1,
      "highlightedMeshes": 1,
      "color": [
-      72,
-      110,
-      117
+      94,
+      176,
+      188
      ],
-     "selectionIntensity": 0.6,
-     "label": false,
+     "selectionIntensity": 0.8114512059100857,
+     "label": true,
      "badge": "상태만 표시 · 수치 및 진단 미제공",
      "backButtons": [
       "선택 해제 · 이전 시점으로"
@@ -7587,12 +8645,12 @@
      "meshes": 1,
      "highlightedMeshes": 1,
      "color": [
-      107,
-      132,
-      138
+      111,
+      180,
+      190
      ],
-     "selectionIntensity": 0.6,
-     "label": false,
+     "selectionIntensity": 0.8114512059100857,
+     "label": true,
      "badge": "상태만 표시 · 수치 및 진단 미제공",
      "backButtons": [
       "선택 해제 · 이전 시점으로"
@@ -7648,12 +8706,12 @@
      "meshes": 1,
      "highlightedMeshes": 1,
      "color": [
-      68,
-      106,
-      114
+      89,
+      169,
+      181
      ],
-     "selectionIntensity": 0.6,
-     "label": false,
+     "selectionIntensity": 0.8114512059100857,
+     "label": true,
      "badge": "상태만 표시 · 수치 및 진단 미제공",
      "backButtons": [
       "선택 해제 · 이전 시점으로"
@@ -7709,12 +8767,12 @@
      "meshes": 1,
      "highlightedMeshes": 1,
      "color": [
-      109,
-      135,
-      142
+      115,
+      185,
+      196
      ],
-     "selectionIntensity": 0.6,
-     "label": false,
+     "selectionIntensity": 0.8114512059100857,
+     "label": true,
      "badge": "상태만 표시 · 수치 및 진단 미제공",
      "backButtons": [
       "선택 해제 · 이전 시점으로"
@@ -7770,12 +8828,12 @@
      "meshes": 1,
      "highlightedMeshes": 1,
      "color": [
-      64,
-      172,
-      187
+      65,
+      173,
+      189
      ],
      "selectionIntensity": null,
-     "label": false,
+     "label": true,
      "badge": "ESTIMATED_GEOMETRY · 추정 외함",
      "backButtons": [
       "점검 부위로"
@@ -7834,12 +8892,12 @@
      "meshes": 1,
      "highlightedMeshes": 1,
      "color": [
-      103,
-      184,
-      197
+      118,
+      198,
+      210
      ],
      "selectionIntensity": null,
-     "label": false,
+     "label": true,
      "badge": "ESTIMATED_GEOMETRY · 정적 닫힌 형상",
      "backButtons": [
       "뒤로 · 차량 전체 보기"
@@ -7898,12 +8956,12 @@
      "meshes": 1,
      "highlightedMeshes": 1,
      "color": [
-      139,
+      138,
       195,
       207
      ],
      "selectionIntensity": null,
-     "label": false,
+     "label": true,
      "badge": "ESTIMATED_GEOMETRY · 정적 닫힌 형상",
      "backButtons": [
       "뒤로 · 차량 전체 보기"
@@ -7962,12 +9020,12 @@
      "meshes": 1,
      "highlightedMeshes": 1,
      "color": [
-      105,
-      182,
-      195
+      124,
+      199,
+      210
      ],
      "selectionIntensity": null,
-     "label": false,
+     "label": true,
      "badge": "ESTIMATED_GEOMETRY · 정적 휴지 자세",
      "backButtons": [
       "뒤로 · 차량 전체 보기"
@@ -8026,12 +9084,12 @@
      "meshes": 1,
      "highlightedMeshes": 1,
      "color": [
-      104,
-      180,
-      193
+      125,
+      199,
+      209
      ],
      "selectionIntensity": null,
-     "label": false,
+     "label": true,
      "badge": "ESTIMATED_GEOMETRY · 정적 휴지 자세",
      "backButtons": [
       "뒤로 · 차량 전체 보기"
@@ -8090,12 +9148,12 @@
      "meshes": 1,
      "highlightedMeshes": 1,
      "color": [
-      54,
-      131,
-      143
+      3,
+      48,
+      57
      ],
      "selectionIntensity": null,
-     "label": false,
+     "label": true,
      "badge": "기존 커뮤니티 GLB 표식 · OEM 광학 구조 미검증",
      "backButtons": [
       "뒤로 · 차량 전체 보기"
@@ -8153,12 +9211,12 @@
      "meshes": 1,
      "highlightedMeshes": 1,
      "color": [
-      54,
-      131,
-      143
+      4,
+      48,
+      57
      ],
      "selectionIntensity": null,
-     "label": false,
+     "label": true,
      "badge": "기존 커뮤니티 GLB 표식 · OEM 광학 구조 미검증",
      "backButtons": [
       "뒤로 · 차량 전체 보기"
@@ -8216,12 +9274,12 @@
      "meshes": 1,
      "highlightedMeshes": 1,
      "color": [
-      52,
-      130,
-      142
+      1,
+      46,
+      55
      ],
      "selectionIntensity": null,
-     "label": false,
+     "label": true,
      "badge": "기존 커뮤니티 GLB 표식 · OEM 광학 구조 미검증",
      "backButtons": [
       "뒤로 · 차량 전체 보기"
@@ -8279,12 +9337,12 @@
      "meshes": 1,
      "highlightedMeshes": 1,
      "color": [
-      53,
-      130,
-      142
+      2,
+      46,
+      56
      ],
      "selectionIntensity": null,
-     "label": false,
+     "label": true,
      "badge": "기존 커뮤니티 GLB 표식 · OEM 광학 구조 미검증",
      "backButtons": [
       "뒤로 · 차량 전체 보기"
@@ -9065,7 +10123,7 @@
     }
    },
    "flows": {
-    "bayLabel": true,
+    "bayLabel": false,
     "hoodListNames": {
      "washer-fluid-cap": "워셔액",
      "coolant-reservoir": "냉각수 리저버",
@@ -9151,6 +10209,164 @@
      "charge": false
     }
    },
+   "labels": {
+    "overview": {
+     "checked": 4,
+     "wrong": [],
+     "shown": [
+      "area:hood",
+      "area:tires"
+     ]
+    },
+    "preview:washer-fluid-cap": {
+     "checked": 2,
+     "wrong": [],
+     "shown": [
+      "washer-fluid-cap",
+      "coolant-reservoir"
+     ]
+    },
+    "preview:coolant-reservoir": {
+     "checked": 2,
+     "wrong": [],
+     "shown": [
+      "coolant-reservoir",
+      "washer-fluid-cap"
+     ]
+    },
+    "preview:brake-fluid-reservoir": {
+     "checked": 2,
+     "wrong": [],
+     "shown": [
+      "brake-fluid-reservoir",
+      "fuse-box"
+     ]
+    },
+    "preview:battery-12v": {
+     "checked": 1,
+     "wrong": [],
+     "shown": [
+      "battery-12v"
+     ]
+    },
+    "preview:fuse-box": {
+     "checked": 1,
+     "wrong": [],
+     "shown": [
+      "fuse-box"
+     ]
+    },
+    "preview:tire.front-left": {
+     "checked": 2,
+     "wrong": [],
+     "shown": [
+      "tire.front-left"
+     ]
+    },
+    "preview:tire.front-right": {
+     "checked": 2,
+     "wrong": [],
+     "shown": [
+      "tire.front-right"
+     ]
+    },
+    "preview:tire.rear-left": {
+     "checked": 2,
+     "wrong": [],
+     "shown": [
+      "tire.rear-left"
+     ]
+    },
+    "preview:tire.rear-right": {
+     "checked": 2,
+     "wrong": [],
+     "shown": [
+      "tire.rear-right"
+     ]
+    },
+    "preview:ev-battery.pack": {
+     "checked": 1,
+     "wrong": [],
+     "shown": [
+      "ev-battery.pack"
+     ]
+    },
+    "preview:ev-charge.port": {
+     "checked": 1,
+     "wrong": [],
+     "shown": [
+      "ev-charge.port"
+     ]
+    },
+    "preview:ev-charge.flap": {
+     "checked": 2,
+     "wrong": [],
+     "shown": [
+      "ev-charge.flap",
+      "ev-charge.port"
+     ]
+    },
+    "preview:wiper.front.left": {
+     "checked": 1,
+     "wrong": [],
+     "shown": [
+      "wiper.front.left"
+     ]
+    },
+    "preview:wiper.front.right": {
+     "checked": 1,
+     "wrong": [],
+     "shown": [
+      "wiper.front.right"
+     ]
+    },
+    "preview:light-low-beam-left-0": {
+     "checked": 1,
+     "wrong": [],
+     "shown": [
+      "light-low-beam-left-0"
+     ]
+    },
+    "preview:light-low-beam-right-0": {
+     "checked": 1,
+     "wrong": [],
+     "shown": [
+      "light-low-beam-right-0"
+     ]
+    },
+    "preview:light-high-beam-left-0": {
+     "checked": 1,
+     "wrong": [],
+     "shown": [
+      "light-high-beam-left-0"
+     ]
+    },
+    "preview:light-high-beam-right-0": {
+     "checked": 1,
+     "wrong": [],
+     "shown": [
+      "light-high-beam-right-0"
+     ]
+    },
+    "bay": {
+     "checked": 4,
+     "wrong": [],
+     "shown": [
+      "washer-fluid-cap",
+      "coolant-reservoir",
+      "brake-fluid-reservoir",
+      "battery-12v"
+     ]
+    },
+    "tires": {
+     "checked": 4,
+     "wrong": [],
+     "shown": [
+      "tire.front-left",
+      "tire.rear-left"
+     ]
+    }
+   },
    "overviewFacts": {
     "text": true,
     "legendTires": true,
@@ -9167,7 +10383,20 @@
       23,
       41
      ],
-     "fromState": "COMPONENT_SELECTION"
+     "touch": {
+      "pick": [
+       52,
+       58
+      ],
+      "label": [
+       77,
+       44
+      ],
+      "labelId": "washer-fluid-cap"
+     },
+     "fromState": "COMPONENT_SELECTION",
+     "labelClickSelected": true,
+     "labelClickState": "WASHER_SELECTED"
     },
     "coolant-reservoir": {
      "clickable": true,
@@ -9177,7 +10406,20 @@
       47,
       49
      ],
-     "fromState": "COMPONENT_SELECTION"
+     "touch": {
+      "pick": [
+       72,
+       68
+      ],
+      "label": [
+       114,
+       44
+      ],
+      "labelId": "coolant-reservoir"
+     },
+     "fromState": "COMPONENT_SELECTION",
+     "labelClickSelected": true,
+     "labelClickState": "COMPONENT_PREVIEW"
     },
     "lcw-coolant-reservoir": {
      "clickable": false,
@@ -9186,6 +10428,14 @@
       0,
       0
      ],
+     "touch": {
+      "pick": [
+       0,
+       0
+      ],
+      "label": null,
+      "labelId": null
+     },
      "fromState": "COMPONENT_SELECTION"
     },
     "brake-fluid-reservoir": {
@@ -9196,7 +10446,20 @@
       35,
       27
      ],
-     "fromState": "COMPONENT_SELECTION"
+     "touch": {
+      "pick": [
+       62,
+       40
+      ],
+      "label": [
+       100,
+       44
+      ],
+      "labelId": "brake-fluid-reservoir"
+     },
+     "fromState": "COMPONENT_SELECTION",
+     "labelClickSelected": true,
+     "labelClickState": "COMPONENT_PREVIEW"
     },
     "battery-12v": {
      "clickable": true,
@@ -9206,7 +10469,20 @@
       57,
       66
      ],
-     "fromState": "COMPONENT_SELECTION"
+     "touch": {
+      "pick": [
+       66,
+       90
+      ],
+      "label": [
+       129,
+       44
+      ],
+      "labelId": "battery-12v"
+     },
+     "fromState": "COMPONENT_SELECTION",
+     "labelClickSelected": true,
+     "labelClickState": "COMPONENT_PREVIEW"
     },
     "fuse-box": {
      "clickable": true,
@@ -9216,6 +10492,14 @@
       48,
       36
      ],
+     "touch": {
+      "pick": [
+       80,
+       34
+      ],
+      "label": null,
+      "labelId": null
+     },
      "fromState": "COMPONENT_SELECTION"
     },
     "tire.front-left": {
@@ -9226,7 +10510,20 @@
       60,
       63
      ],
-     "fromState": "TIRE_SELECTION"
+     "touch": {
+      "pick": [
+       76,
+       88
+      ],
+      "label": [
+       117,
+       44
+      ],
+      "labelId": "tire.front-left"
+     },
+     "fromState": "TIRE_SELECTION",
+     "labelClickSelected": true,
+     "labelClickState": "TIRE_PREVIEW"
     },
     "tire.front-right": {
      "clickable": false,
@@ -9235,6 +10532,14 @@
       0,
       0
      ],
+     "touch": {
+      "pick": [
+       0,
+       0
+      ],
+      "label": null,
+      "labelId": null
+     },
      "fromState": "TIRE_SELECTION"
     },
     "tire.rear-left": {
@@ -9245,7 +10550,20 @@
       60,
       61
      ],
-     "fromState": "TIRE_SELECTION"
+     "touch": {
+      "pick": [
+       86,
+       84
+      ],
+      "label": [
+       117,
+       44
+      ],
+      "labelId": "tire.rear-left"
+     },
+     "fromState": "TIRE_SELECTION",
+     "labelClickSelected": true,
+     "labelClickState": "TIRE_PREVIEW"
     },
     "tire.rear-right": {
      "clickable": false,
@@ -9254,6 +10572,14 @@
       0,
       0
      ],
+     "touch": {
+      "pick": [
+       0,
+       0
+      ],
+      "label": null,
+      "labelId": null
+     },
      "fromState": "TIRE_SELECTION"
     },
     "ev-battery.pack": {
@@ -9263,6 +10589,14 @@
       0,
       0
      ],
+     "touch": {
+      "pick": [
+       0,
+       0
+      ],
+      "label": null,
+      "labelId": null
+     },
      "fromState": "INSPECTION_OVERVIEW"
     },
     "ev-charge.port": {
@@ -9272,6 +10606,14 @@
       0,
       0
      ],
+     "touch": {
+      "pick": [
+       0,
+       0
+      ],
+      "label": null,
+      "labelId": null
+     },
      "fromState": "INSPECTION_OVERVIEW"
     },
     "ev-charge.flap": {
@@ -9281,6 +10623,14 @@
       0,
       0
      ],
+     "touch": {
+      "pick": [
+       0,
+       0
+      ],
+      "label": null,
+      "labelId": null
+     },
      "fromState": "INSPECTION_OVERVIEW"
     },
     "wiper.front.left": {
@@ -9291,6 +10641,14 @@
       8,
       4
      ],
+     "touch": {
+      "pick": [
+       40,
+       26
+      ],
+      "label": null,
+      "labelId": null
+     },
      "fromState": "INSPECTION_OVERVIEW"
     },
     "wiper.front.right": {
@@ -9301,6 +10659,14 @@
       11,
       3
      ],
+     "touch": {
+      "pick": [
+       34,
+       22
+      ],
+      "label": null,
+      "labelId": null
+     },
      "fromState": "INSPECTION_OVERVIEW"
     },
     "light-low-beam-left-0": {
@@ -9311,6 +10677,14 @@
       6,
       2
      ],
+     "touch": {
+      "pick": [
+       22,
+       2
+      ],
+      "label": null,
+      "labelId": null
+     },
      "fromState": "INSPECTION_OVERVIEW"
     },
     "light-low-beam-right-0": {
@@ -9321,16 +10695,32 @@
       2,
       1
      ],
+     "touch": {
+      "pick": [
+       2,
+       2
+      ],
+      "label": null,
+      "labelId": null
+     },
      "fromState": "INSPECTION_OVERVIEW"
     },
     "light-high-beam-left-0": {
      "clickable": true,
      "selected": false,
-     "state": "INSPECTION_OVERVIEW",
+     "state": "COMPONENT_SELECTION",
      "touchPx": [
       1,
       1
      ],
+     "touch": {
+      "pick": [
+       0,
+       0
+      ],
+      "label": null,
+      "labelId": null
+     },
      "fromState": "INSPECTION_OVERVIEW"
     },
     "light-high-beam-right-0": {
@@ -9340,6 +10730,14 @@
       0,
       0
      ],
+     "touch": {
+      "pick": [
+       0,
+       0
+      ],
+      "label": null,
+      "labelId": null
+     },
      "fromState": "INSPECTION_OVERVIEW"
     }
    },
@@ -9348,7 +10746,7 @@
     "tires": 70
    },
    "paint": {
-    "tiresTinted": true,
+    "tiresTinted": false,
     "othersKeepMaterial": true,
     "legendCounts": 4
    },

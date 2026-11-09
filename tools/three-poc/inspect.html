@@ -40,15 +40,12 @@
   #panel li{margin:5px 0}
   .eyebrow{font-size:12px;color:var(--accent);font-weight:600;letter-spacing:.06em;margin-bottom:6px}
   .items{list-style:none;padding:0!important;margin:12px 0 0!important;display:flex;flex-direction:column;gap:8px}
+  /* P10: one neutral border for every list row. Cyan means "selected" only; availability is the tag text, not a color. */
   .item{display:flex;align-items:center;justify-content:space-between;width:100%;text-align:left;background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:13px 14px}
-  .item.available{border-color:var(--accent)}
-  .item.available:hover{background:#21303a}
+  .item.available:hover{background:#252a31}
   .item[aria-disabled="true"]{cursor:default;color:var(--faint)}
-  .tag{font-size:12px;border-radius:999px;padding:2px 9px;border:1px solid var(--line);color:var(--faint);white-space:nowrap}
-  .item.available .tag{border-color:var(--accent);color:var(--accent)}
-  .item.preview{border-color:#6b5937}
-  .item.preview .tag{border-color:#6b5937;color:var(--warn)}
-  .item[aria-pressed="true"]{background:#21303a;border-color:var(--accent)}
+  .tag{font-size:12px;border-radius:999px;padding:2px 9px;border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+  .item[aria-pressed="true"]{background:#16303a;border-color:var(--accent);box-shadow:inset 3px 0 0 var(--accent)}
   button{min-height:44px}
   .accuracy{margin-top:10px!important;color:var(--warn);font-size:13px}
   #panel .accuracy li{margin:2px 0}
@@ -91,11 +88,22 @@
   .item:has(.inspection-state){flex-wrap:wrap;gap:8px}
   .note{font-size:12px;color:var(--faint)!important}
 
-  #capLabel{position:fixed;z-index:2;left:0;top:0;display:none;transform:translate(-50%,calc(-100% - 14px));pointer-events:auto}
-  #capLabel button{background:var(--accent);color:var(--accent-ink);border:0;border-radius:999px;padding:6px 14px;font-size:14px;font-weight:700;box-shadow:0 4px 16px #0008}
-  #capLabel::after{content:"";position:absolute;left:50%;top:100%;width:2px;height:12px;background:var(--accent);transform:translateX(-50%)}
-  body[data-state="COMPONENT_SELECTION"] #capLabel,body[data-state="WASHER_SELECTED"] #capLabel,body[data-state="MOBILE_HANDOFF_READY"] #capLabel{display:block}
-  #capLabel[data-hidden]{display:none!important}
+  /* P10 PartLabel: one label rule for every modeled part (part-labels.mjs). The layer itself never takes input. */
+  #partLabels,#partLabelLines{position:fixed;inset:0;z-index:2;pointer-events:none}
+  #partLabelLines line{stroke:#c6d0db;stroke-width:1.5;opacity:.75}
+  #partLabelLines circle{fill:#c6d0db}
+  #partLabelLines [data-selected="true"]{stroke:var(--accent);fill:var(--accent);opacity:1}
+  #partLabelLines [data-occluded="true"]{stroke-dasharray:3 3}
+  .part-label{position:fixed;left:0;top:0;display:none;pointer-events:auto}
+  .part-label[data-shown="true"]{display:block}
+  .part-label button{display:inline-flex;align-items:center;gap:6px;min-width:44px;min-height:44px;padding:6px 12px;border-radius:999px;border:1px solid #4a525d;background:#171a1fe8;color:var(--text);font-size:13px;font-weight:600;white-space:nowrap;box-shadow:0 4px 14px #0009}
+  .part-label button:hover{background:#252a31}
+  .part-label[data-selected="true"] button{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);cursor:default}
+  .part-label[data-occluded="true"] button{border-style:dashed}
+  .part-label[data-actionable="false"] button{cursor:default}
+  .part-label .label-state{font-weight:700}
+  .part-label[data-selected="true"] .label-state{color:inherit}
+  .part-label .label-note{font-weight:400;font-size:12px}
 
   #toast{position:fixed;left:50%;top:72px;transform:translateX(-50%);background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:8px 16px;font-size:14px;color:var(--text);opacity:0;transition:opacity .25s;pointer-events:none;white-space:nowrap}
   #toast.on{opacity:1}
@@ -181,7 +189,8 @@
   <span class="hint">현재 점검 응답은 홈 복귀·종료·새로고침 시 지워집니다.</span>
 </div>
 <aside id="panel" aria-live="polite"></aside>
-<div id="capLabel"><button type="button" id="capButton">워셔액</button></div>
+<svg id="partLabelLines" aria-hidden="true"></svg>
+<div id="partLabels" role="group" aria-label="3D 모델 부품 이름표"></div>
 <div id="toast" role="status"></div>
 <p class="disclaimer">커뮤니티 3D 자산 기반 참조 모델입니다. 실제 OEM 형상·치수가 아니며 부품 위치와 개방 동작은 추정·시뮬레이션입니다.</p>
 <div id="dev" hidden></div>

@@ -42,7 +42,7 @@ const actions = [
   // Open via the panel button this time (keyboard-accessible path).
   ['click', '[data-action=area][data-id=hood]'], settled('COMPONENT_SELECTION'),
   expect(`${I}.hoodAngle===60`, 'hood fully open (axis A, 60 deg)'),
-  expect(`!document.getElementById('capLabel').hasAttribute('data-hidden')&&document.querySelectorAll('[data-action=component]').length===5&&document.querySelectorAll('.item[aria-disabled=true]').length===1`, 'cap label shown; washer + 4 geometry previews, LCW planned'),
+  expect(`${I}.labelInfo().filter(l=>l.shown).length===5&&!${I}.labelInfo().some(l=>l.id==='lcw-coolant-reservoir')&&document.querySelectorAll('[data-action=component]').length===5&&document.querySelector('[data-id="lcw-coolant-reservoir"]')?.dataset.action==='result-detail'`, 'five part labels shown, none for LCW; washer + 4 geometry previews, LCW list-only result'),
   ...shot('04-component-selection'),
   ev(tap(`${I}.capPoint()`)), settled('WASHER_SELECTED'),
   expect(`${I}.state.component==='washer-fluid-cap'&&document.querySelector('#panel h2').textContent==='워셔액'&&document.querySelector('#panel a.link').href.startsWith('https://manuals.hyundai.co.uk/')`, 'washer detail with manual source'),

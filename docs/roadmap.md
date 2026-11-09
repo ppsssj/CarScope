@@ -64,6 +64,10 @@ OWLv2, Grounding DINO Tiny, OmDet-Turbo Tiny를 텍스트 프롬프트로 실행
 
 P9-XR-C의 3D AR 위치 찾기를 P11 화면의 점검 방법 선택에 통합하고, Render에서 환경변수 없이 별도 진입점과 Start Command로만 켜지는 경로를 준비했다. 기본은 꺼져 있고 워셔액만 대상이다. QR, 인증, 세션, 결과 계약은 바꾸지 않았다. **Render 배포·활성화는 하지 않았고 승인 항목이 남아 있다. Z Flip8과 실차는 NOT_RUN이다.** [설계와 승인 항목](p11-xr-webxr-render-entry.md), [증거 인덱스](evidence/p11-xr/README.md).
 
+## P10 통합 3D 시각 UX — 라벨·강조·상태 색
+
+워셔액 전용 3D 이름표를 형상이 있는 18개 부품의 공통 PartLabel로 바꾸고(화면 경계·패널·가림·충돌·44px), 선택(청록 발광 보정+외곽선)·결과(재질 색)·힌트(중립색)를 분리했다. 목록 기본 테두리는 중립색이며 청록은 선택 행에만 쓴다. P0-4·P1-3·P1-4·P1-5·P1-6·P2-6은 FIXED, **P1-13은 개요의 전조등·충전구·와이퍼 대상이 44px 미만이라 OPEN**이다. **데스크톱 Chrome 측정이며 AVD, 실제 손가락 터치, 스마트폰은 `NOT_RUN`이다.** [설계](p10-unified-3d-visual-ux.md), [증거 인덱스](evidence/p10-unified/README.md).
+
 ## P10-2 — 카메라 프레이밍 통일
 
 워셔액 결과 화면의 카메라 오류와 타이어 전환 중 차체 통과를 고치고, 모든 부품이 `cameraClass`에 따른 한 가지 프레이밍 규칙을 쓰게 했다. 상세, 결과, 이력 화면의 시점이 같다. 차체 판정은 근사 상자와 샘플링이며 연속 경로의 증명이 아니다. **데스크톱 Chrome 측정이며 AVD와 실제 터치는 `NOT_RUN`이다.** [설계](p10-2-camera-framing.md), [증거 인덱스](evidence/p10-2/README.md).
