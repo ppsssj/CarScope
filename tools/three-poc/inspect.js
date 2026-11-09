@@ -40,7 +40,7 @@ import { sourceWorldParts } from './charge-port-model.mjs';
 import { measureEvChargePortSupport, buildEvChargePort, EV_CHARGE_IDS } from "./ioniq5-asset/ev-charge-port.mjs";
 import { resolveTireTargets, tireCameraDirection } from "./tire-targets.mjs";
 import { STATES, EVENTS, INSPECTION_AREAS, initialState, transition, hoodTarget, cameraGoal, areaOf, isHistoryState, HOOD_OPEN_DEG } from "./inspection-flow.mjs";
-import { labelPlan, layoutLabels, areaEvent, touchProbes, receiverLocked, hintTargets, selectionIntensity, SELECTION_COLOR, HINT_COLOR } from './part-labels.mjs';
+import { labelPlan, layoutLabels, areaEvent, touchProbes, chooseTouch, usesTouchSlop, receiverLocked, hintTargets, selectionIntensity, SELECTION_COLOR, HINT_COLOR } from './part-labels.mjs';
 
 const params = new URLSearchParams(location.search);
 const $ = (id) => document.getElementById(id);
@@ -628,12 +628,21 @@ function hitPartId(object) {
   if (u.washer) return 'washer-fluid-cap';
   return u.inspectionTarget ?? null;
 }
-// Touch slop: a touch that selects nothing tries points up to TOUCH_SLOP_PX away, nearest first. Each probe is a real
-// ray, so a part is chosen only where it is really drawn and not covered. Hover keeps the exact point.
+// Touch slop (finger input only): when the exact point selects nothing, points up to TOUCH_SLOP_PX away are probed with
+// real rays and chooseTouch decides: exact first, one specific part only, never an area-wide surface, nothing when
+// ambiguous. Mouse, pen and hover keep the exact point.
+let lastTouch = null;
+function touchDecision(x, y) {
+  const exact = pickExact(x, y);
+  if (exact) return chooseTouch(exact);
+  const found = [];
+  for (const p of touchProbes(x, y).slice(1)) { const event = pickExact(p.x, p.y); if (event) found.push({ r: p.r, event }); }
+  return chooseTouch(null, found);
+}
 function pickTarget(x, y, { slop = false } = {}) {
   if (!slop) return pickExact(x, y);
-  for (const p of touchProbes(x, y)) { const ev = pickExact(p.x, p.y); if (ev) return ev; }
-  return null;
+  const d = touchDecision(x, y); lastTouch = { x, y, reason: d.reason, event: d.event };
+  return d.event;
 }
 function pickExact(x, y) {
   const h = hitAt(x, y);
@@ -653,7 +662,11 @@ function pickExact(x, y) {
 let downAt = null, hovered = null;
 renderer.domElement.addEventListener("pointerdown", (e) => { downAt = [e.clientX, e.clientY]; });
 renderer.domElement.addEventListener("pointerup", (e) => {
-  if (downAt && Math.hypot(e.clientX - downAt[0], e.clientY - downAt[1]) < 5) { const ev = pickTarget(e.clientX, e.clientY, { slop: true }); if (ev) dispatch(ev); }
+  if (downAt && Math.hypot(e.clientX - downAt[0], e.clientY - downAt[1]) < 5) {
+    const slop = usesTouchSlop(e.pointerType), ev = pickTarget(e.clientX, e.clientY, { slop });
+    log('pick', { pointerType: e.pointerType, slop, reason: slop ? lastTouch?.reason : ev ? 'EXACT' : 'NONE' });
+    if (ev) dispatch(ev);
+  }
   downAt = null;
 });
 renderer.domElement.addEventListener('pointercancel', () => { downAt = null; });
@@ -1056,6 +1069,9 @@ window.__inspect = {
   hitAt,
   // What a real touch at (x,y) selects, with the 16px slop. null: nothing (an empty touch).
   pickAt: (x, y) => pickTarget(x, y, { slop: true }),
+  // The touch decision with its reason (EXACT, SLOP, AMBIGUOUS, AREA_ONLY, NONE), and what a mouse click selects.
+  touchAt: (x, y) => touchDecision(x, y),
+  clickAt: (x, y) => pickExact(x, y),
   // Shown and hidden labels with the reason, anchor, box and the part the anchor sits on (P1-3, P1-13, P2-6).
   labelInfo: () => labels.info.map(e => { const item = labels.items.find(x => x.id === e.id), el = labels.els.get(e.id), b = el?.querySelector('button')?.getBoundingClientRect();
     return { ...e, kind: item?.kind, anchorPart: labels.anchorPart.get(e.id) ?? null, text: item?.text, actionable: !!(item && (item.event || item.kind === 'AREA')), event: item ? areaEvent(item, labels.anchorPart.get(e.id)) : null,

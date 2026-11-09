@@ -145,13 +145,40 @@ export function layoutLabels(items,{width,height,obstacles=[],targets=[],limit=L
 }
 
 /**
- * Touch points to try around a touch, nearest first: the point itself, then rings up to TOUCH_SLOP_PX. The page keeps
- * the first point whose ray really reaches a selectable part, so a covered part is never chosen through another mesh.
+ * Touch points to try around a touch, nearest first: the point itself, then rings up to TOUCH_SLOP_PX. Each is a real
+ * ray, so a covered part is never chosen through another mesh. chooseTouch decides from the results.
  */
 export function touchProbes(x,y,slop=TOUCH_SLOP_PX){
   const out=[{x,y,r:0}];
   for(const [r,n] of [[slop/3,8],[slop*2/3,12],[slop,16]])for(let k=0;k<n;k++){const t=2*Math.PI*k/n;out.push({x:x+r*Math.cos(t),y:y+r*Math.sin(t),r});}
   return out;
+}
+
+/** The part a touch event points at: its partId (area events opened from a part) or its id. */
+export const touchTargetId=ev=>ev?.partId??ev?.id??null;
+/** An area-wide target such as the hood (SELECT_AREA without a part): a large surface, never reached by slop. */
+export const isAreaWide=ev=>ev?.type===E.SELECT_AREA&&!ev.partId;
+export const TOUCH_INPUT='touch';
+/** Slop applies to finger input only. A mouse (and a pen) keeps the exact point. */
+export const usesTouchSlop=pointerType=>pointerType===TOUCH_INPUT;
+
+/**
+ * Decides a touch from what the exact point and the probes around it would select. `exact` is the event at the touch
+ * point (null when it selects nothing); `found` lists {r, event} for the probes within TOUCH_SLOP_PX.
+ *   1. Something selectable at the exact point always wins: slop never overrides it.
+ *   2. Slop reaches a part only if it is the only selectable thing within reach. Anything else in reach (another part,
+ *      or an area-wide surface such as the hood) makes the intent unclear and nothing is selected; the part's 3D label
+ *      or the list stays the way to choose it. A tap aimed at a lamp marker beside the hood or a tire selects neither.
+ *   3. An area-wide surface alone is never reached by slop: only an exact touch opens the hood.
+ * Returns {event, reason}; reason is EXACT, SLOP, AMBIGUOUS, AREA_ONLY or NONE.
+ */
+export function chooseTouch(exact,found=[]){
+  if(exact)return {event:exact,reason:'EXACT'};
+  const hits=found.filter(f=>f.event);
+  if(!hits.length)return {event:null,reason:'NONE'};
+  if(new Set(hits.map(f=>touchTargetId(f.event))).size>1)return {event:null,reason:'AMBIGUOUS'};
+  if(isAreaWide(hits[0].event))return {event:null,reason:'AREA_ONLY'};
+  return {event:hits.reduce((a,b)=>b.r<a.r?b:a).event,reason:'SLOP'};
 }
 
 // ---- Highlight roles --------------------------------------------------------------------------------------------------

@@ -174,11 +174,78 @@ async function runTouch(browser){
   return R;
 }
 
+// PR #117 review: the click decision on the real page. Reconstructs the old rule (first probe within 16px that selects
+// anything) to find the taps that used to open the hood when aimed at a lamp marker, then taps and clicks them for real.
+const OLD_RULE_POINTS=(page,lights)=>page.evaluate(lights=>{
+  const I=window.__inspect,probes=(x,y)=>{const out=[];for(const [r,n] of [[16/3,8],[32/3,12],[16,16]])for(let k=0;k<n;k++){const t=2*Math.PI*k/n;out.push([x+r*Math.cos(t),y+r*Math.sin(t)]);}return out;};
+  const panel=document.getElementById('panel').getBoundingClientRect(),free=(x,y)=>x>20&&y>80&&x<innerWidth-20&&y<innerHeight-20&&!(x>=panel.left&&x<=panel.right&&y>=panel.top&&y<=panel.bottom);
+  const out=[];
+  for(const id of lights){
+    const c=I.componentPoint(id);if(!c.inFront)continue;
+    // Up to three points per lamp, nearest the marker first, where the old rule opened the hood.
+    const mine=[];
+    for(let d=0;d<=24&&mine.length<3;d+=2)for(const [dx,dy] of [[d,0],[-d,0],[0,d],[0,-d],[d,d],[-d,-d],[d,-d],[-d,d]]){
+      if(mine.length>=3)break;
+      const x=Math.round(c.x+dx),y=Math.round(c.y+dy);if(!free(x,y)||I.clickAt(x,y)||mine.some(p=>p.x===x&&p.y===y))continue;
+      const old=probes(x,y).map(([px,py])=>I.clickAt(px,py)).find(Boolean);
+      if(old?.type==='SELECT_AREA'&&old.id==='hood'&&!old.partId&&!document.elementFromPoint(x,y)?.closest('.part-label'))mine.push({id,x,y,now:I.touchAt(x,y)});
+    }
+    out.push(...mine);
+  }
+  return out;
+},lights);
+const exactPoint=(page,id,kinds)=>page.evaluate(({id,kinds})=>{const I=window.__inspect,c=I.componentPoint(id);
+  for(let r=0;r<80;r+=2)for(let dx=-r;dx<=r;dx+=2)for(const dy of [-r,r]){const x=c.x+dx,y=c.y+dy,h=I.hitAt(x,y);if(h&&kinds.includes(h.kind)&&(h.id??'washer-fluid-cap')===id&&!document.elementFromPoint(x,y)?.closest('.part-label,#panel'))return {x,y};}
+  return null;},{id,kinds});
+
+async function runPickRegression(browser,viewport){
+  const T=await open(browser,viewport,true),{page,settle,dispatch,until,state,toOverview,shot}=T,V=key(viewport),R={lampPoints:[]};
+  const LIGHTS=['light-low-beam-left-0','light-low-beam-right-0','light-high-beam-left-0','light-high-beam-right-0'];
+  await dispatch({type:'START'});await until('INSPECTION_OVERVIEW');await settle();
+  const points=await OLD_RULE_POINTS(page,LIGHTS);R.lampPoints=points.map(p=>({id:p.id,x:p.x,y:p.y,reason:p.now.reason}));
+  if(!points.length)summary.notRun.push(`${V} lamp taps: no point reproduced the old hood selection on this view`);
+  for(const p of points){
+    await check(`${V} touch tap aimed at ${p.id} (${p.x},${p.y}), old rule opened the hood: hood stays closed`,async()=>{
+      await toOverview();await page.touchscreen.tap(p.x,p.y);await page.waitForTimeout(120);
+      const s=await state();assert.ok(!['HOOD_OPENING','COMPONENT_SELECTION'].includes(s.name),s.name);
+      // Never another area (hood, tire, wipers, charge port); at most a lamp of the same headlamp if it alone is in reach.
+      assert.ok(s.name==='INSPECTION_OVERVIEW'||s.name==='VISIBILITY_PREVIEW'&&s.component?.startsWith('light-'),`${s.name} ${s.component}`);
+      const last=await page.evaluate(()=>window.__inspectLog.filter(l=>l.tag==='pick').at(-1));assert.equal(last.pointerType,'touch');assert.equal(last.slop,true);
+    });
+    await check(`${V} mouse click at the same point selects nothing (exact only)`,async()=>{
+      await toOverview();await page.mouse.click(p.x,p.y);await page.waitForTimeout(120);
+      assert.equal((await state()).name,'INSPECTION_OVERVIEW');
+      const last=await page.evaluate(()=>window.__inspectLog.filter(l=>l.tag==='pick').at(-1));assert.equal(last.pointerType,'mouse');assert.equal(last.slop,false);
+    });
+  }
+  // Existing selections by touch, exactly on the part.
+  await toOverview();await dispatch({type:'SELECT_AREA',id:'hood'});await until('COMPONENT_SELECTION');await settle();
+  for(const [id,kinds,expect] of [['washer-fluid-cap',['washer'],'WASHER_SELECTED'],['coolant-reservoir',['component'],'COMPONENT_PREVIEW']]){
+    await check(`${V} touch on the ${id} mesh still selects it`,async()=>{
+      if((await state()).name!=='COMPONENT_SELECTION'){await dispatch({type:'BACK'});await until('COMPONENT_SELECTION');await settle();}
+      const pt=await exactPoint(page,id,kinds);assert.ok(pt,'an exposed point');
+      await page.touchscreen.tap(pt.x,pt.y);await page.waitForTimeout(80);await settle();
+      assert.deepEqual(await state(),{name:expect,component:id});
+    });
+  }
+  await toOverview();await dispatch({type:'SELECT_AREA',id:'tires'});await until('TIRE_SELECTION');await settle();
+  await check(`${V} touch on a tire still selects it and the camera moves`,async()=>{
+    const pt=await exactPoint(page,'tire.front-left',['tire']);assert.ok(pt);const before=await page.evaluate(()=>window.__inspect.cameraPose().position);
+    await page.touchscreen.tap(pt.x,pt.y);await page.waitForTimeout(80);await settle();
+    assert.deepEqual(await state(),{name:'TIRE_PREVIEW',component:'tire.front-left'});
+    const after=await page.evaluate(()=>window.__inspect.cameraPose().position);assert.ok(Math.hypot(...after.map((v,i)=>v-before[i]))>0.05,'camera moved');
+  });
+  await shot('after-touch-regression');
+  await T.context.close();
+  return R;
+}
+
 let browser;
 try{
   browser=await chromium.launch({channel:process.env.CARSCOPE_BROWSER_CHANNEL??'chrome',headless:true});summary.browser=browser.version();
   for(const viewport of VIEWPORTS){console.log('labels',key(viewport));summary.viewports[key(viewport)]=await runViewport(browser,viewport);}
   summary.touch=await runTouch(browser);
+  summary.pick={};for(const viewport of VIEWPORTS){console.log('pick',key(viewport));summary.pick[key(viewport)]=await runPickRegression(browser,viewport);}
 }catch(error){summary.errors.push(error.stack??String(error));}
 finally{await browser?.close();}
 summary.status=summary.errors.length||summary.failures.length?'FAIL':'PASS';

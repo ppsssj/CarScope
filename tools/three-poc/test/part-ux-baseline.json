@@ -2596,7 +2596,7 @@
      ],
      "touch": {
       "pick": [
-       98,
+       90,
        40
       ],
       "label": null,
@@ -2614,8 +2614,8 @@
      ],
      "touch": {
       "pick": [
-       40,
-       8
+       8,
+       2
       ],
       "label": null,
       "labelId": null
@@ -2625,7 +2625,7 @@
     "light-low-beam-right-0": {
      "clickable": true,
      "selected": false,
-     "state": "COMPONENT_SELECTION",
+     "state": "INSPECTION_OVERVIEW",
      "touchPx": [
       3,
       2
@@ -5031,7 +5031,7 @@
      "touch": {
       "pick": [
        132,
-       120
+       112
       ],
       "label": [
        114,
@@ -5093,7 +5093,7 @@
      ],
      "touch": {
       "pick": [
-       128,
+       112,
        152
       ],
       "label": [
@@ -5270,8 +5270,8 @@
      ],
      "touch": {
       "pick": [
-       82,
-       42
+       72,
+       38
       ],
       "label": [
        85,
@@ -5311,8 +5311,8 @@
      ],
      "touch": {
       "pick": [
-       34,
-       8
+       8,
+       2
       ],
       "label": null,
       "labelId": null
@@ -5322,7 +5322,7 @@
     "light-low-beam-right-0": {
      "clickable": true,
      "selected": false,
-     "state": "COMPONENT_SELECTION",
+     "state": "INSPECTION_OVERVIEW",
      "touchPx": [
       2,
       1
@@ -7725,7 +7725,7 @@
      "touch": {
       "pick": [
        106,
-       96
+       86
       ],
       "label": [
        114,
@@ -7810,7 +7810,7 @@
      ],
      "touch": {
       "pick": [
-       90,
+       84,
        50
       ],
       "label": null,
@@ -7951,8 +7951,8 @@
     },
     "wiper.front.left": {
      "clickable": true,
-     "selected": true,
-     "state": "VISIBILITY_PREVIEW",
+     "selected": false,
+     "state": "INSPECTION_OVERVIEW",
      "touchPx": [
       11,
       5
@@ -7960,7 +7960,7 @@
      "touch": {
       "pick": [
        62,
-       32
+       28
       ],
       "label": [
        85,
@@ -7982,7 +7982,7 @@
      ],
      "touch": {
       "pick": [
-       54,
+       42,
        32
       ],
       "label": null,
@@ -8000,7 +8000,7 @@
      ],
      "touch": {
       "pick": [
-       14,
+       4,
        2
       ],
       "label": null,
@@ -8011,7 +8011,7 @@
     "light-low-beam-right-0": {
      "clickable": true,
      "selected": false,
-     "state": "COMPONENT_SELECTION",
+     "state": "INSPECTION_OVERVIEW",
      "touchPx": [
       2,
       1
@@ -10409,7 +10409,7 @@
      "touch": {
       "pick": [
        72,
-       68
+       64
       ],
       "label": [
        114,
@@ -10494,7 +10494,7 @@
      ],
      "touch": {
       "pick": [
-       80,
+       64,
        34
       ],
       "label": null,
@@ -10644,7 +10644,7 @@
      "touch": {
       "pick": [
        40,
-       26
+       20
       ],
       "label": null,
       "labelId": null
@@ -10661,8 +10661,8 @@
      ],
      "touch": {
       "pick": [
-       34,
-       22
+       22,
+       16
       ],
       "label": null,
       "labelId": null
@@ -10679,7 +10679,7 @@
      ],
      "touch": {
       "pick": [
-       22,
+       8,
        2
       ],
       "label": null,
@@ -10708,7 +10708,7 @@
     "light-high-beam-left-0": {
      "clickable": true,
      "selected": false,
-     "state": "COMPONENT_SELECTION",
+     "state": "INSPECTION_OVERVIEW",
      "touchPx": [
       1,
       1

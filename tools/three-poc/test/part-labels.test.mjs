@@ -8,7 +8,7 @@ import {STATES as S,EVENTS as E,initialState,transition} from '../inspection-flo
 import {
   LABELED_PARTS,LABEL_MIN_PX,LABEL_LIMIT,TOUCH_SLOP_PX,OVERVIEW_AREAS,LOCKED_RECEIVER_PHASES,SELECTION_COLOR,HINT_COLOR,
   SELECTION_RESULT_SHARE,SELECTION_INTENSITY,accentLuminance,areaEvent,hintTargets,labelPlan,layoutLabels,luminance,
-  receiverLocked,selectionIntensity,touchProbes,
+  receiverLocked,selectionIntensity,touchProbes,chooseTouch,usesTouchSlop,isAreaWide,
 } from '../part-labels.mjs';
 
 const read=f=>readFileSync(new URL(f,import.meta.url),'utf8');
@@ -195,7 +195,8 @@ test('the page has one label system and no washer-only label left',()=>{
   assert.doesNotMatch(page,/capLabel|capButton|washerHint/);
   assert.match(html,/id="partLabels"/);
   assert.match(page,/labelPlan\(state/);
-  assert.match(page,/pickTarget\(e\.clientX, e\.clientY, \{ slop: true \}\)/,'a real touch uses the slop');
+  assert.match(page,/const slop = usesTouchSlop\(e\.pointerType\), ev = pickTarget\(e\.clientX, e\.clientY, \{ slop \}\)/,'only a finger uses the slop');
+  assert.match(page,/return chooseTouch\(null, found\)/,'the page decides with the tested rule');
 });
 
 test('the list border is neutral; cyan only marks the selected row',()=>{
@@ -222,4 +223,31 @@ test('a label never covers another selectable part, so it cannot take that part\
   const near={id:'near',box:{x:250,y:180,w:100,h:100}};
   const [x]=layoutLabels([item('a',300,300,{box:{x:280,y:290,w:40,h:20}})],{width:W,height:H,targets:[near,{id:'a',box:{x:280,y:290,w:40,h:20}}]});
   assert.equal(x.shown,true);assert.ok(!overlap(x.rect,near.box),'placed off the neighbour');assert.equal(x.coversPart,false);
+});
+
+// ---- touch decision (PR #117 review) ---------------------------------------------------------------------------------
+const hood={type:E.SELECT_AREA,id:'hood'},lightArea=id=>({type:E.SELECT_AREA,id:'lights',partId:id}),tire={type:E.SELECT_TIRE,id:'tire.front-left'};
+test('slop is for fingers only: mouse and pen keep the exact point',()=>{
+  assert.equal(usesTouchSlop('touch'),true);
+  for(const t of ['mouse','pen','',undefined])assert.equal(usesTouchSlop(t),false,String(t));
+});
+test('a selectable exact point always wins over anything the slop could reach',()=>{
+  assert.deepEqual(chooseTouch(tire,[{r:5,event:lightArea('light-low-beam-left-0')}]),{event:tire,reason:'EXACT'});
+  assert.deepEqual(chooseTouch(hood,[]),{event:hood,reason:'EXACT'},'a tap on the hood itself still opens it');
+});
+test('the four lamp taps that opened the hood: slop never reaches an area-wide surface',()=>{
+  // P10 review: a tap beside a lamp marker hit nothing exactly; the old slop took the hood within 16px.
+  assert.equal(isAreaWide(hood),true);assert.equal(isAreaWide(lightArea('light-low-beam-right-0')),false);
+  assert.deepEqual(chooseTouch(null,[{r:5.3,event:hood},{r:16,event:hood}]),{event:null,reason:'AREA_ONLY'});
+  // A lamp with the hood also in reach: unclear, so neither (the lamp's label or list stays the way to choose it).
+  assert.deepEqual(chooseTouch(null,[{r:16,event:hood},{r:10.7,event:lightArea('light-low-beam-right-0')}]),{event:null,reason:'AMBIGUOUS'});
+  // The 420x860 case: a tap aimed at a lamp with a tire and the hood in reach selects no tire.
+  assert.deepEqual(chooseTouch(null,[{r:5.3,event:tire},{r:16,event:hood}]),{event:null,reason:'AMBIGUOUS'});
+  assert.deepEqual(chooseTouch(null,[{r:10.7,event:lightArea('light-low-beam-right-0')}]),{event:lightArea('light-low-beam-right-0'),reason:'SLOP'},'a lamp alone in reach is selected');
+});
+test('two different parts within reach: nothing is chosen, the label or list decides',()=>{
+  const l={type:E.SELECT_VISIBILITY_PART,id:'wiper.front.left'},r={type:E.SELECT_VISIBILITY_PART,id:'wiper.front.right'};
+  assert.deepEqual(chooseTouch(null,[{r:5.3,event:l},{r:16,event:r}]),{event:null,reason:'AMBIGUOUS'});
+  assert.deepEqual(chooseTouch(null,[{r:16,event:l},{r:5.3,event:l}]),{event:l,reason:'SLOP'},'one part, nearest probe');
+  assert.deepEqual(chooseTouch(null,[]),{event:null,reason:'NONE'});
 });
