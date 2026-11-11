@@ -40,18 +40,18 @@ try{
     await page.locator('.history-filters summary').click();
     await page.evaluate(()=>{fixtureTest.demoControl.calls.length=0;});
     await page.locator('select[name=taskId]').focus();await page.locator('select[name=taskId]').selectOption('brake-fluid');
-    await page.waitForFunction(()=>{const c=[...document.querySelectorAll('.history-card')];return c.length&&c.every(x=>x.textContent.includes('taskId brake-fluid'));});
+    await page.waitForFunction(()=>{const c=[...document.querySelectorAll('.history-card')];return c.length&&c.every(x=>x.dataset.task==='brake-fluid'&&x.textContent.includes('브레이크액'));});
     assert.equal(await page.locator('select[name=taskId]').evaluate(e=>document.activeElement===e),true,'filter focus survives results refresh');
     assert.equal(await page.evaluate(()=>fixtureTest.demoControl.calls.at(-1).query.cursor),undefined);
     await page.locator('input[name=fromDate]').fill('2026-11-02');await page.locator('input[name=toDate]').fill('2026-11-01');await page.locator('input[name=toDate]').dispatchEvent('change');
     await status(page,'INVALID_QUERY');assert.equal(await page.locator('.history-card').count(),0);
     await page.locator('#historyResults [data-action=history-reset-filters]').click();await page.waitForFunction(()=>document.querySelectorAll('.history-card').length===20);
     // detail
-    const washer=page.locator('.history-card',{hasText:'taskId washer-fluid'}).first();await washer.click();await page.locator('.source-zone[data-source-zone=HISTORY]').waitFor();
-    assert.match(await page.locator('#panel').textContent(),/질문별 응답이 없습니다/);assert.equal(await noOverflow(page),true);
+    const washer=page.locator('.history-card[data-task="washer-fluid"]').first();await washer.click();await page.locator('.source-zone[data-source-zone=HISTORY]').waitFor();
+    assert.match(await page.locator('#panel').textContent(),/질문별 응답 없이 하나의 선택으로 저장됩니다/);assert.equal(await noOverflow(page),true);
     await page.screenshot({path:path.join(out,`dom-detail-v1-${viewport.width}.png`),fullPage:true});
     await page.locator('#panel [data-action=back]').click();await page.locator('.history-card').first().waitFor();
-    const tire=page.locator('.history-card',{hasText:'taskId tire.front-left'}).first();await tire.click();await page.locator('.history-original').waitFor();
+    const tire=page.locator('.history-card[data-task="tire.front-left"]').first();await tire.click();await page.locator('.history-original').waitFor();
     assert.match(await page.locator('#panel').textContent(),/외관 손상/);await page.locator('.history-original summary').click();assert.equal(await noOverflow(page),true);
     await page.screenshot({path:path.join(out,`dom-detail-v2-${viewport.width}.png`),fullPage:true});
     await page.locator('#panel [data-action=back]').click();await page.locator('.history-card').first().waitFor();
@@ -105,6 +105,38 @@ try{
       // Android Back path: the shell's one step via the same dispatch; Escape uses it too.
       await page.keyboard.press('Escape');await settled(page,'HISTORY_LIST');assert.equal(await page.evaluate(()=>document.activeElement.dataset.record),record,'Back returns focus to the opened record');
       assert.equal(await page.evaluate(()=>__inspect.history().detail.record),null);
+      // History follow-up: this session's result opened from History goes back to the same History screen, by every Back.
+      const INTERNAL=/USER_REPORTED|taskId|partId|recordId|inspectionId|digest|NEEDS_REFILL|REVIEW_NEEDED|NO_FINDINGS_REPORTED|\bUNSURE\b|\bUNABLE\b|\bSELF\b|\bMOBILE\b/;
+      const hist=()=>page.evaluate(()=>{const h=__inspect.history();return {filters:JSON.stringify(h.filters),items:h.list.items.map(r=>r.recordId).join(),status:h.list.status,detail:h.detail.recordId??null,state:__inspect.state.name,size:JSON.stringify(__inspect.state).length};});
+      assert.doesNotMatch(await page.locator('#panel').innerText(),INTERNAL,'list in plain words');
+      const listBefore=await hist();
+      await page.locator('#panel').evaluate(p=>{p.scrollTop=Math.min(120,p.scrollHeight-p.clientHeight);});const listScroll=await page.locator('#panel').evaluate(p=>p.scrollTop);
+      for(const [i,how] of ['panel','top bar','Escape'].entries()){
+        await page.locator('#historyResults [data-action=history-session-part]').click();await settled(page,'PART_RESULT');
+        assert.equal(await page.evaluate(()=>__inspect.state.component),'tire.front-left');
+        assert.equal(await page.locator('#panel [data-source-zone=SESSION] .inspection-state').getAttribute('data-inspection-state'),'FINDINGS_REPORTED','this session\'s result, not a stored record');
+        if(i===0)await page.locator('#panel .actions [data-action=back]').click();else if(i===1)await page.locator('#back').click();else await page.keyboard.press('Escape');
+        await settled(page,'HISTORY_LIST');
+        assert.deepEqual(await hist(),listBefore,`${how}: same filters and records, no reload, no growth`);
+        assert.equal(await page.locator('#panel').evaluate(p=>p.scrollTop),listScroll,`${how}: reading position kept`);
+        assert.equal(await page.evaluate(()=>document.activeElement.dataset.action),'history-session-part',`${how}: focus back on the control`);
+      }
+      const openFilters=()=>page.locator('.history-filters').evaluate(d=>{d.open=true;});
+      // All parts with a second page, then a record's detail → this session's hood-part result → Back → Back.
+      await openFilters();await page.locator('select[name=taskId]').selectOption('');await page.waitForFunction(()=>__inspect.history().list.status==='SUCCESS'&&__inspect.history().filters.taskId===null);
+      if(await page.locator('[data-action=history-more]').count()){const n=await page.locator('.history-card').count();await page.locator('[data-action=history-more]').click();await page.waitForFunction(n=>document.querySelectorAll('.history-card').length>n,n);}
+      const paged=await hist();assert.ok(paged.items.split(',').length>20,'two pages loaded');
+      const card=page.locator('.history-card[data-task="brake-fluid"]').first();await card.scrollIntoViewIfNeeded();const pagedScroll=await page.locator('#panel').evaluate(p=>p.scrollTop);
+      await card.click();await settled(page,'HISTORY_DETAIL');await page.locator('.history-original').waitFor();
+      const detailBefore=await hist();assert.doesNotMatch(await page.locator('#panel').innerText(),INTERNAL,'detail in plain words');
+      await page.locator('#historyResults [data-action=history-session-part]').click();await settled(page,'PART_RESULT');
+      assert.equal(await page.evaluate(()=>__inspect.state.component),'brake-fluid-reservoir');assert.equal(await page.evaluate(()=>__inspect.hoodAngle),60);
+      await page.keyboard.press('Escape');await settled(page,'HISTORY_DETAIL');
+      assert.deepEqual(await hist(),detailBefore,'same record, still loaded, no reload');assert.equal(await page.evaluate(()=>__inspect.hoodAngle),0,'the hood closed for History');
+      await page.locator('#panel .actions [data-action=back]').click();await settled(page,'HISTORY_LIST');
+      const after=await hist();assert.equal(after.items,paged.items,'both pages kept');assert.equal(after.filters,paged.filters);
+      assert.equal(await page.locator('#panel').evaluate(p=>p.scrollTop),pagedScroll,'list position kept');
+      await openFilters();await page.locator('select[name=taskId]').selectOption('tire.front-left');await page.locator('.history-card').first().waitFor();
       // Paused or hidden screen drops records and reads fresh on return.
       await page.evaluate(()=>dispatchEvent(new Event('carscope-tire-inactive')));assert.equal(await page.evaluate(()=>__inspect.history().list.items.length),0);assert.equal(await page.locator('.history-card').count(),0);
       await page.evaluate(()=>dispatchEvent(new Event('carscope-tire-active')));await page.locator('.history-card').first().waitFor();
@@ -117,7 +149,7 @@ try{
       await page.locator('[data-action=exit]').click();if(await page.locator('#exitConfirm:not([hidden])').count())await page.locator('#exitConfirm [data-action=exit-confirm]').click();await settled(page,'IDLE');assert.equal(await page.evaluate(()=>__inspect.history().list.status),'IDLE');
       await page.locator('#start').click();await settled(page,'INSPECTION_OVERVIEW');await page.locator('#panel [data-action=open-history]').click();await page.locator('.history-card').first().waitFor();
       await page.evaluate(()=>dispatchEvent(new Event('pagehide')));assert.equal(await page.evaluate(()=>__inspect.history().provider),'DISPOSED');assert.equal(await page.evaluate(()=>__inspect.history().list.items.length),0);
-      summary.checks.push(`PASS ${viewport.width} real GLB: zones, camera kept, session/SDK unchanged, Back/focus, pause, leave, regressions, dispose`);await context.close();
+      summary.checks.push(`PASS ${viewport.width} real GLB: zones, camera kept, session/SDK unchanged, Back/focus, History→this session result→Back by panel/top bar/Escape (filters, pages, scroll, record kept, no growth), plain words, pause, leave, regressions, dispose`);await context.close();
     }
   }
   assert.deepEqual(summary.errors,[]);summary.status='PASS';

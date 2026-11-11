@@ -76,6 +76,18 @@ function goBack(state) {
   return target;
 }
 
+// P10 History follow-up: a current-session result opened from History goes back to that History screen (list or
+// detail). The History point keeps only its own entry chain (never a result), so moving between History and results
+// cannot nest. While such a result is open, or the hood closes on the way back, History is still "held": its filters,
+// loaded pages and open record stay, and nothing is fetched again.
+function historyPoint(state) {
+  const { back, resume, ...screen } = state;
+  return { ...screen, afterClose: null, ...(back ? { back: returnPoint(back) } : {}) };
+}
+export const historyHeld = (state) => isHistoryState(state)
+  || (state.name === S.PART_RESULT && !!state.back && isHistoryState(state.back))
+  || (state.name === S.HOOD_CLOSING && !!state.resume && isHistoryState(state.resume));
+
 // Past records are a read-only overlay: area/component (and so hood and camera) stay as they were,
 // and leaving restores the exact screen. Nothing here touches the session or its selections.
 function historyTransition(state, event) {
@@ -90,7 +102,7 @@ function historyTransition(state, event) {
       return { ...base, name: state.historyReturn, ...(state.back ? { back: state.back } : {}) };
     case E.OPEN_RESULT: {
       const target = targetForPart(event.id);
-      return target ? { name: S.PART_RESULT, component: target.partId, area: target.area, afterClose: null } : state;
+      return target ? { name: S.PART_RESULT, component: target.partId, area: target.area, afterClose: null, back: historyPoint(state) } : state;
     }
     case E.SHOW_SUMMARY:
       return hoodOpen ? closeHood(S.INSPECTION_SUMMARY) : { name: S.INSPECTION_SUMMARY, area: null, component: null, afterClose: null };
@@ -118,6 +130,8 @@ export function transition(state, event, ctx = {}) {
   const selectTire = () => TIRES.some(t => t.id === event.id) && state.component !== event.id
     ? to(S.TIRE_PREVIEW, { area: 'tires', component: event.id }) : state;
   if (isHistoryState(state)) return historyTransition(state, event);
+  // A result opened from History has History right behind it: opening History again returns there instead of nesting.
+  if (type === E.OPEN_HISTORY && state.name === S.PART_RESULT && historyHeld(state)) return goBack(state);
   // History keeps the screen's `back`, so returning from History still knows where that screen came from.
   if (type === E.OPEN_HISTORY) return [S.INSPECTION_OVERVIEW, S.INSPECTION_SUMMARY, S.PART_RESULT].includes(state.name)
     ? { ...to(S.HISTORY_LIST, { historyReturn: state.name, recordId: null }), ...(state.back ? { back: state.back } : {}) } : state;

@@ -55,7 +55,10 @@ test('leaving History closes an opened hood first and keeps no History fields', 
   assert.deepEqual(transition(overviewList,ev(E.EXIT)),initialState());
   assert.deepEqual(transition(overviewList,ev(E.SHOW_SUMMARY)),{name:S.INSPECTION_SUMMARY,area:null,component:null,afterClose:null});
   const toResult=transition(overviewList,ev(E.OPEN_RESULT,{id:'brake-fluid-reservoir'}));
-  assert.deepEqual(toResult,{name:S.PART_RESULT,component:'brake-fluid-reservoir',area:'hood',afterClose:null});
+  // History follow-up: a result opened from History remembers that History screen (and only its entry chain).
+  const {back,...result}=toResult;
+  assert.deepEqual(result,{name:S.PART_RESULT,component:'brake-fluid-reservoir',area:'hood',afterClose:null});
+  assert.deepEqual(back,{...overviewList,afterClose:null});assert.equal(transition(toResult,ev(E.BACK)).name,S.HOOD_CLOSING,'the hood closes before History');
   assert.equal(transition(overviewList,ev(E.OPEN_RESULT,{id:'nope'})),overviewList);
 });
 
@@ -101,10 +104,11 @@ test('unavailable, unauthorized, error and empty screens are visibly different a
 test('list cards carry the required fields; every part renders; no status becomes "normal" or "safe"', async()=>{
   const items=rows.slice(0,20),s=await openStore(listReply(items,true)),html=historyListResultsHtml(s.snapshot);
   for(const r of items){
-    assert.ok(html.includes(`data-record="${r.recordId}"`));assert.ok(html.includes(`taskId ${r.taskId}`));
+    // History follow-up: the card names the part in words; the task id stays on the card as data, not as text.
+    assert.ok(html.includes(`data-record="${r.recordId}"`));assert.ok(html.includes(`data-task="${r.taskId}"`));assert.ok(!html.includes(`taskId ${r.taskId}`));
     assert.ok(html.includes(`datetime="${new Date(r.completedAt).toISOString()}"`));
   }
-  assert.ok(html.includes('USER_REPORTED'));assert.ok(html.includes('data-action="history-more"'));assert.ok(html.includes('전체 개수는 제공되지 않습니다'));
+  assert.ok(html.includes('data-source="USER_REPORTED"'));assert.ok(html.includes('스마트폰으로 사용자가 직접 보고'));assert.ok(html.includes('data-action="history-more"'));assert.ok(html.includes('전체 개수는 제공되지 않습니다'));
   assert.ok(html.includes('불러온 기록 20건'));assert.ok(!/전체 \d+건|총 \d+건/.test(html));
   const all=await openStore(listReply(rows.slice(0,17)));
   const allHtml=historyListResultsHtml(all.snapshot);for(const t of MOBILE_TARGETS)assert.ok(allHtml.includes(t.label),t.label);
@@ -134,7 +138,8 @@ test('detail v2 shows task-labelled answers, separate times and provenance, with
 test('schema v1 washer detail shows the user choice and treats missing answers as expected', async()=>{
   const r=rows.find(x=>x.schemaVersion===1),s=await openStore(listReply([r]),{status:200,body:{schemaVersion:1,record:dto(r,true)}});await s.openDetail(r.recordId);
   const html=historyDetailResultsHtml(s.snapshot);
-  assert.ok(html.includes('질문별 응답이 없습니다'));assert.ok(html.includes('오류가 아닙니다'));assert.ok(html.includes(r.inspectionStatus));
+  assert.ok(html.includes('질문별 응답 없이 하나의 선택으로 저장됩니다'));assert.ok(html.includes('오류가 아닙니다'));assert.ok(html.includes(r.inspectionStatus),'the raw status stays in the original-record details');
+  assert.ok(html.includes(`사용자 선택: ${HISTORY_STATUS_LABELS[r.inspectionStatus]}</p>`),'the choice in words, without its code beside it');
   assert.ok(!html.includes('data-history-status'),'not an error state');
 });
 
