@@ -72,8 +72,8 @@ test('partial summary includes all vehicle positions and unresolved observations
   const summary = summaryHtml(s), guide = guideHtml(s, first);
   assert.ok(summary.includes('0/4')); assert.ok(summary.includes('차량 전방'));
   for (const id of ids) assert.ok(summary.includes(id));
-  assert.ok(summary.includes('불균일한 마모의 육안상 징후')); assert.ok(summary.includes('진행 중'));
+  assert.ok(summary.includes('불균일한 마모의 육안상 징후')); assert.ok(summary.includes('응답 중'));
   assert.equal((guide.match(/type="radio"/g) ?? []).length, 9);
-  assert.ok(guide.includes('disabled')); assert.ok(guide.includes('USER_REPORTED'));
+  assert.ok(guide.includes('disabled')); assert.ok(guide.includes('data-source="USER_REPORTED"')); assert.ok(guide.includes('직접 점검하기'));
   assert.ok(!/localStorage|PSI|kPa|SUPPORTED/.test(summary + guide));
 });

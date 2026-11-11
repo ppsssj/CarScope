@@ -49,9 +49,11 @@ test('rapid tire/hood/summary switching never changes user responses or invents 
     assert.equal(state.name, S.INSPECTION_SUMMARY);
   }
   assert.equal(record, before);
+  // P10 PR #2: the summary counts the 17 result parts; the tire, washer and SDK side sections are gone.
   const html = productSummaryHtml(record);
-  assert.ok(html.includes('1/4')); assert.ok(html.includes('USER_REPORTED')); assert.ok(html.includes('NOT_RECORDED'));
-  assert.ok(html.includes('QR 표시는 점검 완료가 아닙니다')); assert.ok(html.includes('정상·안전·주행 가능 판정이 아닙니다'));
+  assert.ok(html.includes('점검 완료 1/17')); assert.ok(html.includes('data-action="result-detail" data-id="tire.front-left"'));
+  assert.ok(html.includes('QR을 띄운 것은 완료가 아닙니다')); assert.ok(html.includes('정상·안전·주행 가능 판정이 아닙니다'));
+  assert.ok(!/네 타이어 · 로컬 직접 입력 기록|워셔액 · 안내와 스마트폰 점검|실제 SDK 관측과 별개/.test(html));
   assert.equal(record.tires['tire.front-left'].completedAt, 100);
   assert.ok(!/localStorage|sessionStorage|PSI|kPa|source="PLEOS"/.test(html));
 });
@@ -61,7 +63,7 @@ test('each active screen has one explicit end action, with summary entry except 
     const html = sessionActions({ name });
     if (name === S.IDLE) { assert.equal(html, ''); continue; }
     assert.equal((html.match(/data-action="exit"/g) ?? []).length, 1);
-    assert.ok(html.includes('기록 지우기'));
+    assert.ok(html.includes('>점검 종료</button>')); assert.ok(html.includes('저장된 과거 점검 기록은 그대로 남습니다'));
     assert.equal(html.includes('data-action="product-summary"'), ![S.INSPECTION_SUMMARY, S.HOOD_CLOSING].includes(name));
   }
 });

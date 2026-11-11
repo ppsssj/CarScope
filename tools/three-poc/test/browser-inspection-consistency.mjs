@@ -8,6 +8,7 @@ import http from 'node:http';
 import path from 'node:path';
 import assert from 'node:assert/strict';
 import { wireResult } from './result-fixtures.mjs';
+import { MOBILE_REQUEST_TEXT as TEXT } from '../inspection-toast.mjs';
 
 const require = createRequire(new URL('../../mobile-ar-poc/package.json', import.meta.url)), { chromium } = require('playwright');
 const out = process.env.CARSCOPE_EVIDENCE_DIR, url = process.env.CARSCOPE_3D_TEST_URL;
@@ -15,7 +16,6 @@ if (!out || !path.isAbsolute(out) || !path.resolve(out).toLowerCase().startsWith
 await mkdir(out, { recursive: true });
 
 const summary = { scope: url ? 'DOM_AND_REAL_REFERENCE_GLB_PAGE_SCRIPTED_ADAPTER' : 'DOM_ONLY_SCRIPTED_ADAPTER_NO_3D', avd: 'AVD_NOT_RUN', native: 'NOT_RUN', checks: [], failures: [], errors: [] };
-const TEXT = { SENDING: 'Native 점검 요청 전달 중입니다', ACCEPTED: '모바일 점검을 준비합니다 · QR이 표시되면 스캔하세요', REJECTED: '점검 요청을 시작할 수 없습니다', FAILED: 'Native 연결을 확인하지 못했습니다', IN_FLIGHT: '이전 요청의 Native 응답을 기다리는 중입니다 · 새 요청을 보내지 않았습니다' };
 const FRONT_LEFT = 'tire.front-left', FRONT_RIGHT = 'tire.front-right';
 const REAL = 'createNativeInspectionResults({adapter:createAndroidNativeInspectionAdapter()})';
 
@@ -29,12 +29,12 @@ let browser;
 // ---- DOM section: the real view module and controller in real Chrome, no 3D ------------------------------------------
 const fixtureHtml = `<!doctype html><html lang="ko"><meta charset="utf-8"><div id="panel" style="height:300px;overflow:auto"><div style="height:400px"></div>
   <button type="button" class="item" data-action="tire" data-id="${FRONT_LEFT}">앞 왼쪽<span class="inspection-state" data-inspection-state="NOT_INSPECTED">old</span></button>
-  <div id="mobilePartResults"></div><div id="allResults"></div><div style="height:800px"></div></div><div id="toast"></div>
+  <div id="mobilePartResults"></div><div id="mobilePartAction"></div><div id="allResults"></div><div style="height:800px"></div></div><div id="toast"></div>
   <script type="module">
-  import {createTireInspection,updateTireInspection} from '/tire-inspection.mjs';import {createNativeInspectionResults} from '/native-inspection-results.mjs';import {refreshResultRegions,partResultHtml,resultSummaryHtml} from '/inspection-results-view.mjs';import {fixtureAdapter,publish} from '/test/native-results-browser-fixture.mjs';
+  import {createTireInspection,updateTireInspection} from '/tire-inspection.mjs';import {createNativeInspectionResults} from '/native-inspection-results.mjs';import {refreshResultRegions,partResultHtml,partActionHtml,resultSummaryHtml} from '/inspection-results-view.mjs';import {fixtureAdapter,publish} from '/test/native-results-browser-fixture.mjs';
   const store=createNativeInspectionResults({adapter:fixtureAdapter});let local=createTireInspection('fixture-local');store.startSession(local.sessionId);
   const panel=document.getElementById('panel'),refresh=()=>refreshResultRegions(panel,{local,mobile:store.snapshot,partId:'${FRONT_LEFT}'});
-  document.getElementById('mobilePartResults').innerHTML=partResultHtml(local,store.snapshot,'${FRONT_LEFT}');document.getElementById('allResults').innerHTML=resultSummaryHtml(local,store.snapshot);
+  document.getElementById('mobilePartResults').innerHTML=partResultHtml(local,store.snapshot,'${FRONT_LEFT}');document.getElementById('mobilePartAction').innerHTML=partActionHtml(local,store.snapshot,'${FRONT_LEFT}');document.getElementById('allResults').innerHTML=resultSummaryHtml(local,store.snapshot);
   window.fixtureTest={refresh,publish,store,confirm(){for(const checkId of ['damage','debris','wear'])local=updateTireInspection(local,{type:'ANSWER',tireId:'${FRONT_LEFT}',sessionId:local.sessionId,checkId,answer:'FOUND'});local=updateTireInspection(local,{type:'CONFIRM',tireId:'${FRONT_LEFT}',sessionId:local.sessionId,at:1000});refresh();}};</script></html>`;
 const server = http.createServer(async (req, res) => {
   try {
@@ -62,7 +62,7 @@ async function domSection() {
         summary: document.querySelector('#allResults [role=status]').textContent, scroll: panel.scrollTop, focused: document.activeElement.dataset.action, same: before === document.querySelector('#allResults') };
     });
     assert.equal(seen.card, 'FINDINGS_REPORTED'); assert.equal(seen.list, 'FINDINGS_REPORTED');
-    assert.match(seen.summary, /선택된 확정 기록 1\/17 · 미점검 16 · 이상 징후 1/);
+    assert.match(seen.summary, /점검 완료 1\/17 · 미점검 16 · 이상 징후 보고 1/);
     assert.equal(seen.scroll, 500, 'scroll kept'); assert.equal(seen.focused, 'request-mobile', 'focus returns to the same control'); assert.equal(seen.same, true, 'region element kept');
   });
   await scenario('DOM: unchanged content is not rewritten, and an open disclosure survives a real change', async () => {
@@ -136,8 +136,8 @@ const confirmAndRead = (page, id = FRONT_LEFT) => page.evaluate(id => {
   const panel = document.getElementById('panel'), read = () => {
     const row = __inspect.resultMap().find(r => r.partId === id), paint = __inspect.resultPaint().find(p => p.partId === id);
     return { model: row.status, color: row.color, paint: paint.colors, card: panel.querySelector('#mobilePartResults [data-inspection-state]')?.dataset.inspectionState, cardTime: panel.querySelector('#mobilePartResults time')?.dateTime ?? null,
-      local: panel.querySelector('.inspection-record [data-inspection-state]')?.dataset.inspectionState, list: panel.querySelector(`button.item[data-id="${id}"] [data-inspection-state]`)?.dataset.inspectionState,
-      source: panel.querySelector('#mobilePartResults dd')?.textContent };
+      local: __inspect.inspectionMap().find(r => r.partId === id)?.status, list: panel.querySelector(`button.item[data-id="${id}"] [data-inspection-state]`)?.dataset.inspectionState,
+      source: panel.querySelector('#mobilePartResults .result-meta')?.textContent };
   };
   const scrollBefore = panel.scrollTop, cameraBefore = JSON.stringify(__inspect.cameraPose()), stateBefore = __inspect.state, marker = panel.querySelector('h2');
   const before = read();
@@ -158,10 +158,10 @@ async function realPageSection() {
       assert.equal(seen.after.local, 'FINDINGS_REPORTED'); assert.equal(seen.after.list, 'FINDINGS_REPORTED');
       assert.ok(seen.after.paint.every(color => color === seen.after.color), '3D paint uses the same row');
       assert.equal(seen.after.cardTime, new Date(seen.completedAt).toISOString(), 'card shows the record time');
-      assert.match(seen.after.source, /USER_REPORTED/);
+      assert.match(seen.after.source, /이 화면에서 직접 입력/);
     });
     await scenario('A2 confirm keeps camera, selection, panel element, scroll and focus', async () => {
-      await page.locator('[data-action=next-tire]').click(); await settled(page, 'TIRE_PREVIEW');
+      await page.locator(`[data-action=tire][data-id="${FRONT_RIGHT}"]`).first().click(); await settled(page, 'TIRE_PREVIEW');
       await answer(page, 'NOT_FOUND');
       await page.locator('#panel').evaluate(panel => { panel.scrollTop = Math.min(180, panel.scrollHeight - panel.clientHeight); });
       await page.waitForFunction(() => !__inspect.busy);
@@ -186,7 +186,7 @@ async function realPageSection() {
     await scenario('A4 summary agrees with the card after leaving the screen', async () => {
       await page.locator('[data-action=product-summary]').click(); await settled(page, 'INSPECTION_SUMMARY');
       const text = await page.locator('#allResults [role=status]').textContent();
-      assert.match(text, /선택된 확정 기록 1\/17 · 미점검 16 · 이상 징후 1/);
+      assert.match(text, /점검 완료 1\/17 · 미점검 16 · 이상 징후 보고 1/);
       assert.equal(await page.evaluate(id => document.querySelector(`#allResults [data-id="${id}"] [data-inspection-state]`).dataset.inspectionState, FRONT_LEFT), 'FINDINGS_REPORTED');
     });
     await context.close();
@@ -200,7 +200,7 @@ async function realPageSection() {
       await answer(page);
       const seen = await confirmAndRead(page);
       assert.equal(seen.after.card, 'UNABLE', 'the mobile result is still the one shown');
-      const read = id => ({ card: document.querySelector('#mobilePartResults [data-inspection-state]').dataset.inspectionState, list: document.querySelector(`button.item[data-id="${id}"] [data-inspection-state]`).dataset.inspectionState, local: document.querySelector('.inspection-record [data-inspection-state]').dataset.inspectionState, model: __inspect.resultMap().find(r => r.partId === id).status });
+      const read = id => ({ card: document.querySelector('#mobilePartResults [data-inspection-state]').dataset.inspectionState, list: document.querySelector(`button.item[data-id="${id}"] [data-inspection-state]`).dataset.inspectionState, local: __inspect.inspectionMap().find(r => r.partId === id).status, model: __inspect.resultMap().find(r => r.partId === id).status });
       assert.deepEqual(await page.evaluate(read, FRONT_LEFT), { card: 'UNABLE', list: 'UNABLE', local: 'FINDINGS_REPORTED', model: 'UNABLE' });
       await page.locator('.record-history summary').click();
       await page.locator('[data-action=select-result][data-record="LOCAL"]').click();
@@ -304,7 +304,8 @@ async function realPageSection() {
       await page.locator(`[data-action=result-detail][data-id="${FRONT_LEFT}"]`).click(); await settled(page, 'PART_RESULT');
       await fixture(page, 'f=>{window.__held=f.deferredReply();f.setRequestReply(window.__held.reply);}');
       await clickRequest(page);
-      await page.locator('[data-action=exit]').click(); await settled(page, 'IDLE');
+      // Ending asks only when this session holds answers, results or a live phone check (P10 PR #2).
+      await page.locator('[data-action=exit]').click(); if (await page.locator('#exitConfirm:not([hidden])').count()) await page.locator('#exitConfirm [data-action=exit-confirm]').click(); await settled(page, 'IDLE');
       await page.locator('#start').click(); await settled(page, 'INSPECTION_OVERVIEW');
       await page.evaluate(() => window.__held.resolve({ ok: true }));
       await page.waitForTimeout(100);

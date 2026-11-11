@@ -26,7 +26,8 @@ test('all 17 result details use the existing component camera and explicit list-
   const idle=initialState(),overview=transition(idle,{type:'START'});assert.equal(transition(idle,{type:'OPEN_RESULT',id:'washer-fluid-cap'}),idle);
   for(const t of MOBILE_TARGETS){const detail=transition(overview,{type:'OPEN_RESULT',id:t.partId});assert.equal(detail.name,'PART_RESULT');assert.equal(detail.component,t.partId);assert.equal(detail.area,t.area);
     assert.equal(cameraGoal(detail),t.partId==='lcw-coolant-reservoir'?'bay':t.partId);assert.equal(hoodTarget(detail),t.area==='hood'?60:0);
-    const back=transition(detail,{type:'BACK'});if(t.area==='hood'){assert.equal(back.name,'HOOD_CLOSING');assert.equal(transition(back,{type:'OPEN_RESULT',id:t.partId}),back);assert.equal(transition(back,{type:'HOOD_CLOSED'}).name,'INSPECTION_SUMMARY');}else assert.equal(back.name,'INSPECTION_SUMMARY');
+    // P10 PR #2 (P0-3): Back returns to the screen the result was opened from, here the overview.
+    const back=transition(detail,{type:'BACK'});if(t.area==='hood'){assert.equal(back.name,'HOOD_CLOSING');assert.equal(transition(back,{type:'OPEN_RESULT',id:t.partId}),back);assert.deepEqual(transition(back,{type:'HOOD_CLOSED'}),overview);}else assert.deepEqual(back,overview);
     const exit=transition(detail,{type:'EXIT'});assert.equal(t.area==='hood'?transition(exit,{type:'HOOD_CLOSED'}).name:exit.name,'IDLE');
   }
   assert.equal(transition(overview,{type:'OPEN_RESULT',id:'ev-charge.flap'}),overview);
@@ -81,7 +82,7 @@ test('local drafts/completions and mobile reports never overwrite or merge, incl
   c.select(t.taskId,r.inspectionId);assert.equal(projectInspectionResults(local,c.snapshot)[1].status,'NO_FINDINGS_REPORTED');
   local=updateTireInspection(local,{type:'ANSWER',sessionId:'local',tireId:t.partId,checkId:'wear',answer:'UNABLE'});assert.equal(projectInspectionResults(local,c.snapshot)[1].status,'NO_FINDINGS_REPORTED');
   c.select(t.taskId,'LOCAL');assert.equal(projectInspectionResults(local,c.snapshot)[1].status,'NOT_INSPECTED');assert.equal(local.tires[t.partId].responses.damage,'FOUND');
-  assert.match(partResultHtml(local,c.snapshot,t.partId),/로컬 응답과 모바일 응답은 별도로/);assert.match(resultSummaryHtml(local,c.snapshot),/17개 부품/);assert.match(partResultHtml(local,c.snapshot,t.partId),/2026-11-04T01:02:03.000Z/);c.dispose();
+  assert.match(partResultHtml(local,c.snapshot,t.partId),/직접 입력과 스마트폰 결과는 따로 보관되며 합쳐지지 않습니다/);assert.match(resultSummaryHtml(local,c.snapshot),/점검 완료 \d+\/17/);assert.match(partResultHtml(local,c.snapshot,t.partId),/2026-11-04T01:02:03.000Z/);c.dispose();
 });
 test('session change during asynchronous SHA-256 and terminal change during verification cannot stage a result',async()=>{
   const a=testAuthority();let releaseHash;const c=createNativeInspectionResults({adapter:a.adapter,now:()=>0,hash:()=>new Promise(resolve=>releaseHash=resolve)});c.startSession('local');

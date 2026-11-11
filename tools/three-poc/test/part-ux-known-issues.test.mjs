@@ -69,7 +69,7 @@ const fromList=()=>{
   return transition(s,{type:E.HOOD_OPENED});
 };
 
-test('P0-3: Back from a result opened in the part list returns to that list',{todo:'P0-3 open until P10-3'},()=>{
+test('P0-3: Back from a result opened in the part list returns to that list',()=>{
   const list=fromList();
   assert.equal(list.name,S.COMPONENT_SELECTION);
   const result=transition(list,{type:E.OPEN_RESULT,id:'lcw-coolant-reservoir'});
@@ -77,7 +77,7 @@ test('P0-3: Back from a result opened in the part list returns to that list',{to
   assert.equal(transition(result,{type:E.BACK}).name,S.COMPONENT_SELECTION);
 });
 
-test('P1-7: the state legend speaks for all 17 result parts',{todo:'P1-7 open until P10-4'},()=>{
+test('P1-7: the state legend speaks for all 17 result parts',()=>{
   const html=stateLegendHtml(createTireInspection('baseline'));
   assert.doesNotMatch(html,/타이어 4개/);
   assert.match(html,/17/);
@@ -87,17 +87,10 @@ test('P2-9: the 12V battery cites one manual page',{todo:'P2-9 open until P10-7'
   assert.equal(INSPECTION_LAYOUT.find(p=>p.id==='battery-12v').page,SERVICE_EVIDENCE.find(p=>p.id==='battery-12v').page);
 });
 
-// ---- Today's behavior for those three, so an accidental change is caught before the fix arrives. ---------------------
-test('baseline: Back from a hood result closes the hood and heads for the summary',()=>{
-  const back=transition(transition(fromList(),{type:E.OPEN_RESULT,id:'lcw-coolant-reservoir'}),{type:E.BACK});
-  assert.equal(back.name,S.HOOD_CLOSING);
-  assert.equal(back.afterClose,S.INSPECTION_SUMMARY);
-  assert.equal(issueById('P0-3').status,'OPEN','declare the fix in the registry and remove this test together');
-});
-
-test('baseline: the legend still counts the four tires',()=>{
-  assert.match(stateLegendHtml(createTireInspection('baseline')),/타이어 4개/);
-  assert.equal(issueById('P1-7').status,'OPEN','declare the fix in the registry and remove this test together');
+// ---- Today's behavior for the one still open, so an accidental change is caught before the fix arrives. --------------
+// P0-3 and P1-7 were declared FIXED in P10 PR #2 (docs/p10-unified-inspection-panels.md); their guards were removed with them.
+test('P0-3 and P1-7 are declared fixed together with their checks',()=>{
+  assert.equal(issueById('P0-3').status,'FIXED');assert.equal(issueById('P1-7').status,'FIXED');
 });
 
 test('baseline: the two 12V page references still differ',()=>{

@@ -14,7 +14,8 @@
     "test:toast-browser": "node test/browser-inspection-toast.mjs",
     "test:consistency-browser": "node test/browser-inspection-consistency.mjs",
     "test:part-ux-baseline": "node test/browser-part-ux-baseline.mjs",
-    "test:part-labels-browser": "node test/browser-part-labels.mjs"
+    "test:part-labels-browser": "node test/browser-part-labels.mjs",
+    "test:panels-browser": "node test/browser-inspection-panels.mjs"
   },
   "dependencies": {
     "qrcode": "1.5.4",

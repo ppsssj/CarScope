@@ -123,9 +123,9 @@ export function historyDetailResultsHtml(snapshot,sessionRow){
 export function historyPanelHtml(state,snapshot,sessionRow){
   if(state.name==='HISTORY_DETAIL')return `<div class="eyebrow">차량 점검 · 저장된 과거 기록</div><h2>점검 기록 상세</h2>
     <div id="historyResults" tabindex="-1">${historyDetailResultsHtml(snapshot,sessionRow)}</div>
-    <div class="actions"><button type="button" class="secondary" data-action="back">기록 목록으로</button></div>`;
+    <div class="actions"><button type="button" class="secondary" data-action="back">뒤로</button></div>`;
   return `<div class="eyebrow">차량 점검 · 저장된 과거 기록</div><h2>과거 점검 기록</h2>
     <p class="note">완료 시각 최신순 · 저장된 사용자 보고만 표시합니다. 현재 세션이나 SDK 관측과 합치지 않습니다.</p>
     ${historyFilterHtml(snapshot)}<div id="historyResults" tabindex="-1">${historyListResultsHtml(snapshot,sessionRow)}</div>
-    <div class="actions"><button type="button" class="secondary" data-action="back">이전 화면으로</button></div>`;
+    <div class="actions"><button type="button" class="secondary" data-action="back">뒤로</button></div>`;
 }

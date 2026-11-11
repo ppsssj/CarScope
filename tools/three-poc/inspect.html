@@ -81,12 +81,42 @@
   [data-inspection-state="FINDINGS_REPORTED"]{color:#ef9867}
   [data-inspection-state="UNABLE"]{color:#d9bd72}
   [data-inspection-state="NO_FINDINGS_REPORTED"]{color:#82b7dd}
-  .inspection-legend ul{list-style:none;padding:0!important;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:6px}
-  .inspection-legend li{display:flex;flex-wrap:wrap;align-items:center;gap:5px;font-size:12px}
-  .record-scope summary,.part-identity summary{min-height:44px;display:list-item;list-style-position:inside;padding:12px 0;cursor:pointer;color:var(--muted);font-size:12px}
-  .inspection-record{border-top:1px solid var(--line);margin-top:12px}
   .item:has(.inspection-state){flex-wrap:wrap;gap:8px}
   .note{font-size:12px;color:var(--faint)!important}
+
+  /* P10 PR #2: one layout for every screen. Same card, row, progress and notice styles; existing tokens only.
+     Cyan is still the selection role; result colors stay on the state badges. */
+  .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+  #panel h2:focus{outline:none}
+  #panel button{max-width:100%;white-space:normal;overflow-wrap:anywhere}
+  .progress-summary{margin:14px 0 4px;padding:12px 14px;background:var(--surface-2);border:1px solid var(--line);border-radius:10px}
+  #panel .progress-head{margin:0;color:var(--text)}
+  .progress-head strong{font-size:22px}.progress-head small{font-size:14px;color:var(--muted);font-weight:400}
+  .progress-summary .progress{margin:10px 0}
+  .result-counts{list-style:none;padding:0!important;margin:0!important;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:6px 10px}
+  #panel .result-counts li{display:flex;align-items:center;justify-content:space-between;gap:6px;margin:0;font-size:12px}
+  .result-counts b{font-variant-numeric:tabular-nums}
+  .item .row-name{flex:1 1 auto;min-width:0}
+  .row-go{color:var(--faint);font-size:18px;line-height:1;margin-left:4px}
+  .area-card,.result-row{flex-wrap:wrap;gap:6px 10px}
+  .area-card small,.result-row small{order:3;width:100%;color:var(--muted);font-size:12px;overflow-wrap:anywhere}
+  .area-card:disabled{opacity:1;color:var(--faint)}
+  #panel h3.result-group{display:flex;justify-content:space-between;margin-top:16px}
+  .result-group small{color:var(--faint);font-weight:400}
+  #panel .safety-note{margin:10px 0 0;padding:8px 10px;border-left:3px solid var(--warn);color:var(--text);font-size:13px}
+  #panel .model-note{font-size:13px;margin:12px 0 6px}
+  .model-note .badge{margin:0 6px 0 0}
+  .result-head{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px}
+  .result-meta{color:var(--muted);font-size:13px}
+  #panel .part-results h3,#panel .mobile-flow h3{margin-top:0}
+  .secondary.wide{width:100%;margin-top:10px}
+  .dev-info{margin-top:12px;border-top:1px solid var(--line)}
+  .dev-info>summary{min-height:44px;display:list-item;list-style-position:inside;padding:12px 0;cursor:pointer;color:var(--muted);font-size:13px}
+  #exitConfirm{position:fixed;inset:0;z-index:20;display:grid;place-items:center;padding:16px;background:#000b}
+  #exitConfirm[hidden]{display:none}
+  .dialog{width:min(420px,100%);max-height:100%;overflow:auto;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:22px}
+  .dialog h2{margin:0 0 8px;font-size:20px}.dialog p{color:var(--muted);margin:6px 0}.dialog ul{margin:6px 0;padding-left:20px}
+  .dialog-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}.dialog-actions button{flex:1 1 140px}
 
   /* P10 PartLabel: one label rule for every modeled part (part-labels.mjs). The layer itself never takes input. */
   #partLabels,#partLabelLines{position:fixed;inset:0;z-index:2;pointer-events:none}
@@ -105,7 +135,7 @@
   .part-label[data-selected="true"] .label-state{color:inherit}
   .part-label .label-note{font-weight:400;font-size:12px}
 
-  #toast{position:fixed;left:50%;top:72px;transform:translateX(-50%);background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:8px 16px;font-size:14px;color:var(--text);opacity:0;transition:opacity .25s;pointer-events:none;white-space:nowrap}
+  #toast{position:fixed;left:var(--free-center,50%);top:72px;transform:translateX(-50%);background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:8px 16px;font-size:14px;color:var(--text);opacity:0;transition:opacity .25s;pointer-events:none;white-space:nowrap}
   #toast.on{opacity:1}
   .disclaimer{position:fixed;left:22px;bottom:14px;right:22px;font-size:11px;color:var(--faint);pointer-events:none}
   #status{position:fixed;inset:0;display:grid;place-items:center;color:var(--muted);pointer-events:none}
@@ -130,13 +160,14 @@
   }
   .result-list .item{display:flex;flex-wrap:wrap;gap:8px;align-items:center;white-space:normal}
   .result-list small{display:block;width:100%;overflow-wrap:anywhere}
-  .part-results{margin-top:16px;border-top:1px solid #414751;padding-top:12px;overflow-wrap:anywhere}
+  .part-results{margin-top:12px;padding:12px 14px;background:var(--surface-2);border:1px solid var(--line);border-radius:10px;overflow-wrap:anywhere}
   .record-picker{display:grid;gap:8px;margin:12px 0;border:1px solid #414751;border-radius:10px;padding:10px}
   .record-picker button{text-align:left;white-space:normal;overflow-wrap:anywhere;min-height:44px}
   .record-picker [aria-pressed="true"]{border:2px solid #82b7dd;background:#192c3e}
-  .mobile-flow{margin:12px 0;display:grid;gap:8px}
+  .mobile-flow{margin:16px 0 0;padding-top:12px;border-top:1px solid var(--line);display:grid;gap:8px}
   .mobile-flow p{margin:0}
   .mobile-actions{display:flex;flex-wrap:wrap;gap:8px}
+  .mobile-actions>*{flex:1 1 160px}
   .mobile-qr-slot{width:min(300px,100%);aspect-ratio:1;margin:0 auto;background:#fff;border-radius:8px}
   .record-history,.debug-admin{margin-top:10px}
   .part-results pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px}
@@ -145,7 +176,8 @@
   .source-zone[data-source-zone="SESSION"]{--zone:#7fd1b9}
   .source-zone[data-source-zone="HISTORY"]{--zone:#b79cf0}
   .source-zone[data-source-zone="SDK"]{--zone:var(--warn)}
-  .source-zone .part-results{margin-top:6px;border-top:0;padding-top:0}
+  .source-zone .part-results{margin-top:6px;padding:0;border:0;background:none}
+  .source-zone.dev-info{padding-top:0}
   .zone-tag{display:inline-block;font-size:12px;font-weight:600;color:var(--zone);margin-bottom:6px}
   .zone-row{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px}
   .source-zone .secondary{width:100%;margin-top:8px}
@@ -192,6 +224,7 @@
 <svg id="partLabelLines" aria-hidden="true"></svg>
 <div id="partLabels" role="group" aria-label="3D 모델 부품 이름표"></div>
 <div id="toast" role="status"></div>
+<div id="exitConfirm" hidden><div class="dialog" role="alertdialog" aria-modal="true" aria-labelledby="exitConfirmTitle"></div></div>
 <p class="disclaimer">커뮤니티 3D 자산 기반 참조 모델입니다. 실제 OEM 형상·치수가 아니며 부품 위치와 개방 동작은 추정·시뮬레이션입니다.</p>
 <div id="dev" hidden></div>
 <script type="module" src="./inspect.js"></script>

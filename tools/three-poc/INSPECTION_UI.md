@@ -12,9 +12,9 @@ P5-A5: [UX 검토·검증](../../docs/p5-a5-state-map-mobile-integration-prepara
 
 ## 전체 경로와 종료
 
-3D 차량 홈 → 차량 점검 → 보닛/타이어 선택 → 상세 → 전체 점검 요약 → 계속 점검 또는 종료·기록 지우기 → 홈. 전체 요약은 응답 전에도 열 수 있다. 열려 있는 모델의 보닛은 먼저 닫고 요약으로 이동한다. 종료 버튼은 모든 활성 단계에 있고, 홈으로 들어가면 메모리 기록을 지운다. 뒤로 가기/타이어 전환/다른 부위 탐색/요약 왕복 중에는 같은 기록을 유지한다.
+3D 차량 홈 → 차량 점검(부위 카드 + 17개 부품 진행 현황) → 부위 → 부품 상세 → 전체 점검 요약 ↔ 부품 결과 → 점검 종료 → 홈. 전체 요약은 응답 전에도 열 수 있다. 열려 있는 모델의 보닛은 먼저 닫고 요약으로 이동한다. **P10 PR #2:** 부품 결과와 전체 요약의 뒤로 가기는 그 화면을 연 곳으로 돌아간다(보닛 목록에서 연 결과는 보닛 목록, 타이어 상세에서 연 요약은 그 타이어). 패널·상단 바·Escape·Android Back이 같은 BACK 하나를 보낸다. 종료 버튼은 모든 활성 단계에 있고, 이번 점검에 응답·받은 결과·진행 중인 스마트폰 점검이 있으면 지워지는 범위를 보여 주고 확인을 받는다(개요에서 뒤로 가기도 같다). 저장된 과거 기록은 지우지 않는다. 뒤로 가기/타이어 전환/다른 부위 탐색/요약 왕복 중에는 같은 기록을 유지한다. 설계와 검증은 [P10 통합 점검 패널](../../docs/p10-unified-inspection-panels.md).
 
-전체 요약의 타이어 결과는 USER_REPORTED이고 차량 안전·정상·주행 가능 판정이 아니다. 워셔액 안내/QR 표시는 점검 완료로 집계하지 않는다. 워셔액 모바일 결과와 Native Receiver 결과는 이 3D 화면에 수집되지 않으며 별도 관리한다. Pleos capability/availability/관측 시각은 타이어 상세에서 별도 확인한다.
+전체 요약은 17개 결과 부품의 진행 현황과 부위별 목록만 보여 준다. 결과는 사용자 보고이며 차량 안전·정상·주행 가능 판정이 아니다. 안내 열람·QR 표시는 점검 완료로 집계하지 않는다. 타이어 직접 입력은 타이어 상세·네 타이어 요약에서, 워셔액 안내는 워셔액 상세에서, Pleos SDK 관측은 각 상세의 접힌 "차량 연동 상태 · 개발자 정보"에서 확인한다. 출처 코드(`USER_REPORTED`, `MOBILE`)와 연결·식별 정보는 접힌 "개발자 정보"에 남는다.
 
 기록은 메모리 전용이다. 영구 저장·새로고침/Activity 재생성/프로세스 종료 복구는 제공하지 않는다. 홈/점검 종료/화면 닫기/새로고침 시 삭제된다. localStorage·DB를 추가하기 전에 보존 기간·사용자/차량 경계·동의·복원/삭제 정책을 별도 결정한다.
 
@@ -26,7 +26,7 @@ P5-A5: [UX 검토·검증](../../docs/p5-a5-state-map-mobile-integration-prepara
 
 ## P3-I3 타이어 셀프 점검
 
-차량 점검 → 타이어 → 네 바퀴 중 선택 → 육안 체크리스트 3개 응답 → 결과 확정 → 이전/다음 타이어 → 점검 요약. 일부 타이어만 응답한 중간 요약도 열 수 있다. 요약의 앞/뒤·좌/우는 차량 진행 방향 기준이다.
+차량 점검 → 타이어 → 네 바퀴 중 선택 → 육안 체크리스트 3개 응답 → 결과 확정 → "다른 타이어" 목록 → 네 타이어 요약. 일부 타이어만 응답한 중간 요약도 열 수 있다. 요약의 앞/뒤·좌/우는 차량 진행 방향 기준이다.
 
 `tire-inspection.mjs`는 SDK와 독립된 immutable `USER_REPORTED` 세션 모델이다. 모든 항목에 응답해도 확정 전에는 IN_PROGRESS다. 완료 후 응답을 수정하면 완료 시각을 지우고 재확정을 요구한다. 점검 종료·페이지 재로드는 기록을 지우며, 서버·DB·storage API로 저장하지 않는다. 정상·안전·주행 가능 판정이나 압력 수치를 생성하지 않는다.
 
@@ -62,7 +62,7 @@ GLB와 파생 자산은 저장소 밖에 둔다. QR origin은 코드에 넣지 �
 | `inspection-handoff.mjs` | 서버 측 어댑터. 검증은 QR-AR의 `tools/mobile-ar-poc/public/handoff.mjs`(`handoffURL`, `isLoopbackHost`)를 그대로 사용하며, 실패를 예외 대신 “비활성(configured: false)”으로 돌려준다. 브라우저 페이지는 이 모듈을 import하지 않는다 |
 | `inspect.js` | 상태를 화면에 반영: 보닛·카메라 tween, 강조, 워셔액 라벨, 패널, 클릭 판정 |
 | `inspection-toast.mjs` | `#toast`의 단일 소유자. 새 안내가 이전 안내와 타이머를 대체하고 4초 뒤 사라진다. 모바일 요청 문구는 확인된 단계만 말한다. 실제 페이지 검사는 `npm run test:toast-browser --prefix tools/three-poc` |
-| `inspection-results-view.mjs`의 `refreshResultRegions` | 결과 카드·전체 요약·목록 배지의 유일한 갱신 경로. 로컬과 모바일 변경이 같은 투영으로 이곳을 지난다. 검사는 `npm run test:consistency-browser --prefix tools/three-poc`. [P9-S2](../../docs/p9-s2-inspection-ui-consistency.md) |
+| `inspection-results-view.mjs`의 `refreshResultRegions` | 결과 카드·스마트폰 점검 영역·전체 요약·개요 진행 현황·부위 카드 결과 수·네 타이어 요약·목록 배지의 유일한 갱신 경로. 로컬과 모바일 변경이 같은 투영으로 이곳을 지난다. 검사는 `npm run test:consistency-browser --prefix tools/three-poc`. [P9-S2](../../docs/p9-s2-inspection-ui-consistency.md) |
 | `check-inspection.mjs` | headless Chrome 흐름 검사와 화면 캡처 (외부 폴더에 저장) |
 | `test/inspection-flow.test.mjs` | 상태 전이·중복 입력·취소·종료·QR 계약 단위 테스트 (CI 포함) |
 

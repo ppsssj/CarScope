@@ -58,6 +58,24 @@ const available = (list, id) => list.find((x) => x.id === id && x.status === 'av
 export const initialState = () => ({ name: S.IDLE, area: null, component: null, afterClose: null });
 export const isHistoryState = (state) => state.name === S.HISTORY_LIST || state.name === S.HISTORY_DETAIL;
 
+// P10 PR #2: the part result and the whole summary are opened from many screens, so Back returns to the screen they
+// were opened from (`back`), not to a fixed parent. Opening and closing animations are not screens: they return to the
+// overview. The chain is capped so moving between the summary and results many times cannot grow without bound.
+export const BACK_DEPTH = 4;
+const overviewScreen = () => ({ name: S.INSPECTION_OVERVIEW, area: null, component: null, afterClose: null });
+export function returnPoint(state, depth = 1) {
+  if (state.name === S.HOOD_CLOSING && state.resume) return returnPoint(state.resume, depth);
+  if ([S.IDLE, S.HOOD_OPENING, S.HOOD_CLOSING].includes(state.name) || isHistoryState(state)) return overviewScreen();
+  const { back, resume, ...screen } = state;
+  return back && depth < BACK_DEPTH ? { ...screen, back: returnPoint(back, depth + 1) } : screen;
+}
+/** Back from a screen that remembers where it was opened. The hood closes first when the target has it closed. */
+function goBack(state) {
+  const target = state.back ?? overviewScreen();
+  if (hoodTarget(state) > 0 && hoodTarget(target) === 0) return { name: S.HOOD_CLOSING, area: state.area, component: null, afterClose: target.name, resume: target };
+  return target;
+}
+
 // Past records are a read-only overlay: area/component (and so hood and camera) stay as they were,
 // and leaving restores the exact screen. Nothing here touches the session or its selections.
 function historyTransition(state, event) {
@@ -69,7 +87,7 @@ function historyTransition(state, event) {
       return state.name === S.HISTORY_LIST && isRecordId(event.recordId) ? { ...state, name: S.HISTORY_DETAIL, recordId: event.recordId } : state;
     case E.BACK:
       if (state.name === S.HISTORY_DETAIL) return { ...state, name: S.HISTORY_LIST, recordId: null };
-      return { ...base, name: state.historyReturn };
+      return { ...base, name: state.historyReturn, ...(state.back ? { back: state.back } : {}) };
     case E.OPEN_RESULT: {
       const target = targetForPart(event.id);
       return target ? { name: S.PART_RESULT, component: target.partId, area: target.area, afterClose: null } : state;
@@ -89,8 +107,9 @@ function historyTransition(state, event) {
  */
 export function transition(state, event, ctx = {}) {
   const { type } = event;
-  const to = (name, patch = {}) => ({ ...state, name, ...patch });
-  const close = (afterClose) => to(S.HOOD_CLOSING, { component: null, afterClose });
+  // `back` and `resume` belong to one screen only; every other move starts without them.
+  const to = (name, patch = {}) => { const { back, resume, ...rest } = state; return { ...rest, name, ...patch }; };
+  const close = (afterClose, resume) => to(S.HOOD_CLOSING, { component: null, afterClose, ...(resume ? { resume } : {}) });
   const select = () => {
     const c = areaOf(state).components.find(c => c.id === event.id && ['available', 'preview'].includes(c.status));
     if (!c || c.id === state.component) return state;
@@ -99,20 +118,25 @@ export function transition(state, event, ctx = {}) {
   const selectTire = () => TIRES.some(t => t.id === event.id) && state.component !== event.id
     ? to(S.TIRE_PREVIEW, { area: 'tires', component: event.id }) : state;
   if (isHistoryState(state)) return historyTransition(state, event);
+  // History keeps the screen's `back`, so returning from History still knows where that screen came from.
   if (type === E.OPEN_HISTORY) return [S.INSPECTION_OVERVIEW, S.INSPECTION_SUMMARY, S.PART_RESULT].includes(state.name)
-    ? to(S.HISTORY_LIST, { historyReturn: state.name, recordId: null }) : state;
+    ? { ...to(S.HISTORY_LIST, { historyReturn: state.name, recordId: null }), ...(state.back ? { back: state.back } : {}) } : state;
   if(type===E.OPEN_RESULT&&![S.IDLE,S.HOOD_CLOSING].includes(state.name)){
-    const target=targetForPart(event.id);return target?to(S.PART_RESULT,{component:target.partId,area:target.area,afterClose:null}):state;
+    const target=targetForPart(event.id);if(!target)return state;
+    if(state.name===S.PART_RESULT&&state.component===target.partId)return state;
+    // Moving between results replaces the result screen, so Back still leads to where results were first opened.
+    return {name:S.PART_RESULT,area:target.area,component:target.partId,afterClose:null,back:state.name===S.PART_RESULT?state.back:returnPoint(state)};
   }
   if (type === E.SHOW_SUMMARY && state.name !== S.IDLE) {
     if (state.name === S.INSPECTION_SUMMARY || (state.name === S.HOOD_CLOSING && [S.IDLE, S.INSPECTION_SUMMARY].includes(state.afterClose))) return state;
-    return hoodTarget(state) > 0 || state.name === S.HOOD_CLOSING
-      ? close(S.INSPECTION_SUMMARY) : to(S.INSPECTION_SUMMARY, { area: null, component: null, afterClose: null });
+    const summary = { name: S.INSPECTION_SUMMARY, area: null, component: null, afterClose: null, back: returnPoint(state) };
+    return hoodTarget(state) > 0 || state.name === S.HOOD_CLOSING ? close(S.INSPECTION_SUMMARY, summary) : summary;
   }
   switch (state.name) {
     case S.PART_RESULT:
       if(type===E.SELECT_TIRE&&state.area==='tires'&&TIRES.some(t=>t.id===event.id))return to(S.TIRE_PREVIEW,{component:event.id});
-      if(type===E.BACK||type===E.EXIT)return state.area==='hood'?close(type===E.EXIT?S.IDLE:S.INSPECTION_SUMMARY):type===E.EXIT?initialState():to(S.INSPECTION_SUMMARY,{area:null,component:null});
+      if(type===E.EXIT)return state.area==='hood'?close(S.IDLE):initialState();
+      if(type===E.BACK)return goBack(state);
       return state;
     case S.IDLE:
       return type === E.START ? to(S.INSPECTION_OVERVIEW) : state;
@@ -127,7 +151,7 @@ export function transition(state, event, ctx = {}) {
         return ctx[event.id+'Available']===true?to(S.VISIBILITY_PREVIEW,{area:event.id,component:ids.includes(event.partId)?event.partId:ids[0]}):state;
       }
       if (type === E.SELECT_AREA && available(INSPECTION_AREAS, event.id)) return to(S.HOOD_OPENING, { area: event.id });
-      if (type === E.BACK && state.name === S.INSPECTION_SUMMARY) return to(S.INSPECTION_OVERVIEW);
+      if (type === E.BACK && state.name === S.INSPECTION_SUMMARY) return goBack(state);
       if (type === E.BACK || type === E.EXIT) return initialState();
       return state;
     case S.EV_BATTERY_PREVIEW:
@@ -158,7 +182,7 @@ export function transition(state, event, ctx = {}) {
       if (type === E.EXIT) return close(S.IDLE);
       return state;
     case S.HOOD_CLOSING:
-      if (type === E.HOOD_CLOSED) return to(state.afterClose, { afterClose: null, area: [S.IDLE, S.INSPECTION_SUMMARY].includes(state.afterClose) ? null : state.area });
+      if (type === E.HOOD_CLOSED) return state.resume ?? to(state.afterClose, { afterClose: null, area: [S.IDLE, S.INSPECTION_SUMMARY].includes(state.afterClose) ? null : state.area });
       if (type === E.SELECT_AREA && event.id === 'hood') return to(S.HOOD_OPENING, { area: event.id, afterClose: null });
       if (type === E.EXIT) return to(S.HOOD_CLOSING, { afterClose: S.IDLE });
       return state;
