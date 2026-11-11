@@ -15,20 +15,20 @@ import { buildServiceComponents, SERVICE_MANUAL } from "./ioniq5-asset/service-c
 import { buildInspectionComponents } from "./ioniq5-asset/inspection-components.mjs";
 import { buildEvBatteryPack, EV_BATTERY_ID } from "./ioniq5-asset/ev-battery.mjs";
 import { CAMERA_MOVE_MS, boxDistance, cameraPath, framingDistance, inflateBox } from "./inspection-camera.mjs";
-import { createTireInspection, updateTireInspection, inspectionProgress } from "./tire-inspection.mjs";
+import { createTireInspection, updateTireInspection } from "./tire-inspection.mjs";
 import { inspectionStateMap } from './inspection-state-map.mjs';
 import {targetForPart,targetForTask} from './mobile-result-contract.mjs';
 import {partById,partLabel} from './inspection-parts.mjs';
 import {createNativeInspectionResults} from './native-inspection-results.mjs';
 import {projectInspectionResults} from './inspection-results.mjs';
-import {partResultHtml,refreshResultRegions,resultSummaryHtml} from './inspection-results-view.mjs';
+import {partResultHtml,partActionHtml,refreshResultRegions,areaResultText} from './inspection-results-view.mjs';
 import {createToast,createMobileRequestNotifier} from './inspection-toast.mjs';
 import {createInspectionHistoryStore} from './inspection-history-store.mjs';
 import {EMPTY_HISTORY_FILTERS} from './inspection-history-contract.mjs';
 import {historyPanelHtml,historyListResultsHtml,historyDetailResultsHtml,historyFilterHtml,historyFilterSummaryText,historyEntryZoneHtml} from './inspection-history-view.mjs';
 import { stateBadgeHtml, stateLegendHtml } from './inspection-state-view.mjs';
 import { guideHtml, summaryHtml } from "./tire-inspection-view.mjs";
-import { LIGHT_SCOPE_TEXT, productSummaryHtml, sessionActions, washerGuideHtml } from './inspection-product.mjs';
+import { LIGHT_SCOPE_TEXT, productSummaryHtml, sessionActions, washerGuideHtml, hoodGuideHtml, actionsHtml, sessionDataScope, exitConfirmHtml } from './inspection-product.mjs';
 import { TIRES, detachedTireInfo } from "./inspection-tires.mjs";
 import { tireStatus, enableTireStatus, disposeTireStatus } from "./tire-status.mjs";
 import { componentStatus, componentStatusHtml, enableComponentStatus, disposeComponentStatus } from "./component-status.mjs";
@@ -175,9 +175,37 @@ let state = initialState();
 let handoff = { configured: false, url: null, reason: "loading" };
 fetch("./inspection-handoff.json").then((r) => (r.ok ? r.json() : null)).then((h) => { if (h) handoff = h; render(); }).catch(() => {});
 
+// P10 PR #2: leaving the session (점검 종료, or Back from the overview) asks first, but only when this session holds
+// something that would be lost. Every entry (panel, top bar, Escape, Android Back, test hook) passes through here.
+let exitScope = null;
+const leavesSession = (prev, next) => prev.name !== STATES.IDLE && !(prev.name === STATES.HOOD_CLOSING && prev.afterClose === STATES.IDLE)
+  && (next.name === STATES.IDLE || next.name === STATES.HOOD_CLOSING && next.afterClose === STATES.IDLE);
+function askExit(scope) {
+  exitScope = scope;
+  const box = $('exitConfirm');
+  box.querySelector('.dialog').innerHTML = exitConfirmHtml(scope);
+  box.hidden = false;
+  for (const id of ['panel', 'view', 'partLabels', 'home']) $(id).inert = true;
+  document.querySelector('.topbar').inert = true;
+  box.querySelector('[data-action="exit-cancel"]').focus();
+}
+function closeExit() {
+  if (!exitScope) return;
+  exitScope = null;
+  $('exitConfirm').hidden = true;
+  for (const id of ['view', 'partLabels']) $(id).inert = false;
+  document.querySelector('.topbar').inert = false;
+  $('panel').inert = state.name === STATES.IDLE; $('home').inert = state.name !== STATES.IDLE;
+  $('panel').querySelector('[data-action="exit"]')?.focus({ preventScroll: true });
+}
 function dispatch(event) {
+  if (exitScope && event.type === EVENTS.BACK) { closeExit(); log('exit-cancel', { by: 'BACK' }); return false; }
   const prev = state, next = transition(state, event, { handoffConfigured: handoff.configured, chargePortAvailable: M.chargeInfo.status === 'AVAILABLE', wipersAvailable:M.wiperInfo.status==='AVAILABLE', lightsAvailable:M.lights.size===4 });
   if (next === prev) { log("ignored", { state: prev.name, event: event.type }); return false; }
+  if ([EVENTS.BACK, EVENTS.EXIT].includes(event.type) && !event.confirmed && leavesSession(prev, next)) {
+    const scope = sessionDataScope(userInspection, mobileResults.snapshot);
+    if (scope.any) { askExit(scope); log('exit-ask', { state: prev.name, event: event.type, ...scope }); return false; }
+  }
   state = next;
   log("transition", { from: prev.name, to: next.name, event: event.type });
   enter(prev);
@@ -341,9 +369,36 @@ function componentBounds(id) {
 const crumbs = { IDLE: "", INSPECTION_OVERVIEW: "차량 점검", HOOD_OPENING: "차량 점검 › 보닛", HOOD_CLOSING: "차량 점검", COMPONENT_SELECTION: "차량 점검 › 보닛", WASHER_SELECTED: `차량 점검 › 보닛 › ${partLabel('washer-fluid-cap')}`, MOBILE_HANDOFF_READY: `차량 점검 › 보닛 › ${partLabel('washer-fluid-cap')}` };
 const hints = { INSPECTION_OVERVIEW: "모델의 부위나 목록을 선택하세요", COMPONENT_SELECTION: "모델의 부품이나 목록을 선택하세요" };
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+const sessionRows = () => projectInspectionResults(userInspection, mobileResults.snapshot);
+// P10 PR #2: one row rule for every part list. A part with a result shows its result badge; a part without one says it
+// only shows the shape. Cyan stays the selection role (aria-pressed), never a status.
 const item = (x, action) => ['available', 'preview'].includes(x.status)||targetForPart(x.id)
-  ? `<li><button type="button" class="item available ${x.status === 'preview' ? 'preview' : ''}" aria-pressed="${state.component === x.id}" data-action="${x.status==='planned'?'result-detail':action}" data-id="${x.id}">${esc(x.label)}${targetForPart(x.id)?stateBadgeHtml(projectInspectionResults(userInspection,mobileResults.snapshot).find(r=>r.partId===x.id)):`<span class="tag">${x.status === 'preview' ? '형상 보기' : '점검 가능'}</span>`}${x.status==='planned'?'<small>목록 접근 · 형상 미구현</small>':''}</button></li>`
+  ? `<li><button type="button" class="item available ${x.status === 'preview' ? 'preview' : ''}" aria-pressed="${state.component === x.id}" data-action="${x.status==='planned'?'result-detail':action}" data-id="${x.id}">${esc(x.label)}${targetForPart(x.id)?stateBadgeHtml(sessionRows().find(r=>r.partId===x.id)):'<span class="tag">형상 보기</span>'}${x.status==='planned'?'<small>3D 형상 없음 · 결과만 확인</small>':''}</button></li>`
   : `<li><div class="item" aria-disabled="true">${esc(x.label)}<span class="tag">준비 중</span></div></li>`;
+const areaAvailable = (id) => id === 'ev-charge' ? M.chargeInfo.status === 'AVAILABLE' : id === 'wipers' ? M.wiperInfo.status === 'AVAILABLE' : id === 'lights' ? M.lights.size === 4 : true;
+/** Overview card of one area: the same size and border for all, results counted from the 17-part projection. */
+function areaCard(a) {
+  const ok = areaAvailable(a.id), results = areaResultText(sessionRows(), a.id);
+  const tag = !ok ? '사용할 수 없음' : results ? `<span data-area-results="${a.id}">${results}</span>` : '형상 보기';
+  return `<li><button type="button" class="item area-card" data-action="area" data-id="${a.id}"${ok ? '' : ' disabled'}><span class="row-name">${esc(a.label)}</span><span class="tag">${tag}</span>${ok ? '' : '<small>참조 모델에서 위치를 확인할 수 없습니다</small>'}<span class="row-go" aria-hidden="true">›</span></button></li>`;
+}
+const MODEL_BADGE = { GLB_ORIGINAL: '참조 모델', GLB_MARKER: '위치 표식', ESTIMATED: '추정 모델' };
+const modelNote = (id, text) => `<p class="model-note"><span class="badge">${MODEL_BADGE[partById(id)?.geometrySource] ?? '추정 모델'}</span> ${text}</p>`;
+const listHtml = (title, rows) => `<h3>${title}</h3><ul class="items">${rows}</ul>`;
+const sdkHtml = (id, body) => `<details class="sdk-details dev-info"><summary>차량 연동 상태 · 개발자 정보</summary><div id="${id}">${body}</div></details>`;
+const devHtml = (body) => `<details class="dev-info"><summary>개발자 정보</summary>${body}</details>`;
+/**
+ * Every part screen in one order: name, current result, model notice and location, how to check and safety,
+ * the main action, then other parts, vehicle data and developer details, and Back.
+ */
+function detailScreen({ eyebrow, title, part = null, note = '', intro = '', guide = '', action = '', list = '', sdk = '', dev = '', nav = '' }) {
+  const target = part && targetForPart(part);
+  return `<div class="eyebrow">${eyebrow}</div><h2>${title}</h2>
+    ${target ? `<div id="mobilePartResults">${partResultHtml(userInspection, mobileResults.snapshot, part)}</div>` : ''}
+    ${note}${intro}${guide}
+    ${target ? `<div id="mobilePartAction">${partActionHtml(userInspection, mobileResults.snapshot, part)}</div>` : ''}${action}
+    ${list}${sdk}${dev}${actionsHtml(nav)}`;
+}
 
 const connectionLabels = { DETACHED: '미연동', ATTACHED: '앱 소유권 확보 · SDK 연결 완료를 뜻하지 않음', STOPPED: '화면 중지 · 이전 관측 무효화', SUPERSEDED: '다른 점검 화면이 세션을 소유함', UNAVAILABLE: '상태 전달 실패 · 이전 관측 무효화' };
 function tireStatusHtml(id) {
@@ -351,104 +406,94 @@ function tireStatusHtml(id) {
   const source = t.source === 'MOCK' ? 'MOCK · 모의 데이터' : t.source === 'PLEOS' ? 'PLEOS · 앱 캐시' : '없음 · 미연동';
   return `<dl class="tire-status"><dt>데이터 출처</dt><dd>${source}</dd></dl>${t.features.map(r =>
     `<section data-feature="${r.featureId}"><h3>${r.featureId}</h3><dl class="tire-status"><dt>Capability</dt><dd><span class="tire-state">${r.capabilityStatus}</span></dd><dt>Availability</dt><dd><span class="tire-state">${r.availabilityStatus}</span></dd><dt>최근 관측 시각</dt><dd>${r.observedAt === null ? '없음' : esc(new Date(r.observedAt).toISOString())}</dd></dl></section>`).join('')}
-    <dl class="tire-status"><dt>연결</dt><dd>${connectionLabels[t.connectionStatus]}</dd><dt>세션 진단</dt><dd>${t.sessionPhase}${t.sessionPhase === 'UNRESOLVED' ? ' · SDK 요청/정리 미완료, 재시작 차단' : ' · 원격 연결/정리 완료 미검증'}</dd></dl>`;
+    <dl class="tire-status"><dt>연결</dt><dd>${connectionLabels[t.connectionStatus]}</dd><dt>세션 진단</dt><dd>${t.sessionPhase}${t.sessionPhase === 'UNRESOLVED' ? ' · SDK 요청/정리 미완료, 재시작 차단' : ' · 원격 연결/정리 완료 미검증'}</dd></dl>
+    <p class="note">SUPPORTED는 API 기능 지원 여부입니다. STALE은 오래된 관측이며 정상·비정상 판정이 아닙니다.</p>`;
 }
 
 function panelContents() {
-  const S = STATES;
+  const S = STATES, hoodList = () => listHtml('보닛의 다른 부품', areaOf(state).components.map(c => item(c, 'component')).join(''));
   switch (state.name) {
     case S.PART_RESULT:{
       const target=targetForPart(state.component),available=!!targetMeshes(state.component)?.length;
-      return `<div class="eyebrow">부품별 점검 결과 · 사용자 보고</div><h2>${esc(target.label)}</h2>
-        <p class="note">${available?'기존 참조 형상의 카메라 이동과 선택 강조를 사용합니다. 실제 차량의 부품 위치·형상 일치는 미검증입니다.':'이 부품의 3D 형상이 없거나 위치를 검증하지 못했습니다. 목록에서 결과만 확인하며 대체 형상을 생성하지 않습니다.'}</p>
+      return `<div class="eyebrow">점검 결과</div><h2>${esc(target.label)}</h2>
+        <section class="source-zone" data-source-zone="SESSION"><span class="zone-tag">이번 점검 · 이 화면</span><div id="mobilePartResults">${partResultHtml(userInspection,mobileResults.snapshot,state.component)}</div></section>
+        ${available?modelNote(state.component,'3D 위치와 형상은 참조 모델 기준이며 실제 차량과 일치하는지 검증하지 않았습니다.'):'<p class="model-note"><span class="badge">3D 형상 없음</span> 이 부품은 3D 형상이 없거나 위치를 검증하지 못해 결과만 확인합니다. 대신할 형상을 만들지 않습니다.</p>'}
         ${target.area==='lights'?`<p>${LIGHT_SCOPE_TEXT}</p>`:''}
-        ${target.area==='tires'?`<button type="button" class="secondary" data-action="tire" data-id="${target.partId}">로컬 타이어 직접 입력 열기</button>`:''}
-        <button type="button" class="secondary" data-action="back">전체 점검 요약으로</button>`;
+        <div id="mobilePartAction">${partActionHtml(userInspection,mobileResults.snapshot,state.component)}</div>
+        ${target.area==='tires'?`<button type="button" class="secondary wide" data-action="tire" data-id="${target.partId}">이 타이어 직접 점검하기</button>`:''}
+        ${historyEntryZoneHtml(target.label)}
+        <details class="sdk-details dev-info source-zone" data-source-zone="SDK"><summary>차량 연동 상태 · 개발자 정보</summary><div id="resultSdkContent">${resultSdkBody()}</div></details>${actionsHtml()}`;
     }
     case S.VISIBILITY_PREVIEW:{
       const part=areaOf(state).components.find(c=>c.id===state.component),wiper=state.area==='wipers';
-      return `<div class="eyebrow">${wiper?'전면 와이퍼 · 한 유리 영역':'전조등 · 전역 SDK 보고'}</div><h2>${esc(part.label)}</h2>
-        <span class="badge">${wiper?'ESTIMATED_GEOMETRY · 정적 휴지 자세':'기존 커뮤니티 GLB 표식 · OEM 광학 구조 미검증'}</span>
-        <p>${wiper?'전면 유리의 물을 닦는 암과 블레이드의 추정 외관입니다. 두 와이퍼는 전면 유리 하나의 작동 상태를 공유합니다. 작동 각도·위치·속도·마모·교체 시기는 측정하지 않습니다.':'하향등은 가까운 전방, 상향등은 먼 전방을 비추는 기능입니다. 이 평면 표식은 기존 모델의 위치 안내이며 실제 bulb·광도·광축·고장 진단이 아닙니다. 하우징에 가릴 수 있으며 좌우 선택에도 같은 전역 상태가 표시됩니다.'} 좌우는 운전자가 전방을 보는 기준입니다.</p>
-        ${wiper?'':`<p>${LIGHT_SCOPE_TEXT}</p>`}
-        <p class="note">${wiper?'ON·SERVICE 보고로 와이퍼를 움직이거나 실제 자세를 재현하지 않습니다.':'강조는 선택 표시이며 실제 램프 발광이나 광도 재현이 아닙니다. 차체·하우징을 관통 선택하지 않습니다.'}</p>
-        ${!wiper&&M.lights.get(state.component).sightline.status==='SOURCE_OCCLUDED'?'<p role="status">이 참조 모델의 표식은 차체에 가려져 있습니다. 목록으로 위치와 전역 SDK 보고를 확인할 수 있습니다.</p>':''}
-        <ul class="items">${areaOf(state).components.map(c=>item(c,'visibility-part')).join('')}</ul>
-        <details class="sdk-details" open><summary>SDK 보고 · 사용자 기록과 별개</summary><div id="visibilityStatusContent">${visibilityStatusHtml(visibilityFeaturesForPart(state.component))}</div></details>
-        <div class="actions"><button type="button" class="secondary" data-action="back">뒤로 · 차량 전체 보기</button></div>`;
+      return detailScreen({eyebrow:wiper?'전면 와이퍼':'전조등',title:esc(part.label),part:state.component,
+        note:modelNote(state.component,wiper?'멈춰 있는 와이퍼를 추정한 형상입니다. 작동 각도·속도·마모·교체 시기는 측정하지 않습니다.':'참조 모델의 위치 표식입니다. 실제 전구·밝기·광축이나 고장 여부를 나타내지 않습니다.'),
+        intro:`<p>${wiper?'두 와이퍼는 전면 유리 하나의 작동 상태를 함께 씁니다.':'하향등은 가까운 앞쪽, 상향등은 먼 앞쪽을 비춥니다. 청록 강조는 선택 표시이며 실제 불빛이 아닙니다.'} 좌우는 운전자가 앞을 보는 기준입니다.</p>
+          ${!wiper&&M.lights.get(state.component).sightline.status==='SOURCE_OCCLUDED'?'<p role="status">이 표식은 참조 모델의 차체에 가려 보이지 않을 수 있습니다. 목록에서 고를 수 있습니다.</p>':''}`,
+        guide:wiper?'':`<h3>점검 범위</h3><p>${LIGHT_SCOPE_TEXT}</p>`,
+        list:listHtml(wiper?'다른 와이퍼':'다른 전조등',areaOf(state).components.map(c=>item(c,'visibility-part')).join('')),
+        sdk:sdkHtml('visibilityStatusContent',visibilityStatusHtml(visibilityFeaturesForPart(state.component)))+`<p class="note">${wiper?'차량이 보고한 작동 상태로 와이퍼를 움직이거나 자세를 바꾸지 않습니다.':'차량이 보고하는 전조등 상태는 좌우 구분 없이 하나이며, 어느 쪽을 골라도 같습니다.'}</p>`});
     }
     case S.CHARGE_PORT_PREVIEW:
-      return `<div class="eyebrow">EV 충전구 · 차량 우측 후방</div><h2>${esc(partLabel(state.component))}</h2>
-        <span class="badge">ESTIMATED_GEOMETRY · 정적 닫힌 형상</span>
-        <p>모델 우측 후방의 추정 외함입니다. 형상·치수·배치와 실제 차량 변형의 일치는 미검증입니다. 힌지축·각도·소켓·정비 절차를 제공하지 않습니다.</p>
-        <p class="note">SDK true/false는 보고값이며 형상을 열거나 회전시키지 않습니다. 현재 모델의 정적 자세가 실제 차량의 닫힘 상태를 뜻하지 않습니다.</p>
-        <ul class="items">${areaOf(state).components.map(c => item(c, 'charge-part')).join('')}</ul>
-        <details class="sdk-details" open><summary>충전구 SDK 보고 · 형상과 별개</summary><div id="chargePortStatusContent">${chargePortStatusHtml()}</div></details>
-        <div class="actions"><button type="button" class="secondary" data-action="back">뒤로 · 차량 전체 보기</button></div>`;
+      return detailScreen({eyebrow:'EV 충전구',title:esc(partLabel(state.component)),part:state.component,
+        note:modelNote(state.component,'차량 오른쪽 뒤의 충전구를 추정한 형상입니다. 실제 위치·치수와 일치하는지 검증하지 않았고, 열림 상태를 나타내지 않습니다.'),
+        intro:state.component==='ev-charge.flap'?`<p>충전구 덮개는 따로 기록하지 않고 ${esc(partLabel('ev-charge.port'))} 점검의 덮개 손상 항목에 포함됩니다.</p>`:'',
+        list:listHtml('충전구 부품',areaOf(state).components.map(c=>item(c,'charge-part')).join('')),
+        sdk:sdkHtml('chargePortStatusContent',chargePortStatusHtml()+'<p class="note">SDK true/false는 보고값이며 형상을 열거나 회전시키지 않습니다.</p>')});
     case S.EV_BATTERY_PREVIEW:
-      return `<div class="eyebrow">EV 배터리 · 하부 보기</div><h2>고전압 배터리 팩</h2>
-        <span class="badge">ESTIMATED_GEOMETRY · 추정 외함</span>
-        <p>차체 아래 두 차축 사이의 외함을 나타낸 개략 모델입니다. 치수·배치·해당 차량 변형과의 일치는 미검증입니다. 12V 보조 배터리와 다릅니다.</p>
-        <p class="note">하부를 보기 위해 화면의 바닥 장식을 숨겼습니다. 실제 차량 아래로 진입하거나 배터리를 열도록 안내하는 절차가 아닙니다.</p>
-        <p class="note">SoC는 원시 Integer이며 단위·범위가 미검증입니다. 충전 스위치 값은 충전 진행 상태나 안전 판정이 아닙니다.</p>
-        <div class="actions"><button type="button" class="secondary" data-action="back">점검 부위로</button></div>`;
+      return detailScreen({eyebrow:'EV 배터리',title:esc(partLabel(EV_BATTERY_ID)),
+        note:modelNote(EV_BATTERY_ID,'두 차축 사이 차체 아래의 외함을 나타낸 개략 형상입니다. 치수와 배치는 검증하지 않았습니다.'),
+        intro:'<p>12V 보조 배터리와 다른 부품입니다. 이 부위는 점검 결과를 기록하지 않고 형상만 보여 줍니다.</p><p class="note">아래쪽이 보이도록 바닥 표시를 숨겼습니다. 차량 아래로 들어가거나 배터리를 열지 마세요.</p>',
+        sdk:sdkHtml('componentStatusContent',componentStatusHtml(state.component))+'<p class="note">충전 상태 값은 단위·범위를 검증하지 않은 원시 값이며 충전 진행이나 안전 판정이 아닙니다.</p>'});
     case S.INSPECTION_SUMMARY: return productSummaryHtml(userInspection,mobileResults.snapshot);
     case S.TIRE_SUMMARY:
-      return `<div class="eyebrow">타이어 · 육안 기록</div><h2>네 타이어 점검 요약</h2>${summaryHtml(userInspection)}
-        <div class="actions"><button type="button" class="secondary" data-action="back">타이어 목록으로</button></div>`;
+      return `<div class="eyebrow">타이어</div><h2>네 타이어 요약</h2><div id="tireSummary">${summaryHtml(userInspection,mobileResults.snapshot)}</div>${actionsHtml()}`;
     case S.TIRE_SELECTION:
-      return `<div class="eyebrow">타이어 · 형상 탐색</div><h2>타이어 선택</h2><p>모델의 타이어·휠 또는 아래 목록을 선택하세요. 좌우는 차량 진행 방향 기준입니다.</p>
-        <ul class="items">${TIRES.map(t => item(t, 'tire')).join('')}</ul>${stateLegendHtml(userInspection)}
-        <p role="status">육안 점검 완료 ${inspectionProgress(userInspection)}/4</p><p class="note">타이어를 선택해 육안 기록과 API 상태를 확인하세요. 수치 및 정상·비정상 판정은 제공하지 않습니다.</p>
-        <div class="actions"><button type="button" class="primary" data-action="tire-summary">중간 결과 · 요약 보기</button><button type="button" class="secondary" data-action="back">점검 부위로</button></div>`;
+      return `<div class="eyebrow">타이어</div><h2>타이어 선택</h2><p>점검할 타이어를 고르세요. 좌우는 차량 진행 방향 기준입니다.</p>
+        <ul class="items">${TIRES.map(t => item(t, 'tire')).join('')}</ul>
+        ${actionsHtml('<button type="button" class="secondary" data-action="tire-summary">네 타이어 요약</button>')}`;
     case S.TIRE_PREVIEW: {
       const t = detachedTireInfo(state.component);
-      return `<div class="eyebrow">타이어 · 상태 탐색</div><h2>${esc(t.label)}</h2><span class="badge detached">상태만 표시 · 수치 및 진단 미제공</span>
-        <details class="part-identity"><summary>모델 위치·부품 ID</summary><dl class="tire-status"><dt>타이어 위치</dt><dd>${esc(t.label)} · 차량 진행 방향 기준</dd><dt>차량 부품 ID</dt><dd>${esc(t.vehiclePartId)}</dd>
-        </dl></details><div class="tire-nav"><button type="button" class="secondary" data-action="previous-tire">이전 타이어</button><button type="button" class="secondary" data-action="next-tire">다음 타이어</button></div>
-        <section id="tireGuide">${guideHtml(userInspection, state.component)}</section><details class="sdk-details"><summary>Pleos API 상태 · 수동 기록과 별개</summary><div id="tireStatusContent">${tireStatusHtml(state.component)}</div></details>
-        <p class="note">SUPPORTED는 API 기능 지원 여부입니다. STALE은 오래된 관측이며 정상·비정상 판정이 아닙니다.</p>
-        <p class="note">커뮤니티 GLB의 기존 타이어 형상입니다. 실차 형상 정확도와 API 값·단위는 미검증이며 공기압 및 정상·비정상을 판단하지 않습니다.</p>
-        <h3>다른 타이어 보기</h3><ul class="items">${TIRES.map(t => item(t, 'tire')).join('')}</ul>
-        <div class="actions"><button type="button" class="primary" data-action="tire-summary">점검 요약 보기</button><button type="button" class="secondary" data-action="back">선택 해제 · 이전 시점으로</button></div>`;
+      return detailScreen({eyebrow:'타이어',title:esc(t.label),part:state.component,
+        note:modelNote(state.component,'참조 3D 모델의 타이어입니다. 공기압·마모 정도나 정상 여부는 판단하지 않습니다.'),
+        guide:`<section id="tireGuide">${guideHtml(userInspection, state.component)}</section>`,
+        list:listHtml('다른 타이어',TIRES.map(t => item(t, 'tire')).join('')),
+        sdk:sdkHtml('tireStatusContent',tireStatusHtml(state.component)),
+        dev:devHtml(`<dl class="tire-status"><dt>타이어 위치</dt><dd>${esc(t.label)} · 차량 진행 방향 기준</dd><dt>차량 부품 ID</dt><dd>${esc(t.vehiclePartId)}</dd></dl>`),
+        nav:'<button type="button" class="secondary" data-action="tire-summary">네 타이어 요약</button>'});
     }
     case S.HOOD_CLOSING:
       return '<div class="eyebrow">차량 점검</div><h2>모델의 보닛을 닫는 중</h2><p>완료되면 요청한 화면으로 이동합니다.</p>';
     case S.INSPECTION_OVERVIEW:
-      return `<div class="eyebrow">차량 점검</div><h2>점검할 부위를 선택하세요</h2><p>3D 모델의 강조된 부위나 아래 목록에서 선택합니다.</p>
-        <ul class="items">${INSPECTION_AREAS.map((a) => a.id === 'ev-charge' && M.chargeInfo.status !== 'AVAILABLE' || a.id==='wipers'&&M.wiperInfo.status!=='AVAILABLE'||a.id==='lights'&&M.lights.size!==4 ? `<li><button type="button" class="item" disabled>${esc(a.label)} · 모델 위치 미검증</button></li>` : item(a, "area")).join("")}</ul>${stateLegendHtml(userInspection)}
-        ${M.chargeInfo.status !== 'AVAILABLE' ? '<p role="status">참조 모델에서 충전구 위치를 확인할 수 없어 이 항목을 사용할 수 없습니다.</p>' : ''}
-        <p class="note">응답은 이 화면의 메모리에만 남습니다. 홈 복귀·종료·새로고침 시 지워집니다.</p>`;
+      return `<div class="eyebrow">차량 점검</div><h2>점검할 부위를 선택하세요</h2>
+        <div id="sessionProgress">${stateLegendHtml(userInspection,mobileResults.snapshot,{compact:true})}</div>
+        <ul class="items area-list">${INSPECTION_AREAS.map(areaCard).join('')}</ul>`;
     case S.HOOD_OPENING:
-      return `<div class="eyebrow">보닛</div><h2>보닛을 여는 중</h2><p>차량 전방으로 이동합니다.</p><div class="progress"><i id="hoodProgress"></i></div>
-        <div class="actions"><button type="button" class="secondary" data-action="back">취소</button></div>`;
+      return `<div class="eyebrow">보닛</div><h2>보닛을 여는 중</h2><p>차량 앞쪽으로 이동합니다.</p><div class="progress"><i id="hoodProgress"></i></div>${actionsHtml()}`;
     case S.COMPONENT_SELECTION:
-      return `<div class="eyebrow">보닛 · 전방 수납부</div><h2>점검 항목</h2><p>모델의 부품이나 목록에서 고르세요. 형상 안내와 사용자 점검 결과를 별도로 확인할 수 있습니다.</p>
+      return `<div class="eyebrow">보닛 · 전방 수납부</div><h2>점검할 부품을 고르세요</h2>
         <ul class="items">${areaOf(state).components.map((c) => item(c, "component")).join("")}</ul>
-        <p class="note">밝은 베이지색 리저버와 무광 케이스는 추정 부품 모델입니다. 저전도 냉각수 형상은 미구현이며 목록에서 결과 상세만 확인합니다.</p>
-        <div class="actions"><button type="button" class="secondary" data-action="back">점검 부위로</button></div>`;
+        <p class="note">부품의 위치와 형상은 추정 모델입니다. 저전도 냉각수는 3D 형상이 없어 결과만 확인합니다.</p>${actionsHtml()}`;
     case S.COMPONENT_PREVIEW: {
       const c = areaOf(state).components.find(c => c.id === state.component);
-      return `<div class="eyebrow">보닛 · 형상 탐색</div><h2>${esc(c.label)}</h2><span class="badge">추정 모델 · 점검 절차 미제공</span>
-        <ul class="accuracy"><li>모델 위치: 추정</li><li>형상 및 치수: 추정</li><li>실제 차량별 배치: 미검증</li><li>점검 및 정비 절차: 아직 제공하지 않음</li></ul>
-        <h3>모델에서의 위치 안내</h3><p>${esc(c.location)}에 배치한 추정 형상입니다. 좌우는 운전자가 전방을 보는 기준입니다.</p>
-        <p>형상과 배치를 살펴보는 화면입니다. 실제 차량의 정확한 위치나 상태를 나타내지 않습니다.</p>
-        <h3>다른 항목 보기</h3><ul class="items">${areaOf(state).components.map(c => item(c, 'component')).join('')}</ul>
-        <div class="actions"><button type="button" class="secondary" data-action="back">점검 목록과 이전 시점으로</button></div>`;
+      return detailScreen({eyebrow:'보닛 · 전방 수납부',title:esc(c.label),part:c.id,
+        note:modelNote(c.id,'위치·형상·치수는 추정이며 실제 차량의 배치와 일치하는지 검증하지 않았습니다.'),
+        intro:`<p>${esc(c.location)}에 있는 것으로 추정한 형상입니다. 좌우는 운전자가 앞을 보는 기준입니다.</p>`,
+        guide:hoodGuideHtml(),list:hoodList(),
+        sdk:c.id==='brake-fluid-reservoir'?sdkHtml('componentStatusContent',componentStatusHtml(c.id)):''});
     }
     case S.WASHER_SELECTED:
-      return `<div class="eyebrow">보닛 · 워셔액</div><h2>${esc(partLabel('washer-fluid-cap'))}</h2><span class="badge">위치·형상 추정</span>
-        ${washerGuideHtml(esc(SERVICE_MANUAL))}
-        <div class="actions">${handoff.configured
-          ? `<button type="button" class="primary" data-action="handoff">스마트폰으로 이어서 보기</button>`
-          : mobileResults.snapshot.connection==='ADAPTER_CONNECTED'?'':`<p class="note">스마트폰 연결이 준비되지 않았습니다. 현재는 이 화면의 안내를 확인할 수 있습니다.</p>`}
-          <button type="button" class="secondary" data-action="back">점검 항목으로</button></div>`;
+      return detailScreen({eyebrow:'보닛 · 전방 수납부',title:esc(partLabel('washer-fluid-cap')),part:'washer-fluid-cap',
+        note:modelNote('washer-fluid-cap','위치와 형상은 추정입니다. 실제 차량의 캡 표기를 우선하세요.'),
+        guide:washerGuideHtml(esc(SERVICE_MANUAL)),
+        action:handoff.configured?'<button type="button" class="secondary wide" data-action="handoff">QR로 워셔액 안내 열기</button>':'',
+        list:hoodList(),sdk:sdkHtml('componentStatusContent',componentStatusHtml('washer-fluid-cap'))});
     case S.MOBILE_HANDOFF_READY:
-      return `<div class="eyebrow">보닛 · 워셔액</div><h2>스마트폰으로 이어서 보기</h2><p>스마트폰 카메라로 QR을 스캔하면 워셔액 점검 보조 화면이 열립니다.</p>
-        <div class="qr"><img src="./inspection-qr.svg" alt="워셔액 점검 보조 화면으로 연결되는 QR 코드"></div>
+      return `<div class="eyebrow">보닛 · 워셔액</div><h2>QR로 워셔액 안내 열기</h2><p>스마트폰 카메라로 QR을 스캔하면 워셔액 점검 안내 화면이 열립니다.</p>
+        <div class="qr"><img src="./inspection-qr.svg" alt="워셔액 점검 안내 화면으로 연결되는 QR 코드"></div>
         <p><a class="link" id="handoffLink" href="${esc(handoff.url)}" target="_blank" rel="noopener noreferrer">직접 열기</a></p>
         <p class="note">QR에는 작업 종류만 담기며 차량·계정 정보는 포함되지 않습니다. 스마트폰 화면의 후보 표시는 색상 기반이며 실제 주입구 인식 정확도는 검증되지 않았습니다.</p>
-        <div class="actions"><button type="button" class="secondary" data-action="back">점검 방법으로</button></div>`;
+        ${actionsHtml()}`;
     default:
       return "";
   }
@@ -479,17 +524,7 @@ function refreshHistory(){
 }
 function panelHtml() {
   if(isHistoryState(state)){const snapshot=inspectionHistory.snapshot;return historyPanelHtml(state,snapshot,state.name===STATES.HISTORY_DETAIL?historySessionRow(snapshot.detail.record):historySessionRow())+sessionActions(state);}
-  const hasStatus = state.name === STATES.EV_BATTERY_PREVIEW || state.name === STATES.WASHER_SELECTED || state.name === STATES.COMPONENT_PREVIEW && state.component === 'brake-fluid-reservoir';
-  const status = hasStatus ? `<details class="sdk-details"${state.name === STATES.EV_BATTERY_PREVIEW ? ' open' : ''}><summary>Pleos API 지원 및 SDK 보고 상태</summary><div id="componentStatusContent">${componentStatusHtml(state.component)}</div></details>` : '';
-  let result=targetForPart(state.component)?`<div id="mobilePartResults">${partResultHtml(userInspection,mobileResults.snapshot,state.component)}</div>`:'';
-  let resultSdk='',past='';
-  if(state.name===STATES.PART_RESULT){
-    // Three separate sources for one part: this session's reports, stored records, and live SDK observations.
-    result=`<section class="source-zone" data-source-zone="SESSION"><span class="zone-tag">현재 세션 · 이 화면 메모리</span>${result}</section>`;
-    past=historyEntryZoneHtml(targetForPart(state.component).label);
-    resultSdk=`<details class="sdk-details source-zone" data-source-zone="SDK"><summary>SDK 관측 · 사용자 보고와 별개</summary><div id="resultSdkContent">${resultSdkBody()}</div></details>`;
-  }
-  return panelContents() + result + past + resultSdk + status + sessionActions(state);
+  return panelContents() + sessionActions(state);
 }
 
 const showToast = createToast($('toast'));
@@ -497,8 +532,8 @@ const requestMobile = createMobileRequestNotifier({ request: (taskId) => mobileR
 function render() {
   $("panel").innerHTML = panelHtml();
   syncQrSlot();
-  $('home').inert = state.name !== STATES.IDLE;
-  $('panel').inert = state.name === STATES.IDLE;
+  $('home').inert = state.name !== STATES.IDLE || !!exitScope;
+  $('panel').inert = state.name === STATES.IDLE || !!exitScope;
   $("crumb").textContent = state.name === STATES.INSPECTION_SUMMARY ? '차량 점검 › 전체 요약' : state.area === 'tires' ? `차량 점검 › 타이어${state.component ? ' › ' + detachedTireInfo(state.component).label : ''}` : state.name === STATES.COMPONENT_PREVIEW ? `차량 점검 › 보닛 › ${areaOf(state).components.find(c => c.id === state.component).label}` : crumbs[state.name];
   if(state.name===STATES.PART_RESULT)$('crumb').textContent='차량 점검 › '+targetForPart(state.component).label;
   if(isHistoryState(state))$('crumb').textContent=state.name===STATES.HISTORY_DETAIL?'차량 점검 › 과거 점검 기록 › 상세':'차량 점검 › 과거 점검 기록';
@@ -552,10 +587,6 @@ $("panel").addEventListener("click", (e) => {
   }
   else if (a === 'tire-summary') dispatch({ type: EVENTS.SHOW_TIRE_SUMMARY });
   else if (a === 'product-summary') dispatch({ type: EVENTS.SHOW_SUMMARY });
-  else if (['previous-tire', 'next-tire'].includes(a) && state.name === STATES.TIRE_PREVIEW) {
-    const index = TIRES.findIndex(t => t.id === state.component);
-    dispatch({ type: EVENTS.SELECT_TIRE, id: TIRES[(index + (a === 'next-tire' ? 1 : 3)) % 4].id });
-  }
   else if (a === "area") dispatch({ type: EVENTS.SELECT_AREA, id: b.dataset.id });
   else if (a === "component") dispatch({ type: EVENTS.SELECT_COMPONENT, id: b.dataset.id });
   else if (a === "tire") dispatch({ type: EVENTS.SELECT_TIRE, id: b.dataset.id });
@@ -595,6 +626,11 @@ $('partLabels').addEventListener('click', (e) => {
   const entry = el && labels.items.find(x => x.id === el.dataset.partLabel);
   const event = entry && areaEvent(entry, labels.anchorPart.get(entry.id));
   if (event) { log('label-select', { id: entry.id, event: event.type }); dispatch(event); }
+});
+$('exitConfirm').addEventListener('click', (e) => {
+  const a = e.target.closest('[data-action]')?.dataset.action;
+  if (a === 'exit-cancel') { closeExit(); log('exit-cancel', { by: 'button' }); }
+  else if (a === 'exit-confirm') { closeExit(); dispatch({ type: EVENTS.EXIT, confirmed: true }); }
 });
 addEventListener("keydown", (e) => {
   if (e.key === "Escape") dispatch({ type: EVENTS.BACK });
@@ -680,6 +716,9 @@ renderer.domElement.addEventListener("pointermove", (e) => {
 // ---------- layout: keep the car centred in the space the panel leaves ----------
 function layout() {
   const w = innerWidth, h = innerHeight, b = panelBox();
+  // The toast centers on the free space beside a side panel (P2-5), measured from the panel's resting place, not mid-slide.
+  const p = $('panel'), right = parseFloat(getComputedStyle(p).right) || 0;
+  document.documentElement.style.setProperty('--free-center', b.side ? `${Math.round((w - right - p.offsetWidth) / 2)}px` : '50%');
   camera.aspect = w / h;
   if (!b.side && !b.bottom) camera.clearViewOffset();
   else camera.setViewOffset(w, h, b.side / 2, b.bottom / 2, w, h);

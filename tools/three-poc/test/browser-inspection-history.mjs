@@ -112,8 +112,9 @@ try{
       // Existing flows after History: mobile request path, parts, summary, end.
       await page.locator('[data-action=request-mobile]').waitFor();assert.equal(await page.evaluate(()=>__inspect.nativeResults().connection),'INCOMPLETE_NATIVE');
       await page.locator('[data-action=product-summary]').click();await settled(page,'INSPECTION_SUMMARY');
-      await page.locator('[data-action=area][data-id=hood]').click();await settled(page,'COMPONENT_SELECTION');await page.locator('[data-action=component][data-id="washer-fluid-cap"]').click();await settled(page,'WASHER_SELECTED');
-      await page.locator('[data-action=exit]').click();await settled(page,'IDLE');assert.equal(await page.evaluate(()=>__inspect.history().list.status),'IDLE');
+      // The summary lists parts only (P10 PR #2): open a hood part from it, then end from the open-hood screen.
+      await page.locator('[data-action=result-detail][data-id="washer-fluid-cap"]').click();await settled(page,'PART_RESULT');
+      await page.locator('[data-action=exit]').click();if(await page.locator('#exitConfirm:not([hidden])').count())await page.locator('#exitConfirm [data-action=exit-confirm]').click();await settled(page,'IDLE');assert.equal(await page.evaluate(()=>__inspect.history().list.status),'IDLE');
       await page.locator('#start').click();await settled(page,'INSPECTION_OVERVIEW');await page.locator('#panel [data-action=open-history]').click();await page.locator('.history-card').first().waitFor();
       await page.evaluate(()=>dispatchEvent(new Event('pagehide')));assert.equal(await page.evaluate(()=>__inspect.history().provider),'DISPOSED');assert.equal(await page.evaluate(()=>__inspect.history().list.items.length),0);
       summary.checks.push(`PASS ${viewport.width} real GLB: zones, camera kept, session/SDK unchanged, Back/focus, pause, leave, regressions, dispose`);await context.close();

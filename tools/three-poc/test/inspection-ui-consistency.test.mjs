@@ -45,9 +45,9 @@ test('card and summary are drawn from the same record the moment it is confirmed
   assert.match(partResultHtml(before, mobile, TIRE), /data-inspection-state="NOT_INSPECTED"/);
   const card = partResultHtml(after, mobile, TIRE), summary = resultSummaryHtml(after, mobile);
   assert.match(card, /data-inspection-state="FINDINGS_REPORTED"/);
-  assert.match(card, /USER_REPORTED/);
+  assert.match(card, /이 화면에서 직접 입력/);
   assert.match(card, /1970-01-01T00:00:01\.000Z/);
-  assert.match(summary, /선택된 확정 기록 1\/17 · 미점검 16 · 이상 징후 1/);
+  assert.match(summary, /점검 완료 1\/17 · 미점검 16 · 이상 징후 보고 1 · 확인 불가 0 · 발견 사항 없음 0/);
   const counts = resultCounts(projectInspectionResults(after, mobile));
   assert.equal(counts.FINDINGS_REPORTED, 1);
   assert.equal(Object.values(counts).reduce((sum, n) => sum + n), 17);

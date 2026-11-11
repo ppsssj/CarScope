@@ -105,7 +105,8 @@ test('the page takes part names from the registry instead of writing them again'
 
 test('dropping "marker" from a light name does not drop the warning that it is only a marker',()=>{
   const page=read('../inspect.js');
-  assert.match(page,/기존 커뮤니티 GLB 표식 · OEM 광학 구조 미검증/);
-  assert.match(page,/이 평면 표식은 기존 모델의 위치 안내이며 실제 bulb/);
-  assert.match(page,/좌우는 운전자가 전방을 보는 기준입니다/,'the side reference that "vehicle left" used to give');
+  // P10 PR #2 rewords the warning in plain Korean; the claim it carries is unchanged.
+  assert.match(page,/GLB_MARKER: '위치 표식'/,'a light is badged as a marker, not as the part');
+  assert.match(page,/참조 모델의 위치 표식입니다\. 실제 전구·밝기·광축이나 고장 여부를 나타내지 않습니다/);
+  assert.match(page,/좌우는 운전자가 앞을 보는 기준입니다/,'the side reference that "vehicle left" used to give');
 });

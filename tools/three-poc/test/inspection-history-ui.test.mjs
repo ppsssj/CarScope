@@ -73,7 +73,9 @@ test('entry appears where History can open, and ending a session states stored r
   for(const name of Object.values(S)){
     const html=sessionActions({name}),entry=[S.INSPECTION_OVERVIEW,S.INSPECTION_SUMMARY,S.PART_RESULT].includes(name);
     assert.equal(html.includes('data-action="open-history"'),entry,name);
-    if(isHistoryState({name})){assert.ok(html.includes('현재 세션 기록 지우기'));assert.ok(html.includes('저장된 과거 기록은 삭제되지 않습니다'));}
+    // P10 PR #2: every screen, History included, says what ending clears and that stored records stay.
+    if(name!==S.IDLE){assert.ok(html.includes('이번 점검의 응답'),name);assert.ok(html.includes('저장된 과거 점검 기록은 그대로 남습니다'),name);}
+    if(isHistoryState({name}))assert.ok(html.includes('이번 점검 전체 점검 요약'),'History names the current session explicitly');
   }
 });
 

@@ -172,7 +172,7 @@
      "selectable": true,
      "title": "워셔액",
      "crumb": "차량 점검 › 보닛 › 워셔액",
-     "listName": null,
+     "listName": "워셔액",
      "state": "WASHER_SELECTED",
      "distance": 0.551,
      "azimuth": 65.4,
@@ -216,11 +216,11 @@
      ],
      "selectionIntensity": null,
      "label": true,
-     "badge": "위치·형상 추정",
+     "badge": "추정 모델",
      "backButtons": [
-      "점검 항목으로"
+      "뒤로"
      ],
-     "focusOutline": true,
+     "focusOutline": false,
      "hasMobile": true,
      "noProcedureText": false,
      "internalWords": [],
@@ -275,13 +275,13 @@
      ],
      "selectionIntensity": null,
      "label": true,
-     "badge": "추정 모델 · 점검 절차 미제공",
+     "badge": "추정 모델",
      "backButtons": [
-      "점검 목록과 이전 시점으로"
+      "뒤로"
      ],
-     "focusOutline": true,
+     "focusOutline": false,
      "hasMobile": true,
-     "noProcedureText": true,
+     "noProcedureText": false,
      "internalWords": [],
      "backTo": "COMPONENT_SELECTION",
      "backPoseMoved": 1.77
@@ -338,13 +338,13 @@
      ],
      "selectionIntensity": null,
      "label": true,
-     "badge": "추정 모델 · 점검 절차 미제공",
+     "badge": "추정 모델",
      "backButtons": [
-      "점검 목록과 이전 시점으로"
+      "뒤로"
      ],
-     "focusOutline": true,
+     "focusOutline": false,
      "hasMobile": true,
-     "noProcedureText": true,
+     "noProcedureText": false,
      "internalWords": [],
      "backTo": "COMPONENT_SELECTION",
      "backPoseMoved": 1.798
@@ -397,13 +397,13 @@
      ],
      "selectionIntensity": null,
      "label": true,
-     "badge": "추정 모델 · 점검 절차 미제공",
+     "badge": "추정 모델",
      "backButtons": [
-      "점검 목록과 이전 시점으로"
+      "뒤로"
      ],
-     "focusOutline": true,
+     "focusOutline": false,
      "hasMobile": true,
-     "noProcedureText": true,
+     "noProcedureText": false,
      "internalWords": [],
      "backTo": "COMPONENT_SELECTION",
      "backPoseMoved": 1.233
@@ -456,13 +456,13 @@
      ],
      "selectionIntensity": null,
      "label": true,
-     "badge": "추정 모델 · 점검 절차 미제공",
+     "badge": "추정 모델",
      "backButtons": [
-      "점검 목록과 이전 시점으로"
+      "뒤로"
      ],
-     "focusOutline": true,
+     "focusOutline": false,
      "hasMobile": true,
-     "noProcedureText": true,
+     "noProcedureText": false,
      "internalWords": [],
      "backTo": "COMPONENT_SELECTION",
      "backPoseMoved": 1.605
@@ -515,16 +515,14 @@
      ],
      "selectionIntensity": 0.8114512059100857,
      "label": true,
-     "badge": "상태만 표시 · 수치 및 진단 미제공",
+     "badge": "참조 모델",
      "backButtons": [
-      "선택 해제 · 이전 시점으로"
+      "뒤로"
      ],
-     "focusOutline": true,
+     "focusOutline": false,
      "hasMobile": true,
      "noProcedureText": false,
-     "internalWords": [
-      "USER_REPORTED"
-     ],
+     "internalWords": [],
      "backTo": "TIRE_SELECTION",
      "backPoseMoved": 4.333
     },
@@ -576,16 +574,14 @@
      ],
      "selectionIntensity": 0.8114512059100857,
      "label": true,
-     "badge": "상태만 표시 · 수치 및 진단 미제공",
+     "badge": "참조 모델",
      "backButtons": [
-      "선택 해제 · 이전 시점으로"
+      "뒤로"
      ],
-     "focusOutline": true,
+     "focusOutline": false,
      "hasMobile": true,
      "noProcedureText": false,
-     "internalWords": [
-      "USER_REPORTED"
-     ],
+     "internalWords": [],
      "backTo": "TIRE_SELECTION",
      "backPoseMoved": 10.799
     },
@@ -637,16 +633,14 @@
      ],
      "selectionIntensity": 0.8114512059100857,
      "label": true,
-     "badge": "상태만 표시 · 수치 및 진단 미제공",
+     "badge": "참조 모델",
      "backButtons": [
-      "선택 해제 · 이전 시점으로"
+      "뒤로"
      ],
-     "focusOutline": true,
+     "focusOutline": false,
      "hasMobile": true,
      "noProcedureText": false,
-     "internalWords": [
-      "USER_REPORTED"
-     ],
+     "internalWords": [],
      "backTo": "TIRE_SELECTION",
      "backPoseMoved": 5.627
     },
@@ -698,16 +692,14 @@
      ],
      "selectionIntensity": 0.8114512059100857,
      "label": true,
-     "badge": "상태만 표시 · 수치 및 진단 미제공",
+     "badge": "참조 모델",
      "backButtons": [
-      "선택 해제 · 이전 시점으로"
+      "뒤로"
      ],
-     "focusOutline": true,
+     "focusOutline": false,
      "hasMobile": true,
      "noProcedureText": false,
-     "internalWords": [
-      "USER_REPORTED"
-     ],
+     "internalWords": [],
      "backTo": "TIRE_SELECTION",
      "backPoseMoved": 11.381
     },
@@ -759,19 +751,14 @@
      ],
      "selectionIntensity": null,
      "label": true,
-     "badge": "ESTIMATED_GEOMETRY · 추정 외함",
+     "badge": "추정 모델",
      "backButtons": [
-      "점검 부위로"
+      "뒤로"
      ],
-     "focusOutline": true,
+     "focusOutline": false,
      "hasMobile": false,
      "noProcedureText": false,
-     "internalWords": [
-      "DETACHED",
-      "ESTIMATED_GEOMETRY",
-      "UNVERIFIED",
-      "USER_REPORTED"
-     ],
+     "internalWords": [],
      "backTo": "INSPECTION_OVERVIEW",
      "backPoseMoved": 10.564
     },
@@ -823,19 +810,14 @@
      ],
      "selectionIntensity": null,
      "label": true,
-     "badge": "ESTIMATED_GEOMETRY · 정적 닫힌 형상",
+     "badge": "추정 모델",
      "backButtons": [
-      "뒤로 · 차량 전체 보기"
+      "뒤로"
      ],
-     "focusOutline": true,
+     "focusOutline": false,
      "hasMobile": true,
      "noProcedureText": false,
-     "internalWords": [
-      "DETACHED",
-      "ESTIMATED_GEOMETRY",
-      "UNVERIFIED",
-      "USER_REPORTED"
-     ],
+     "internalWords": [],
      "backTo": "INSPECTION_OVERVIEW",
      "backPoseMoved": 11.938
     },
@@ -887,19 +869,14 @@
      ],
      "selectionIntensity": null,
      "label": true,
-     "badge": "ESTIMATED_GEOMETRY · 정적 닫힌 형상",
+     "badge": "추정 모델",
      "backButtons": [
-      "뒤로 · 차량 전체 보기"
+      "뒤로"
      ],
-     "focusOutline": true,
+     "focusOutline": false,
      "hasMobile": false,
      "noProcedureText": false,
-     "internalWords": [
-      "DETACHED",
-      "ESTIMATED_GEOMETRY",
-      "UNVERIFIED",
-      "USER_REPORTED"
-     ],
+     "internalWords": [],
      "backTo": "INSPECTION_OVERVIEW",
      "backPoseMoved": 11.841
     },
@@ -951,19 +928,14 @@
      ],
      "selectionIntensity": null,
      "label": true,
-     "badge": "ESTIMATED_GEOMETRY · 정적 휴지 자세",
+     "badge": "추정 모델",
      "backButtons": [
-      "뒤로 · 차량 전체 보기"
+      "뒤로"
      ],
-     "focusOutline": true,
+     "focusOutline": false,
      "hasMobile": true,
      "noProcedureText": false,
-     "internalWords": [
-      "DETACHED",
-      "ESTIMATED_GEOMETRY",
-      "UNVERIFIED",
-      "USER_REPORTED"
-     ],
+     "internalWords": [],
      "backTo": "INSPECTION_OVERVIEW",
      "backPoseMoved": 7.25
     },
@@ -1015,19 +987,14 @@
      ],
      "selectionIntensity": null,
      "label": true,
-     "badge": "ESTIMATED_GEOMETRY · 정적 휴지 자세",
+     "badge": "추정 모델",
      "backButtons": [
-      "뒤로 · 차량 전체 보기"
+      "뒤로"
      ],
-     "focusOutline": true,
+     "focusOutline": false,
      "hasMobile": true,
      "noProcedureText": false,
-     "internalWords": [
-      "DETACHED",
-      "ESTIMATED_GEOMETRY",
-      "UNVERIFIED",
-      "USER_REPORTED"
-     ],
+     "internalWords": [],
      "backTo": "INSPECTION_OVERVIEW",
      "backPoseMoved": 7.892
     },
@@ -1079,18 +1046,14 @@
      ],
      "selectionIntensity": null,
      "label": true,
-     "badge": "기존 커뮤니티 GLB 표식 · OEM 광학 구조 미검증",
+     "badge": "위치 표식",
      "backButtons": [
-      "뒤로 · 차량 전체 보기"
+      "뒤로"
      ],
-     "focusOutline": true,
+     "focusOutline": false,
      "hasMobile": true,
      "noProcedureText": false,
-     "internalWords": [
-      "DETACHED",
-      "UNVERIFIED",
-      "USER_REPORTED"
-     ],
+     "internalWords": [],
      "backTo": "INSPECTION_OVERVIEW",
      "backPoseMoved": 7.359
     },
@@ -1142,18 +1105,14 @@
      ],
      "selectionIntensity": null,
      "label": true,
-     "badge": "기존 커뮤니티 GLB 표식 · OEM 광학 구조 미검증",
+     "badge": "위치 표식",
      "backButtons": [
-      "뒤로 · 차량 전체 보기"
+      "뒤로"
      ],
-     "focusOutline": true,
+     "focusOutline": false,
      "hasMobile": true,
      "noProcedureText": false,
-     "internalWords": [
-      "DETACHED",
-      "UNVERIFIED",
-      "USER_REPORTED"
-     ],
+     "internalWords": [],
      "backTo": "INSPECTION_OVERVIEW",
      "backPoseMoved": 7.949
     },
@@ -1205,18 +1164,14 @@
      ],
      "selectionIntensity": null,
      "label": true,
-     "badge": "기존 커뮤니티 GLB 표식 · OEM 광학 구조 미검증",
+     "badge": "위치 표식",
      "backButtons": [
-      "뒤로 · 차량 전체 보기"
+      "뒤로"
      ],
-     "focusOutline": true,
+     "focusOutline": false,
      "hasMobile": true,
      "noProcedureText": false,
-     "internalWords": [
-      "DETACHED",
-      "UNVERIFIED",
-      "USER_REPORTED"
-     ],
+     "internalWords": [],
      "backTo": "INSPECTION_OVERVIEW",
      "backPoseMoved": 7.476
     },
@@ -1268,18 +1223,14 @@
      ],
      "selectionIntensity": null,
      "label": true,
-     "badge": "기존 커뮤니티 GLB 표식 · OEM 광학 구조 미검증",
+     "badge": "위치 표식",
      "backButtons": [
-      "뒤로 · 차량 전체 보기"
+      "뒤로"
      ],
-     "focusOutline": true,
+     "focusOutline": false,
      "hasMobile": true,
      "noProcedureText": false,
-     "internalWords": [
-      "DETACHED",
-      "UNVERIFIED",
-      "USER_REPORTED"
-     ],
+     "internalWords": [],
      "backTo": "INSPECTION_OVERVIEW",
      "backPoseMoved": 8.225
     }
@@ -1324,7 +1275,7 @@
      "title": "워셔액",
      "crumb": "차량 점검 › 워셔액",
      "hood": 60,
-     "backTo": "INSPECTION_SUMMARY",
+     "backTo": "INSPECTION_OVERVIEW",
      "historyPosition": [
       1.514,
       1.309,
@@ -1370,7 +1321,7 @@
      "title": "냉각수 리저버",
      "crumb": "차량 점검 › 냉각수 리저버",
      "hood": 60,
-     "backTo": "INSPECTION_SUMMARY",
+     "backTo": "INSPECTION_OVERVIEW",
      "historyPosition": [
       1.832,
       1.571,
@@ -1395,7 +1346,7 @@
      "title": "저전도 냉각수 리저버",
      "crumb": "차량 점검 › 저전도 냉각수 리저버",
      "hood": 60,
-     "backTo": "INSPECTION_SUMMARY",
+     "backTo": "INSPECTION_OVERVIEW",
      "historyPosition": [
       2.877,
       2.592,
@@ -1441,7 +1392,7 @@
      "title": "브레이크액",
      "crumb": "차량 점검 › 브레이크액",
      "hood": 60,
-     "backTo": "INSPECTION_SUMMARY",
+     "backTo": "INSPECTION_OVERVIEW",
      "historyPosition": [
       1.56,
       1.375,
@@ -1487,7 +1438,7 @@
      "title": "12V 보조 배터리",
      "crumb": "차량 점검 › 12V 보조 배터리",
      "hood": 60,
-     "backTo": "INSPECTION_SUMMARY",
+     "backTo": "INSPECTION_OVERVIEW",
      "historyPosition": [
       2.077,
       1.68,
@@ -1533,7 +1484,7 @@
      "title": "모터룸 퓨즈박스",
      "crumb": "차량 점검 › 모터룸 퓨즈박스",
      "hood": 60,
-     "backTo": "INSPECTION_SUMMARY",
+     "backTo": "INSPECTION_OVERVIEW",
      "historyPosition": [
       1.755,
       1.457,
@@ -1579,7 +1530,7 @@
      "title": "앞 왼쪽 타이어",
      "crumb": "차량 점검 › 앞 왼쪽 타이어",
      "hood": 0,
-     "backTo": "INSPECTION_SUMMARY",
+     "backTo": "INSPECTION_OVERVIEW",
      "historyPosition": [
       1.909,
       1.177,
@@ -1625,7 +1576,7 @@
      "title": "앞 오른쪽 타이어",
      "crumb": "차량 점검 › 앞 오른쪽 타이어",
      "hood": 0,
-     "backTo": "INSPECTION_SUMMARY",
+     "backTo": "INSPECTION_OVERVIEW",
      "historyPosition": [
       1.909,
       1.177,
@@ -1671,7 +1622,7 @@
      "title": "뒤 왼쪽 타이어",
      "crumb": "차량 점검 › 뒤 왼쪽 타이어",
      "hood": 0,
-     "backTo": "INSPECTION_SUMMARY",
+     "backTo": "INSPECTION_OVERVIEW",
      "historyPosition": [
       -2.015,
       1.177,
@@ -1717,7 +1668,7 @@
      "title": "뒤 오른쪽 타이어",
      "crumb": "차량 점검 › 뒤 오른쪽 타이어",
      "hood": 0,
-     "backTo": "INSPECTION_SUMMARY",
+     "backTo": "INSPECTION_OVERVIEW",
      "historyPosition": [
       -2.015,
       1.177,
@@ -1763,7 +1714,7 @@
      "title": "EV 충전구",
      "crumb": "차량 점검 › EV 충전구",
      "hood": 0,
-     "backTo": "INSPECTION_SUMMARY",
+     "backTo": "INSPECTION_OVERVIEW",
      "historyPosition": [
       -2.376,
       1.271,
@@ -1809,7 +1760,7 @@
      "title": "전면 왼쪽 와이퍼",
      "crumb": "차량 점검 › 전면 왼쪽 와이퍼",
      "hood": 0,
-     "backTo": "INSPECTION_SUMMARY",
+     "backTo": "INSPECTION_OVERVIEW",
      "historyPosition": [
       1.6,
       2.492,
@@ -1855,7 +1806,7 @@
      "title": "전면 오른쪽 와이퍼",
      "crumb": "차량 점검 › 전면 오른쪽 와이퍼",
      "hood": 0,
-     "backTo": "INSPECTION_SUMMARY",
+     "backTo": "INSPECTION_OVERVIEW",
      "historyPosition": [
       1.534,
       2.34,
@@ -1901,7 +1852,7 @@
      "title": "왼쪽 하향등",
      "crumb": "차량 점검 › 왼쪽 하향등",
      "hood": 0,
-     "backTo": "INSPECTION_SUMMARY",
+     "backTo": "INSPECTION_OVERVIEW",
      "historyPosition": [
       2.563,
       0.876,
@@ -1947,7 +1898,7 @@
      "title": "오른쪽 하향등",
      "crumb": "차량 점검 › 오른쪽 하향등",
      "hood": 0,
-     "backTo": "INSPECTION_SUMMARY",
+     "backTo": "INSPECTION_OVERVIEW",
      "historyPosition": [
       2.563,
       0.876,
@@ -1993,7 +1944,7 @@
      "title": "왼쪽 상향등",
      "crumb": "차량 점검 › 왼쪽 상향등",
      "hood": 0,
-     "backTo": "INSPECTION_SUMMARY",
+     "backTo": "INSPECTION_OVERVIEW",
      "historyPosition": [
       2.345,
       0.803,
@@ -2039,7 +1990,7 @@
      "title": "오른쪽 상향등",
      "crumb": "차량 점검 › 오른쪽 상향등",
      "hood": 0,
-     "backTo": "INSPECTION_SUMMARY",
+     "backTo": "INSPECTION_OVERVIEW",
      "historyPosition": [
       2.345,
       0.803,
@@ -2057,7 +2008,7 @@
      "battery-12v": "12V 보조 배터리",
      "fuse-box": "모터룸 퓨즈박스"
     },
-    "resultBackFromList": "INSPECTION_SUMMARY",
+    "resultBackFromList": "COMPONENT_SELECTION",
     "tireList": {
      "directDistance": 7.868,
      "viaTireDistance": 7.868,
@@ -2112,11 +2063,7 @@
      }
     },
     "backLabels": [
-     "뒤로 · 차량 전체 보기",
-     "선택 해제 · 이전 시점으로",
-     "점검 목록과 이전 시점으로",
-     "점검 부위로",
-     "점검 항목으로"
+     "뒤로"
     ],
     "pinch": "NOT_RUN: desktop pointer input only",
     "realTouch": "NOT_RUN: desktop pointer input only"
@@ -2298,11 +2245,11 @@
     }
    },
    "overviewFacts": {
-    "text": true,
-    "legendTires": true,
-    "toastCenter": 800,
+    "text": false,
+    "legendTires": false,
+    "toastCenter": 601,
     "usableCenter": 601,
-    "batteryTag": "점검 가능"
+    "batteryTag": "형상 보기"
    },
    "select3d": {
     "washer-fluid-cap": {
@@ -2861,7 +2808,7 @@
      "selectable": true,
      "title": "워셔액",
      "crumb": "차량 점검 › 보닛 › 워셔액",
-     "listName": null,
+     "listName": "워셔액",
      "state": "WASHER_SELECTED",
      "distance": 0.617,
      "azimuth": 65.4,
@@ -2905,11 +2852,11 @@
      ],
      "selectionIntensity": null,
      "label": true,
-     "badge": "위치·형상 추정",
+     "badge": "추정 모델",
      "backButtons": [
-      "점검 항목으로"
+      "뒤로"
      ],
-     "focusOutline": true,
+     "focusOutline": false,
      "hasMobile": true,
      "noProcedureText": false,
      "internalWords": [],
@@ -2964,13 +2911,13 @@
      ],
      "selectionIntensity": null,
      "label": true,
-     "badge": "추정 모델 · 점검 절차 미제공",
+     "badge": "추정 모델",
      "backButtons": [
-      "점검 목록과 이전 시점으로"
+      "뒤로"
      ],
-     "focusOutline": true,
+     "focusOutline": false,
      "hasMobile": true,
-     "noProcedureText": true,
+     "noProcedureText": false,
      "internalWords": [],
      "backTo": "COMPONENT_SELECTION",
      "backPoseMoved": 2.262
@@ -3027,13 +2974,13 @@
      ],
      "selectionIntensity": null,
      "label": true,
-     "badge": "추정 모델 · 점검 절차 미제공",
+     "badge": "추정 모델",
      "backButtons": [
-      "점검 목록과 이전 시점으로"
+      "뒤로"
      ],
-     "focusOutline": true,
+     "focusOutline": false,
      "hasMobile": true,
-     "noProcedureText": true,
+     "noProcedureText": false,
      "internalWords": [],
      "backTo": "COMPONENT_SELECTION",
      "backPoseMoved": 2.32
@@ -3086,13 +3033,13 @@
      ],
      "selectionIntensity": null,
      "label": true,
-     "badge": "추정 모델 · 점검 절차 미제공",
+     "badge": "추정 모델",
      "backButtons": [
-      "점검 목록과 이전 시점으로"
+      "뒤로"
      ],
-     "focusOutline": true,
+     "focusOutline": false,
      "hasMobile": true,
-     "noProcedureText": true,
+     "noProcedureText": false,
      "internalWords": [],
      "backTo": "COMPONENT_SELECTION",
      "backPoseMoved": 1.702
@@ -3145,13 +3092,13 @@
      ],
      "selectionIntensity": null,
      "label": true,
-     "badge": "추정 모델 · 점검 절차 미제공",
+     "badge": "추정 모델",
      "backButtons": [
-      "점검 목록과 이전 시점으로"
+      "뒤로"
      ],
-     "focusOutline": true,
+     "focusOutline": false,
      "hasMobile": true,
-     "noProcedureText": true,
+     "noProcedureText": false,
      "internalWords": [],
      "backTo": "COMPONENT_SELECTION",
      "backPoseMoved": 2.113
@@ -3204,16 +3151,14 @@
      ],
      "selectionIntensity": 0.8114512059100857,
      "label": true,
-     "badge": "상태만 표시 · 수치 및 진단 미제공",
+     "badge": "참조 모델",
      "backButtons": [
-      "선택 해제 · 이전 시점으로"
+      "뒤로"
      ],
-     "focusOutline": true,
+     "focusOutline": false,
      "hasMobile": true,
      "noProcedureText": false,
-     "internalWords": [
-      "USER_REPORTED"
-     ],
+     "internalWords": [],
      "backTo": "TIRE_SELECTION",
      "backPoseMoved": 6.007
     },
@@ -3265,16 +3210,14 @@
      ],
      "selectionIntensity": 0.8114512059100857,
      "label": true,
-     "badge": "상태만 표시 · 수치 및 진단 미제공",
+     "badge": "참조 모델",
      "backButtons": [
-      "선택 해제 · 이전 시점으로"
+      "뒤로"
      ],
-     "focusOutline": true,
+     "focusOutline": false,
      "hasMobile": true,
      "noProcedureText": false,
-     "internalWords": [
-      "USER_REPORTED"
-     ],
+     "internalWords": [],
      "backTo": "TIRE_SELECTION",
      "backPoseMoved": 13.108
     },
@@ -3326,16 +3269,14 @@
      ],
      "selectionIntensity": 0.8114512059100857,
      "label": true,
-     "badge": "상태만 표시 · 수치 및 진단 미제공",
+     "badge": "참조 모델",
      "backButtons": [
-      "선택 해제 · 이전 시점으로"
+      "뒤로"
      ],
-     "focusOutline": true,
+     "focusOutline": false,
      "hasMobile": true,
      "noProcedureText": false,
-     "internalWords": [
-      "USER_REPORTED"
-     ],
+     "internalWords": [],
      "backTo": "TIRE_SELECTION",
      "backPoseMoved": 7.269
     },
@@ -3387,16 +3328,14 @@
      ],
      "selectionIntensity": 0.8114512059100857,
      "label": true,
-     "badge": "상태만 표시 · 수치 및 진단 미제공",
+     "badge": "참조 모델",
      "backButtons": [
-      "선택 해제 · 이전 시점으로"
+      "뒤로"
      ],
-     "focusOutline": true,
+     "focusOutline": false,
      "hasMobile": true,
      "noProcedureText": false,
-     "internalWords": [
-      "USER_REPORTED"
-     ],
+     "internalWords": [],
      "backTo": "TIRE_SELECTION",
      "backPoseMoved": 13.732
     },
@@ -3448,19 +3387,14 @@
      ],
      "selectionIntensity": null,
      "label": true,
-     "badge": "ESTIMATED_GEOMETRY · 추정 외함",
+     "badge": "추정 모델",
      "backButtons": [
-      "점검 부위로"
+      "뒤로"
      ],
-     "focusOutline": true,
+     "focusOutline": false,
      "hasMobile": false,
      "noProcedureText": false,
-     "internalWords": [
-      "DETACHED",
-      "ESTIMATED_GEOMETRY",
-      "UNVERIFIED",
-      "USER_REPORTED"
-     ],
+     "internalWords": [],
      "backTo": "INSPECTION_OVERVIEW",
      "backPoseMoved": 11.346
     },
@@ -3512,19 +3446,14 @@
      ],
      "selectionIntensity": null,
      "label": true,
-     "badge": "ESTIMATED_GEOMETRY · 정적 닫힌 형상",
+     "badge": "추정 모델",
      "backButtons": [
-      "뒤로 · 차량 전체 보기"
+      "뒤로"
      ],
-     "focusOutline": true,
+     "focusOutline": false,
      "hasMobile": true,
      "noProcedureText": false,
-     "internalWords": [
-      "DETACHED",
-      "ESTIMATED_GEOMETRY",
-      "UNVERIFIED",
-      "USER_REPORTED"
-     ],
+     "internalWords": [],
      "backTo": "INSPECTION_OVERVIEW",
      "backPoseMoved": 12.638
     },
@@ -3576,19 +3505,14 @@
      ],
      "selectionIntensity": null,
      "label": true,
-     "badge": "ESTIMATED_GEOMETRY · 정적 닫힌 형상",
+     "badge": "추정 모델",
      "backButtons": [
-      "뒤로 · 차량 전체 보기"
+      "뒤로"
      ],
-     "focusOutline": true,
+     "focusOutline": false,
      "hasMobile": false,
      "noProcedureText": false,
-     "internalWords": [
-      "DETACHED",
-      "ESTIMATED_GEOMETRY",
-      "UNVERIFIED",
-      "USER_REPORTED"
-     ],
+     "internalWords": [],
      "backTo": "INSPECTION_OVERVIEW",
      "backPoseMoved": 12.528
     },
@@ -3640,19 +3564,14 @@
      ],
      "selectionIntensity": null,
      "label": true,
-     "badge": "ESTIMATED_GEOMETRY · 정적 휴지 자세",
+     "badge": "추정 모델",
      "backButtons": [
-      "뒤로 · 차량 전체 보기"
+      "뒤로"
      ],
-     "focusOutline": true,
+     "focusOutline": false,
      "hasMobile": true,
      "noProcedureText": false,
-     "internalWords": [
-      "DETACHED",
-      "ESTIMATED_GEOMETRY",
-      "UNVERIFIED",
-      "USER_REPORTED"
-     ],
+     "internalWords": [],
      "backTo": "INSPECTION_OVERVIEW",
      "backPoseMoved": 7.566
     },
@@ -3704,19 +3623,14 @@
      ],
      "selectionIntensity": null,
      "label": true,
-     "badge": "ESTIMATED_GEOMETRY · 정적 휴지 자세",
+     "badge": "추정 모델",
      "backButtons": [
-      "뒤로 · 차량 전체 보기"
+      "뒤로"
      ],
-     "focusOutline": true,
+     "focusOutline": false,
      "hasMobile": true,
      "noProcedureText": false,
-     "internalWords": [
-      "DETACHED",
-      "ESTIMATED_GEOMETRY",
-      "UNVERIFIED",
-      "USER_REPORTED"
-     ],
+     "internalWords": [],
      "backTo": "INSPECTION_OVERVIEW",
      "backPoseMoved": 8.312
     },
@@ -3768,18 +3682,14 @@
      ],
      "selectionIntensity": null,
      "label": true,
-     "badge": "기존 커뮤니티 GLB 표식 · OEM 광학 구조 미검증",
+     "badge": "위치 표식",
      "backButtons": [
-      "뒤로 · 차량 전체 보기"
+      "뒤로"
      ],
-     "focusOutline": true,
+     "focusOutline": false,
      "hasMobile": true,
      "noProcedureText": false,
-     "internalWords": [
-      "DETACHED",
-      "UNVERIFIED",
-      "USER_REPORTED"
-     ],
+     "internalWords": [],
      "backTo": "INSPECTION_OVERVIEW",
      "backPoseMoved": 7.892
     },
@@ -3831,18 +3741,14 @@
      ],
      "selectionIntensity": null,
      "label": true,
-     "badge": "기존 커뮤니티 GLB 표식 · OEM 광학 구조 미검증",
+     "badge": "위치 표식",
      "backButtons": [
-      "뒤로 · 차량 전체 보기"
+      "뒤로"
      ],
-     "focusOutline": true,
+     "focusOutline": false,
      "hasMobile": true,
      "noProcedureText": false,
-     "internalWords": [
-      "DETACHED",
-      "UNVERIFIED",
-      "USER_REPORTED"
-     ],
+     "internalWords": [],
      "backTo": "INSPECTION_OVERVIEW",
      "backPoseMoved": 8.496
     },
@@ -3894,18 +3800,14 @@
      ],
      "selectionIntensity": null,
      "label": true,
-     "badge": "기존 커뮤니티 GLB 표식 · OEM 광학 구조 미검증",
+     "badge": "위치 표식",
      "backButtons": [
-      "뒤로 · 차량 전체 보기"
+      "뒤로"
      ],
-     "focusOutline": true,
+     "focusOutline": false,
      "hasMobile": true,
      "noProcedureText": false,
-     "internalWords": [
-      "DETACHED",
-      "UNVERIFIED",
-      "USER_REPORTED"
-     ],
+     "internalWords": [],
      "backTo": "INSPECTION_OVERVIEW",
      "backPoseMoved": 8.024
     },
@@ -3957,18 +3859,14 @@
      ],
      "selectionIntensity": null,
      "label": true,
-     "badge": "기존 커뮤니티 GLB 표식 · OEM 광학 구조 미검증",
+     "badge": "위치 표식",
      "backButtons": [
-      "뒤로 · 차량 전체 보기"
+      "뒤로"
      ],
-     "focusOutline": true,
+     "focusOutline": false,
      "hasMobile": true,
      "noProcedureText": false,
-     "internalWords": [
-      "DETACHED",
-      "UNVERIFIED",
-      "USER_REPORTED"
-     ],
+     "internalWords": [],
      "backTo": "INSPECTION_OVERVIEW",
      "backPoseMoved": 8.779
     }
@@ -4013,7 +3911,7 @@
      "title": "워셔액",
      "crumb": "차량 점검 › 워셔액",
      "hood": 60,
-     "backTo": "INSPECTION_SUMMARY",
+     "backTo": "INSPECTION_OVERVIEW",
      "historyPosition": [
       1.539,
       1.369,
@@ -4059,7 +3957,7 @@
      "title": "냉각수 리저버",
      "crumb": "차량 점검 › 냉각수 리저버",
      "hood": 60,
-     "backTo": "INSPECTION_SUMMARY",
+     "backTo": "INSPECTION_OVERVIEW",
      "historyPosition": [
       1.875,
       1.671,
@@ -4084,7 +3982,7 @@
      "title": "저전도 냉각수 리저버",
      "crumb": "차량 점검 › 저전도 냉각수 리저버",
      "hood": 60,
-     "backTo": "INSPECTION_SUMMARY",
+     "backTo": "INSPECTION_OVERVIEW",
      "historyPosition": [
       3.239,
       3.081,
@@ -4130,7 +4028,7 @@
      "title": "브레이크액",
      "crumb": "차량 점검 › 브레이크액",
      "hood": 60,
-     "backTo": "INSPECTION_SUMMARY",
+     "backTo": "INSPECTION_OVERVIEW",
      "historyPosition": [
       1.591,
       1.448,
@@ -4176,7 +4074,7 @@
      "title": "12V 보조 배터리",
      "crumb": "차량 점검 › 12V 보조 배터리",
      "hood": 60,
-     "backTo": "INSPECTION_SUMMARY",
+     "backTo": "INSPECTION_OVERVIEW",
      "historyPosition": [
       2.127,
       1.798,
@@ -4222,7 +4120,7 @@
      "title": "모터룸 퓨즈박스",
      "crumb": "차량 점검 › 모터룸 퓨즈박스",
      "hood": 60,
-     "backTo": "INSPECTION_SUMMARY",
+     "backTo": "INSPECTION_OVERVIEW",
      "historyPosition": [
       1.792,
       1.543,
@@ -4268,7 +4166,7 @@
      "title": "앞 왼쪽 타이어",
      "crumb": "차량 점검 › 앞 왼쪽 타이어",
      "hood": 0,
-     "backTo": "INSPECTION_SUMMARY",
+     "backTo": "INSPECTION_OVERVIEW",
      "historyPosition": [
       1.967,
       1.28,
@@ -4314,7 +4212,7 @@
      "title": "앞 오른쪽 타이어",
      "crumb": "차량 점검 › 앞 오른쪽 타이어",
      "hood": 0,
-     "backTo": "INSPECTION_SUMMARY",
+     "backTo": "INSPECTION_OVERVIEW",
      "historyPosition": [
       1.967,
       1.28,
@@ -4360,7 +4258,7 @@
      "title": "뒤 왼쪽 타이어",
      "crumb": "차량 점검 › 뒤 왼쪽 타이어",
      "hood": 0,
-     "backTo": "INSPECTION_SUMMARY",
+     "backTo": "INSPECTION_OVERVIEW",
      "historyPosition": [
       -2.073,
       1.28,
@@ -4406,7 +4304,7 @@
      "title": "뒤 오른쪽 타이어",
      "crumb": "차량 점검 › 뒤 오른쪽 타이어",
      "hood": 0,
-     "backTo": "INSPECTION_SUMMARY",
+     "backTo": "INSPECTION_OVERVIEW",
      "historyPosition": [
       -2.073,
       1.28,
@@ -4452,7 +4350,7 @@
      "title": "EV 충전구",
      "crumb": "차량 점검 › EV 충전구",
      "hood": 0,
-     "backTo": "INSPECTION_SUMMARY",
+     "backTo": "INSPECTION_OVERVIEW",
      "historyPosition": [
       -2.435,
       1.308,
@@ -4498,7 +4396,7 @@
      "title": "전면 왼쪽 와이퍼",
      "crumb": "차량 점검 › 전면 왼쪽 와이퍼",
      "hood": 0,
-     "backTo": "INSPECTION_SUMMARY",
+     "backTo": "INSPECTION_OVERVIEW",
      "historyPosition": [
       1.76,
       2.865,
@@ -4544,7 +4442,7 @@
      "title": "전면 오른쪽 와이퍼",
      "crumb": "차량 점검 › 전면 오른쪽 와이퍼",
      "hood": 0,
-     "backTo": "INSPECTION_SUMMARY",
+     "backTo": "INSPECTION_OVERVIEW",
      "historyPosition": [
       1.676,
       2.671,
@@ -4590,7 +4488,7 @@
      "title": "왼쪽 하향등",
      "crumb": "차량 점검 › 왼쪽 하향등",
      "hood": 0,
-     "backTo": "INSPECTION_SUMMARY",
+     "backTo": "INSPECTION_OVERVIEW",
      "historyPosition": [
       2.661,
       0.896,
@@ -4636,7 +4534,7 @@
      "title": "오른쪽 하향등",
      "crumb": "차량 점검 › 오른쪽 하향등",
      "hood": 0,
-     "backTo": "INSPECTION_SUMMARY",
+     "backTo": "INSPECTION_OVERVIEW",
      "historyPosition": [
       2.661,
       0.896,
@@ -4682,7 +4580,7 @@
      "title": "왼쪽 상향등",
      "crumb": "차량 점검 › 왼쪽 상향등",
      "hood": 0,
-     "backTo": "INSPECTION_SUMMARY",
+     "backTo": "INSPECTION_OVERVIEW",
      "historyPosition": [
       2.442,
       0.803,
@@ -4728,7 +4626,7 @@
      "title": "오른쪽 상향등",
      "crumb": "차량 점검 › 오른쪽 상향등",
      "hood": 0,
-     "backTo": "INSPECTION_SUMMARY",
+     "backTo": "INSPECTION_OVERVIEW",
      "historyPosition": [
       2.442,
       0.803,
@@ -4746,7 +4644,7 @@
      "battery-12v": "12V 보조 배터리",
      "fuse-box": "모터룸 퓨즈박스"
     },
-    "resultBackFromList": "INSPECTION_SUMMARY",
+    "resultBackFromList": "COMPONENT_SELECTION",
     "tireList": {
      "directDistance": 9.937,
      "viaTireDistance": 9.937,
@@ -4801,11 +4699,7 @@
      }
     },
     "backLabels": [
-     "뒤로 · 차량 전체 보기",
-     "선택 해제 · 이전 시점으로",
-     "점검 목록과 이전 시점으로",
-     "점검 부위로",
-     "점검 항목으로"
+     "뒤로"
     ],
     "pinch": "NOT_RUN: desktop pointer input only",
     "realTouch": "NOT_RUN: desktop pointer input only"
@@ -4990,11 +4884,11 @@
     }
    },
    "overviewFacts": {
-    "text": true,
-    "legendTires": true,
-    "toastCenter": 612,
+    "text": false,
+    "legendTires": false,
+    "toastCenter": 413,
     "usableCenter": 413,
-    "batteryTag": "점검 가능"
+    "batteryTag": "형상 보기"
    },
    "select3d": {
     "washer-fluid-cap": {
@@ -5558,7 +5452,7 @@
      "selectable": true,
      "title": "워셔액",
      "crumb": "차량 점검 › 보닛 › 워셔액",
-     "listName": null,
+     "listName": "워셔액",
      "state": "WASHER_SELECTED",
      "distance": 0.588,
      "azimuth": 65.4,
@@ -5602,11 +5496,11 @@
      ],
      "selectionIntensity": null,
      "label": true,
-     "badge": "위치·형상 추정",
+     "badge": "추정 모델",
      "backButtons": [
-      "점검 항목으로"
+      "뒤로"
      ],
-     "focusOutline": true,
+     "focusOutline": false,
      "hasMobile": true,
      "noProcedureText": false,
      "internalWords": [],
@@ -5661,13 +5555,13 @@
      ],
      "selectionIntensity": null,
      "label": true,
-     "badge": "추정 모델 · 점검 절차 미제공",
+     "badge": "추정 모델",
      "backButtons": [
-      "점검 목록과 이전 시점으로"
+      "뒤로"
      ],
-     "focusOutline": true,
+     "focusOutline": false,
      "hasMobile": true,
-     "noProcedureText": true,
+     "noProcedureText": false,
      "internalWords": [],
      "backTo": "COMPONENT_SELECTION",
      "backPoseMoved": 2.034
@@ -5724,13 +5618,13 @@
      ],
      "selectionIntensity": null,
      "label": true,
-     "badge": "추정 모델 · 점검 절차 미제공",
+     "badge": "추정 모델",
      "backButtons": [
-      "점검 목록과 이전 시점으로"
+      "뒤로"
      ],
-     "focusOutline": true,
+     "focusOutline": false,
      "hasMobile": true,
-     "noProcedureText": true,
+     "noProcedureText": false,
      "internalWords": [],
      "backTo": "COMPONENT_SELECTION",
      "backPoseMoved": 2.079
@@ -5783,13 +5677,13 @@
      ],
      "selectionIntensity": null,
      "label": true,
-     "badge": "추정 모델 · 점검 절차 미제공",
+     "badge": "추정 모델",
      "backButtons": [
-      "점검 목록과 이전 시점으로"
+      "뒤로"
      ],
-     "focusOutline": true,
+     "focusOutline": false,
      "hasMobile": true,
-     "noProcedureText": true,
+     "noProcedureText": false,
      "internalWords": [],
      "backTo": "COMPONENT_SELECTION",
      "backPoseMoved": 1.484
@@ -5842,13 +5736,13 @@
      ],
      "selectionIntensity": null,
      "label": true,
-     "badge": "추정 모델 · 점검 절차 미제공",
+     "badge": "추정 모델",
      "backButtons": [
-      "점검 목록과 이전 시점으로"
+      "뒤로"
      ],
-     "focusOutline": true,
+     "focusOutline": false,
      "hasMobile": true,
-     "noProcedureText": true,
+     "noProcedureText": false,
      "internalWords": [],
      "backTo": "COMPONENT_SELECTION",
      "backPoseMoved": 1.878
@@ -5901,16 +5795,14 @@
      ],
      "selectionIntensity": 0.8114512059100857,
      "label": true,
-     "badge": "상태만 표시 · 수치 및 진단 미제공",
+     "badge": "참조 모델",
      "backButtons": [
-      "선택 해제 · 이전 시점으로"
+      "뒤로"
      ],
-     "focusOutline": true,
+     "focusOutline": false,
      "hasMobile": true,
      "noProcedureText": false,
-     "internalWords": [
-      "USER_REPORTED"
-     ],
+     "internalWords": [],
      "backTo": "TIRE_SELECTION",
      "backPoseMoved": 5.196
     },
@@ -5962,16 +5854,14 @@
      ],
      "selectionIntensity": 0.8114512059100857,
      "label": true,
-     "badge": "상태만 표시 · 수치 및 진단 미제공",
+     "badge": "참조 모델",
      "backButtons": [
-      "선택 해제 · 이전 시점으로"
+      "뒤로"
      ],
-     "focusOutline": true,
+     "focusOutline": false,
      "hasMobile": true,
      "noProcedureText": false,
-     "internalWords": [
-      "USER_REPORTED"
-     ],
+     "internalWords": [],
      "backTo": "TIRE_SELECTION",
      "backPoseMoved": 12.018
     },
@@ -6023,16 +5913,14 @@
      ],
      "selectionIntensity": 0.8114512059100857,
      "label": true,
-     "badge": "상태만 표시 · 수치 및 진단 미제공",
+     "badge": "참조 모델",
      "backButtons": [
-      "선택 해제 · 이전 시점으로"
+      "뒤로"
      ],
-     "focusOutline": true,
+     "focusOutline": false,
      "hasMobile": true,
      "noProcedureText": false,
-     "internalWords": [
-      "USER_REPORTED"
-     ],
+     "internalWords": [],
      "backTo": "TIRE_SELECTION",
      "backPoseMoved": 6.473
     },
@@ -6084,16 +5972,14 @@
      ],
      "selectionIntensity": 0.8114512059100857,
      "label": true,
-     "badge": "상태만 표시 · 수치 및 진단 미제공",
+     "badge": "참조 모델",
      "backButtons": [
-      "선택 해제 · 이전 시점으로"
+      "뒤로"
      ],
-     "focusOutline": true,
+     "focusOutline": false,
      "hasMobile": true,
      "noProcedureText": false,
-     "internalWords": [
-      "USER_REPORTED"
-     ],
+     "internalWords": [],
      "backTo": "TIRE_SELECTION",
      "backPoseMoved": 12.623
     },
@@ -6145,19 +6031,14 @@
      ],
      "selectionIntensity": null,
      "label": true,
-     "badge": "ESTIMATED_GEOMETRY · 추정 외함",
+     "badge": "추정 모델",
      "backButtons": [
-      "점검 부위로"
+      "뒤로"
      ],
-     "focusOutline": true,
+     "focusOutline": false,
      "hasMobile": false,
      "noProcedureText": false,
-     "internalWords": [
-      "DETACHED",
-      "ESTIMATED_GEOMETRY",
-      "UNVERIFIED",
-      "USER_REPORTED"
-     ],
+     "internalWords": [],
      "backTo": "INSPECTION_OVERVIEW",
      "backPoseMoved": 10.71
     },
@@ -6209,19 +6090,14 @@
      ],
      "selectionIntensity": null,
      "label": true,
-     "badge": "ESTIMATED_GEOMETRY · 정적 닫힌 형상",
+     "badge": "추정 모델",
      "backButtons": [
-      "뒤로 · 차량 전체 보기"
+      "뒤로"
      ],
-     "focusOutline": true,
+     "focusOutline": false,
      "hasMobile": true,
      "noProcedureText": false,
-     "internalWords": [
-      "DETACHED",
-      "ESTIMATED_GEOMETRY",
-      "UNVERIFIED",
-      "USER_REPORTED"
-     ],
+     "internalWords": [],
      "backTo": "INSPECTION_OVERVIEW",
      "backPoseMoved": 11.983
     },
@@ -6273,19 +6149,14 @@
      ],
      "selectionIntensity": null,
      "label": true,
-     "badge": "ESTIMATED_GEOMETRY · 정적 닫힌 형상",
+     "badge": "추정 모델",
      "backButtons": [
-      "뒤로 · 차량 전체 보기"
+      "뒤로"
      ],
-     "focusOutline": true,
+     "focusOutline": false,
      "hasMobile": false,
      "noProcedureText": false,
-     "internalWords": [
-      "DETACHED",
-      "ESTIMATED_GEOMETRY",
-      "UNVERIFIED",
-      "USER_REPORTED"
-     ],
+     "internalWords": [],
      "backTo": "INSPECTION_OVERVIEW",
      "backPoseMoved": 11.878
     },
@@ -6337,19 +6208,14 @@
      ],
      "selectionIntensity": null,
      "label": true,
-     "badge": "ESTIMATED_GEOMETRY · 정적 휴지 자세",
+     "badge": "추정 모델",
      "backButtons": [
-      "뒤로 · 차량 전체 보기"
+      "뒤로"
      ],
-     "focusOutline": true,
+     "focusOutline": false,
      "hasMobile": true,
      "noProcedureText": false,
-     "internalWords": [
-      "DETACHED",
-      "ESTIMATED_GEOMETRY",
-      "UNVERIFIED",
-      "USER_REPORTED"
-     ],
+     "internalWords": [],
      "backTo": "INSPECTION_OVERVIEW",
      "backPoseMoved": 7.082
     },
@@ -6401,19 +6267,14 @@
      ],
      "selectionIntensity": null,
      "label": true,
-     "badge": "ESTIMATED_GEOMETRY · 정적 휴지 자세",
+     "badge": "추정 모델",
      "backButtons": [
-      "뒤로 · 차량 전체 보기"
+      "뒤로"
      ],
-     "focusOutline": true,
+     "focusOutline": false,
      "hasMobile": true,
      "noProcedureText": false,
-     "internalWords": [
-      "DETACHED",
-      "ESTIMATED_GEOMETRY",
-      "UNVERIFIED",
-      "USER_REPORTED"
-     ],
+     "internalWords": [],
      "backTo": "INSPECTION_OVERVIEW",
      "backPoseMoved": 7.786
     },
@@ -6465,18 +6326,14 @@
      ],
      "selectionIntensity": null,
      "label": true,
-     "badge": "기존 커뮤니티 GLB 표식 · OEM 광학 구조 미검증",
+     "badge": "위치 표식",
      "backButtons": [
-      "뒤로 · 차량 전체 보기"
+      "뒤로"
      ],
-     "focusOutline": true,
+     "focusOutline": false,
      "hasMobile": true,
      "noProcedureText": false,
-     "internalWords": [
-      "DETACHED",
-      "UNVERIFIED",
-      "USER_REPORTED"
-     ],
+     "internalWords": [],
      "backTo": "INSPECTION_OVERVIEW",
      "backPoseMoved": 7.32
     },
@@ -6528,18 +6385,14 @@
      ],
      "selectionIntensity": null,
      "label": true,
-     "badge": "기존 커뮤니티 GLB 표식 · OEM 광학 구조 미검증",
+     "badge": "위치 표식",
      "backButtons": [
-      "뒤로 · 차량 전체 보기"
+      "뒤로"
      ],
-     "focusOutline": true,
+     "focusOutline": false,
      "hasMobile": true,
      "noProcedureText": false,
-     "internalWords": [
-      "DETACHED",
-      "UNVERIFIED",
-      "USER_REPORTED"
-     ],
+     "internalWords": [],
      "backTo": "INSPECTION_OVERVIEW",
      "backPoseMoved": 7.92
     },
@@ -6591,18 +6444,14 @@
      ],
      "selectionIntensity": null,
      "label": true,
-     "badge": "기존 커뮤니티 GLB 표식 · OEM 광학 구조 미검증",
+     "badge": "위치 표식",
      "backButtons": [
-      "뒤로 · 차량 전체 보기"
+      "뒤로"
      ],
-     "focusOutline": true,
+     "focusOutline": false,
      "hasMobile": true,
      "noProcedureText": false,
-     "internalWords": [
-      "DETACHED",
-      "UNVERIFIED",
-      "USER_REPORTED"
-     ],
+     "internalWords": [],
      "backTo": "INSPECTION_OVERVIEW",
      "backPoseMoved": 7.445
     },
@@ -6654,18 +6503,14 @@
      ],
      "selectionIntensity": null,
      "label": true,
-     "badge": "기존 커뮤니티 GLB 표식 · OEM 광학 구조 미검증",
+     "badge": "위치 표식",
      "backButtons": [
-      "뒤로 · 차량 전체 보기"
+      "뒤로"
      ],
-     "focusOutline": true,
+     "focusOutline": false,
      "hasMobile": true,
      "noProcedureText": false,
-     "internalWords": [
-      "DETACHED",
-      "UNVERIFIED",
-      "USER_REPORTED"
-     ],
+     "internalWords": [],
      "backTo": "INSPECTION_OVERVIEW",
      "backPoseMoved": 8.2
     }
@@ -6710,7 +6555,7 @@
      "title": "워셔액",
      "crumb": "차량 점검 › 워셔액",
      "hood": 60,
-     "backTo": "INSPECTION_SUMMARY",
+     "backTo": "INSPECTION_OVERVIEW",
      "historyPosition": [
       1.528,
       1.342,
@@ -6756,7 +6601,7 @@
      "title": "냉각수 리저버",
      "crumb": "차량 점검 › 냉각수 리저버",
      "hood": 60,
-     "backTo": "INSPECTION_SUMMARY",
+     "backTo": "INSPECTION_OVERVIEW",
      "historyPosition": [
       1.856,
       1.627,
@@ -6781,7 +6626,7 @@
      "title": "저전도 냉각수 리저버",
      "crumb": "차량 점검 › 저전도 냉각수 리저버",
      "hood": 60,
-     "backTo": "INSPECTION_SUMMARY",
+     "backTo": "INSPECTION_OVERVIEW",
      "historyPosition": [
       3.073,
       2.857,
@@ -6827,7 +6672,7 @@
      "title": "브레이크액",
      "crumb": "차량 점검 › 브레이크액",
      "hood": 60,
-     "backTo": "INSPECTION_SUMMARY",
+     "backTo": "INSPECTION_OVERVIEW",
      "historyPosition": [
       1.577,
       1.416,
@@ -6873,7 +6718,7 @@
      "title": "12V 보조 배터리",
      "crumb": "차량 점검 › 12V 보조 배터리",
      "hood": 60,
-     "backTo": "INSPECTION_SUMMARY",
+     "backTo": "INSPECTION_OVERVIEW",
      "historyPosition": [
       2.105,
       1.746,
@@ -6919,7 +6764,7 @@
      "title": "모터룸 퓨즈박스",
      "crumb": "차량 점검 › 모터룸 퓨즈박스",
      "hood": 60,
-     "backTo": "INSPECTION_SUMMARY",
+     "backTo": "INSPECTION_OVERVIEW",
      "historyPosition": [
       1.775,
       1.505,
@@ -6965,7 +6810,7 @@
      "title": "앞 왼쪽 타이어",
      "crumb": "차량 점검 › 앞 왼쪽 타이어",
      "hood": 0,
-     "backTo": "INSPECTION_SUMMARY",
+     "backTo": "INSPECTION_OVERVIEW",
      "historyPosition": [
       1.942,
       1.235,
@@ -7011,7 +6856,7 @@
      "title": "앞 오른쪽 타이어",
      "crumb": "차량 점검 › 앞 오른쪽 타이어",
      "hood": 0,
-     "backTo": "INSPECTION_SUMMARY",
+     "backTo": "INSPECTION_OVERVIEW",
      "historyPosition": [
       1.942,
       1.235,
@@ -7057,7 +6902,7 @@
      "title": "뒤 왼쪽 타이어",
      "crumb": "차량 점검 › 뒤 왼쪽 타이어",
      "hood": 0,
-     "backTo": "INSPECTION_SUMMARY",
+     "backTo": "INSPECTION_OVERVIEW",
      "historyPosition": [
       -2.047,
       1.235,
@@ -7103,7 +6948,7 @@
      "title": "뒤 오른쪽 타이어",
      "crumb": "차량 점검 › 뒤 오른쪽 타이어",
      "hood": 0,
-     "backTo": "INSPECTION_SUMMARY",
+     "backTo": "INSPECTION_OVERVIEW",
      "historyPosition": [
       -2.047,
       1.235,
@@ -7149,7 +6994,7 @@
      "title": "EV 충전구",
      "crumb": "차량 점검 › EV 충전구",
      "hood": 0,
-     "backTo": "INSPECTION_SUMMARY",
+     "backTo": "INSPECTION_OVERVIEW",
      "historyPosition": [
       -2.409,
       1.291,
@@ -7195,7 +7040,7 @@
      "title": "전면 왼쪽 와이퍼",
      "crumb": "차량 점검 › 전면 왼쪽 와이퍼",
      "hood": 0,
-     "backTo": "INSPECTION_SUMMARY",
+     "backTo": "INSPECTION_OVERVIEW",
      "historyPosition": [
       1.687,
       2.694,
@@ -7241,7 +7086,7 @@
      "title": "전면 오른쪽 와이퍼",
      "crumb": "차량 점검 › 전면 오른쪽 와이퍼",
      "hood": 0,
-     "backTo": "INSPECTION_SUMMARY",
+     "backTo": "INSPECTION_OVERVIEW",
      "historyPosition": [
       1.611,
       2.52,
@@ -7287,7 +7132,7 @@
      "title": "왼쪽 하향등",
      "crumb": "차량 점검 › 왼쪽 하향등",
      "hood": 0,
-     "backTo": "INSPECTION_SUMMARY",
+     "backTo": "INSPECTION_OVERVIEW",
      "historyPosition": [
       2.608,
       0.885,
@@ -7333,7 +7178,7 @@
      "title": "오른쪽 하향등",
      "crumb": "차량 점검 › 오른쪽 하향등",
      "hood": 0,
-     "backTo": "INSPECTION_SUMMARY",
+     "backTo": "INSPECTION_OVERVIEW",
      "historyPosition": [
       2.608,
       0.885,
@@ -7379,7 +7224,7 @@
      "title": "왼쪽 상향등",
      "crumb": "차량 점검 › 왼쪽 상향등",
      "hood": 0,
-     "backTo": "INSPECTION_SUMMARY",
+     "backTo": "INSPECTION_OVERVIEW",
      "historyPosition": [
       2.388,
       0.803,
@@ -7425,7 +7270,7 @@
      "title": "오른쪽 상향등",
      "crumb": "차량 점검 › 오른쪽 상향등",
      "hood": 0,
-     "backTo": "INSPECTION_SUMMARY",
+     "backTo": "INSPECTION_OVERVIEW",
      "historyPosition": [
       2.388,
       0.803,
@@ -7443,7 +7288,7 @@
      "battery-12v": "12V 보조 배터리",
      "fuse-box": "모터룸 퓨즈박스"
     },
-    "resultBackFromList": "INSPECTION_SUMMARY",
+    "resultBackFromList": "COMPONENT_SELECTION",
     "tireList": {
      "directDistance": 8.953,
      "viaTireDistance": 8.953,
@@ -7498,11 +7343,7 @@
      }
     },
     "backLabels": [
-     "뒤로 · 차량 전체 보기",
-     "선택 해제 · 이전 시점으로",
-     "점검 목록과 이전 시점으로",
-     "점검 부위로",
-     "점검 항목으로"
+     "뒤로"
     ],
     "pinch": "NOT_RUN: desktop pointer input only",
     "realTouch": "NOT_RUN: desktop pointer input only"
@@ -7684,11 +7525,11 @@
     }
    },
    "overviewFacts": {
-    "text": true,
-    "legendTires": true,
-    "toastCenter": 512,
+    "text": false,
+    "legendTires": false,
+    "toastCenter": 313,
     "usableCenter": 313,
-    "batteryTag": "점검 가능"
+    "batteryTag": "형상 보기"
    },
    "select3d": {
     "washer-fluid-cap": {
@@ -8247,7 +8088,7 @@
      "selectable": true,
      "title": "워셔액",
      "crumb": "차량 점검 › 보닛 › 워셔액",
-     "listName": null,
+     "listName": "워셔액",
      "state": "WASHER_SELECTED",
      "distance": 1.123,
      "azimuth": 65.4,
@@ -8291,11 +8132,11 @@
      ],
      "selectionIntensity": null,
      "label": true,
-     "badge": "위치·형상 추정",
+     "badge": "추정 모델",
      "backButtons": [
-      "점검 항목으로"
+      "뒤로"
      ],
-     "focusOutline": true,
+     "focusOutline": false,
      "hasMobile": true,
      "noProcedureText": false,
      "internalWords": [],
@@ -8350,13 +8191,13 @@
      ],
      "selectionIntensity": null,
      "label": true,
-     "badge": "추정 모델 · 점검 절차 미제공",
+     "badge": "추정 모델",
      "backButtons": [
-      "점검 목록과 이전 시점으로"
+      "뒤로"
      ],
-     "focusOutline": true,
+     "focusOutline": false,
      "hasMobile": true,
-     "noProcedureText": true,
+     "noProcedureText": false,
      "internalWords": [],
      "backTo": "COMPONENT_SELECTION",
      "backPoseMoved": 4.104
@@ -8413,13 +8254,13 @@
      ],
      "selectionIntensity": null,
      "label": true,
-     "badge": "추정 모델 · 점검 절차 미제공",
+     "badge": "추정 모델",
      "backButtons": [
-      "점검 목록과 이전 시점으로"
+      "뒤로"
      ],
-     "focusOutline": true,
+     "focusOutline": false,
      "hasMobile": true,
-     "noProcedureText": true,
+     "noProcedureText": false,
      "internalWords": [],
      "backTo": "COMPONENT_SELECTION",
      "backPoseMoved": 4.3
@@ -8472,13 +8313,13 @@
      ],
      "selectionIntensity": null,
      "label": true,
-     "badge": "추정 모델 · 점검 절차 미제공",
+     "badge": "추정 모델",
      "backButtons": [
-      "점검 목록과 이전 시점으로"
+      "뒤로"
      ],
-     "focusOutline": true,
+     "focusOutline": false,
      "hasMobile": true,
-     "noProcedureText": true,
+     "noProcedureText": false,
      "internalWords": [],
      "backTo": "COMPONENT_SELECTION",
      "backPoseMoved": 3.318
@@ -8531,13 +8372,13 @@
      ],
      "selectionIntensity": null,
      "label": true,
-     "badge": "추정 모델 · 점검 절차 미제공",
+     "badge": "추정 모델",
      "backButtons": [
-      "점검 목록과 이전 시점으로"
+      "뒤로"
      ],
-     "focusOutline": true,
+     "focusOutline": false,
      "hasMobile": true,
-     "noProcedureText": true,
+     "noProcedureText": false,
      "internalWords": [],
      "backTo": "COMPONENT_SELECTION",
      "backPoseMoved": 3.992
@@ -8590,16 +8431,14 @@
      ],
      "selectionIntensity": 0.8114512059100857,
      "label": true,
-     "badge": "상태만 표시 · 수치 및 진단 미제공",
+     "badge": "참조 모델",
      "backButtons": [
-      "선택 해제 · 이전 시점으로"
+      "뒤로"
      ],
-     "focusOutline": true,
+     "focusOutline": false,
      "hasMobile": true,
      "noProcedureText": false,
-     "internalWords": [
-      "USER_REPORTED"
-     ],
+     "internalWords": [],
      "backTo": "TIRE_SELECTION",
      "backPoseMoved": 12.375
     },
@@ -8651,16 +8490,14 @@
      ],
      "selectionIntensity": 0.8114512059100857,
      "label": true,
-     "badge": "상태만 표시 · 수치 및 진단 미제공",
+     "badge": "참조 모델",
      "backButtons": [
-      "선택 해제 · 이전 시점으로"
+      "뒤로"
      ],
-     "focusOutline": true,
+     "focusOutline": false,
      "hasMobile": true,
      "noProcedureText": false,
-     "internalWords": [
-      "USER_REPORTED"
-     ],
+     "internalWords": [],
      "backTo": "TIRE_SELECTION",
      "backPoseMoved": 24.28
     },
@@ -8712,16 +8549,14 @@
      ],
      "selectionIntensity": 0.8114512059100857,
      "label": true,
-     "badge": "상태만 표시 · 수치 및 진단 미제공",
+     "badge": "참조 모델",
      "backButtons": [
-      "선택 해제 · 이전 시점으로"
+      "뒤로"
      ],
-     "focusOutline": true,
+     "focusOutline": false,
      "hasMobile": true,
      "noProcedureText": false,
-     "internalWords": [
-      "USER_REPORTED"
-     ],
+     "internalWords": [],
      "backTo": "TIRE_SELECTION",
      "backPoseMoved": 13.862
     },
@@ -8773,16 +8608,14 @@
      ],
      "selectionIntensity": 0.8114512059100857,
      "label": true,
-     "badge": "상태만 표시 · 수치 및 진단 미제공",
+     "badge": "참조 모델",
      "backButtons": [
-      "선택 해제 · 이전 시점으로"
+      "뒤로"
      ],
-     "focusOutline": true,
+     "focusOutline": false,
      "hasMobile": true,
      "noProcedureText": false,
-     "internalWords": [
-      "USER_REPORTED"
-     ],
+     "internalWords": [],
      "backTo": "TIRE_SELECTION",
      "backPoseMoved": 25.071
     },
@@ -8834,19 +8667,14 @@
      ],
      "selectionIntensity": null,
      "label": true,
-     "badge": "ESTIMATED_GEOMETRY · 추정 외함",
+     "badge": "추정 모델",
      "backButtons": [
-      "점검 부위로"
+      "뒤로"
      ],
-     "focusOutline": true,
+     "focusOutline": false,
      "hasMobile": false,
      "noProcedureText": false,
-     "internalWords": [
-      "DETACHED",
-      "ESTIMATED_GEOMETRY",
-      "UNVERIFIED",
-      "USER_REPORTED"
-     ],
+     "internalWords": [],
      "backTo": "INSPECTION_OVERVIEW",
      "backPoseMoved": 19.511
     },
@@ -8898,19 +8726,14 @@
      ],
      "selectionIntensity": null,
      "label": true,
-     "badge": "ESTIMATED_GEOMETRY · 정적 닫힌 형상",
+     "badge": "추정 모델",
      "backButtons": [
-      "뒤로 · 차량 전체 보기"
+      "뒤로"
      ],
-     "focusOutline": true,
+     "focusOutline": false,
      "hasMobile": true,
      "noProcedureText": false,
-     "internalWords": [
-      "DETACHED",
-      "ESTIMATED_GEOMETRY",
-      "UNVERIFIED",
-      "USER_REPORTED"
-     ],
+     "internalWords": [],
      "backTo": "INSPECTION_OVERVIEW",
      "backPoseMoved": 20.565
     },
@@ -8962,19 +8785,14 @@
      ],
      "selectionIntensity": null,
      "label": true,
-     "badge": "ESTIMATED_GEOMETRY · 정적 닫힌 형상",
+     "badge": "추정 모델",
      "backButtons": [
-      "뒤로 · 차량 전체 보기"
+      "뒤로"
      ],
-     "focusOutline": true,
+     "focusOutline": false,
      "hasMobile": false,
      "noProcedureText": false,
-     "internalWords": [
-      "DETACHED",
-      "ESTIMATED_GEOMETRY",
-      "UNVERIFIED",
-      "USER_REPORTED"
-     ],
+     "internalWords": [],
      "backTo": "INSPECTION_OVERVIEW",
      "backPoseMoved": 20.364
     },
@@ -9026,19 +8844,14 @@
      ],
      "selectionIntensity": null,
      "label": true,
-     "badge": "ESTIMATED_GEOMETRY · 정적 휴지 자세",
+     "badge": "추정 모델",
      "backButtons": [
-      "뒤로 · 차량 전체 보기"
+      "뒤로"
      ],
-     "focusOutline": true,
+     "focusOutline": false,
      "hasMobile": true,
      "noProcedureText": false,
-     "internalWords": [
-      "DETACHED",
-      "ESTIMATED_GEOMETRY",
-      "UNVERIFIED",
-      "USER_REPORTED"
-     ],
+     "internalWords": [],
      "backTo": "INSPECTION_OVERVIEW",
      "backPoseMoved": 13.634
     },
@@ -9090,19 +8903,14 @@
      ],
      "selectionIntensity": null,
      "label": true,
-     "badge": "ESTIMATED_GEOMETRY · 정적 휴지 자세",
+     "badge": "추정 모델",
      "backButtons": [
-      "뒤로 · 차량 전체 보기"
+      "뒤로"
      ],
-     "focusOutline": true,
+     "focusOutline": false,
      "hasMobile": true,
      "noProcedureText": false,
-     "internalWords": [
-      "DETACHED",
-      "ESTIMATED_GEOMETRY",
-      "UNVERIFIED",
-      "USER_REPORTED"
-     ],
+     "internalWords": [],
      "backTo": "INSPECTION_OVERVIEW",
      "backPoseMoved": 14.764
     },
@@ -9154,18 +8962,14 @@
      ],
      "selectionIntensity": null,
      "label": true,
-     "badge": "기존 커뮤니티 GLB 표식 · OEM 광학 구조 미검증",
+     "badge": "위치 표식",
      "backButtons": [
-      "뒤로 · 차량 전체 보기"
+      "뒤로"
      ],
-     "focusOutline": true,
+     "focusOutline": false,
      "hasMobile": true,
      "noProcedureText": false,
-     "internalWords": [
-      "DETACHED",
-      "UNVERIFIED",
-      "USER_REPORTED"
-     ],
+     "internalWords": [],
      "backTo": "INSPECTION_OVERVIEW",
      "backPoseMoved": 14.79
     },
@@ -9217,18 +9021,14 @@
      ],
      "selectionIntensity": null,
      "label": true,
-     "badge": "기존 커뮤니티 GLB 표식 · OEM 광학 구조 미검증",
+     "badge": "위치 표식",
      "backButtons": [
-      "뒤로 · 차량 전체 보기"
+      "뒤로"
      ],
-     "focusOutline": true,
+     "focusOutline": false,
      "hasMobile": true,
      "noProcedureText": false,
-     "internalWords": [
-      "DETACHED",
-      "UNVERIFIED",
-      "USER_REPORTED"
-     ],
+     "internalWords": [],
      "backTo": "INSPECTION_OVERVIEW",
      "backPoseMoved": 15.434
     },
@@ -9280,18 +9080,14 @@
      ],
      "selectionIntensity": null,
      "label": true,
-     "badge": "기존 커뮤니티 GLB 표식 · OEM 광학 구조 미검증",
+     "badge": "위치 표식",
      "backButtons": [
-      "뒤로 · 차량 전체 보기"
+      "뒤로"
      ],
-     "focusOutline": true,
+     "focusOutline": false,
      "hasMobile": true,
      "noProcedureText": false,
-     "internalWords": [
-      "DETACHED",
-      "UNVERIFIED",
-      "USER_REPORTED"
-     ],
+     "internalWords": [],
      "backTo": "INSPECTION_OVERVIEW",
      "backPoseMoved": 14.985
     },
@@ -9343,18 +9139,14 @@
      ],
      "selectionIntensity": null,
      "label": true,
-     "badge": "기존 커뮤니티 GLB 표식 · OEM 광학 구조 미검증",
+     "badge": "위치 표식",
      "backButtons": [
-      "뒤로 · 차량 전체 보기"
+      "뒤로"
      ],
-     "focusOutline": true,
+     "focusOutline": false,
      "hasMobile": true,
      "noProcedureText": false,
-     "internalWords": [
-      "DETACHED",
-      "UNVERIFIED",
-      "USER_REPORTED"
-     ],
+     "internalWords": [],
      "backTo": "INSPECTION_OVERVIEW",
      "backPoseMoved": 15.744
     }
@@ -9399,7 +9191,7 @@
      "title": "워셔액",
      "crumb": "차량 점검 › 워셔액",
      "hood": 60,
-     "backTo": "INSPECTION_SUMMARY",
+     "backTo": "INSPECTION_OVERVIEW",
      "historyPosition": [
       1.735,
       1.827,
@@ -9445,7 +9237,7 @@
      "title": "냉각수 리저버",
      "crumb": "차량 점검 › 냉각수 리저버",
      "hood": 60,
-     "backTo": "INSPECTION_SUMMARY",
+     "backTo": "INSPECTION_OVERVIEW",
      "historyPosition": [
       2.204,
       2.437,
@@ -9470,7 +9262,7 @@
      "title": "저전도 냉각수 리저버",
      "crumb": "차량 점검 › 저전도 냉각수 리저버",
      "hood": 60,
-     "backTo": "INSPECTION_SUMMARY",
+     "backTo": "INSPECTION_OVERVIEW",
      "historyPosition": [
       4.762,
       5.137,
@@ -9516,7 +9308,7 @@
      "title": "브레이크액",
      "crumb": "차량 점검 › 브레이크액",
      "hood": 60,
-     "backTo": "INSPECTION_SUMMARY",
+     "backTo": "INSPECTION_OVERVIEW",
      "historyPosition": [
       1.83,
       2.006,
@@ -9562,7 +9354,7 @@
      "title": "12V 보조 배터리",
      "crumb": "차량 점검 › 12V 보조 배터리",
      "hood": 60,
-     "backTo": "INSPECTION_SUMMARY",
+     "backTo": "INSPECTION_OVERVIEW",
      "historyPosition": [
       2.514,
       2.701,
@@ -9608,7 +9400,7 @@
      "title": "모터룸 퓨즈박스",
      "crumb": "차량 점검 › 모터룸 퓨즈박스",
      "hood": 60,
-     "backTo": "INSPECTION_SUMMARY",
+     "backTo": "INSPECTION_OVERVIEW",
      "historyPosition": [
       2.072,
       2.198,
@@ -9654,7 +9446,7 @@
      "title": "앞 왼쪽 타이어",
      "crumb": "차량 점검 › 앞 왼쪽 타이어",
      "hood": 0,
-     "backTo": "INSPECTION_SUMMARY",
+     "backTo": "INSPECTION_OVERVIEW",
      "historyPosition": [
       2.41,
       2.067,
@@ -9700,7 +9492,7 @@
      "title": "앞 오른쪽 타이어",
      "crumb": "차량 점검 › 앞 오른쪽 타이어",
      "hood": 0,
-     "backTo": "INSPECTION_SUMMARY",
+     "backTo": "INSPECTION_OVERVIEW",
      "historyPosition": [
       2.41,
       2.067,
@@ -9746,7 +9538,7 @@
      "title": "뒤 왼쪽 타이어",
      "crumb": "차량 점검 › 뒤 왼쪽 타이어",
      "hood": 0,
-     "backTo": "INSPECTION_SUMMARY",
+     "backTo": "INSPECTION_OVERVIEW",
      "historyPosition": [
       -2.515,
       2.067,
@@ -9792,7 +9584,7 @@
      "title": "뒤 오른쪽 타이어",
      "crumb": "차량 점검 › 뒤 오른쪽 타이어",
      "hood": 0,
-     "backTo": "INSPECTION_SUMMARY",
+     "backTo": "INSPECTION_OVERVIEW",
      "historyPosition": [
       -2.515,
       2.067,
@@ -9838,7 +9630,7 @@
      "title": "EV 충전구",
      "crumb": "차량 점검 › EV 충전구",
      "hood": 0,
-     "backTo": "INSPECTION_SUMMARY",
+     "backTo": "INSPECTION_OVERVIEW",
      "historyPosition": [
       -2.885,
       1.593,
@@ -9884,7 +9676,7 @@
      "title": "전면 왼쪽 와이퍼",
      "crumb": "차량 점검 › 전면 왼쪽 와이퍼",
      "hood": 0,
-     "backTo": "INSPECTION_SUMMARY",
+     "backTo": "INSPECTION_OVERVIEW",
      "historyPosition": [
       2.433,
       4.436,
@@ -9930,7 +9722,7 @@
      "title": "전면 오른쪽 와이퍼",
      "crumb": "차량 점검 › 전면 오른쪽 와이퍼",
      "hood": 0,
-     "backTo": "INSPECTION_SUMMARY",
+     "backTo": "INSPECTION_OVERVIEW",
      "historyPosition": [
       2.272,
       4.062,
@@ -9976,7 +9768,7 @@
      "title": "왼쪽 하향등",
      "crumb": "차량 점검 › 왼쪽 하향등",
      "hood": 0,
-     "backTo": "INSPECTION_SUMMARY",
+     "backTo": "INSPECTION_OVERVIEW",
      "historyPosition": [
       3.147,
       0.993,
@@ -10022,7 +9814,7 @@
      "title": "오른쪽 하향등",
      "crumb": "차량 점검 › 오른쪽 하향등",
      "hood": 0,
-     "backTo": "INSPECTION_SUMMARY",
+     "backTo": "INSPECTION_OVERVIEW",
      "historyPosition": [
       3.147,
       0.993,
@@ -10068,7 +9860,7 @@
      "title": "왼쪽 상향등",
      "crumb": "차량 점검 › 왼쪽 상향등",
      "hood": 0,
-     "backTo": "INSPECTION_SUMMARY",
+     "backTo": "INSPECTION_OVERVIEW",
      "historyPosition": [
       2.945,
       0.803,
@@ -10114,7 +9906,7 @@
      "title": "오른쪽 상향등",
      "crumb": "차량 점검 › 오른쪽 상향등",
      "hood": 0,
-     "backTo": "INSPECTION_SUMMARY",
+     "backTo": "INSPECTION_OVERVIEW",
      "historyPosition": [
       2.945,
       0.803,
@@ -10132,7 +9924,7 @@
      "battery-12v": "12V 보조 배터리",
      "fuse-box": "모터룸 퓨즈박스"
     },
-    "resultBackFromList": "INSPECTION_SUMMARY",
+    "resultBackFromList": "COMPONENT_SELECTION",
     "tireList": {
      "directDistance": 18.986,
      "viaTireDistance": 18.986,
@@ -10187,11 +9979,7 @@
      }
     },
     "backLabels": [
-     "뒤로 · 차량 전체 보기",
-     "선택 해제 · 이전 시점으로",
-     "점검 목록과 이전 시점으로",
-     "점검 부위로",
-     "점검 항목으로"
+     "뒤로"
     ],
     "pinch": "NOT_RUN: desktop pointer input only",
     "realTouch": "NOT_RUN: desktop pointer input only"
@@ -10368,11 +10156,11 @@
     }
    },
    "overviewFacts": {
-    "text": true,
-    "legendTires": true,
+    "text": false,
+    "legendTires": false,
     "toastCenter": 210,
     "usableCenter": 210,
-    "batteryTag": "점검 가능"
+    "batteryTag": "형상 보기"
    },
    "select3d": {
     "washer-fluid-cap": {
@@ -10767,8 +10555,8 @@
    "RESULT_RECEIVED": "KEPT"
   },
   "exit": {
-   "askedFirst": false,
-   "state": "IDLE"
+   "askedFirst": true,
+   "state": "TIRE_PREVIEW"
   }
  },
  "crossesBody": {

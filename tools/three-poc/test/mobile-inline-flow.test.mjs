@@ -3,7 +3,7 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {createTireInspection} from '../tire-inspection.mjs';
 import {createNativeInspectionResults} from '../native-inspection-results.mjs';
-import {partResultHtml} from '../inspection-results-view.mjs';
+import {partResultHtml,partActionHtml} from '../inspection-results-view.mjs';
 import {MOBILE_TARGETS} from '../mobile-result-contract.mjs';
 import {testAuthority,wireResult} from './result-fixtures.mjs';
 import {digestResult} from '../mobile-result-contract.mjs';
@@ -12,7 +12,8 @@ const WASHER=MOBILE_TARGETS[0];
 const local=createTireInspection('local');
 function setup(){const a=testAuthority(),c=createNativeInspectionResults({adapter:a.adapter});c.startSession('local');return {a,c};}
 const status=(phase,extra={})=>({taskId:WASHER.taskId,phase,retryAvailable:false,canCancel:false,...extra});
-const html=(c)=>partResultHtml(local,c.snapshot,WASHER.partId);
+// P10 PR #2: the result card and the action region (phone check, developer details) are drawn separately, in this order.
+const html=(c)=>partResultHtml(local,c.snapshot,WASHER.partId)+partActionHtml(local,c.snapshot,WASHER.partId);
 
 test('the empty QR slot appears only when Native says a QR is showing, and the request button only when nothing is active',()=>{
   const {a,c}=setup();
