@@ -97,6 +97,11 @@ export class ExternalVehicleDataService {
     return this.#recordConsent(sessionKey, id, g.provider.consentResult(query));
   }
   /** Tests only: the consent page cannot be opened (BLOCKED), so tests record the documented redirect result directly. */
+  /** Tests only: whether a vehicle is withdrawn for this person (their own mark or a provider notice). */
+  testOnlyIsRevoked({ sessionKey, provider: id, providerVehicleId }) {
+    if (!this.#testMode) throw new Error('TEST_ONLY');
+    return this.#isRevoked(this.#account(sessionKey, id), id, providerVehicleId);
+  }
   testOnlyRecordConsent({ sessionKey, provider: id, query }) {
     if (!this.#testMode) throw new Error('TEST_ONLY');
     const g = this.#gate(sessionKey, id, null); if (!g.provider) return g;
@@ -107,10 +112,13 @@ export class ExternalVehicleDataService {
     const accountKey = this.#account(sessionKey, id);
     const vehicles = result.providerVehicleIds ? new Set(result.providerVehicleIds) : null;
     this.#consents.set(accountKey, { providerUserId: result.providerUserId ?? null, vehicles });
-    // A fresh consent lifts earlier withdrawals: Pleos names the vehicles; Hyundai consents per account, so the withdrawals that
-    // applied to this account are lifted. Other accounts' withdrawals stay.
-    if (vehicles) for (const v of vehicles) this.#revoked.delete(`${id}|${v}`);
-    else for (const [key, set] of this.#revoked) if (key.startsWith(`${id}|`) && set.has(accountKey)) this.#revoked.delete(key);
+    // A fresh consent lifts only this account's own withdrawal marks: Pleos for the vehicles it names, Hyundai (per-account consent)
+    // for every vehicle of this provider. Other accounts' marks and a provider notice for the vehicle ('*') stay.
+    for (const [key, set] of this.#revoked) {
+      if (!key.startsWith(`${id}|`) || (vehicles && !vehicles.has(key.slice(id.length + 1)))) continue;
+      set.delete(accountKey);
+      if (set.size === 0) this.#revoked.delete(key);
+    }
     return { consented: true };
   }
 
@@ -180,9 +188,9 @@ export class ExternalVehicleDataService {
     return error;
   }
   /** Still the same account generation and the same binding, not withdrawn? Only then may a late answer be used. */
-  #current(b, epoch) {
+  #current(b, epoch, consent) {
     return this.#epoch(b.accountKey) === epoch && this.#bindings.get(b.bindingId)?.gen === b.gen &&
-      !this.#isRevoked(b.accountKey, b.provider, b.providerVehicleId) && this.#consents.has(b.accountKey);
+      !this.#isRevoked(b.accountKey, b.provider, b.providerVehicleId) && this.#consents.get(b.accountKey) === consent;
   }
 
   /** Readings for documented features. A feature the provider has no call for is FEATURE_UNSUPPORTED without a request. */
@@ -195,7 +203,8 @@ export class ExternalVehicleDataService {
     const b = this.#binding(sessionKey, id, carscopeVehicleId);
     if (!b) return features.map(f => blank(f, A.NOT_CONNECTED, 'NO_OWNER_CONFIRMED_BINDING'));
     if (this.#isRevoked(b.accountKey, id, b.providerVehicleId) || !this.#consents.has(b.accountKey)) return features.map(f => blank(f, A.CONSENT_REQUIRED, 'NO_DATA_SHARING_CONSENT', b.bindingId));
-    const epoch = this.#epoch(b.accountKey), calls = new Map(), out = new Map();
+    // The consent record is captured too: a re-consent replaces it, so an answer requested under the earlier grant is never returned.
+    const epoch = this.#epoch(b.accountKey), consent = this.#consents.get(b.accountKey), calls = new Map(), out = new Map();
     const withdrawn = () => features.map(f => blank(f, A.CONSENT_REQUIRED, 'ACCESS_WITHDRAWN_DURING_REQUEST', b.bindingId));
     for (const f of features) {
       const call = CALLS[id][f];
@@ -217,7 +226,7 @@ export class ExternalVehicleDataService {
         const r = t.error ? t : await g.provider.read(t.record, b.providerVehicleId, call, { vehicleBinding: b.bindingId, fetchedAt, mock: false });
         // A withdrawal, disconnect or re-binding may have happened while the request was in flight: the answer is dropped
         // (not cached, not returned), and so is everything this call gathered before it.
-        if (!this.#current(b, epoch)) return withdrawn();
+        if (!this.#current(b, epoch, consent)) return withdrawn();
         if (r.error && accountEnded(r.error)) { this.#onError(b.accountKey, r.error); return features.map(f => blank(f, r.error.availability, r.error.reason, b.bindingId)); }
         if (r.error) { for (const f of wanted) out.set(f, blank(f, r.error.availability, r.error.reason, b.bindingId)); continue; }
         readings = r.readings; this.#cache.set(key, { fetchedAt, readings });

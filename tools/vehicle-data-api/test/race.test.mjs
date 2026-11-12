@@ -174,3 +174,76 @@ test('a vehicle list that returns after disconnect is dropped and creates no sel
   carlist.release();
   assert.deepEqual(await pending, { availability: A.CONSENT_REQUIRED, reason: 'ACCESS_WITHDRAWN_DURING_REQUEST' });
 });
+
+const CAROL = 'session-carol-000000000000003';
+const revoked = (service, session, car) => service.testOnlyIsRevoked({ sessionKey: session, provider: PROVIDER, providerVehicleId: car });
+async function relogin(service, session, code) {
+  const state = new URL(service.beginLogin({ sessionKey: session, provider: PROVIDER }).authorizationUrl).searchParams.get('state');
+  assert.deepEqual(await service.completeLogin({ sessionKey: session, provider: PROVIDER, state, code }), { connected: true });
+}
+
+test('A and B both withdrawn on the same vehicle; only A re-consents: A is restored, B stays withdrawn', async () => {
+  const { service } = setup();
+  await link(service, ALICE, 'code-alice', 'alice-car');
+  await link(service, CAROL, 'code-carol', 'carol-car');
+  await service.disconnect({ sessionKey: ALICE, provider: PROVIDER });
+  await service.disconnect({ sessionKey: CAROL, provider: PROVIDER });
+  assert.deepEqual([revoked(service, ALICE, CAR_A1), revoked(service, CAROL, CAR_A1)], [true, true]);
+  await link(service, ALICE, 'code-alice', 'alice-car');
+  assert.deepEqual([revoked(service, ALICE, CAR_A1), revoked(service, CAROL, CAR_A1)], [false, true], 'A\'s consent lifts A\'s mark only');
+  assert.equal((await odometer(service, ALICE, 'alice-car-1')).availability, A.RECEIVED);
+  // B logs in again without consenting: still nothing.
+  await relogin(service, CAROL, 'code-carol');
+  assert.equal((await service.listVehicles({ sessionKey: CAROL, provider: PROVIDER })).availability, A.CONSENT_REQUIRED);
+  assert.equal((await odometer(service, CAROL, 'carol-car-1')).availability, A.NOT_CONNECTED);
+});
+
+test('a provider notice for the vehicle (*) is not lifted by one account re-consenting', async () => {
+  const { service, calls } = setup();
+  await link(service, ALICE, 'code-alice', 'alice-car');
+  await link(service, CAROL, 'code-carol', 'carol-car');
+  assert.deepEqual(service.handleRevocation({ provider: PROVIDER, body: { type: 'vehicle', action: 'delete', carId: CAR_A1 } }), { accepted: true, purged: 2 });
+  service.testOnlyRecordConsent({ sessionKey: ALICE, provider: PROVIDER, query: { userId: 'user-code-alice' } });
+  assert.deepEqual([revoked(service, ALICE, CAR_A1), revoked(service, CAROL, CAR_A1)], [true, true]);
+  const { vehicles } = await service.listVehicles({ sessionKey: ALICE, provider: PROVIDER });
+  assert.equal(vehicles.length, 1, 'only the other, unaffected car is offered');
+  const before = calls.filter(c => c.url.endsWith(`${CAR_A1}/odometer`)).length;
+  assert.equal((await odometer(service, ALICE, 'alice-car-1')).availability, A.NOT_CONNECTED);
+  assert.equal(calls.filter(c => c.url.endsWith(`${CAR_A1}/odometer`)).length, before, 'no request for the withdrawn vehicle');
+  // Alice's other vehicle is restored by her consent, within what the provider still allows.
+  assert.equal((await odometer(service, ALICE, 'alice-car-2')).availability, A.RECEIVED);
+});
+
+test('a normal re-consent restores only that person, and only their own vehicles', async () => {
+  const { service } = setup();
+  await link(service, ALICE, 'code-alice', 'alice-car');
+  await link(service, CAROL, 'code-carol', 'carol-car');
+  await link(service, BOB, 'code-bob', 'bob-car');
+  await service.disconnect({ sessionKey: ALICE, provider: PROVIDER });
+  await link(service, ALICE, 'code-alice', 'alice-car');
+  for (const v of ['alice-car-1', 'alice-car-2']) assert.equal((await odometer(service, ALICE, v)).availability, A.RECEIVED, v);
+  assert.equal((await odometer(service, CAROL, 'carol-car-1')).availability, A.RECEIVED, 'Carol was never cut');
+  assert.equal((await odometer(service, BOB, 'bob-car-1')).availability, A.RECEIVED);
+  assert.equal((await odometer(service, ALICE, 'bob-car-1')).reason, 'NO_OWNER_CONFIRMED_BINDING', 'no access to another person\'s vehicle');
+  assert.equal(revoked(service, ALICE, CAR_B), false);
+});
+
+test('a read requested under an earlier grant is not returned after re-consent, with or without a withdrawal in between', async () => {
+  for (const between of ['disconnect-and-relink', 'consent-only']) {
+    const hold = gate();
+    const { service, calls } = setup({ hold: { [`odometer-${CAR_A1}`]: hold } });
+    await link(service, ALICE, 'code-alice', 'alice-car');
+    const old = odometer(service, ALICE, 'alice-car-1');
+    await tick();
+    if (between === 'disconnect-and-relink') { await service.disconnect({ sessionKey: ALICE, provider: PROVIDER }); await link(service, ALICE, 'code-alice', 'alice-car'); }
+    else service.testOnlyRecordConsent({ sessionKey: ALICE, provider: PROVIDER, query: { userId: 'user-code-alice' } });
+    hold.release();
+    const r = await old;
+    assert.deepEqual([r.availability, r.value, r.reason], [A.CONSENT_REQUIRED, null, 'ACCESS_WITHDRAWN_DURING_REQUEST'], between);
+    // Nothing from the old grant was cached: the next read asks the provider under the new one.
+    const before = calls.filter(c => c.url.endsWith(`${CAR_A1}/odometer`)).length;
+    const fresh = await odometer(service, ALICE, 'alice-car-1');
+    assert.deepEqual([fresh.availability, fresh.value], [A.RECEIVED, 12320], between);
+    assert.equal(calls.filter(c => c.url.endsWith(`${CAR_A1}/odometer`)).length, before + 1, between);
+  }
+});

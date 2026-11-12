@@ -229,3 +229,17 @@ test('the service refuses a token store that is not approved, and test mode cann
   assert.deepEqual(svc.beginLogin({ sessionKey: ALICE, provider: 'HYUNDAI_DEVELOPERS' }), { availability: A.DISABLED, reason: 'PROVIDER_NOT_ENABLED' });
   assert.deepEqual(svc.beginLogin({ sessionKey: 'short', provider: 'HYUNDAI_DEVELOPERS' }).reason, 'NO_AUTHENTICATED_SESSION');
 });
+
+test('Pleos: a provider withdrawal notice for a VIN survives the owner re-consenting to that VIN through the consent redirect', async () => {
+  const pleosRoutes = { 'POST /v1/auth/token': json(PL.token), 'GET /v1/vehicles/consent': json(PL.vehicles), [`GET /v1/vehicles/${PLEOS_VIN}/status`]: json(PL.status) };
+  const { service, pleosCalls } = setup({ pleosRoutes, pleosCountry: 'DE' });
+  await connect(service, ALICE, 'PLEOS_VEHICLE_DATA', PL.consentRedirect);
+  assert.deepEqual(service.handleRevocation({ provider: 'PLEOS_VEHICLE_DATA', body: PL.revoke }), { accepted: true, purged: 1 });
+  assert.deepEqual(service.testOnlyRecordConsent({ sessionKey: ALICE, provider: 'PLEOS_VEHICLE_DATA', query: PL.consentRedirect }), { consented: true });
+  assert.equal(service.testOnlyIsRevoked({ sessionKey: ALICE, provider: 'PLEOS_VEHICLE_DATA', providerVehicleId: PLEOS_VIN }), true);
+  assert.deepEqual((await service.listVehicles({ sessionKey: ALICE, provider: 'PLEOS_VEHICLE_DATA' })).vehicles, []);
+  const before = pleosCalls.length;
+  const [r] = await service.read({ sessionKey: ALICE, provider: 'PLEOS_VEHICLE_DATA', carscopeVehicleId: 'carscope-vehicle-1', features: ['warning.washer-fluid'] });
+  assert.deepEqual([r.availability, r.value], [A.NOT_CONNECTED, null]);
+  assert.equal(pleosCalls.filter(c => c.url.endsWith('/status')).length, pleosCalls.slice(0, before).filter(c => c.url.endsWith('/status')).length);
+});
