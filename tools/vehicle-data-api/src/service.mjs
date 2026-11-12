@@ -6,6 +6,11 @@
 // - Data is read only for a vehicle that (1) the provider lists for this account, (2) has consent, (3) the person explicitly bound
 //   to a CarScope vehicle. A look-alike model (AVD, the IONIQ 5 GLB) is never a reason to bind. No binding → no combination.
 // - A withdrawal (callback or disconnect) purges tokens, bindings and cached readings at once and blocks further reads.
+//   Local blocking never waits for the provider: disconnect cuts access first, then tells the provider with credentials held
+//   only in that call's memory, and reports the two outcomes separately.
+// - Async races: every account has a generation (bumped by disconnect, account deletion, and a provider saying consent or auth
+//   is gone) and every binding has its own. A token refresh, code exchange, vehicle list or data read that started under an
+//   older generation is dropped when it returns: nothing is stored, cached or returned. Other accounts and vehicles are untouched.
 // - Per-account and per-provider call limits are CarScope's own guard; the providers publish no limit (docs).
 import { RateLimiter } from '../../inspection-sync-poc/src/rate-limit.mjs';
 import { AVAILABILITY as A, PROVIDER, SOURCE, emptyReading, reading } from './model.mjs';
@@ -28,7 +33,10 @@ export class ExternalVehicleDataService {
   #handles = new Map();    // vehicleHandle → { accountKey, provider, providerVehicleId }
   #bindings = new Map();   // bindingId → { accountKey, provider, providerVehicleId, carscopeVehicleId }
   #cache = new Map();      // bindingId|call → { fetchedAt, readings }
-  #revoked = new Set();    // provider|providerVehicleId withdrawn; cleared only by a new consent result
+  #revoked = new Map();    // provider|providerVehicleId → Set of accountKeys it was withdrawn for ('*' = every account: provider notice)
+  #epochs = new Map();     // accountKey → generation; any account-wide cut increments it
+  #refreshing = new Map(); // accountKey → in-flight refresh (one at a time: Pleos refresh tokens are single use)
+  #nextGen = 1;            // binding generations
 
   constructor({ providers = {}, tokenStore, keySalt, states, now = Date.now, testMode = false, rates = EXTERNAL_RATES,
     minIntervalMs = 60_000, staleAfterMs = 15 * 60_000, pleosCountry = null } = {}) {
@@ -49,6 +57,20 @@ export class ExternalVehicleDataService {
     return { provider };
   }
   #account(sessionKey, providerId) { return opaqueKey('acct', this.#salt, providerId, sessionKey); }
+  #isRevoked(accountKey, id, vehicle) { const s = this.#revoked.get(`${id}|${vehicle}`); return !!s && (s.has('*') || s.has(accountKey)); }
+  #revoke(id, vehicle, ...accountKeys) {
+    const key = `${id}|${vehicle}`; if (!this.#revoked.has(key)) this.#revoked.set(key, new Set());
+    for (const a of accountKeys) this.#revoked.get(key).add(a);
+  }
+  #epoch(accountKey) { return this.#epochs.get(accountKey) ?? 0; }
+  /** Cut everything an account holds, synchronously. In-flight work for it is dropped when it returns. */
+  #cutAccount(accountKey) {
+    this.#epochs.set(accountKey, this.#epoch(accountKey) + 1);
+    for (const [bid, b] of this.#bindings) if (b.accountKey === accountKey) { this.#purgeBinding(bid); this.#revoke(b.provider, b.providerVehicleId, accountKey); }
+    for (const [h, v] of this.#handles) if (v.accountKey === accountKey) this.#handles.delete(h);
+    this.#consents.delete(accountKey); this.#tokens.delete(accountKey); this.#refreshing.delete(accountKey);
+  }
+  #dropped() { return { availability: A.CONSENT_REQUIRED, reason: 'ACCESS_WITHDRAWN_DURING_REQUEST' }; }
 
   beginLogin({ sessionKey, provider: id }) {
     const g = this.#gate(sessionKey, id); if (!g.provider) return g;
@@ -57,8 +79,9 @@ export class ExternalVehicleDataService {
   async completeLogin({ sessionKey, provider: id, state, code }) {
     const g = this.#gate(sessionKey, id); if (!g.provider) return g;
     if (!this.#states.consume({ state, sessionKey, provider: id, purpose: 'LOGIN' })) return { availability: A.NOT_CONNECTED, reason: 'OAUTH_STATE_MISMATCH' };
-    const accountKey = this.#account(sessionKey, id);
+    const accountKey = this.#account(sessionKey, id), epoch = this.#epoch(accountKey);
     const r = await g.provider.exchangeCode({ code, accountKey, now: this.#now() });
+    if (this.#epoch(accountKey) !== epoch) return this.#dropped(); // disconnected while the code was being exchanged
     if (r.error) return r.error;
     this.#tokens.put(r.record);
     return { connected: true };
@@ -84,30 +107,47 @@ export class ExternalVehicleDataService {
     const accountKey = this.#account(sessionKey, id);
     const vehicles = result.providerVehicleIds ? new Set(result.providerVehicleIds) : null;
     this.#consents.set(accountKey, { providerUserId: result.providerUserId ?? null, vehicles });
-    for (const v of vehicles ?? []) this.#revoked.delete(`${id}|${v}`);
+    // A fresh consent lifts earlier withdrawals: Pleos names the vehicles; Hyundai consents per account, so the withdrawals that
+    // applied to this account are lifted. Other accounts' withdrawals stay.
+    if (vehicles) for (const v of vehicles) this.#revoked.delete(`${id}|${v}`);
+    else for (const [key, set] of this.#revoked) if (key.startsWith(`${id}|`) && set.has(accountKey)) this.#revoked.delete(key);
     return { consented: true };
   }
 
   async #token(accountKey, provider) {
-    let record = this.#tokens.get(accountKey);
+    const record = this.#tokens.get(accountKey);
     if (!record) return { error: { availability: A.NOT_CONNECTED, reason: 'NO_LINKED_ACCOUNT' } };
-    if (record.expiresAt <= this.#now() + 30_000) {
-      const r = await provider.refresh(record, this.#now());
-      if (r.error) { if (r.error.availability === A.AUTH_EXPIRED) this.#tokens.delete(accountKey); return { error: r.error.availability === A.PROVIDER_ERROR ? r.error : { availability: A.AUTH_EXPIRED, reason: r.error.reason } }; }
-      this.#tokens.put(r.record); record = r.record;
+    if (record.expiresAt > this.#now() + 30_000) return { record };
+    let pending = this.#refreshing.get(accountKey);
+    if (!pending) {
+      const epoch = this.#epoch(accountKey);
+      pending = (async () => {
+        const r = await provider.refresh(record, this.#now());
+        // A disconnect, withdrawal or new login happened meanwhile: the late result is never written back.
+        if (this.#epoch(accountKey) !== epoch || this.#tokens.get(accountKey) !== record) return { error: this.#dropped() };
+        if (r.error) {
+          if (r.error.availability === A.AUTH_EXPIRED) this.#cutAccount(accountKey);
+          return { error: r.error.availability === A.PROVIDER_ERROR ? r.error : { availability: A.AUTH_EXPIRED, reason: r.error.reason } };
+        }
+        this.#tokens.put(r.record);
+        return { record: r.record };
+      })().finally(() => { if (this.#refreshing.get(accountKey) === pending) this.#refreshing.delete(accountKey); });
+      this.#refreshing.set(accountKey, pending);
     }
-    return { record };
+    return pending;
   }
 
   /** Vehicles the provider lists for this account and (Pleos) that the owner consented to. Output is handles, never ids. */
   async listVehicles({ sessionKey, provider: id }) {
     const g = this.#gate(sessionKey, id, null); if (!g.provider) return g;
-    const accountKey = this.#account(sessionKey, id), consent = this.#consents.get(accountKey);
+    const accountKey = this.#account(sessionKey, id), consent = this.#consents.get(accountKey), epoch = this.#epoch(accountKey);
     if (!consent) return { availability: A.CONSENT_REQUIRED, reason: 'NO_DATA_SHARING_CONSENT' };
     if (!this.#limiter.check(accountKey, 'external-read').ok || !this.#limiter.check(id, 'external-provider').ok) return { availability: A.RATE_LIMITED, reason: 'CARSCOPE_LIMIT' };
     const t = await this.#token(accountKey, g.provider); if (t.error) return t.error;
-    const r = await g.provider.listVehicles(t.record); if (r.error) return this.#onError(accountKey, r.error);
-    const vehicles = r.vehicles.filter(v => (consent.vehicles === null || consent.vehicles.has(v.providerVehicleId)) && !this.#revoked.has(`${id}|${v.providerVehicleId}`));
+    const r = await g.provider.listVehicles(t.record);
+    if (this.#epoch(accountKey) !== epoch || this.#consents.get(accountKey) !== consent) return this.#dropped();
+    if (r.error) return this.#onError(accountKey, r.error);
+    const vehicles = r.vehicles.filter(v => (consent.vehicles === null || consent.vehicles.has(v.providerVehicleId)) && !this.#isRevoked(accountKey, id, v.providerVehicleId));
     return { vehicles: vehicles.map(v => {
       const vehicleHandle = opaqueKey('vh', this.#salt, id, accountKey, v.providerVehicleId);
       this.#handles.set(vehicleHandle, { accountKey, provider: id, providerVehicleId: v.providerVehicleId });
@@ -122,10 +162,10 @@ export class ExternalVehicleDataService {
     if (ownerConfirmed !== true) return { availability: A.NOT_CONNECTED, reason: 'OWNER_CONFIRMATION_REQUIRED' };
     if (typeof carscopeVehicleId !== 'string' || !VEHICLE_ID.test(carscopeVehicleId)) return { availability: A.NOT_CONNECTED, reason: 'INVALID_CARSCOPE_VEHICLE' };
     if (!h || h.accountKey !== accountKey || h.provider !== id) return { availability: A.NOT_CONNECTED, reason: 'VEHICLE_NOT_AUTHORIZED_FOR_ACCOUNT' };
-    if (this.#revoked.has(`${id}|${h.providerVehicleId}`)) return { availability: A.CONSENT_REQUIRED, reason: 'CONSENT_WITHDRAWN' };
+    if (this.#isRevoked(accountKey, id, h.providerVehicleId)) return { availability: A.CONSENT_REQUIRED, reason: 'CONSENT_WITHDRAWN' };
     for (const b of this.#bindings.values()) if (b.carscopeVehicleId === carscopeVehicleId && b.provider === id && b.accountKey !== accountKey) return { availability: A.NOT_CONNECTED, reason: 'CARSCOPE_VEHICLE_BOUND_TO_OTHER_ACCOUNT' };
     const bindingId = opaqueKey('vb', this.#salt, id, accountKey, h.providerVehicleId, carscopeVehicleId);
-    this.#bindings.set(bindingId, { accountKey, provider: id, providerVehicleId: h.providerVehicleId, carscopeVehicleId });
+    this.#bindings.set(bindingId, { accountKey, provider: id, providerVehicleId: h.providerVehicleId, carscopeVehicleId, gen: this.#nextGen++ });
     return { bound: true };
   }
 
@@ -134,10 +174,15 @@ export class ExternalVehicleDataService {
     for (const [bindingId, b] of this.#bindings) if (b.accountKey === accountKey && b.provider === id && b.carscopeVehicleId === carscopeVehicleId) return { bindingId, ...b };
     return null;
   }
+  /** Provider says consent or auth is gone for the whole account: cut it like a withdrawal. Callers check the generation first. */
   #onError(accountKey, error) {
-    if (error.availability === A.CONSENT_REQUIRED) this.#consents.delete(accountKey);
-    if (error.availability === A.AUTH_EXPIRED) this.#tokens.delete(accountKey);
+    if (error.availability === A.CONSENT_REQUIRED || error.availability === A.AUTH_EXPIRED) this.#cutAccount(accountKey);
     return error;
+  }
+  /** Still the same account generation and the same binding, not withdrawn? Only then may a late answer be used. */
+  #current(b, epoch) {
+    return this.#epoch(b.accountKey) === epoch && this.#bindings.get(b.bindingId)?.gen === b.gen &&
+      !this.#isRevoked(b.accountKey, b.provider, b.providerVehicleId) && this.#consents.has(b.accountKey);
   }
 
   /** Readings for documented features. A feature the provider has no call for is FEATURE_UNSUPPORTED without a request. */
@@ -149,8 +194,9 @@ export class ExternalVehicleDataService {
     if (!g.provider) return features.map(f => blank(f, g.availability, g.reason));
     const b = this.#binding(sessionKey, id, carscopeVehicleId);
     if (!b) return features.map(f => blank(f, A.NOT_CONNECTED, 'NO_OWNER_CONFIRMED_BINDING'));
-    if (this.#revoked.has(`${id}|${b.providerVehicleId}`) || !this.#consents.has(b.accountKey)) return features.map(f => blank(f, A.CONSENT_REQUIRED, 'NO_DATA_SHARING_CONSENT', b.bindingId));
-    const calls = new Map(), out = new Map();
+    if (this.#isRevoked(b.accountKey, id, b.providerVehicleId) || !this.#consents.has(b.accountKey)) return features.map(f => blank(f, A.CONSENT_REQUIRED, 'NO_DATA_SHARING_CONSENT', b.bindingId));
+    const epoch = this.#epoch(b.accountKey), calls = new Map(), out = new Map();
+    const withdrawn = () => features.map(f => blank(f, A.CONSENT_REQUIRED, 'ACCESS_WITHDRAWN_DURING_REQUEST', b.bindingId));
     for (const f of features) {
       const call = CALLS[id][f];
       if (!call) out.set(f, blank(f, A.FEATURE_UNSUPPORTED, 'PROVIDER_HAS_NO_DOCUMENTED_API', b.bindingId));
@@ -163,16 +209,22 @@ export class ExternalVehicleDataService {
         if (!this.#limiter.check(b.accountKey, 'external-read').ok || !this.#limiter.check(id, 'external-provider').ok) {
           for (const f of wanted) out.set(f, blank(f, A.RATE_LIMITED, 'CARSCOPE_LIMIT', b.bindingId)); continue;
         }
+        // An error that ends the account's access (expired auth, consent gone) is reported as itself for every feature; nothing
+        // gathered earlier in this call is returned with it.
+        const accountEnded = e => [A.AUTH_EXPIRED, A.CONSENT_REQUIRED].includes(e.availability) && e.reason !== 'ACCESS_WITHDRAWN_DURING_REQUEST';
         const t = await this.#token(b.accountKey, g.provider);
+        if (t.error && accountEnded(t.error)) return features.map(f => blank(f, t.error.availability, t.error.reason, b.bindingId)); // #token already cut it
         const r = t.error ? t : await g.provider.read(t.record, b.providerVehicleId, call, { vehicleBinding: b.bindingId, fetchedAt, mock: false });
-        // The withdrawal may have arrived while the request was in flight: then the answer is dropped.
-        if (this.#revoked.has(`${id}|${b.providerVehicleId}`) || !this.#bindings.has(b.bindingId)) { for (const f of wanted) out.set(f, blank(f, A.CONSENT_REQUIRED, 'CONSENT_WITHDRAWN', b.bindingId)); continue; }
-        if (r.error) { this.#onError(b.accountKey, r.error); for (const f of wanted) out.set(f, blank(f, r.error.availability, r.error.reason, b.bindingId)); continue; }
+        // A withdrawal, disconnect or re-binding may have happened while the request was in flight: the answer is dropped
+        // (not cached, not returned), and so is everything this call gathered before it.
+        if (!this.#current(b, epoch)) return withdrawn();
+        if (r.error && accountEnded(r.error)) { this.#onError(b.accountKey, r.error); return features.map(f => blank(f, r.error.availability, r.error.reason, b.bindingId)); }
+        if (r.error) { for (const f of wanted) out.set(f, blank(f, r.error.availability, r.error.reason, b.bindingId)); continue; }
         readings = r.readings; this.#cache.set(key, { fetchedAt, readings });
       }
       for (const f of wanted) out.set(f, readings.find(x => x.featureId === f) ?? blank(f, A.FEATURE_UNSUPPORTED, 'VEHICLE_DID_NOT_SEND', b.bindingId));
     }
-    return features.map(f => out.get(f));
+    return features.map(f => out.get(f)); // every await above is followed by the #current check, so nothing stale reaches here
   }
 
   /** Provider withdrawal notice (Hyundai partner_deletecallback, Pleos consent-withdraw). Returns how many bindings were purged. */
@@ -180,13 +232,16 @@ export class ExternalVehicleDataService {
     const provider = this.#providers[id], parsed = provider?.parseRevocation(body);
     if (!parsed) return { accepted: false };
     const users = new Set(parsed.providerUserIds), vehicles = new Set(parsed.providerVehicleIds);
-    for (const v of vehicles) this.#revoked.add(`${id}|${v}`);
     const accounts = new Set();
     for (const [key, c] of this.#consents) if (c.providerUserId && users.has(c.providerUserId)) accounts.add(key);
+    for (const v of vehicles) {
+      const holders = [...this.#handles.values(), ...this.#bindings.values()].filter(x => x.provider === id && x.providerVehicleId === v).map(x => x.accountKey);
+      this.#revoke(id, v, '*', ...holders);
+    }
     let purged = 0;
     for (const [bid, b] of this.#bindings) if (b.provider === id && (vehicles.has(b.providerVehicleId) || accounts.has(b.accountKey))) { this.#purgeBinding(bid); purged++; }
     for (const [h, v] of this.#handles) if (v.provider === id && (vehicles.has(v.providerVehicleId) || accounts.has(v.accountKey))) this.#handles.delete(h);
-    for (const key of accounts) { this.#consents.delete(key); this.#tokens.delete(key); }
+    for (const key of accounts) this.#cutAccount(key);
     return { accepted: true, purged };
   }
   #purgeBinding(bindingId) {
@@ -194,20 +249,33 @@ export class ExternalVehicleDataService {
     for (const key of this.#cache.keys()) if (key.startsWith(bindingId + '|')) this.#cache.delete(key);
   }
 
-  /** Owner disconnects: tell the provider (best effort), then purge locally regardless of the answer. */
+  /**
+   * Owner disconnects. Local access is cut first and synchronously (bindings, cache, handles, consent, tokens, generation), so
+   * nothing can be read even while the provider is slow or failing. The token record is kept only in this call's memory to tell
+   * the provider, and is never written back. The two outcomes are reported separately:
+   *   localAccessBlocked: true, and already true before any provider call starts
+   *   remoteWithdrawal: NOT_ATTEMPTED (no token was held) | CONFIRMED | FAILED, with each step's outcome
+   */
   async disconnect({ sessionKey, provider: id }) {
     const g = this.#gate(sessionKey, id, null); if (!g.provider) return g;
-    const accountKey = this.#account(sessionKey, id), record = this.#tokens.get(accountKey), remote = [];
-    const mine = [...this.#bindings].filter(([, b]) => b.accountKey === accountKey && b.provider === id);
-    if (record) {
-      if (id === PROVIDER.PLEOS_VEHICLE_DATA) for (const [, b] of mine) remote.push(await g.provider.withdrawConsent(record, b.providerVehicleId));
-      else remote.push(await g.provider.withdrawConsent(record));
-      remote.push(await g.provider.revoke(record));
-    }
-    for (const [bid, b] of mine) { this.#purgeBinding(bid); this.#revoked.add(`${id}|${b.providerVehicleId}`); }
-    for (const [h, v] of this.#handles) if (v.accountKey === accountKey) this.#handles.delete(h);
-    this.#consents.delete(accountKey); this.#tokens.delete(accountKey);
-    return { disconnected: true, providerConfirmed: remote.length > 0 && remote.every(r => r.ok) };
+    const accountKey = this.#account(sessionKey, id);
+    let record = this.#tokens.get(accountKey);
+    const vins = [...this.#bindings.values()].filter(b => b.accountKey === accountKey && b.provider === id).map(b => b.providerVehicleId);
+    this.#cutAccount(accountKey);
+    if (!record) return { localAccessBlocked: true, remoteWithdrawal: 'NOT_ATTEMPTED', steps: [] };
+    const steps = [];
+    const step = async (name, call) => {
+      try {
+        const r = await call();
+        steps.push({ step: name, ok: r?.ok === true, ...(r?.localOnly ? { localOnly: true } : {}), ...(r?.error ? { reason: r.error.reason } : {}) });
+      } catch { steps.push({ step: name, ok: false, reason: 'CALL_FAILED' }); }
+    };
+    try {
+      if (id === PROVIDER.PLEOS_VEHICLE_DATA) for (const vin of vins) await step('WITHDRAW_CONSENT', () => g.provider.withdrawConsent(record, vin));
+      else await step('WITHDRAW_CONSENT', () => g.provider.withdrawConsent(record));
+      await step('REVOKE_TOKEN', () => g.provider.revoke(record));
+    } finally { record = null; }
+    return { localAccessBlocked: true, remoteWithdrawal: steps.every(x => x.ok) ? 'CONFIRMED' : 'FAILED', steps };
   }
 
   /** Readings with STALE applied for the card: a received value whose fetch is older than staleAfterMs. */

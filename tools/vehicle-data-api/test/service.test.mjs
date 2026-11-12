@@ -159,13 +159,15 @@ test('account deletion callback drops tokens and consent for that provider user'
 test('disconnect tells Hyundai (terms reject + token delete) and purges locally even if the provider fails', async () => {
   const { service, calls, tokens } = setup();
   await connect(service);
-  assert.deepEqual(await service.disconnect({ sessionKey: ALICE, provider: 'HYUNDAI_DEVELOPERS' }), { disconnected: true, providerConfirmed: true });
+  assert.deepEqual(await service.disconnect({ sessionKey: ALICE, provider: 'HYUNDAI_DEVELOPERS' }),
+    { localAccessBlocked: true, remoteWithdrawal: 'CONFIRMED', steps: [{ step: 'WITHDRAW_CONSENT', ok: true }, { step: 'REVOKE_TOKEN', ok: true }] });
   assert.ok(calls.some(c => c.url.endsWith('/api/v1/car-service/terms/reject')));
   assert.equal(new URLSearchParams(calls.at(-1).body).get('grant_type'), 'delete');
   assert.equal(tokens.size, 0);
   const failing = setup({ routes: { ...HYUNDAI_ROUTES, 'GET /api/v1/car-service/terms/reject': json(H.error4002, 500) } });
   await connect(failing.service);
-  assert.deepEqual(await failing.service.disconnect({ sessionKey: ALICE, provider: 'HYUNDAI_DEVELOPERS' }), { disconnected: true, providerConfirmed: false });
+  assert.deepEqual(await failing.service.disconnect({ sessionKey: ALICE, provider: 'HYUNDAI_DEVELOPERS' }),
+    { localAccessBlocked: true, remoteWithdrawal: 'FAILED', steps: [{ step: 'WITHDRAW_CONSENT', ok: false, reason: 'HYUNDAI_4002' }, { step: 'REVOKE_TOKEN', ok: true }] });
   assert.equal(failing.tokens.size, 0);
 });
 
