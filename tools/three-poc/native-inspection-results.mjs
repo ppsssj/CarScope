@@ -13,7 +13,7 @@ const proofKeys=['version','proofId','sessionState','confirmation','bindingId','
 const REQUEST_TIMEOUT_MS=8000;
 const REQUEST_NOTICES=new Set(['NATIVE_NOT_CONNECTED','REQUEST_REJECTED','REQUEST_FAILED']);
 const CONFIRMATIONS=new Set(['NATIVE_EXPLICIT','AVD_SIMULATION_AUTO']);
-const RECEIVER_PHASES=new Set(['NOT_CONFIGURED','AUTH_WAITING','AUTH_FAILED','CREATING','QR_READY','QR_EXPIRED','CONNECTED','RESULT_RECEIVED','COMPLETED','CANCELLED','EXPIRED','FAILED','CLOSED']);
+const RECEIVER_PHASES=new Set(['NOT_CONFIGURED','AUTH_WAITING','AUTH_FAILED','CREATING','QR_READY','QR_EXPIRED','CONNECTED','RESULT_RECEIVED','AWAITING_CONFIRMATION','COMPLETED','CANCELLED','EXPIRED','FAILED','CLOSED']);
 const receiverKeys=new Set(['taskId','phase','failure','retryAvailable','canCancel','inviteExpiresAt']);
 // Native omits null fields. An unknown field or value is dropped whole: this page shows status and never holds a QR.
 function receiverStatus(raw){

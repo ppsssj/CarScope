@@ -2,6 +2,7 @@ package io.carscope.app.lab
 
 import android.graphics.Bitmap
 import android.graphics.Color
+import android.graphics.Rect
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
@@ -53,6 +54,7 @@ open class InspectionActivity : SyncReceiverActivity() {
     private var inlineActive = false
     private var inlineBitmap: Bitmap? = null
     private var slotCommand = NativePanelCommand("slot")
+    private var lastQrLog = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -71,7 +73,7 @@ open class InspectionActivity : SyncReceiverActivity() {
             addView(closePanel)
             addView(closeNote)
             bridgeStatus = TextView(this@InspectionActivity).apply {
-                text = "Native에서 수락한 뒤 3D에서 기록을 직접 선택하세요."
+                text = "3D 결과 반영 상태 확인 전"
                 tag = "native-3d-status"; setPadding(24, 8, 24, 8)
             }
             addView(bridgeStatus)
@@ -102,6 +104,10 @@ open class InspectionActivity : SyncReceiverActivity() {
         screen = DebugWebScreen(this, TAG, HOST, ROOT, mapOf("external/ioniq5.glb" to File(filesDir, DebugWebScreen.MODEL_PATH)), tireStatus::readJson, componentStatus::readJson, componentStatus::readChargePortJson, componentStatus::readVisibilityJson, bridge::handle, newAvdHistoryChannel()::handle)
         inspectionPanel = screen.create(intent.getStringExtra("query").orEmpty())
         webFocusability = inspectionPanel.descendantFocusability
+        // A resized WebView changes the scale: place the QR again after this layout pass (the page reports its new slot too).
+        inspectionPanel.addOnLayoutChangeListener { _, l, t, r, b, ol, ot, or, ob ->
+            if (l != ol || t != ot || r != or || b != ob) onInlineQrHostLaidOut()
+        }
         inlineQr = ImageView(this).apply {
             tag = "inline-qr"; contentDescription = "모바일 점검 초대 QR · 공유하지 마세요"; visibility = View.GONE; isSaveEnabled = false
             isClickable = false; isFocusable = false; scaleType = ImageView.ScaleType.FIT_CENTER
@@ -165,19 +171,26 @@ open class InspectionActivity : SyncReceiverActivity() {
         }
     }
 
-    /** Only a QR that fits the visible page is drawn, and the window is secure only while one is. */
+    /** The WebView's laid-out bounds in the frame that also holds the QR. Tests override it: Robolectric's WebView takes no frame. */
+    internal open fun inlineQrHost(): Rect = Rect(inspectionPanel.left, inspectionPanel.top, inspectionPanel.right, inspectionPanel.bottom)
+    /** A resized WebView changes the scale: place the QR again after the layout pass. */
+    internal fun onInlineQrHostLaidOut() { bridgeHandler.post { if (!bridgeStopped) updateInlineQr() } }
+    /** Only a QR that fits the visible page is drawn, and the window is secure only while one is.
+     * The slot is converted once, by [InlineQrPlacement]; an unlaid-out WebView draws nothing. */
     private fun updateInlineQr() {
-        val density = resources.displayMetrics.density
-        val x = (slotCommand.x * density).toInt(); val y = (slotCommand.y * density).toInt(); val size = (slotCommand.size * density).toInt()
-        val fits = inspectionPanel.width == 0 || x + size <= inspectionPanel.width && y + size <= inspectionPanel.height
-        val show = inlineBitmap != null && slotCommand.slot == "SHOWN" && slotCommand.size in MIN_QR_DP..MAX_QR_DP && fits && !showingReceiver && !bridgeStopped
-        if (show) (inlineQr.layoutParams as FrameLayout.LayoutParams).let {
-            if (it.width != size || it.leftMargin != x || it.topMargin != y) {
-                it.width = size; it.height = size; it.leftMargin = x; it.topMargin = y; inlineQr.layoutParams = it
+        val host = inlineQrHost()
+        val place = if (inlineBitmap != null && !showingReceiver && !bridgeStopped) InlineQrPlacement.place(slotCommand,
+            host.left, host.top, host.width(), host.height(), resources.displayMetrics.density) else null
+        if (place != null) (inlineQr.layoutParams as FrameLayout.LayoutParams).let {
+            if (it.width != place.size || it.height != place.size || it.leftMargin != place.left || it.topMargin != place.top) {
+                it.width = place.size; it.height = place.size; it.leftMargin = place.left; it.topMargin = place.top; inlineQr.layoutParams = it
             }
         }
-        inlineQr.visibility = if (show) View.VISIBLE else View.GONE
-        if (show || showingReceiver) window.addFlags(WindowManager.LayoutParams.FLAG_SECURE) else window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
+        inlineQr.visibility = if (place != null) View.VISIBLE else View.GONE
+        // Geometry only: no QR content, invite or token is ever part of this line.
+        val line = place?.let { "shown left=${it.left} top=${it.top} size=${it.size} scale=${"%.3f".format(it.scale)} density=${resources.displayMetrics.density}" } ?: "hidden slot=${slotCommand.slot}"
+        if (line != lastQrLog) { lastQrLog = line; Log.i(TAG, "CARSCOPE_INLINE_QR $line") }
+        if (place != null || showingReceiver) window.addFlags(WindowManager.LayoutParams.FLAG_SECURE) else window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
     }
 
     /** Words for the page's own panel. No QR, invite, receiver token or grant passes through here. */
@@ -194,7 +207,8 @@ open class InspectionActivity : SyncReceiverActivity() {
         ReceiverPhase.IDLE -> when (authority) { "GRANTED" -> "CREATING"; "DENIED" -> "AUTH_FAILED"; "NOT_CONFIGURED" -> "NOT_CONFIGURED"; else -> "AUTH_WAITING" }
         ReceiverPhase.CREATING -> "CREATING"
         ReceiverPhase.WAITING -> if (state.phoneClaimed) "CONNECTED" else if (state.qr != null) "QR_READY" else "QR_EXPIRED"
-        ReceiverPhase.RESULT_SUBMITTED -> "RESULT_RECEIVED"
+        // The simulator confirms on its own; any other path waits for the explicit Accept, and the page must say which.
+        ReceiverPhase.RESULT_SUBMITTED -> if (autoConfirmReceivedResult()) "RESULT_RECEIVED" else "AWAITING_CONFIRMATION"
         ReceiverPhase.ACCEPTED -> "COMPLETED"
         ReceiverPhase.CANCELLED -> "CANCELLED"
         ReceiverPhase.EXPIRED -> "EXPIRED"
@@ -211,11 +225,15 @@ open class InspectionActivity : SyncReceiverActivity() {
             closeNote.text = if (noRequest) NO_REQUEST_NOTE else "패널을 닫아도 서버의 점검 요청은 취소되지 않습니다. 취소하려면 아래 '점검 요청 취소'를 누르세요."
             bridgeStatus.text = when (bridge.blockingReason) {
                 "SERVER_CLOCK_UNAVAILABLE", "ACCEPTED_NOT_BOUND" -> "3D 연결 차단: 서버 기준 시각 계약이 없습니다. Native 수락 결과를 3D에 적용할 수 없습니다."
-                null -> "Native에서 수락한 뒤 3D에서 기록을 직접 선택하세요."
+                null -> bridgeIdleText()
                 else -> "3D 연결을 검증하지 못했습니다. 새 점검 세션이 필요합니다."
             }
         }
     }
+    /** The 3D page shows the newest verified result by itself; only the explicit path needs this panel's Accept first. */
+    private fun bridgeIdleText() = if (autoConfirmReceivedResult())
+        "AVD 시뮬레이션: 검증을 통과한 결과는 수락 버튼 없이 3D에 반영됩니다. 차량 소유자 승인이 아닙니다."
+        else "이 패널에서 결과를 수락하면 3D에 반영됩니다."
     /** The Debug management panel. Closing hides it only: the server session, polling and QR stay until Cancel, stop or expiry. */
     private fun showReceiver(show: Boolean) {
         if (show) window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
@@ -253,7 +271,5 @@ open class InspectionActivity : SyncReceiverActivity() {
         const val ROOT = "inspection"
         const val OVERLAY_DIM = 0x33000000
         const val NO_REQUEST_NOTE = "현재 진행 중인 점검 요청이 없습니다."
-        const val MIN_QR_DP = 120
-        const val MAX_QR_DP = 600
     }
 }

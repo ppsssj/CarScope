@@ -4,8 +4,10 @@ import com.google.gson.Gson
 import java.util.UUID
 
 internal data class NativeInspectionRequest(val taskId: String, val localSessionId: String, val generation: Long)
-/** A page command for the inline flow. Layout and fixed actions only: it cannot read a QR or a credential. */
-internal data class NativePanelCommand(val action: String, val slot: String = "NONE", val x: Int = 0, val y: Int = 0, val size: Int = 0)
+/** A page command for the inline flow. Layout and fixed actions only: it cannot read a QR or a credential.
+ * x, y and size are CSS px of the page's viewport; vw and vh are that viewport's size in the same unit. */
+internal data class NativePanelCommand(val action: String, val slot: String = "NONE", val x: Int = 0, val y: Int = 0, val size: Int = 0,
+    val vw: Int = 0, val vh: Int = 0)
 
 /** One current WebView/Activity owns this token-free vault. No static owner, Intent authority, or JS proof input. */
 internal class NativeInspectionBridge(
@@ -102,11 +104,12 @@ internal class NativeInspectionBridge(
                     }
                     "close" -> { keys(); clear(); gson.toJson(mapOf("ok" to true)) }
                     "panel" -> {
-                        keys("slot", "x", "y", "size")
+                        keys("slot", "x", "y", "size", "vw", "vh")
                         val slot = x["slot"] as? String ?: error("INVALID")
-                        val (left, top, size) = listOf("x", "y", "size").map { SyncHttpDecoder.number(x[it]) }
-                        require(slot in slots && listOf(left, top, size).all { it in 0..10_000L })
-                        panelCommand(NativePanelCommand("slot", slot, left.toInt(), top.toInt(), size.toInt()))
+                        val (left, top, size, vw, vh) = listOf("x", "y", "size", "vw", "vh").map { SyncHttpDecoder.number(x[it]) }
+                        require(slot in slots && listOf(left, top, size, vw, vh).all { it in 0..10_000L })
+                        require(slot != "SHOWN" || vw > 0 && vh > 0)
+                        panelCommand(NativePanelCommand("slot", slot, left.toInt(), top.toInt(), size.toInt(), vw.toInt(), vh.toInt()))
                         gson.toJson(mapOf("ok" to true))
                     }
                     "control" -> {

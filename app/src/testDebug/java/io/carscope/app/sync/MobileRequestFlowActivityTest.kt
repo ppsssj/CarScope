@@ -26,6 +26,9 @@ class MobileFlowActivity : InspectionActivity() {
     internal val exchange = PendingAvdSimulatorExchange()
     internal var clock = 2100L
     internal var created = 0
+    // Robolectric's WebView never takes a frame, so the bounds a real layout pass gives are set here (empty: not laid out).
+    internal var webFrame = android.graphics.Rect()
+    override fun inlineQrHost() = webFrame
     override fun now() = clock
     override fun endpoint() = AvdSimulatorSamples.endpoint
     override fun newAvdSimulatorSource(endpoint: SyncEndpoint, dispatcher: SyncCallbackDispatcher) =
@@ -52,7 +55,13 @@ class MobileRequestFlowActivityTest {
         fun status() = root.findViewWithTag<TextView>("status").text.toString()
         fun qr() = root.findViewWithTag<ImageView>("qr").visibility
         fun inlineQr() = root.findViewWithTag<ImageView>("inline-qr")
-        fun slot(kind: String, x: Int = 0, y: Int = 0, size: Int = 0) { rpc("panel", """, "slot":"$kind","x":$x,"y":$y,"size":$size"""); shadowOf(Looper.getMainLooper()).idle() }
+        // A page slot in CSS px of a viewport the size of the recorded AVD page (1224×880).
+        fun slot(kind: String, x: Int = 0, y: Int = 0, size: Int = 0, vw: Int = if (kind == "SHOWN") 1224 else 0, vh: Int = if (kind == "SHOWN") 880 else 0) {
+            rpc("panel", """, "slot":"$kind","x":$x,"y":$y,"size":$size,"vw":$vw,"vh":$vh"""); shadowOf(Looper.getMainLooper()).idle()
+        }
+        /** The WebView laid out at [w]×[h] px, as on the AVD (1682×1210 at density 1.0), then the Activity's layout hook. */
+        fun layoutWeb(w: Int = 1682, h: Int = 1210) { a.webFrame = android.graphics.Rect(0, 0, w, h); a.onInlineQrHostLaidOut(); shadowOf(Looper.getMainLooper()).idle() }
+        fun placed() = (inlineQr().layoutParams as android.widget.FrameLayout.LayoutParams).let { listOf(it.leftMargin, it.topMargin, it.width, it.height) }
         fun secure() = a.window.attributes.flags and WindowManager.LayoutParams.FLAG_SECURE != 0
         fun receiver() = JsonParser.parseString(rpc("poll")).asJsonObject["receiver"]?.takeIf { it.isJsonObject }?.asJsonObject
     }
@@ -80,20 +89,46 @@ class MobileRequestFlowActivityTest {
         h.a.exchange.callbacks.last()(AvdSimulatorSamples.value())
         assertEquals("QR_READY", h.receiver()!!["phase"].asString)
         assertEquals("no slot yet, so nothing is drawn", View.GONE, h.inlineQr().visibility); assertFalse(h.secure())
-        h.slot("SHOWN", 100, 200, 300)
-        assertEquals(View.VISIBLE, h.inlineQr().visibility); assertNotNull(h.inlineQr().drawable); assertTrue(h.secure())
-        val place = h.inlineQr().layoutParams as android.widget.FrameLayout.LayoutParams
-        assertEquals(100, place.leftMargin); assertEquals(200, place.topMargin); assertEquals(300, place.width); assertEquals(300, place.height)
-        for (reply in listOf(h.rpc("poll"), h.rpc("panel", """, "slot":"SHOWN","x":100,"y":200,"size":300"""))) {
+        h.slot("SHOWN", 870, 300, 300)
+        assertEquals("the WebView is not laid out yet, so no scale is known", View.GONE, h.inlineQr().visibility); assertFalse(h.secure())
+        h.layoutWeb()
+        assertEquals("the layout pass places it without a new report", View.VISIBLE, h.inlineQr().visibility)
+        assertNotNull(h.inlineQr().drawable); assertTrue(h.secure())
+        // Slot (870, 300, 300) CSS px × 1682/1224 = the slot in WebView pixels. Density 1.0 alone gave (870, 300, 300).
+        assertEquals(listOf(1196, 412, 412, 412), h.placed())
+        for (reply in listOf(h.rpc("poll"), h.rpc("panel", """, "slot":"SHOWN","x":870,"y":300,"size":300,"vw":1224,"vh":880"""))) {
             for (secret in listOf(HttpSamples.invite, HttpSamples.receiver, AvdSimulatorSamples.token, AvdSimulatorSamples.proof)) assertFalse(reply, reply.contains(secret))
         }
+        h.slot("SHOWN", 870, 180, 300); assertEquals("the panel scrolled: the QR follows", listOf(1196, 247, 412, 412), h.placed())
         h.slot("HIDDEN"); assertEquals("scrolled out of the panel", View.GONE, h.inlineQr().visibility); assertFalse(h.secure())
-        h.slot("SHOWN", 100, 200, 40); assertEquals("too small to scan", View.GONE, h.inlineQr().visibility)
-        h.slot("SHOWN", 100, 200, 300); assertEquals(View.VISIBLE, h.inlineQr().visibility)
+        h.slot("SHOWN", 870, 300, 60); assertEquals("too small to scan", View.GONE, h.inlineQr().visibility)
+        h.slot("SHOWN", 870, 300, 300); assertEquals(View.VISIBLE, h.inlineQr().visibility)
+        h.layoutWeb(1682, 900)
+        assertEquals("the WebView changed size: the old report is not drawn", View.GONE, h.inlineQr().visibility); assertFalse(h.secure())
+        h.slot("SHOWN", 870, 200, 300, 1224, 655); assertEquals(listOf(1196, 275, 412, 412), h.placed()); assertTrue(h.secure())
+        h.layoutWeb(); h.slot("SHOWN", 870, 300, 300); assertEquals(listOf(1196, 412, 412, 412), h.placed())
         h.rpc("control", """, "action":"admin""""); shadowOf(Looper.getMainLooper()).idle()
         assertEquals("the management panel has its own copy", View.GONE, h.inlineQr().visibility); assertTrue(h.secure())
         h.b.stop(); assertNull(h.inlineQr().drawable); assertEquals(View.GONE, h.inlineQr().visibility); assertFalse(h.secure())
         h.b.destroy()
+    }
+
+    @Test fun `cancel and invite expiry release the inline QR bitmap and the secure window`() {
+        val h = host(); h.request(); h.a.exchange.callbacks.last()(AvdSimulatorSamples.value())
+        h.layoutWeb(); h.slot("SHOWN", 870, 300, 300)
+        assertEquals(View.VISIBLE, h.inlineQr().visibility); assertTrue(h.secure())
+        h.rpc("control", """, "action":"cancel""""); shadowOf(Looper.getMainLooper()).idle()
+        assertEquals("CANCELLED", h.receiver()!!["phase"].asString)
+        assertNull(h.inlineQr().drawable); assertEquals(View.GONE, h.inlineQr().visibility); assertFalse(h.secure())
+        h.slot("SHOWN", 870, 300, 300); assertEquals("a stale slot report draws nothing after cancel", View.GONE, h.inlineQr().visibility)
+        h.b.stop().destroy()
+
+        val e = host(); e.request(); e.a.exchange.callbacks.last()(AvdSimulatorSamples.value())
+        e.layoutWeb(); e.slot("SHOWN", 870, 300, 300); assertEquals(View.VISIBLE, e.inlineQr().visibility)
+        e.a.clock = e.a.fake.expiry - 29_000; e.tick() // the invite (expiry - 30 s) has passed; the session has not
+        assertEquals("QR_EXPIRED", e.receiver()!!["phase"].asString)
+        assertNull(e.inlineQr().drawable); assertEquals(View.GONE, e.inlineQr().visibility); assertFalse(e.secure())
+        e.b.stop().destroy()
     }
 
     @Test fun `the simulator confirms a verified result without a tap and labels it as automatic`() {

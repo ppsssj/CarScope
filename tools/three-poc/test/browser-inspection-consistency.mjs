@@ -217,10 +217,22 @@ async function realPageSection() {
       const place = await page.evaluate(async () => { const f = await import('./test/native-results-browser-fixture.mjs'); const r = document.querySelector('#mobileQrSlot').getBoundingClientRect(), p = document.getElementById('panel').getBoundingClientRect(); return { last: f.panelSlots.at(-1), r: [r.left, r.top, r.width, r.height], inside: r.top >= p.top && r.bottom <= p.bottom && r.left >= p.left && r.right <= p.right, text: document.getElementById('mobilePartResults').innerHTML }; });
       assert.equal(place.inside, true, 'revealed inside the panel');
       assert.deepEqual([place.last.slot, place.last.x, place.last.y, place.last.size], ['SHOWN', Math.round(place.r[0]), Math.round(place.r[1]), Math.round(place.r[2])]);
+      // PR #120: the report carries its own viewport so Native converts once, by its WebView width, not by display density.
+      assert.deepEqual([place.last.vw, place.last.vh], await page.evaluate(() => [innerWidth, innerHeight]));
       assert.equal(Math.round(place.r[2]), Math.round(place.r[3]), 'square');
       assert.ok(place.r[2] >= 120, 'large enough to scan');
       assert.doesNotMatch(place.text, /invite=|#v=2|data:image/);
+      assert.doesNotMatch(JSON.stringify(await fixture(page, 'f=>f.panelSlots.slice()')), /invite|token|data:/, 'reports hold geometry only');
       await page.screenshot({ path: path.join(out, 'inline-qr-slot.png') });
+      // Scrolling the panel reports the new place without waiting for the 1 s timer; scrolling it away hides the QR.
+      const before = (await fixture(page, 'f=>f.panelSlots.length'));
+      const scrolled = await page.evaluate(async () => { const p = document.getElementById('panel'), s = document.querySelector('#mobileQrSlot'); const top = s.getBoundingClientRect().top, step = Math.min(40, p.scrollHeight - p.clientHeight - p.scrollTop);
+        if (step > 0) { p.scrollTop += step; } else { p.scrollTop -= 40; } await new Promise(r => { let n = 4; const k = () => (--n ? requestAnimationFrame(k) : r()); requestAnimationFrame(k); });
+        const f = await import('./test/native-results-browser-fixture.mjs'), r = s.getBoundingClientRect(); return { moved: r.top !== top, last: f.panelSlots.at(-1), top: r.top }; });
+      if (scrolled.moved) { assert.ok((await fixture(page, 'f=>f.panelSlots.length')) > before, 'a scroll is reported before the next timer tick'); assert.ok(scrolled.last.slot === 'HIDDEN' || scrolled.last.y === Math.round(scrolled.top), 'the report follows the slot'); }
+      const away = await page.evaluate(async () => { const p = document.getElementById('panel'), s = document.querySelector('#mobileQrSlot'); p.style.height = '120px'; p.style.bottom = 'auto'; await new Promise(r => { let n = 4; const k = () => (--n ? requestAnimationFrame(k) : r()); requestAnimationFrame(k); });
+        const f = await import('./test/native-results-browser-fixture.mjs'), last = f.panelSlots.at(-1); p.style.height = ''; p.style.bottom = ''; await new Promise(r => { let n = 4; const k = () => (--n ? requestAnimationFrame(k) : r()); requestAnimationFrame(k); }); return { last, after: f.panelSlots.at(-1), clipped: s.getBoundingClientRect().height > 120 }; });
+      assert.equal(away.clipped, true); assert.equal(away.last.slot, 'HIDDEN', 'a slot the panel cannot show whole is hidden'); assert.equal(away.after.slot, 'SHOWN', 'and shown again once it fits');
       await page.locator('[data-action=mobile-cancel]').click();
       assert.deepEqual(await fixture(page, 'f=>f.controls.slice()'), ['cancel']);
       await fixture(page, '(f,[t])=>f.receiver({taskId:t,phase:"CONNECTED"})', [FRONT_LEFT]);

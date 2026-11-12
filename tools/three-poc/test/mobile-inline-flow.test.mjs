@@ -18,7 +18,7 @@ const html=(c)=>partResultHtml(local,c.snapshot,WASHER.partId)+partActionHtml(lo
 test('the empty QR slot appears only when Native says a QR is showing, and the request button only when nothing is active',()=>{
   const {a,c}=setup();
   assert.match(html(c),/data-action="request-mobile"/);assert.doesNotMatch(html(c),/mobileQrSlot/);
-  for(const phase of ['AUTH_WAITING','AUTH_FAILED','CREATING','CONNECTED','RESULT_RECEIVED','QR_EXPIRED']){
+  for(const phase of ['AUTH_WAITING','AUTH_FAILED','CREATING','CONNECTED','RESULT_RECEIVED','AWAITING_CONFIRMATION','QR_EXPIRED']){
     a.callbacks.onReceiver(status(phase));
     assert.doesNotMatch(html(c),/data-action="request-mobile"/,phase);assert.doesNotMatch(html(c),/mobileQrSlot/,phase);
   }

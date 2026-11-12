@@ -78,4 +78,24 @@ class NativeInspectionActivityTest {
         assertFalse(secure()); assertEquals(View.GONE, panel.visibility); assertEquals(View.VISIBLE, web.visibility)
         b.stop().destroy()
     }
+    @Test fun `without the simulator a received result waits for the explicit Accept and the page is told so`() {
+        val b = Robolectric.buildActivity(BridgeHostFixtureActivity::class.java).create().start()
+        val a = b.get()
+        val root = a.findViewById<ViewGroup>(android.R.id.content).getChildAt(0) as ViewGroup
+        val bridge = ReflectionHelpers.getField<NativeInspectionBridge>(a, "bridge")
+        fun rpc(op: String, extra: String = "") = bridge.handle("""{"op":"$op","localSessionId":"host","generation":1$extra}""")
+        val serverNow = System.currentTimeMillis(); val elapsed = System.nanoTime() / 1_000_000
+        a.fake.serverClock = SyncServerClock.fromResponse(serverNow, elapsed, elapsed)
+        rpc("open"); rpc("request", """, "taskId":"washer-fluid","partId":"washer-fluid-cap""""); shadowOf(Looper.getMainLooper()).idle()
+        assertTrue("the granted request creates its session", rpc("poll").contains("QR_READY"))
+        a.fake.result = true; shadowOf(Looper.getMainLooper()).idleFor(3, java.util.concurrent.TimeUnit.SECONDS)
+        val poll = rpc("poll")
+        assertTrue(poll, poll.contains("\"phase\":\"AWAITING_CONFIRMATION\""))
+        assertFalse("an OEM path is never confirmed automatically", poll.contains("RESULT_RECEIVED") || poll.contains("COMPLETED"))
+        assertEquals(0, a.fake.accepted)
+        assertTrue(root.findViewWithTag<Button>("accept").isEnabled)
+        val status = root.findViewWithTag<android.widget.TextView>("native-3d-status").text.toString()
+        assertTrue(status, status.contains("수락하면 3D에 반영"))
+        b.stop().destroy()
+    }
 }

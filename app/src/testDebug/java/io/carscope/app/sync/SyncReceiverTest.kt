@@ -73,6 +73,21 @@ class SyncReceiverTest {
         assertEquals(3, f.transport.accepts); assertEquals(ReceiverPhase.RESULT_SUBMITTED, f.owner.state.phase)
         f.owner.retryPolling(); assertEquals(4, f.transport.accepts)
     }
+    @Test fun `out of automatic attempts a later successful poll still offers the retry, not only the manual Accept`() {
+        val f = Fixture(auto = true); f.transport.acceptReply = SyncReply.Failure(SyncFailure.SERVER)
+        f.submitted(); repeat(6) { f.owner.poll() }
+        assertEquals(3, f.transport.accepts)
+        assertEquals(ReceiverPhase.RESULT_SUBMITTED, f.owner.state.phase); assertNull("a poll succeeded", f.owner.state.failure)
+        assertTrue("the page must be able to show the retry", f.owner.state.retryAvailable); assertFalse(f.owner.state.autoConfirmed)
+        f.transport.acceptReply = SyncReply.Success(view(SyncSessionState.ACCEPTED, result))
+        f.owner.retryPolling()
+        assertEquals(4, f.transport.accepts); assertEquals(result.digest(), f.transport.acceptedDigest)
+        assertEquals(ReceiverPhase.ACCEPTED, f.owner.state.phase); assertTrue(f.owner.state.autoConfirmed); assertFalse(f.owner.state.explicitlyAccepted)
+    }
+    @Test fun `the explicit path never offers an automatic retry for a waiting result`() {
+        val f = Fixture(); f.submitted(); repeat(4) { f.owner.poll() }
+        assertEquals(0, f.transport.accepts); assertFalse(f.owner.state.retryAvailable); assertTrue(f.owner.state.canAccept)
+    }
     @Test fun `a confirmation answered with another digest fails closed`() {
         val f = Fixture(auto = true)
         f.transport.acceptReply = SyncReply.Success(view(SyncSessionState.ACCEPTED, result, "sha256:" + "0".repeat(64)))
