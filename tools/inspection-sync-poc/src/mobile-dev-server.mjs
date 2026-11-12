@@ -26,7 +26,7 @@ export async function startMobileDevServer({ port = 0, store, now, limits, rates
         // A phone that cancels or leaves closes its side; the upstream request goes too, so the route sees it (P13-A).
         req.on('aborted', () => upstream.destroy()); res.on('close', () => { if (!res.writableFinished) upstream.destroy(); }); req.pipe(upstream); return;
       }
-      await serveMobilePage(req, res, { webxrGuide, partDetection: Boolean(partDetection), partAnalysis: partAnalysis ? partAnalysis.provider.id : null });
+      await serveMobilePage(req, res, { webxrGuide, partDetection: Boolean(partDetection), partAnalysis: partAnalysis ? partAnalysis.provider.id : null, partAnalysisDraft: partAnalysis?.allowDraft === true });
     } catch { if (!res.headersSent) res.writeHead(500, headers); res.end(); }
   });
   try { await new Promise((resolve, reject) => { server.once('error', reject); server.listen(port, '127.0.0.1', resolve); }); }

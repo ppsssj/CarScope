@@ -20,7 +20,8 @@ export function openAiFixture() {
     if (url !== 'https://api.openai.com/v1/responses') throw new Error('Unexpected external URL in MOCK');
     const request = JSON.parse(options.body), partId = request.text.format.schema.properties.partId.enum[0];
     // Evidence records no key and no pixels. The real adapter alone reads the synthetic image data URL.
-    fixture.calls.push({ partId, strict: request.text.format.strict, store: request.store, aborted: false });
+    // P13-G: whether the prompt the real adapter sent names the outside of the car (no pixels, no key).
+    fixture.calls.push({ partId, strict: request.text.format.strict, store: request.store, aborted: false, exterior: /on the outside of/.test(request.instructions ?? '') });
     const call = fixture.calls.at(-1);
     options.signal.addEventListener('abort', () => { call.aborted = true; }, { once: true });
     if (fixture.mode === 'error') return new Response('private upstream message', { status: 429 });

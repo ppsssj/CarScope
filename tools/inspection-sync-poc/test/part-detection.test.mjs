@@ -29,15 +29,21 @@ const jpeg = (width = 640, height = 480, pad = 64) => {
   return Buffer.concat([Buffer.from([0xff, 0xd8]), sof, Buffer.alloc(pad), Buffer.from([0xff, 0xd9])]);
 };
 
-test('the six bonnet parts are the registry\'s, with its ids and tasks, and nothing else is offered', () => {
-  assert.deepEqual(Object.keys(PART_DETECTION).sort(), [...SIX].sort());
+test('the registry\'s 17 task parts have a row, with its ids and tasks: the six bonnet parts and, P13-G, eleven exterior parts that no class detects', () => {
+  const TASK_PARTS = INSPECTION_PARTS.filter(part => part.taskId).map(part => part.id);
+  assert.deepEqual(Object.keys(PART_DETECTION).sort(), [...TASK_PARTS].sort());
   assert.deepEqual(INSPECTION_PARTS.filter(part => part.area === 'hood').map(part => part.id).sort(), [...SIX].sort());
-  for (const id of SIX) {
+  for (const id of TASK_PARTS) {
     assert.equal(PART_DETECTION[id].partId, id);
     assert.equal(PART_DETECTION[id].taskId, partById(id).taskId, id);
-    assert.equal(PART_GUIDES[id].taskId, PART_DETECTION[id].taskId, id);
   }
-  for (const task of ['tire.front-left', 'wiper.front.left', 'light-low-beam-left-0', 'ev-charge.port', 'ev-battery.pack']) assert.equal(detectionForTask(task), null, task);
+  for (const id of SIX) assert.equal(PART_GUIDES[id].taskId, PART_DETECTION[id].taskId, id);
+  // The exterior rows only record that nothing detects them: no class is mapped or substituted, and the detector is never offered.
+  for (const task of ['tire.front-left', 'wiper.front.left', 'light-low-beam-left-0', 'ev-charge.port']) {
+    const row = detectionForTask(task);
+    assert.equal(row.status, 'UNSUPPORTED', task); assert.equal(row.modelClass, null, task); assert.equal(offersDetection(row), false, task);
+  }
+  assert.equal(detectionForTask('ev-battery.pack'), null, 'a part with no inspection has no row');
 });
 
 test('support is as the evidence allows: four experimental, two unsupported, none verified', () => {

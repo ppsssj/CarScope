@@ -22,7 +22,7 @@ test('every one of the 19 parts reads the same capability as the phone, and the 
   }
 });
 
-test('only the six bonnet parts with an AI method get the list tag; the 11 others and the 2 informational parts get none',()=>{
+test('only the six bonnet parts with an EXPERIMENTAL AI method get the list tag; the 11 DRAFT parts and the 2 informational parts get none',()=>{
   for(const p of INSPECTION_PARTS){
     const tag=aiTagHtml(p.id);
     if(AI_PARTS.includes(p.id))assert.match(tag,/AI 실험/,p.id);else assert.equal(tag,'',p.id);
@@ -34,7 +34,8 @@ test('the wording separates detection, a marked region, no AI, and an informatio
   assert.match(partMethodsHtml('washer-fluid-cap'),/AI 위치 찾기와 외관 분석\(실험\)/);
   assert.match(partMethodsHtml('battery-12v'),/사진에서 부품을 직접 지정한 뒤 AI 외관 분석\(실험\)/);
   assert.doesNotMatch(partMethodsHtml('battery-12v'),/위치 찾기/,'a part with no detector never reads as found automatically');
-  for(const id of ['tire.front-left','wiper.front.right','light-low-beam-left-0','ev-charge.port'])assert.match(partMethodsHtml(id),/직접 점검할 수 있어요\. 현재 AI 외관 분석은 지원하지 않습니다/,id);
+  // P13-G: the eleven exterior parts have a DRAFT analysis: named with its stage and where it runs, never as available here.
+  for(const id of ['tire.front-left','wiper.front.right','light-low-beam-left-0','ev-charge.port']){assert.match(partMethodsHtml(id),/AI 외관 분석\(시험 단계\)은 승인된 실험 서비스에서만/,id);assert.doesNotMatch(partMethodsHtml(id),/위치 찾기|지원하지 않습니다/,id);}
   for(const id of ['ev-battery.pack','ev-charge.flap'])assert.match(partMethodsHtml(id),/따로 점검 기록이 없는 부품/,id);
   assert.equal(vehiclePartCapabilities('ev-charge.flap').partPlan,PLAN.INFO_ONLY);
 });

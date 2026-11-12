@@ -17,7 +17,7 @@ const MATRIX = [
   ['brake-fluid-reservoir', true, PLAN.DETECT_AND_ANALYZE], ['fuse-box', true, PLAN.DETECT_AND_ANALYZE],
   ['battery-12v', true, PLAN.MARK_AND_ANALYZE], ['lcw-coolant-reservoir', true, PLAN.MARK_AND_ANALYZE],
   ...['tire.front-left', 'tire.front-right', 'tire.rear-left', 'tire.rear-right', 'wiper.front.left', 'wiper.front.right',
-    'light-low-beam-left-0', 'light-low-beam-right-0', 'light-high-beam-left-0', 'light-high-beam-right-0', 'ev-charge.port'].map(id => [id, true, PLAN.MANUAL_ONLY]),
+    'light-low-beam-left-0', 'light-low-beam-right-0', 'light-high-beam-left-0', 'light-high-beam-right-0', 'ev-charge.port'].map(id => [id, true, PLAN.MARK_AND_ANALYZE, 'DRAFT']),
   ['ev-battery.pack', false, PLAN.INFO_ONLY], ['ev-charge.flap', false, PLAN.INFO_ONLY],
 ];
 const capOf = (p, host = null) => partCapabilities(p.id, { taskId: p.taskId, host });
@@ -31,7 +31,10 @@ test('all 19 parts of the 3D registry: 17 with a phone task, 2 informational, an
     assert.equal(cap.manualChecklist, hasTask, `${id}: the manual checklist depends only on the task`);
   }
   assert.equal(INSPECTION_PARTS.filter(p => p.taskId).length, 17);
-  assert.equal(MATRIX.filter(([, , plan]) => plan === PLAN.MANUAL_ONLY).length, 11);
+  // P13-G: the eleven exterior parts gained a marked-region analysis, as DRAFT. No part is manual only any more.
+  assert.equal(MATRIX.filter(([, , plan]) => plan === PLAN.MANUAL_ONLY).length, 0);
+  assert.equal(MATRIX.filter(([, , , stage]) => stage === 'DRAFT').length, 11);
+  for (const [id, , , stage] of MATRIX) { const p = INSPECTION_PARTS.find(x => x.id === id); assert.equal(capOf(p).stage, p.taskId ? stage ?? 'EXPERIMENTAL' : null, id); }
 });
 
 test('the 17 phone tasks are the 3D tasks, with the same names on both screens', () => {
@@ -81,10 +84,14 @@ test('on the phone, AI is AVAILABLE only where this server offers it and the pag
     ['washer-fluid-cap', { ...on, connected: false }, PLAN.MANUAL_ONLY, AI_STATE.NOT_CONNECTED],
     ['battery-12v', on, PLAN.MARK_AND_ANALYZE, AI_STATE.AVAILABLE],
     ['battery-12v', { ...on, analysis: false }, PLAN.MANUAL_ONLY, AI_STATE.SERVER_DISABLED, 'the detector cannot help a part it has no class for'],
-    ['tire.front-left', on, PLAN.MANUAL_ONLY, AI_STATE.UNSUPPORTED],
-    ['wiper.front.left', on, PLAN.MANUAL_ONLY, AI_STATE.UNSUPPORTED],
-    ['light-high-beam-right-0', on, PLAN.MANUAL_ONLY, AI_STATE.UNSUPPORTED],
-    ['ev-charge.port', on, PLAN.MANUAL_ONLY, AI_STATE.UNSUPPORTED],
+    // P13-G: a draft is offered only where the host also approved drafts; detection never helps a part with no class.
+    ...['tire.front-left', 'wiper.front.left', 'light-high-beam-right-0', 'ev-charge.port'].flatMap(id => [
+      [id, on, PLAN.MANUAL_ONLY, AI_STATE.SERVER_DISABLED, 'analysis on, drafts not approved'],
+      [id, { ...on, draftAnalysis: true }, PLAN.MARK_AND_ANALYZE, AI_STATE.AVAILABLE],
+      [id, { ...on, analysis: false, draftAnalysis: true }, PLAN.MANUAL_ONLY, AI_STATE.SERVER_DISABLED, 'the draft flag alone never turns analysis on'],
+      [id, { ...on, connected: false, draftAnalysis: true }, PLAN.MANUAL_ONLY, AI_STATE.NOT_CONNECTED],
+    ]),
+    ['washer-fluid-cap', { ...on, draftAnalysis: true }, PLAN.DETECT_AND_ANALYZE, AI_STATE.AVAILABLE, 'drafts do not change an experimental part'],
   ];
   for (const [partId, host, offered, state, why] of rows) {
     const p = INSPECTION_PARTS.find(x => x.id === partId), cap = capOf(p, host);
@@ -101,13 +108,19 @@ test('on the phone, AI is AVAILABLE only where this server offers it and the pag
 
 test('the words a driver reads hold no enum, environment variable or provider internals, and never call AI a verdict', () => {
   const hosts = [null, { connected: false, detection: true, analysis: true }, { connected: true, detection: false, analysis: false },
-    { connected: true, detection: true, analysis: true }, { connected: true, detection: true, analysis: false }, { connected: true, detection: false, analysis: true }];
+    { connected: true, detection: true, analysis: true }, { connected: true, detection: true, analysis: false }, { connected: true, detection: false, analysis: true },
+    { connected: true, detection: true, analysis: true, draftAnalysis: true }, { connected: true, detection: false, analysis: true, draftAnalysis: true }];
   const words = new Set(Object.values(METHOD_LABELS));
   for (const p of INSPECTION_PARTS) for (const host of hosts) { const cap = capOf(p, host); words.add(aiNote(cap)); words.add(partMethodSummary(cap)); }
   for (const w of words) {
     assert.doesNotMatch(w, /[A-Z]{2,}_[A-Z_]+|ROBOFLOW|OPENAI|GPT|process\.env|data-part|EXPERIMENTAL|UNSUPPORTED/, w);
     assert.doesNotMatch(w, /정상입니다|안전합니다|문제 없|주행 가능합니다/, w);
   }
-  assert.equal(aiNote(capOf(INSPECTION_PARTS.find(p => p.id === 'tire.front-left'))), '현재 AI 외관 분석은 지원하지 않습니다.');
+  assert.equal(aiNote(capOf(INSPECTION_PARTS.find(p => p.id === 'ev-charge.flap'))), '현재 AI 외관 분석은 지원하지 않습니다.');
+  // P13-G: a draft names its stage in every state: offered, not approved here, and on the vehicle.
+  const tire = INSPECTION_PARTS.find(p => p.id === 'tire.front-left'), on = { connected: true, detection: true, analysis: true };
+  assert.match(aiNote(capOf(tire, { ...on, draftAnalysis: true })), /시험 단계예요\. 자동으로 위치를 찾지 않아요.*정확도를 확인하지 않았어요/);
+  assert.match(aiNote(capOf(tire, on)), /시험 단계라 승인된 실험 서비스에서만/);
+  assert.match(partMethodSummary(capOf(tire)), /AI 외관 분석\(시험 단계\)은 승인된 실험 서비스에서만/);
   assert.match(aiNote(capOf(INSPECTION_PARTS.find(p => p.id === 'battery-12v'), { connected: true, detection: true, analysis: true })), /자동으로 위치를 찾지 않아요/);
 });

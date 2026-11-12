@@ -64,7 +64,8 @@ export function refreshResultRegions(root,{local,mobile,partId}){
 export function vehiclePartCapabilities(partId){const p=partById(partId);return partCapabilities(partId,{taskId:p?.taskId??null});}
 export function partMethodsHtml(partId){const cap=vehiclePartCapabilities(partId);return `<p class="note part-methods" data-ai-plan="${cap.partPlan}">${esc(partMethodSummary(cap))}</p>`;}
 /** A short tag for a part list row: only parts with an AI method get one, so the absence reads plainly. */
-export function aiTagHtml(partId){const cap=vehiclePartCapabilities(partId);return cap.experimental?`<span class="tag ai-tag" data-ai-plan="${cap.partPlan}">AI 실험</span>`:'';}
+// P13-G: a DRAFT part gets no tag. It is offered only by an approved experiment service, so a tag here would advertise it.
+export function aiTagHtml(partId){const cap=vehiclePartCapabilities(partId);return cap.stage==='EXPERIMENTAL'?`<span class="tag ai-tag" data-ai-plan="${cap.partPlan}">AI 실험</span>`:'';}
 const SCHEMA_V1_STATUS={OK:'정상으로 보고',NEEDS_REFILL:'보충 필요로 보고',UNSURE:'확인 불가'};
 const ACTIVE_RECEIVER=new Set(['AUTH_WAITING','AUTH_FAILED','CREATING','QR_READY','QR_EXPIRED','CONNECTED','RESULT_RECEIVED','AWAITING_CONFIRMATION']);
 export const receiverActive=receiver=>!!receiver&&ACTIVE_RECEIVER.has(receiver.phase);

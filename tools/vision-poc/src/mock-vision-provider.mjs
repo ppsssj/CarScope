@@ -1,7 +1,7 @@
 // P13-A: a MOCK vision provider and a fixture detector, for local runs and tests. Neither looks at the picture: what they return says
 // nothing about how well any real model sees. They exist to drive the pipeline, the contract and the screens end to end.
 import { jpegSize } from '../../inspection-sync-poc/src/part-detection-route.mjs';
-import { analysisProfile } from '../../mobile-ar-poc/public/part-analysis.mjs';
+import { analysisProfile, EXTERIOR_PROMPT_VERSION } from '../../mobile-ar-poc/public/part-analysis.mjs';
 
 const washer = (fields) => ({
   partId: 'washer-fluid-cap', partMatch: 'LIKELY_MATCH', assessment: 'NO_VISIBLE_ISSUE_DETECTED',
@@ -35,7 +35,12 @@ export function mockAnswer(partId, name) {
     'wrong-part': { observations: ['요청한 부품이 아닌 다른 부품의 표기가 보입니다.'] },
     'claims-safe': { observations: ['부품은 정상입니다.'] },
   }[name] ?? {};
-  return { ...base, partId, ...generic };
+  // P13-G: an exterior part gets exterior words; the bonnet answers above stay exactly as P13-D wrote them.
+  const exterior = profile.promptVersion === EXTERIOR_PROMPT_VERSION ? {
+    'no-visible-issue': { observations: [`${profile.label}로 보이는 부품이 사진에 보입니다.`, '보이는 범위에서 뚜렷한 균열이나 손상은 보이지 않습니다.'] },
+    indeterminate: { observations: ['부품 일부가 보이지만 흐리게 찍혔습니다.'], limitations: ['초점이 맞지 않아 표면의 균열이나 손상을 구분할 수 없습니다.'], retakeInstructions: ['부품 전체가 화면에 들어오도록 조금 떨어져서 흔들리지 않게 다시 찍어 주세요.'] },
+  }[name] ?? {} : {};
+  return { ...base, partId, ...generic, ...exterior };
 }
 
 /**

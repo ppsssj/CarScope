@@ -47,6 +47,10 @@ let now = Date.now(), browser;
 const authorizer = new LocalTestSessionCreationAuthorizer();
 const on = await startMobileDevServer({ now: () => now, authorizer, rates, partDetection: { provider: detector }, partAnalysis: { provider: vision } });
 const detectOnly = await startMobileDevServer({ now: () => now, authorizer, rates, partDetection: { provider: detector } });
+// P13-G: a host whose operator approved draft profiles. Same fixture detector and MOCK vision: still no outside call.
+const draft = await startMobileDevServer({ now: () => now, authorizer, rates, partDetection: { provider: detector }, partAnalysis: { provider: vision, allowDraft: true } });
+const EXTERIOR = ['tire.front-left', 'tire.front-right', 'tire.rear-left', 'tire.rear-right', 'wiper.front.left', 'wiper.front.right',
+  'light-low-beam-left-0', 'light-low-beam-right-0', 'light-high-beam-left-0', 'light-high-beam-right-0', 'ev-charge.port'];
 const contexts = [];
 const closeAll = () => Promise.all(contexts.splice(0).map(c => c.close().catch(() => {})));
 
@@ -196,15 +200,86 @@ try {
     }
     const tire = await open({ task: 'tire.front-left' });
     await tire.page.waitForTimeout(300);
-    assert.equal(await tire.page.locator('#part-detect-open').count(), 0, 'parts outside the bonnet get no AI entry');
+    assert.equal(await tire.page.locator('#part-detect-open').count(), 0, 'P13-G: an exterior part gets no AI entry without the host\'s draft approval');
+    assert.equal(await tire.page.evaluate(() => document.getElementById('inspection-methods').dataset.aiState), 'SERVER_DISABLED');
+    assert.match(await tire.page.locator('#inspection-methods-ai-note').innerText(), /시험 단계라 승인된 실험 서비스에서만/);
     await closeAll();
+  }
+
+  { // P13-G: the eleven exterior parts on a host that approved drafts: mark the region, see the crop, agree, read a MOCK answer, go back.
+    const SCENARIOS = [['no-visible-issue', '사진에서 보이는 이상 징후를 찾지 못했어요'], ['suspected', '사진에서 이상이 의심되는 부분이 있어요'],
+      ['indeterminate', '이 사진으로는 판단할 수 없어요'], ['wrong-part', '선택한 부품이 아닌 것 같아요']];
+    for (const [i, partId] of EXTERIOR.entries()) {
+      const [scenario, headline] = SCENARIOS[i % SCENARIOS.length];
+      vision.scenario = scenario;
+      const detectBefore = detector.calls, callsBefore = vision.calls.length;
+      const { page, log } = await open({ host: draft, task: partId });
+      const before = await inspectionState(page);
+      await page.waitForFunction(() => window.__partDetection);
+      assert.equal(await page.evaluate(() => window.__partDetection.manualOnly), true, partId);
+      assert.equal(await page.locator('#part-detect-open').innerText(), '사진에서 부품 직접 지정하기', partId);
+      assert.deepEqual(await page.evaluate(() => [document.getElementById('inspection-methods').dataset.aiState, document.getElementById('inspection-methods').dataset.plan]), ['AVAILABLE', 'MARK_AND_ANALYZE'], partId);
+      assert.match(await page.locator('#inspection-methods-ai-note').innerText(), /시험 단계예요\. 자동으로 위치를 찾지 않아요/, partId);
+      await page.locator('#part-detect-open').click(); await waitD(page, 'CONSENT');
+      assert.equal(await page.locator('#part-detect-consent #part-detect-agree').count(), 0, `${partId}: no detector consent`);
+      await page.locator('#part-detect-library-input').setInputFiles(PICTURE);
+      await waitD(page, 'LOCAL_ONLY'); await waitA(page, 'REGION');
+      assert.match(await page.locator('#part-analysis-title').innerText(), /직접 지정, 제한적 분석 · 시험 단계/, partId);
+      assert.match(await page.locator('#part-analysis-evidence').innerText(), /시험 단계의 실험 기능이에요\. 실제 사진으로 정확도를 확인하지 않았어요/, partId);
+      const picker = page.locator('#part-analysis-picker'); await picker.scrollIntoViewIfNeeded();
+      const box = await picker.boundingBox();
+      await page.mouse.click(box.x + box.width * 0.5, box.y + box.height * 0.45);
+      await page.waitForFunction(() => window.__partAnalysis.state.cropReady);
+      assert.match(await page.locator('#part-analysis-region-note').innerText(), /직접 지정한 영역이에요/);
+      // No send before consent: the start button waits for the box.
+      assert.equal(await page.locator('#part-analysis-start').isEnabled(), false, `${partId}: no analysis without consent`);
+      assert.equal(vision.calls.length, callsBefore);
+      await page.locator('#part-analysis-agree').check(); await page.locator('#part-analysis-start').click();
+      await waitA(page, 'RESULT');
+      assert.equal(await page.locator('#part-analysis-headline').innerText(), headline, `${partId} ${scenario}`);
+      assert.match(await page.locator('#part-analysis-result').innerText(), /자동 입력되거나 차량으로 보내지지 않아요/, partId);
+      const position = await page.locator('#part-analysis-position-note').evaluate(n => n.hidden ? null : n.textContent);
+      assert.equal(position === null, partId === 'ev-charge.port', `${partId}: the photo never confirms the wheel, side or lamp`);
+      if (partId.startsWith('light-')) assert.match(position, /상향등·하향등을 구별하지 않아요/);
+      const [request] = posts(log, '/v1/part-analyses/');
+      assert.ok(request.url.endsWith(`/v1/part-analyses/${partId}`), partId);
+      assert.equal(request.headers['x-carscope-region-source'], 'MANUAL');
+      assert.deepEqual([vision.calls.at(-1).partId, vision.calls.at(-1).regionSource, vision.calls.at(-1).promptVersion], [partId, 'MANUAL', 'p13-g-1']);
+      assert.equal(posts(log, '/v1/part-detections/').length, 0); assert.equal(detector.calls, detectBefore, `${partId}: no detection request`);
+      if (['tire.front-left', 'wiper.front.left', 'light-high-beam-left-0', 'ev-charge.port'].includes(partId)) await shot(page, `p13-g-${partId}-result`, '#part-analysis-result');
+      await page.locator('#part-analysis-ack').check(); await page.locator('#part-analysis-continue').click();
+      await waitA(page, 'IDLE');
+      assert.equal(await inspectionState(page), before, `${partId}: the inspection is as it was`);
+      assert.equal(posts(log, '/v1/submissions').length, 0, `${partId}: nothing was sent to the vehicle`);
+      assert.deepEqual(log.problems, [], partId);
+      await closeAll();
+    }
+    pass('P13-G: 4 tyres, 2 wipers, 4 lamps and the charge port: no detector, the person marks the region, nothing is sent before consent, the request says MANUAL with prompt p13-g-1, every headline shows, labelled as a draft, and the inspection is unchanged');
+
+    vision.mode = 'error'; // A failed analysis of an exterior part leaves the manual check usable.
+    const { page } = await open({ host: draft, task: 'wiper.front.right' });
+    await page.waitForFunction(() => window.__partDetection);
+    await page.locator('#part-detect-open').click(); await waitD(page, 'CONSENT');
+    await page.locator('#part-detect-library-input').setInputFiles(PICTURE); await waitA(page, 'REGION');
+    const box = await page.locator('#part-analysis-picker').boundingBox();
+    await page.mouse.click(box.x + box.width * 0.5, box.y + box.height * 0.5);
+    await page.waitForFunction(() => window.__partAnalysis.state.cropReady);
+    await page.locator('#part-analysis-agree').check(); await page.locator('#part-analysis-start').click();
+    await waitA(page, 'FAILED');
+    await page.locator('#part-detect-close').click();
+    await page.waitForFunction(() => !document.getElementById('part-detect').open);
+    await page.locator('#safety').check(); await page.locator('#manual-start').click();
+    await page.waitForFunction(() => document.body.dataset.step === 'check');
+    vision.mode = 'answer';
+    await closeAll();
+    pass('P13-G: a failed exterior analysis closes back to the inspection, and the manual check starts');
     pass('a provider failure ends in words and the checklist carries on; with the analysis off the manual parts and the tyres have no AI entry');
   }
   result.status = 'PASS';
 } catch (error) {
   result.status = 'FAIL'; result.errors.push(error.stack ?? error.message); process.exitCode = 1;
 } finally {
-  await browser?.close(); await on.stop(); await detectOnly.stop();
+  await browser?.close(); await on.stop(); await detectOnly.stop(); await draft.stop();
   await writeFile(path.join(output, 'results.json'), JSON.stringify(result, null, 2));
   console.log(JSON.stringify({ status: result.status, checks: result.checks.length, errors: result.errors }, null, 2));
 }
