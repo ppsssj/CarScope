@@ -259,7 +259,8 @@ reading 필드:
 | 경계 (`boundary.test.mjs`) | PASS | Render 진입점 6개 import 그래프, server·Android·mobile·3D 소스와 workflow에 provider 호스트 없음, fixture 전용 플래그, 의존성 없음 |
 | 3D 카드 외부 블록 (`external-vehicle-data.test.mjs`) | PASS 5 | 기본 미표시(기존 카드와 동일), MOCK 표시, 숫자 비노출, 투영 계약 거부 13종, 상태 문구 |
 | three-poc 전체 / 패키징 | PASS 348 (기존 TODO 1) / 4 | |
-| 차량 브라우저 회귀 (실제 GLB): consistency·panels·part-labels·results·history·toast·part-UX 기준선 | 아래 PR 보고 참고 | 로컬 Chrome |
+| 차량 브라우저 회귀 (실제 GLB): consistency·panels·part-labels·results·history·toast·part-UX 기준선 | 7/7 PASS | 로컬 Chrome. 증거는 저장소 밖 `C:\CarScope-External\p14b` |
+| 실제 페이지 fixture 확인 | 확인 | 기본 페이지에는 외부 블록 없음. `?externalVehicleData=fixture`에서 PLEOS > MOCK > AI > 직접 점검 순서. 페이지 오류 0, 외부 Origin 요청 0 |
 | Android 단위 / lint / Debug·Release APK·AAB | 288/288 / PASS / PASS | Android 코드 변경 없음 |
 | `check.py boundary`·`sdk-audit`, sync boundary, Kotlin→JS 계약(타이어·컴포넌트), core | PASS | |
 | inspection-sync-poc 전체 | 270 pass / 1 fail / 41 skip | 실패는 기존 `avd-setup-script`(한글 사용자 경로의 임시 디렉터리). 이번 변경과 무관 |
