@@ -1,6 +1,7 @@
 // P12-E: "AI로 부품 위치 찾기". One photo, one explicit consent, one request. It never reads or changes the inspection: the person looks and answers.
 // The photo is redrawn smaller and re-encoded here, which also leaves out its location and camera data. Only the served page's own origin is called.
 import { detectionForTask, initialDetection, offersDetection, PHASE, reduceDetection } from './part-detection.mjs';
+import { METHOD_LABELS } from './part-capabilities.mjs';
 
 const MAX_INPUT_BYTES = 15 * 1024 * 1024, MAX_SIDE = 1280, JPEG_QUALITY = 0.85;
 const el = (tag, className, text) => { const node = document.createElement(tag); if (className) node.className = className; if (text != null) node.textContent = text; return node; };
@@ -54,11 +55,14 @@ export function mountPartDetection({ taskId, detector, introBefore, locationAfte
   let localChoice = manualOnly;
   if (manualOnly && !(analysis && analysisOffered)) return null;
   let state = initialDetection(entry.partId), source = null, original = null, historyPushed = false, controller = null;
+  // P11: the entry reads as the method the part card names. A part with no detector starts by marking the part, never by "finding" it.
+  const withAnalysis = Boolean(analysis && analysisOffered), entryLabel = manualOnly ? METHOD_LABELS.mark : withAnalysis ? METHOD_LABELS.analyze : METHOD_LABELS.detectOnly;
+  const manualTitle = METHOD_LABELS.analyze;
 
   const dialog = el('dialog', 'part-detect-dialog'); dialog.id = 'part-detect'; dialog.setAttribute('aria-labelledby', 'part-detect-title');
   const bar = el('div', 'part-guide-zoom-bar'), close = el('button', null, '점검으로 돌아가기'); close.id = 'part-detect-close'; close.type = 'button'; bar.append(close);
   const body = el('div', 'part-detect-body');
-  body.append(Object.assign(el('h2', null, manualOnly ? 'AI 부품 상태 분석 · 실험' : 'AI로 부품 위치 찾기 · 실험'), { id: 'part-detect-title' }));
+  body.append(Object.assign(el('h2', null, manualOnly ? manualTitle : 'AI로 부품 위치 찾기 · 실험'), { id: 'part-detect-title' }));
 
   const consent = el('section'); consent.id = 'part-detect-consent';
   const agree = el('input'); agree.type = 'checkbox'; agree.id = 'part-detect-agree';
@@ -96,7 +100,7 @@ export function mountPartDetection({ taskId, detector, introBefore, locationAfte
   let extension = null;
 
   function render() {
-    body.querySelector('#part-detect-title').textContent = localChoice ? 'AI 부품 상태 분석 · 실험' : 'AI로 부품 위치 찾기 · 실험';
+    body.querySelector('#part-detect-title').textContent = localChoice ? manualTitle : 'AI로 부품 위치 찾기 · 실험';
     busy.textContent = localChoice ? '사진을 준비하고 있어요…' : '사진을 분석하고 있어요…';
     consent.hidden = state.phase !== PHASE.CONSENT;
     busy.hidden = state.phase !== PHASE.ANALYZING;
@@ -171,7 +175,7 @@ export function mountPartDetection({ taskId, detector, introBefore, locationAfte
     historyPushed = true;
     body.scrollTop = 0;
   }
-  const button = location => { const b = el('button', `part-detect-entry ${location}`, manualOnly ? 'AI로 부품 상태 보기 · 실험' : 'AI로 부품 위치 찾기 · 실험'); b.type = 'button'; b.addEventListener('click', open); return b; };
+  const button = location => { const b = el('button', `part-detect-entry ${location}`, entryLabel); b.type = 'button'; b.addEventListener('click', open); return b; };
   const first = button('part-detect-entry-intro'), later = button('part-detect-entry-location');
   first.id = 'part-detect-open'; later.id = 'part-detect-open-location';
   introBefore?.before(first);

@@ -33,7 +33,7 @@ export const EXTRA_TASKS=Object.freeze([
   {id:'battery-12v',label:'12V 보조 배터리',kind:'bonnet',checks:batteryChecks,position:`${bonnet} 12V 보조 배터리 외관만 대상이며 하부 고전압 배터리는 대상이 아닙니다.`},
   {id:'fuse-box',label:'모터룸 퓨즈박스',kind:'bonnet',checks:fuseChecks,position:`${bonnet} 모터룸 퓨즈박스의 닫힌 덮개만 관찰합니다. 실내 퓨즈박스 응답을 대신 기록하지 마세요.`},
   ...['left','right'].map(side=>({id:`wiper.front.${side}`,label:`전면 ${side==='left'?'왼쪽':'오른쪽'} 와이퍼`,kind:'wiper',checks:wiperChecks,position:`차량에 앉아 앞을 보는 기준 ${side==='left'?'왼쪽':'오른쪽'} 전면 유리 하단의 와이퍼입니다. 차량 전원·와이퍼·자동 와이퍼를 끄고 완전히 정지한 상태에서 보이는 부분만 확인하세요.`})),
-  ...['low','high'].flatMap(beam=>['left','right'].map(side=>({id:`light-${beam}-beam-${side}-0`,label:`${side==='left'?'왼쪽':'오른쪽'} ${beam==='low'?'하향등':'상향등'} 외관`,kind:'lamp',checks:lampChecks,position:`차량에 앉아 앞을 보는 기준 앞쪽 ${side==='left'?'왼쪽':'오른쪽'} 전조등의 ${beam==='low'?'하향등':'상향등'} 영역입니다. 설명서의 등화 배치도를 대조하세요. 차종에 따라 같은 램프 모듈을 공유하므로 구별되지 않으면 확인할 수 없음으로 기록하세요.`}))),
+  ...['low','high'].flatMap(beam=>['left','right'].map(side=>({id:`light-${beam}-beam-${side}-0`,label:`${side==='left'?'왼쪽':'오른쪽'} ${beam==='low'?'하향등':'상향등'}`,kind:'lamp',checks:lampChecks,position:`차량에 앉아 앞을 보는 기준 앞쪽 ${side==='left'?'왼쪽':'오른쪽'} 전조등의 ${beam==='low'?'하향등':'상향등'} 영역입니다. 설명서의 등화 배치도를 대조하세요. 차종에 따라 같은 램프 모듈을 공유하므로 구별되지 않으면 확인할 수 없음으로 기록하세요.`}))),
 ].map(task=>Object.freeze(task)));
 export const extraTask=id=>EXTRA_TASKS.find(task=>task.id===id);
 export const isExtraTask=id=>!!extraTask(id);

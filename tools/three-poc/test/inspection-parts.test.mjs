@@ -75,16 +75,15 @@ test('tires and visibility parts keep their model bindings and take their names 
   assert.deepEqual([...WIPER_PARTS],['wiper.front.left','wiper.front.right']);
 });
 
-// The phone and Native call the four lights "... 외관" (exterior). The result contract and History do not. Nothing else may differ.
-// Reported in docs/p10-1-part-registry.md for a decision. Those files belong to other work and are only read here.
-const LIGHT_NAME_ON_PHONE_AND_NATIVE=label=>label+' 외관';
-const expectedElsewhere=p=>p.area==='lights'?LIGHT_NAME_ON_PHONE_AND_NATIVE(p.label):p.label;
+// P11 (PR #121): the phone and Native dropped "외관" from the four light names, so every result part now reads the same on
+// all screens. The difference reported in docs/p10-1-part-registry.md is resolved; no exception remains.
+const expectedElsewhere=p=>p.label;
 
-test('the phone uses the same name for every result part, except the listed light difference',()=>{
+test('the phone uses the same name for every result part',()=>{
   for(const p of INSPECTION_PARTS.filter(x=>x.taskId))assert.equal(taskLabel(p.taskId),expectedElsewhere(p),p.id);
 });
 
-test('Native uses the same name for every result part, except the listed light difference',()=>{
+test('Native uses the same name for every result part',()=>{
   const contract=read('../../../app/src/debug/java/io/carscope/app/sync/SyncReceiverContract.kt'),checklist=read('../../../app/src/debug/java/io/carscope/app/sync/SyncChecklistInspection.kt');
   const direct=[...(/val labels = listOf\(([^)]*)\)/.exec(contract)?.[1].matchAll(/"([^"]+)"/g)??[])].map(m=>m[1]);
   const native=new Map(['washer-fluid','tire.front-left','tire.front-right','tire.rear-left','tire.rear-right','ev-charge.port'].map((task,i)=>[task,direct[i]]));

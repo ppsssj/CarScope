@@ -285,3 +285,11 @@ body[data-flow="qr"][data-step="done"][data-sync-end] #primary { background: tra
 .part-analysis-picker, .part-analysis-crop { display: block; width: 100%; height: auto; border-radius: 10px; background: #05070a; touch-action: manipulation; }
 .part-analysis-group ul { margin: 0; padding-left: 20px; }
 .part-analysis-group li { margin: 4px 0; overflow-wrap: anywhere; }
+/* P11 (PR #121): one "점검 방법" card per part. The manual check is always there; the AI row is a button only when it can run. */
+.inspection-methods h2 { font-size: 1rem; margin: 0 0 6px; }
+.inspection-methods .method { border-top: 1px solid var(--line); padding: 10px 0 2px; }
+.inspection-methods .method p { margin: 4px 0; }
+.inspection-methods .method-title { font-weight: 700; color: var(--ink); }
+.inspection-methods[data-ai-state="UNSUPPORTED"] [data-method="ai"] .fine,
+.inspection-methods[data-ai-state="SERVER_DISABLED"] [data-method="ai"] .fine { color: var(--ink); }
+.inspection-methods .part-detect-entry { width: 100%; margin: 0 0 4px; }

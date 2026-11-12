@@ -16,6 +16,7 @@ test('Debug package has the History UI unchanged, no provider, and no synthetic 
   cpSync(join(repo,'tools/ioniq5-asset'),join(tools,'ioniq5-asset'),{recursive:true});
   mkdirSync(join(tools,'mobile-ar-poc/public'),{recursive:true});
   cpSync(join(repo,'tools/mobile-ar-poc/public/handoff.mjs'),join(tools,'mobile-ar-poc/public/handoff.mjs'));
+  cpSync(join(repo,'tools/mobile-ar-poc/public/part-capabilities.mjs'),join(tools,'mobile-ar-poc/public/part-capabilities.mjs'));
   const r=spawnSync(process.execPath,['tools/three-poc/build-android-inspection.mjs'],{cwd:fixture,encoding:'utf8',env:{...process.env,CARSCOPE_QR_AR_BASE_URL:''}});
   assert.equal(r.status,0,r.stderr);
   const out=join(fixture,'app/src/debug/assets/inspection'),files=walk(out);

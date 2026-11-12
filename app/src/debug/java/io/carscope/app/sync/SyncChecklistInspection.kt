@@ -22,10 +22,10 @@ internal object SyncChecklistTasks {
         "fuse-box" to SyncChecklistProfile("모터룸 퓨즈박스", linkedMapOf("coverDamage" to "닫힌 덮개 외관", "visibleContamination" to "덮개 주변 젖음·오염", "heatDamage" to "덮개 변형·변색"), "fuse-box"),
         "wiper.front.left" to SyncChecklistProfile("전면 왼쪽 와이퍼", wiper, "wiper.front.left"),
         "wiper.front.right" to SyncChecklistProfile("전면 오른쪽 와이퍼", wiper, "wiper.front.right"),
-        "light-low-beam-left-0" to SyncChecklistProfile("왼쪽 하향등 외관", lamp, "light-low-beam-left-0"),
-        "light-low-beam-right-0" to SyncChecklistProfile("오른쪽 하향등 외관", lamp, "light-low-beam-right-0"),
-        "light-high-beam-left-0" to SyncChecklistProfile("왼쪽 상향등 외관", lamp, "light-high-beam-left-0"),
-        "light-high-beam-right-0" to SyncChecklistProfile("오른쪽 상향등 외관", lamp, "light-high-beam-right-0")
+        "light-low-beam-left-0" to SyncChecklistProfile("왼쪽 하향등", lamp, "light-low-beam-left-0"),
+        "light-low-beam-right-0" to SyncChecklistProfile("오른쪽 하향등", lamp, "light-low-beam-right-0"),
+        "light-high-beam-left-0" to SyncChecklistProfile("왼쪽 상향등", lamp, "light-high-beam-left-0"),
+        "light-high-beam-right-0" to SyncChecklistProfile("오른쪽 상향등", lamp, "light-high-beam-right-0")
     )
 }
 internal enum class ChecklistAnswer { FOUND, NOT_FOUND, UNABLE }
