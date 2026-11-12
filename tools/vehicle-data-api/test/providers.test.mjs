@@ -43,7 +43,7 @@ test('Hyundai: token issue / refresh / delete send Basic client credentials and 
   assert.deepEqual(await p.revoke(refreshed.record), { ok: true });
   assert.equal(new URLSearchParams(calls[2].body).get('grant_type'), 'delete');
   for (const shown of [JSON.stringify(issued.record), String(issued.record), inspect(issued.record), inspect(new Secret('fixture-client-secret')), JSON.stringify({ s: new Secret('x-secret-x') })])
-    assert.ok(!/fixture-access|YDBRI|fixture-client-secret|x-secret-x/.test(shown), shown);
+    assert.ok(!/fixture-access|fixture-refresh|fixture-client-secret|x-secret-x/.test(shown), shown);
 });
 
 test('Hyundai: token errors and malformed token bodies never produce a record', async () => {

@@ -3,7 +3,7 @@
 // Ids below are the spec's example ids, not any real account or vehicle.
 
 export const HYUNDAI_EXAMPLES = Object.freeze({
-  token: { access_token: 'fixture-access-token-0001', token_type: 'Bearer', refresh_token: 'YDBRI832UM6DO_BB5TN12G', expires_in: 7200 },
+  token: { access_token: 'fixture-access-token-0001', token_type: 'Bearer', refresh_token: 'fixture-refresh-token-0001', expires_in: 7200 },
   refresh: { access_token: 'fixture-access-token-0002', token_type: 'Bearer', expires_in: 7200 },
   deleteToken: { access_token: 'fixture-access-token-0002' },
   carlist: { cars: [{ carId: '123e4567-c0a8-4af7-b8e5-262ea1f6aab4', carNickname: 'my sonata', carType: 'GN', carName: 'LF', carSellname: 'Sonata' }], msgId: '714dd6b9-af57-4c25-9630-0f0eef9175f9' },
