@@ -18,7 +18,7 @@ export const LABEL_LIMIT=6;
 /** A touch this close to a part that is really visible there still selects it. Same as the approved P10 touch rule. */
 export const TOUCH_SLOP_PX=16;
 /** Mobile phases while a QR or a phone inspection is live. Labels then become read-only and other parts disappear. */
-export const LOCKED_RECEIVER_PHASES=Object.freeze(['AUTH_WAITING','CREATING','QR_READY','CONNECTED','RESULT_RECEIVED']);
+export const LOCKED_RECEIVER_PHASES=Object.freeze(['AUTH_WAITING','CREATING','QR_READY','CONNECTED','RESULT_RECEIVED','AWAITING_CONFIRMATION']);
 export const receiverLocked=receiver=>!!receiver&&LOCKED_RECEIVER_PHASES.includes(receiver.phase);
 
 /** The parts that can carry a label: real geometry only, from the registry. */

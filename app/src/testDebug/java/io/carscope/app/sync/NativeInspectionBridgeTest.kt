@@ -33,6 +33,22 @@ class NativeInspectionBridgeTest {
                 receivedAt = 105_000, acceptedAt = 106_000, explicitlyAccepted = true)
         }
     }
+    @Test fun `a panel slot carries its viewport size and nothing else`() {
+        val got = mutableListOf<NativePanelCommand>()
+        val bridge = NativeInspectionBridge({ 0L }, {}, {}, panelCommand = { got += it })
+        fun panel(fields: String) = bridge.handle("""{"op":"panel","localSessionId":"s","generation":1$fields}""")
+        assertTrue(bridge.handle("""{"op":"open","localSessionId":"s","generation":1}""").contains("ok"))
+        assertTrue(panel(""", "slot":"SHOWN","x":870,"y":300,"size":300,"vw":1224,"vh":880""").contains("ok"))
+        assertEquals(NativePanelCommand("slot", "SHOWN", 870, 300, 300, 1224, 880), got.single())
+        assertTrue(panel(""", "slot":"HIDDEN","x":0,"y":0,"size":0,"vw":0,"vh":0""").contains("ok"))
+        for (bad in listOf(
+            """, "slot":"SHOWN","x":870,"y":300,"size":300""", // the old shape: a scale would have to be guessed
+            """, "slot":"SHOWN","x":870,"y":300,"size":300,"vw":0,"vh":880""",
+            """, "slot":"SHOWN","x":870,"y":300,"size":300,"vw":1224,"vh":-1""",
+            """, "slot":"SHOWN","x":870,"y":300,"size":300,"vw":1224,"vh":880,"qr":"data:image/png"""",
+            """, "slot":"SHOWN","x":870,"y":300,"size":300,"vw":1224,"vh":880,"dpr":1.375""")) assertTrue(bad, panel(bad).contains("REJECTED"))
+        assertEquals(2, got.size)
+    }
     @Test fun `server clock is optional for standalone receiver but never fabricated for bridge`() {
         val f = Fixture(); val state = f.state(clockValue = null); f.bridge.state(state)
         val poll = f.rpc("poll")

@@ -58,10 +58,21 @@ export function refreshResultRegions(root,{local,mobile,partId}){
   root.scrollTop=scroll;
 }
 const SCHEMA_V1_STATUS={OK:'정상으로 보고',NEEDS_REFILL:'보충 필요로 보고',UNSURE:'확인 불가'};
-const ACTIVE_RECEIVER=new Set(['AUTH_WAITING','AUTH_FAILED','CREATING','QR_READY','QR_EXPIRED','CONNECTED','RESULT_RECEIVED']);
+const ACTIVE_RECEIVER=new Set(['AUTH_WAITING','AUTH_FAILED','CREATING','QR_READY','QR_EXPIRED','CONNECTED','RESULT_RECEIVED','AWAITING_CONFIRMATION']);
 export const receiverActive=receiver=>!!receiver&&ACTIVE_RECEIVER.has(receiver.phase);
-const RECEIVER_TEXT={NOT_CONFIGURED:'이 기기에 스마트폰 점검 등록이 없습니다. 운영자 설정이 필요합니다.',AUTH_WAITING:'스마트폰 점검 권한을 확인하는 중입니다.',AUTH_FAILED:'스마트폰 점검 권한을 확인하지 못했습니다. 자동으로 다시 시도합니다.',CREATING:'QR을 만드는 중입니다.',QR_READY:'스마트폰 카메라로 QR을 스캔하세요.',QR_EXPIRED:'QR이 만료되었습니다. 취소한 뒤 다시 시작하세요.',CONNECTED:'스마트폰이 연결되었습니다. 점검 결과를 기다립니다.',RESULT_RECEIVED:'결과를 받았습니다. 내용을 확인하는 중입니다.',COMPLETED:'스마트폰 결과를 받아 이 화면에 표시했습니다.',CANCELLED:'스마트폰 점검을 취소했습니다.',EXPIRED:'스마트폰 점검 시간이 만료되었습니다. 다시 시작하세요.',FAILED:'스마트폰 점검을 이어갈 수 없습니다. 다시 시작하세요.',CLOSED:'스마트폰 점검 연결이 종료되었습니다.'};
+const RECEIVER_TEXT={NOT_CONFIGURED:'이 기기에 스마트폰 점검 등록이 없습니다. 운영자 설정이 필요합니다.',AUTH_WAITING:'스마트폰 점검 권한을 확인하는 중입니다.',AUTH_FAILED:'스마트폰 점검 권한을 확인하지 못했습니다. 자동으로 다시 시도합니다.',CREATING:'QR을 만드는 중입니다.',QR_READY:'스마트폰 카메라로 QR을 스캔하세요.',QR_EXPIRED:'QR이 만료되었습니다. 취소한 뒤 다시 시작하세요.',CONNECTED:'스마트폰 점검 진행 중',RESULT_RECEIVED:'결과 수신 중',AWAITING_CONFIRMATION:'결과를 받았습니다. 차량의 수신 관리 패널에서 수락해야 반영됩니다.',COMPLETED:'결과 수신 중',CANCELLED:'스마트폰 점검을 취소했습니다.',EXPIRED:'스마트폰 점검 시간이 만료되었습니다. 다시 시작하세요.',FAILED:'스마트폰 점검을 이어갈 수 없습니다. 다시 시작하세요.',CLOSED:'스마트폰 점검 연결이 종료되었습니다.'};
 const FAILURE_TEXT={NETWORK:'네트워크 연결을 확인하세요.',TIMEOUT:'서버 응답이 지연되고 있습니다.',RATE_LIMITED:'요청이 많습니다. 잠시 후 다시 시도하세요.',SERVER:'서버를 사용할 수 없습니다.',UNAUTHORIZED:'권한이 거부되었습니다.',INVALID:'응답 또는 결과를 검증하지 못했습니다.',CONFLICT:'이미 다른 결과가 제출되었습니다.',EXPIRED:'요청이 만료되었습니다.',CLOSED:'요청이 종료되었습니다.'};
+const APPLIED_TEXT='점검 결과가 반영되었습니다',NOT_APPLIED_TEXT='결과를 반영하지 못했습니다 · 다시 확인';
+/** What the driver reads for the phone check of this part. A server ACCEPTED is not shown as applied until this page has
+ * staged the verified result of that session; a closed binding, a lost channel or a refused result reads as not applied. */
+export function receiverText(r,mobile){
+  if(r.phase==='RESULT_RECEIVED'&&r.retryAvailable)return NOT_APPLIED_TEXT;
+  if(r.phase!=='COMPLETED')return RECEIVER_TEXT[r.phase];
+  const binding=(mobile?.bindings??[]).filter(b=>b.taskId===r.taskId).at(-1);
+  if(binding&&(mobile.records??[]).some(rec=>rec.bindingId===binding.bindingId))return APPLIED_TEXT;
+  const refused=mobile?.notice&&!REQUEST_NOTICES.has(mobile.notice);
+  return !binding||binding.state!=='ACTIVE'||mobile.connection!=='ADAPTER_CONNECTED'||refused?NOT_APPLIED_TEXT:RECEIVER_TEXT.COMPLETED;
+}
 const clockText=at=>{const d=new Date(at);return Number.isNaN(d.getTime())?'-':d.toLocaleTimeString('ko-KR');};
 const rowFor=(local,mobile,partId)=>projectInspectionResults(local,mobile).find(r=>r.partId===partId);
 
@@ -81,6 +92,19 @@ export function partResultHtml(local,mobile,partId){
       ${row.candidates.map(c=>{const binding=mobile.bindings.find(b=>b.bindingId===c.bindingId),live=binding?.state==='ACTIVE',chosen=current===c.inspectionId;
         return `<button type="button" class="secondary" data-action="select-result" data-task="${row.taskId}" data-record="${c.inspectionId}" data-session="${esc(local.sessionId)}" aria-pressed="${chosen}" ${!live&&!chosen?'disabled':''}>스마트폰 결과 · ${recordTimeHtml(c.result.completedAt)}${chosen?' · 표시 중':live?'':' · 연결이 끝나 새로 고를 수 없음'}</button>`;}).join('')}</fieldset></details>`:''}</section>`;
 }
+/** Where Native draws the QR over #mobileQrSlot. One coordinate system: CSS px of this page's layout viewport, from
+ * getBoundingClientRect, plus that viewport's own size (vw, vh). Native converts once, by its WebView's measured width / vw,
+ * so neither side assumes a device pixel ratio. SHOWN only while the whole square slot is inside the settled panel and the
+ * viewport; a panel still sliding, a pinch zoom or a clipped slot is HIDDEN, and no slot at all is NONE. */
+export const QR_SLOT_NONE=Object.freeze({slot:'NONE',x:0,y:0,size:0,vw:0,vh:0});
+const QR_SLOT_HIDDEN=Object.freeze({...QR_SLOT_NONE,slot:'HIDDEN'});
+export function qrSlotReport(slot,panel,{width,height,scale=1,moving=false}={}){
+  if(!slot)return QR_SLOT_NONE;
+  const within=(r,b)=>r.left>=b.left-0.5&&r.top>=b.top-0.5&&r.right<=b.right+0.5&&r.bottom<=b.bottom+0.5;
+  if(moving||!panel||Math.abs(scale-1)>0.01||!(width>0&&height>0)||!(slot.width>0)||Math.abs(slot.width-slot.height)>1)return QR_SLOT_HIDDEN;
+  if(!within(slot,panel)||!within(slot,{left:0,top:0,right:width,bottom:height}))return QR_SLOT_HIDDEN;
+  return Object.freeze({slot:'SHOWN',x:Math.round(slot.left),y:Math.round(slot.top),size:Math.round(slot.width),vw:Math.round(width),vh:Math.round(height)});
+}
 /** The main action of a part: the phone inspection. Status comes from Native. The QR slot is empty on purpose: Native
  * draws the QR over it, so this page never has the code. Developer details stay collapsed below it. */
 export function partActionHtml(local,mobile,partId){
@@ -89,7 +113,7 @@ export function partActionHtml(local,mobile,partId){
   const connected=mobile?.connection==='ADAPTER_CONNECTED',failure=mine&&r.failure?` ${FAILURE_TEXT[r.failure]??''}`:'';
   const raw=row.inspectionId?`<dl class="tire-status"><dt>inspectionId</dt><dd>${esc(row.inspectionId)}</dd><dt>taskId / partId</dt><dd>${esc(row.taskId)} / ${esc(row.partId)}</dd>${['confirmation','proofId','bindingId','syncSessionId','localSessionId','generation','receivedAt','acceptedAt'].map(k=>`<dt>${k}</dt><dd>${esc(row.proof[k])}</dd>`).join('')}<dt>digest</dt><dd>${esc(row.resultDigest)}</dd></dl><pre>${esc(JSON.stringify(row.original,null,2))}</pre>`:'';
   return `<section class="mobile-flow"${mine?` data-mobile-phase="${r.phase}"`:''}><h3>스마트폰으로 점검</h3>
-    ${mine?`<p role="status">${RECEIVER_TEXT[r.phase]}${failure}</p>`:other?'<p role="status">다른 부품의 스마트폰 점검이 진행 중입니다. 그 점검을 취소하면 시작할 수 있습니다.</p>':'<p class="note">스마트폰에서 안내를 보며 점검하고, 결과를 이 화면으로 보냅니다.</p>'}
+    ${mine?`<p role="status">${receiverText(r,mobile)}${failure}</p>`:other?'<p role="status">다른 부품의 스마트폰 점검이 진행 중입니다. 그 점검을 취소하면 시작할 수 있습니다.</p>':'<p class="note">스마트폰에서 안내를 보며 점검하고, 결과를 이 화면으로 보냅니다.</p>'}
     ${mine&&r.phase==='QR_READY'?`<div id="mobileQrSlot" class="mobile-qr-slot" role="img" aria-label="스마트폰 점검 초대 QR 표시 영역"></div><p class="note">${r.inviteExpiresAt?`${clockText(r.inviteExpiresAt)}까지 스캔할 수 있습니다. `:''}QR을 다른 사람과 공유하지 마세요.</p>`:''}
     <div class="mobile-actions">${active||other?'':`<button type="button" class="primary" data-action="request-mobile" data-task="${row.taskId}"${connected?'':' disabled'}>스마트폰으로 점검하기</button>`}
     ${(mine||other)&&r.retryAvailable?'<button type="button" class="secondary" data-action="mobile-refresh">다시 확인</button>':''}

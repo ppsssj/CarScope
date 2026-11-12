@@ -21,7 +21,7 @@ import {targetForPart,targetForTask} from './mobile-result-contract.mjs';
 import {partById,partLabel} from './inspection-parts.mjs';
 import {createNativeInspectionResults} from './native-inspection-results.mjs';
 import {projectInspectionResults} from './inspection-results.mjs';
-import {partResultHtml,partActionHtml,refreshResultRegions,areaResultText} from './inspection-results-view.mjs';
+import {partResultHtml,partActionHtml,refreshResultRegions,areaResultText,qrSlotReport,QR_SLOT_NONE} from './inspection-results-view.mjs';
 import {createToast,createMobileRequestNotifier} from './inspection-toast.mjs';
 import {createInspectionHistoryStore} from './inspection-history-store.mjs';
 import {EMPTY_HISTORY_FILTERS} from './inspection-history-contract.mjs';
@@ -285,16 +285,23 @@ let userInspection = createTireInspection(crypto.randomUUID());
 const mobileResults=createNativeInspectionResults({adapter:createAndroidNativeInspectionAdapter()});
 const mobileExpiryTimer=setInterval(()=>{if(state.name!==STATES.IDLE)mobileResults.tick();syncQrSlot();},1000);
 // Tells Native where the part panel left room for the QR. Native draws it there, so the code never reaches this page.
-let lastQrSlot='',qrSlotRevealed=false;
+// Coordinates are CSS px of this viewport plus its size; Native alone converts them to its pixels (see qrSlotReport).
+let lastQrSlot='',qrSlotRevealed=false,qrSlotFrame=0;
 function syncQrSlot(){
-  const panel=$('panel'),slot=panel?.querySelector('#mobileQrSlot');let next={slot:'NONE',x:0,y:0,size:0};
+  const panel=$('panel'),slot=panel?.querySelector('#mobileQrSlot');let next=QR_SLOT_NONE;
   if(slot){
     if(!qrSlotRevealed){qrSlotRevealed=true;slot.scrollIntoView({block:'nearest'});}
-    const r=slot.getBoundingClientRect(),p=panel.getBoundingClientRect();
-    next=r.width>0&&r.top>=p.top&&r.bottom<=p.bottom&&r.left>=p.left&&r.right<=p.right?{slot:'SHOWN',x:Math.round(r.left),y:Math.round(r.top),size:Math.round(r.width)}:{slot:'HIDDEN',x:0,y:0,size:0};
+    next=qrSlotReport(slot.getBoundingClientRect(),panel.getBoundingClientRect(),{width:innerWidth,height:innerHeight,scale:visualViewport?.scale??1,moving:getComputedStyle(panel).transform!=='none'});
   }else qrSlotRevealed=false;
   const key=JSON.stringify(next);if(key!==lastQrSlot){lastQrSlot=key;mobileResults.panelSlot(next);}
 }
+// Scroll, resize and the panel's slide-in move the slot between timer ticks: report the new place on the next frame.
+const queueQrSlot=()=>{if(!qrSlotFrame)qrSlotFrame=requestAnimationFrame(()=>{qrSlotFrame=0;syncQrSlot();});};
+$('panel').addEventListener('scroll',queueQrSlot,{passive:true});
+$('panel').addEventListener('transitionend',queueQrSlot);
+addEventListener('resize',queueQrSlot);
+visualViewport?.addEventListener('resize',queueQrSlot);
+if(typeof ResizeObserver==='function')new ResizeObserver(queueQrSlot).observe($('panel'));
 // No verified History read provider exists yet (issuer BLOCKED), so this page shows UNAVAILABLE and sends
 // nothing. Compose a reviewed Native provider here only; never from a window property, query, postMessage or JSON.
 const inspectionHistory=createInspectionHistoryStore({provider:null});

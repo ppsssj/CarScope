@@ -102,8 +102,11 @@ internal class SyncReceiverController(
                                 // A poll may be the first to see an accept whose response was lost, so it counts only for the digest sent.
                                 autoConfirmed = phase == ReceiverPhase.ACCEPTED && (automatic || decision == null && autoDigest != null && v.resultDigest == autoDigest)))
                             if (phase in listOf(ReceiverPhase.ACCEPTED, ReceiverPhase.CANCELLED, ReceiverPhase.EXPIRED)) client.forget()
-                            else if (phase == ReceiverPhase.RESULT_SUBMITTED && state.canAccept && autoAttempts < AUTO_ATTEMPTS && autoConfirm()) {
-                                autoAttempts++; autoDigest = state.digest; perform(true, automatic = true)
+                            else if (phase == ReceiverPhase.RESULT_SUBMITTED && state.canAccept && autoConfirm()) {
+                                if (autoAttempts < AUTO_ATTEMPTS) { autoAttempts++; autoDigest = state.digest; perform(true, automatic = true) }
+                                // Out of automatic attempts: say so and offer the retry (retryPolling resets the count).
+                                // Without this a successful poll cleared retryAvailable and only the Debug panel's Accept was left.
+                                else { publish(state.copy(retryAvailable = true)); schedule() }
                             } else schedule()
                         }
                     }
