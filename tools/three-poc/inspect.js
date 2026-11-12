@@ -24,6 +24,8 @@ import {projectInspectionResults} from './inspection-results.mjs';
 import {partResultHtml,partActionHtml,refreshResultRegions,areaResultText,qrSlotReport,QR_SLOT_NONE,partMethodsHtml,aiTagHtml,vehiclePartCapabilities} from './inspection-results-view.mjs';
 // P14: read-only status card per part and the vehicle-level Odometer, projected from the existing Native caches.
 import { vehicleStatusCardHtml, odometerCardHtml } from './vehicle-status-card.mjs';
+// P14-B: external connected-car block. MOCK fixture only (no provider is connected); off unless ?externalVehicleData=fixture.
+import { EXTERNAL_FIXTURE } from './external-vehicle-data.mjs';
 import { odometerStatus, odometerReading, enableOdometerStatus } from './odometer-status.mjs';
 import {createToast,createMobileRequestNotifier} from './inspection-toast.mjs';
 import {createInspectionHistoryStore} from './inspection-history-store.mjs';
@@ -46,6 +48,7 @@ import { STATES, EVENTS, INSPECTION_AREAS, initialState, transition, hoodTarget,
 import { labelPlan, layoutLabels, areaEvent, touchProbes, chooseTouch, usesTouchSlop, receiverLocked, hintTargets, selectionIntensity, SELECTION_COLOR, HINT_COLOR } from './part-labels.mjs';
 
 const params = new URLSearchParams(location.search);
+const externalVehicleData=params.get('externalVehicleData')==='fixture'?EXTERNAL_FIXTURE:null;
 const $ = (id) => document.getElementById(id);
 // Cyan is the selection role only (part-labels.mjs). Hints use a neutral color so they never read as a selection.
 const ACCENT = SELECTION_COLOR;
@@ -465,7 +468,7 @@ function panelContents() {
         note:modelNote(EV_BATTERY_ID,'두 차축 사이 차체 아래의 외함을 나타낸 개략 형상입니다. 치수와 배치는 검증하지 않았습니다.'),
         intro:'<p>12V 보조 배터리와 다른 부품입니다. 이 부위는 점검 결과를 기록하지 않고 형상만 보여 줍니다.</p>'+partMethodsHtml(EV_BATTERY_ID)+vehicleCardRegion(EV_BATTERY_ID)+'<p class="note">아래쪽이 보이도록 바닥 표시를 숨겼습니다. 차량 아래로 들어가거나 배터리를 열지 마세요.</p>',
         sdk:sdkHtml('componentStatusContent',componentStatusHtml(state.component))+'<p class="note">충전 상태 값은 단위·범위를 검증하지 않은 원시 값이며 충전 진행이나 안전 판정이 아닙니다.</p>'});
-    case S.INSPECTION_SUMMARY: return productSummaryHtml(userInspection,mobileResults.snapshot)+`<div id="odometerCard">${odometerCardHtml(odometerReading(),odometerStatus.state.connectionStatus)}</div>`;
+    case S.INSPECTION_SUMMARY: return productSummaryHtml(userInspection,mobileResults.snapshot)+`<div id="odometerCard">${odometerCardHtml(odometerReading(),odometerStatus.state.connectionStatus,externalVehicleData)}</div>`;
     case S.TIRE_SUMMARY:
       return `<div class="eyebrow">타이어</div><h2>네 타이어 요약</h2><div id="tireSummary">${summaryHtml(userInspection,mobileResults.snapshot)}</div>${actionsHtml()}`;
     case S.TIRE_SELECTION:
@@ -532,7 +535,7 @@ function refreshResultSdk(){const region=$('resultSdkContent');if(region)region.
 function vehicleCardHtml(partId){
   const row=projectInspectionResults(userInspection,mobileResults.snapshot).find(r=>r.partId===partId)??null;
   const tire=partId.startsWith('tire.')?tireStatus.forTire(partId):null;
-  return vehicleStatusCardHtml(partId,{sdk:{component:componentStatus.state,charge:chargePortStatus.state,visibility:visibilityStatus.state,tire},cap:vehiclePartCapabilities(partId),row});
+  return vehicleStatusCardHtml(partId,{sdk:{component:componentStatus.state,charge:chargePortStatus.state,visibility:visibilityStatus.state,tire},cap:vehiclePartCapabilities(partId),row,external:externalVehicleData});
 }
 const vehicleCardRegion=partId=>`<div id="vehicleStatusCard" data-part="${partId}">${vehicleCardHtml(partId)}</div>`;
 const lastCard=new WeakMap();
@@ -540,7 +543,7 @@ function refreshVehicleCards(){
   const card=$('vehicleStatusCard');
   if(card?.dataset.part){const html=vehicleCardHtml(card.dataset.part);if(lastCard.get(card)!==html){card.innerHTML=html;lastCard.set(card,html);}}
   const odo=$('odometerCard');
-  if(odo){const html=odometerCardHtml(odometerReading(),odometerStatus.state.connectionStatus);if(lastCard.get(odo)!==html){const open=odo.querySelector('details')?.open;odo.innerHTML=html;if(open)odo.querySelector('details').open=true;lastCard.set(odo,html);}}
+  if(odo){const html=odometerCardHtml(odometerReading(),odometerStatus.state.connectionStatus,externalVehicleData);if(lastCard.get(odo)!==html){const open=odo.querySelector('details')?.open;odo.innerHTML=html;if(open)odo.querySelector('details').open=true;lastCard.set(odo,html);}}
 }
 const historySessionRow=record=>{const partId=record?.partId??targetForTask(inspectionHistory.snapshot.filters.taskId)?.partId;return partId?projectInspectionResults(userInspection,mobileResults.snapshot).find(r=>r.partId===partId):null;};
 function refreshHistory(){

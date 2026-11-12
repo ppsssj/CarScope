@@ -1,0 +1,30 @@
+name: External vehicle data API CI
+# P14-B: Hyundai Developers and Pleos Vehicle Data API adapters against the official spec examples (MOCK only).
+# No credentials, no provider request, no Render. The boundary test scans the whole tree, so this runs on every PR.
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  vehicle-data-api:
+    name: Provider contracts, OAuth/consent/revocation flow and boundary (MOCK, no network)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '22.16.0'
+      - name: Syntax
+        run: npm run check --prefix tools/vehicle-data-api
+      - name: Contracts, flow, security and boundary (MOCK_PASS only; never LIVE)
+        run: npm test --prefix tools/vehicle-data-api
