@@ -39,7 +39,7 @@ import { measureFrontWiperSupport, buildFrontWiperGeometry } from "./ioniq5-asse
 import { sourceWorldParts } from './charge-port-model.mjs';
 import { measureEvChargePortSupport, buildEvChargePort, EV_CHARGE_IDS } from "./ioniq5-asset/ev-charge-port.mjs";
 import { resolveTireTargets, tireCameraDirection } from "./tire-targets.mjs";
-import { STATES, EVENTS, INSPECTION_AREAS, initialState, transition, hoodTarget, cameraGoal, areaOf, isHistoryState, HOOD_OPEN_DEG } from "./inspection-flow.mjs";
+import { STATES, EVENTS, INSPECTION_AREAS, initialState, transition, hoodTarget, cameraGoal, areaOf, isHistoryState, historyHeld, HOOD_OPEN_DEG } from "./inspection-flow.mjs";
 import { labelPlan, layoutLabels, areaEvent, touchProbes, chooseTouch, usesTouchSlop, receiverLocked, hintTargets, selectionIntensity, SELECTION_COLOR, HINT_COLOR } from './part-labels.mjs';
 
 const params = new URLSearchParams(location.search);
@@ -298,9 +298,13 @@ function syncQrSlot(){
 // No verified History read provider exists yet (issuer BLOCKED), so this page shows UNAVAILABLE and sends
 // nothing. Compose a reviewed Native provider here only; never from a window property, query, postMessage or JSON.
 const inspectionHistory=createInspectionHistoryStore({provider:null});
-let historyListScroll=0;
+let historyListScroll=0,historyResume=null;
+// History stays open while a current-session result opened from it is shown (historyHeld): coming back keeps the
+// filters, loaded pages and open record without a new request, and the reading position is restored in enter().
 function syncHistory(prev){
-  const was=isHistoryState(prev),now=isHistoryState(state);
+  const was=historyHeld(prev),now=historyHeld(state);
+  if(isHistoryState(prev)&&!isHistoryState(state)&&now)historyResume={name:prev.name,scroll:$('panel').scrollTop};
+  if(!now)historyResume=null;
   if(now&&!was)inspectionHistory.openList(state.component?{taskId:targetForPart(state.component)?.taskId}:EMPTY_HISTORY_FILTERS);
   if(was&&!now)inspectionHistory.closeList();
   if(prev.name===STATES.HISTORY_DETAIL&&state.name===STATES.HISTORY_LIST)inspectionHistory.closeDetail();
@@ -340,6 +344,11 @@ function enter(prev) {
   if(prev.name===STATES.HISTORY_DETAIL&&state.name===STATES.HISTORY_LIST){
     $('panel').scrollTop=historyListScroll;
     $('panel').querySelector(`[data-record="${prev.recordId}"]`)?.focus({preventScroll:true});
+  }else if(historyResume&&isHistoryState(state)&&!isHistoryState(prev)){
+    // Back from a result opened in History: the same History screen, at the same place, focus on the control that left it.
+    if(historyResume.name===state.name)$('panel').scrollTop=historyResume.scroll;
+    $('panel').querySelector('[data-action="history-session-part"]')?.focus({preventScroll:true});
+    historyResume=null;
   }else if(isHistoryState(prev)&&state.name===prev.historyReturn)$('panel').querySelector('[data-action="open-history"]')?.focus();
   syncInspectionMap();
   layout();

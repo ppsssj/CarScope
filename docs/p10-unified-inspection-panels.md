@@ -82,8 +82,7 @@ FIXED로 바꾼 것: P0-3, P1-7(Node 테스트가 판정), P1-10, P1-12, P2-2, P
 
 - **P1-13 OPEN.** 얇은 부품의 손가락 대상은 PR #117 상태 그대로다. 이번 작업으로 해결됐다고 보지 않는다.
 - **P1-8 OPEN.** 상세 화면에서 다른 부위를 3D로 고르는 것은 PR #117 터치 선택 규칙을 바꾸는 일이라 하지 않았다.
-- History 목록·상세 카드에는 `USER_REPORTED`, `taskId`가 남아 있다. 이번에는 뒤로 문구만 바꿨다. 현재 배포에는 검증된 조회 경로가 없어(UNAVAILABLE) 카드가 사용자에게 보이지 않으며, History 연결 PR에서 정리한다.
-- History에서 연 부품 결과의 뒤로 가기는 개요로 간다(History 전이는 바꾸지 않음).
+- ~~History 카드의 내부 값, History에서 연 부품 결과의 뒤로 가기~~ → [History UX 최종 보완](p10-history-ux-final.md)에서 해결.
 - 같은 부품에 Primary가 둘인 화면이 있다(타이어: 결과 확정, 스마트폰으로 점검하기). 둘 다 실행 동작이다.
 - 종료 확인이 생겨 응답이 있는 세션에서 AVD 자동화 스크립트(`avd-android-inspection.mjs`)가 종료 탭 뒤 확인 탭을 한 번 더 해야 할 수 있다. 응답 없는 기존 시나리오는 그대로 즉시 종료된다. **AVD는 NOT_RUN.**
 - Android Back은 같은 `dispatch`를 거치므로 대화상자 취소·확인 규칙이 같다고 보지만, 실제 WebView에서는 확인하지 않았다(NOT_RUN).

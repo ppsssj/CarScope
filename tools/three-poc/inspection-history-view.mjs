@@ -31,18 +31,24 @@ export function formatHistoryTime(ms,{timeZone}={}){
   return `<time datetime="${iso}">${esc(text)}</time>`;
 }
 const recordBadge=record=>{const status=historyDisplayState(record);return stateBadgeHtml({status,...INSPECTION_STATES[status]});};
+const recordLabel=record=>INSPECTION_STATES[historyDisplayState(record)].label;
 const zone=(kind,tag,body)=>`<section class="source-zone" data-source-zone="${kind}"><span class="zone-tag">${tag}</span>${body}</section>`;
+// What a stored record's provenance means for the driver. The contract only accepts USER_REPORTED + SELF + MOBILE,
+// so the words say exactly that; the raw values stay in the record and in the collapsed original-record details.
+const SOURCE_TEXT=Object.freeze({USER_REPORTED:'스마트폰으로 사용자가 직접 보고'});
+const sourceText=source=>SOURCE_TEXT[source]??'출처를 확인할 수 없음';
 
-/** Current-session zone: drawn from the same projection the session UI uses, for comparison only. */
+/** Current-session zone: drawn from the same projection the session UI uses, for comparison only. Its button opens
+ * this session's result for the part, never the stored record. */
 export function historySessionZoneHtml(row,{compact=false}={}){
   if(!row)return '';
-  return zone('SESSION','현재 세션 · 이 화면 메모리',`<div class="zone-row"><span>${esc(row.partLabel)}</span>${stateBadgeHtml(row)}</div>
-    ${compact?'':'<p class="note">과거 기록을 열어도 현재 세션 상태는 바뀌지 않습니다.</p>'}
-    <button type="button" class="secondary" data-action="history-session-part" data-id="${esc(row.partId)}">현재 세션의 이 부품 결과 열기</button>`);
+  return zone('SESSION','이번 점검 · 이 화면',`<div class="zone-row"><span>${esc(row.partLabel)}</span>${stateBadgeHtml(row)}</div>
+    ${compact?'':'<p class="note">과거 기록을 열어도 이번 점검 결과는 바뀌지 않습니다.</p>'}
+    <button type="button" class="secondary" data-action="history-session-part" data-id="${esc(row.partId)}">이번 점검의 이 부품 결과 보기</button>`);
 }
 /** Past-record entry shown beside a part's current result. It performs no request until opened. */
 export function historyEntryZoneHtml(partLabel){
-  return zone('HISTORY','저장된 과거 기록 · 서버',`<p class="note">${esc(partLabel)}의 저장된 사용자 보고를 별도로 조회합니다. 현재 세션과 합치지 않습니다.</p>
+  return zone('HISTORY','저장된 과거 기록 · 서버',`<p class="note">${esc(partLabel)}의 저장된 사용자 보고를 별도로 조회합니다. 이번 점검과 합치지 않습니다.</p>
     <button type="button" class="secondary" data-action="open-history">이 부품의 과거 기록 보기</button>`);
 }
 /** One line naming the applied filters, so the form can stay collapsed and rows stay on screen. */
@@ -56,7 +62,7 @@ export function historyFilterHtml(snapshot){
   return `<details class="history-filters"><summary id="historyFilterSummary">${esc(historyFilterSummaryText(f))}</summary>
     <form id="historyFilterForm" aria-label="점검 기록 필터">
       <label>부품<select name="taskId">${option('','전체 부품',!f.taskId)}${MOBILE_TARGETS.map(t=>option(t.taskId,t.label,f.taskId===t.taskId)).join('')}</select></label>
-      <label>점검 결과<select name="status">${option('','전체 결과',!f.status)}${HISTORY_STATUSES.map(s=>option(s,`${HISTORY_STATUS_LABELS[s]} (${s})`,f.status===s)).join('')}</select></label>
+      <label>점검 결과<select name="status">${option('','전체 결과',!f.status)}${HISTORY_STATUSES.map(s=>option(s,HISTORY_STATUS_LABELS[s],f.status===s)).join('')}</select></label>
       <div class="history-dates"><label>시작일<input type="date" name="fromDate" min="1970-01-01" max="9999-12-31" value="${esc(f.fromDate)}"></label>
       <label>종료일<input type="date" name="toDate" min="1970-01-01" max="9999-12-31" value="${esc(f.toDate)}"></label></div>
       <p class="note">날짜는 사용자가 보고한 점검 완료 시각 기준이며 이 기기의 시간대로 계산합니다.</p>
@@ -72,11 +78,12 @@ function messageHtml(code,{filterAction=false}={}){
 }
 function cardHtml(record,snapshot){
   const t=targetForTask(record.taskId);
-  return `<li><button type="button" class="item history-card" data-action="history-detail" data-record="${esc(record.recordId)}">
-    <span class="history-part">${esc(t.label)}</span>${recordBadge(record)}
+  // The washer's own answer (e.g. 보충 필요) is named, since its badge is shared with other reports. Raw values stay as data.
+  const own=t.schemaVersion===1?`<small>${esc(HISTORY_STATUS_LABELS[record.inspectionStatus]??'')}</small>`:'';
+  return `<li><button type="button" class="item history-card" data-action="history-detail" data-record="${esc(record.recordId)}" data-task="${esc(record.taskId)}" data-source="${esc(record.source)}" data-status="${esc(record.inspectionStatus)}">
+    <span class="history-part">${esc(t.label)}</span>${recordBadge(record)}${own}
     <small>완료 ${formatHistoryTime(record.completedAt)}</small>
-    <small>${esc(record.source)} · 스마트폰 자가 점검</small>
-    <small>taskId ${esc(record.taskId)}</small>${demo(snapshot)?'<small class="history-demo-chip">데모 데이터</small>':''}
+    <small>${esc(sourceText(record.source))}</small>${demo(snapshot)?'<small class="history-demo-chip">데모 데이터</small>':''}
   </button></li>`;
 }
 /** Live region of the list screen. The filter form stays outside it, so re-rendering keeps input focus. */
@@ -103,19 +110,20 @@ export function historyDetailResultsHtml(snapshot,sessionRow){
   if(detail.status!=='SUCCESS'||!detail.record)return banner+messageHtml(detail.status);
   const r=detail.record,o=r.originalResult,t=targetForTask(r.taskId);
   const answers=t.schemaVersion===1
-    ?`<p>사용자 선택: ${esc(HISTORY_STATUS_LABELS[o.status])} (${esc(o.status)})</p><p class="note">schema v1 워셔액 기록에는 질문별 응답이 없습니다. 오류가 아닙니다.</p>`
+    ?`<p>사용자 선택: ${esc(HISTORY_STATUS_LABELS[o.status])}</p><p class="note">이 워셔액 기록은 질문별 응답 없이 하나의 선택으로 저장됩니다. 오류가 아닙니다.</p>`
     :`<dl class="tire-status">${t.responseKeys.map(k=>`<dt>${esc(RESPONSE_LABELS[k])}</dt><dd>${esc(RESPONSE_ANSWERS[r.responses[k]])}</dd>`).join('')}</dl>`;
   return `${banner}${zone('HISTORY','저장된 과거 기록 · 서버 · 읽기 전용',`<div class="zone-row"><strong class="history-part">${esc(t.label)}</strong>${recordBadge(r)}</div>
-    <p class="note">원본 상태값 ${esc(r.inspectionStatus)} · 차량의 정상·안전·주행 가능 판정이 아닙니다.</p>
-    <dl class="tire-status"><dt>점검 항목</dt><dd>${esc(r.taskId)} / ${esc(r.partId)}</dd>
+    <p class="note">${esc(HISTORY_STATUS_LABELS[r.inspectionStatus]??recordLabel(r))} · 차량의 정상·안전·주행 가능 판정이 아닙니다.</p>
+    <dl class="tire-status"><dt>점검 부품</dt><dd>${esc(t.label)}</dd>
       <dt>점검 완료</dt><dd>${formatHistoryTime(r.completedAt)}<br><span class="note">사용자 기기 보고 시각 · 서버 시계가 아님</span></dd>
       <dt>서버 수락</dt><dd>${formatHistoryTime(r.acceptedAt)}</dd>
-      <dt>데이터 출처</dt><dd>${esc(r.source)} · 스마트폰 자가 점검</dd>
-      <dt>SDK 관측</dt><dd>포함하지 않음 · Pleos 실시간 상태와 별개</dd></dl>
+      <dt>결과 출처</dt><dd>${esc(sourceText(r.source))}</dd>
+      <dt>차량 연동 데이터</dt><dd>포함하지 않음 · 실시간 차량 상태와 별개</dd></dl>
     <h3>점검 상세 설명</h3><p>${esc(detailDescription(r,t))}</p>
     <h3>질문별 사용자 응답</h3>${answers}
-    <details class="history-original"><summary>원본 기록·무결성 정보</summary>
-      <dl class="tire-status"><dt>recordId</dt><dd>${esc(r.recordId)}</dd><dt>inspectionId</dt><dd>${esc(r.inspectionId)}</dd><dt>schema</dt><dd>v${esc(r.schemaVersion)}</dd>
+    <details class="history-original"><summary>개발자 정보 · 원본 기록과 무결성</summary>
+      <dl class="tire-status"><dt>taskId / partId</dt><dd>${esc(r.taskId)} / ${esc(r.partId)}</dd><dt>원본 상태값</dt><dd>${esc(r.inspectionStatus)}</dd><dt>source / method / channel</dt><dd>${esc(r.source)} / ${esc(r.method)} / ${esc(r.channel)}</dd><dt>SDK 데이터 포함</dt><dd>${esc(r.sdkDataIncluded)} · Pleos 실시간 상태와 별개</dd>
+        <dt>recordId</dt><dd>${esc(r.recordId)}</dd><dt>inspectionId</dt><dd>${esc(r.inspectionId)}</dd><dt>schema</dt><dd>v${esc(r.schemaVersion)}</dd>
         <dt>digest</dt><dd>${esc(r.resultDigest)}</dd><dt>서버 수신</dt><dd>${formatHistoryTime(r.receivedAt)}</dd><dt>기록 저장</dt><dd>${formatHistoryTime(r.createdAt)}</dd>
         <dt>원본 시작 (ISO)</dt><dd>${esc(o.startedAt)}</dd><dt>원본 완료 (ISO)</dt><dd>${esc(o.completedAt)}</dd><dt>소유 근거</dt><dd>${esc(r.ownershipEvidence)} · 세션 생성 시점 바인딩</dd></dl>
       <pre>${esc(JSON.stringify(o,null,2))}</pre></details>`)}${historySessionZoneHtml(sessionRow)}`;
@@ -125,7 +133,7 @@ export function historyPanelHtml(state,snapshot,sessionRow){
     <div id="historyResults" tabindex="-1">${historyDetailResultsHtml(snapshot,sessionRow)}</div>
     <div class="actions"><button type="button" class="secondary" data-action="back">뒤로</button></div>`;
   return `<div class="eyebrow">차량 점검 · 저장된 과거 기록</div><h2>과거 점검 기록</h2>
-    <p class="note">완료 시각 최신순 · 저장된 사용자 보고만 표시합니다. 현재 세션이나 SDK 관측과 합치지 않습니다.</p>
+    <p class="note">완료 시각 최신순 · 저장된 사용자 보고만 표시합니다. 이번 점검 결과나 차량 연동 상태와 합치지 않습니다.</p>
     ${historyFilterHtml(snapshot)}<div id="historyResults" tabindex="-1">${historyListResultsHtml(snapshot,sessionRow)}</div>
     <div class="actions"><button type="button" class="secondary" data-action="back">뒤로</button></div>`;
 }
