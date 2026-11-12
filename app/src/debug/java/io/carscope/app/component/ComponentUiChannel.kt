@@ -34,6 +34,8 @@ internal object ComponentUiProjection {
     }
     fun visibilityJson(snapshot: ComponentSnapshot?, connection: String, phase: String, sessionId: String, sequence: Long): String =
         project(snapshot, connection, phase, sessionId, sequence, VISIBILITY_UI_V1)
+    fun odometerJson(snapshot: ComponentSnapshot?, connection: String, phase: String, sessionId: String, sequence: Long): String =
+        project(snapshot, connection, phase, sessionId, sequence, ODOMETER_UI_V1)
     private fun project(snapshot: ComponentSnapshot?, connection: String, phase: String, sessionId: String, sequence: Long, features: List<ComponentFeature>): String {
         require(connection in setOf("ATTACHED", "STOPPED", "SUPERSEDED"))
         require(phase in setOf("IDLE", "ACTIVE", "STOPPING", "UNRESOLVED", "CLOSED"))
@@ -50,15 +52,17 @@ internal object ComponentUiProjection {
                     require(r.observedAt == null || r.observedAt in 0..8_640_000_000_000_000L)
                     if (r.value != null) {
                         require(r.capabilityStatus == ComponentStatus.SUPPORTED)
-                        require(when (f) { ComponentFeature.WASHER, ComponentFeature.CHARGE_SWITCH, ComponentFeature.CHARGE_PORT -> r.value is ComponentValue.Flag; ComponentFeature.BRAKE -> r.value is ComponentValue.Oil && r.value.value in OIL_STATES - "ERROR"; ComponentFeature.SOC -> r.value is ComponentValue.Integer; ComponentFeature.WIPER_FRONT -> r.value is ComponentValue.Mode && r.value.value in WIPER_STATES; ComponentFeature.LOW_BEAM, ComponentFeature.HIGH_BEAM -> r.value is ComponentValue.Mode && r.value.value in LIGHT_STATES })
-                        require(r.availabilityStatus in if (f == ComponentFeature.SOC || f == ComponentFeature.WIPER_FRONT && r.value == ComponentValue.Mode("OTHER")) setOf(ComponentStatus.UNVERIFIED, ComponentStatus.STALE) else setOf(ComponentStatus.SUPPORTED, ComponentStatus.STALE))
+                        require(when (f) { ComponentFeature.WASHER, ComponentFeature.CHARGE_SWITCH, ComponentFeature.CHARGE_PORT -> r.value is ComponentValue.Flag; ComponentFeature.BRAKE -> r.value is ComponentValue.Oil && r.value.value in OIL_STATES - "ERROR"; ComponentFeature.SOC -> r.value is ComponentValue.Integer; ComponentFeature.WIPER_FRONT -> r.value is ComponentValue.Mode && r.value.value in WIPER_STATES; ComponentFeature.LOW_BEAM, ComponentFeature.HIGH_BEAM -> r.value is ComponentValue.Mode && r.value.value in LIGHT_STATES; ComponentFeature.ODOMETER -> validDistance(r.value) })
+                        require(r.availabilityStatus in if (f == ComponentFeature.SOC || f == ComponentFeature.ODOMETER || f == ComponentFeature.WIPER_FRONT && r.value == ComponentValue.Mode("OTHER")) setOf(ComponentStatus.UNVERIFIED, ComponentStatus.STALE) else setOf(ComponentStatus.SUPPORTED, ComponentStatus.STALE))
                     } else require(r.availabilityStatus !in setOf(ComponentStatus.SUPPORTED, ComponentStatus.STALE))
                 }
                 addProperty("featureId", f.id); addProperty("vehiclePartId", f.partId)
                 addProperty("capabilityStatus", r?.capabilityStatus?.name ?: "UNVERIFIED"); addProperty("availabilityStatus", r?.availabilityStatus?.name ?: "UNVERIFIED")
                 add("observedAt", r?.observedAt?.let(::JsonPrimitive) ?: JsonNull.INSTANCE)
                 add("source", r?.source?.let(::JsonPrimitive) ?: JsonNull.INSTANCE)
-                add("value", when (val value = r?.value) { is ComponentValue.Flag -> JsonPrimitive(value.value); is ComponentValue.Oil -> JsonPrimitive(value.value); is ComponentValue.Integer -> JsonPrimitive(value.value); is ComponentValue.Mode -> JsonPrimitive(value.value); null -> JsonNull.INSTANCE })
+                add("value", when (val value = r?.value) { is ComponentValue.Flag -> JsonPrimitive(value.value); is ComponentValue.Oil -> JsonPrimitive(value.value); is ComponentValue.Integer -> JsonPrimitive(value.value); is ComponentValue.Mode -> JsonPrimitive(value.value)
+                    // The Float's own shortest decimal form, so 12345.6f is sent as 12345.6, not 12345.599609375. No unit is attached.
+                    is ComponentValue.Decimal -> JsonPrimitive(value.value.toString().toBigDecimal()); null -> JsonNull.INSTANCE })
                 add("unit", JsonNull.INSTANCE)
             })
         })
@@ -74,6 +78,8 @@ internal class ComponentUiChannel(private val owner: ComponentOwner) {
     @Synchronized fun readJson(): String = read(0)
     @Synchronized fun readChargePortJson(): String = read(1)
     @Synchronized fun readVisibilityJson(): String = read(2)
+    /** P14: the same lease and cache: no second SDK session, no extra getter. */
+    @Synchronized fun readOdometerJson(): String = read(3)
     private fun read(channel: Int): String {
         val token = lease
         val snapshot = token?.let(owner::snapshot)
@@ -81,7 +87,8 @@ internal class ComponentUiChannel(private val owner: ComponentOwner) {
         return when (channel) {
             0 -> ComponentUiProjection.json(snapshot, connection, owner.diagnostics().phase, sessionId, ++sequence)
             1 -> ComponentUiProjection.chargePortJson(snapshot, connection, owner.diagnostics().phase, sessionId, ++sequence)
-            else -> ComponentUiProjection.visibilityJson(snapshot, connection, owner.diagnostics().phase, sessionId, ++sequence)
+            2 -> ComponentUiProjection.visibilityJson(snapshot, connection, owner.diagnostics().phase, sessionId, ++sequence)
+            else -> ComponentUiProjection.odometerJson(snapshot, connection, owner.diagnostics().phase, sessionId, ++sequence)
         }
     }
 }

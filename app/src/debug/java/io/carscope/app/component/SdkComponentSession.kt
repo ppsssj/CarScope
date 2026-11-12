@@ -18,6 +18,7 @@ import ai.pleos.playground.vehicle.constant.control.WiperState
 import ai.pleos.playground.vehicle.constant.control.LightState
 import ai.pleos.playground.vehicle.listener.WiperStateListener
 import ai.pleos.playground.vehicle.listener.LightStateListener
+import ai.pleos.playground.vehicle.listener.DistanceDrivenListener
 
 internal fun componentCapability(config: CapabilityConfig, values: List<OilLevelState>? = null) =
     ComponentCapability(config.accessType in setOf(AccessType.READ, AccessType.READ_WRITE), values?.map { it.name }?.toSet())
@@ -27,7 +28,9 @@ internal fun wiperCapability(config: CapabilityConfig, states: Map<WindowArea, L
 internal fun lightCapability(config: CapabilityConfig, states: List<LightState>?) =
     ComponentCapability(componentCapability(config).readable, states?.map { it.name }?.toSet())
 internal fun componentReadPermission(feature: ComponentFeature) = "pleos.car.permission." + when (feature.domain) {
-    "Safety" -> "CAR_SAFETY"; "EvBattery" -> "CAR_ENERGY"; "Wiper" -> "CAR_WINDOWS"; "Light" -> "CAR_LIGHTS"; else -> error("UNVERIFIED_DOMAIN")
+    "Safety" -> "CAR_SAFETY"; "EvBattery" -> "CAR_ENERGY"; "Wiper" -> "CAR_WINDOWS"; "Light" -> "CAR_LIGHTS"
+    "Odometer" -> "CAR_DRIVE" // Vehicle 2.3.2 @RequiresPermission on all four Odometer methods used here (tools/component-probe)
+    else -> error("UNVERIFIED_DOMAIN")
 }
 
 /** Only public Vehicle 2.3.2 declarations. The spelling Waring is the actual SDK spelling. */
@@ -37,6 +40,8 @@ internal class SdkComponentSession(private val context: Context) : ComponentSess
     private lateinit var battery: EvBattery
     private val wiper by lazy { vehicle.getWiper() }
     private val light by lazy { vehicle.getLight() }
+    private val odometer by lazy { vehicle.getOdometer() }
+    private var distanceListener: DistanceDrivenListener? = null
     private var washerListener: LowWasherFluidWaringListener? = null
     private var brakeListener: OilLevelStateListener? = null
     private var socListener: EvBatteryStateOfChargeListener? = null
@@ -60,6 +65,7 @@ internal class SdkComponentSession(private val context: Context) : ComponentSess
             ComponentFeature.WIPER_FRONT -> wiper.checkWiperStateCapabilities({ c, states -> done(wiperCapability(c, states)) }, failed)
             ComponentFeature.LOW_BEAM -> light.checkLowBeamLightStateCapabilities({ c, states -> done(lightCapability(c, states)) }, failed)
             ComponentFeature.HIGH_BEAM -> light.checkHighBeamLightStateCapabilities({ c, states -> done(lightCapability(c, states)) }, failed)
+            ComponentFeature.ODOMETER -> odometer.checkCurrentDistanceDrivenCapabilities(config, failed)
         }
     }
     override fun read(feature: ComponentFeature, done: (ComponentValue?) -> Unit, failed: (Exception) -> Unit) {
@@ -73,6 +79,7 @@ internal class SdkComponentSession(private val context: Context) : ComponentSess
             ComponentFeature.WIPER_FRONT -> wiper.getCurrentWiperState(FRONT_WIPER_AREA, { done(it?.let { v -> ComponentValue.Mode(v.name) }) }, failed)
             ComponentFeature.LOW_BEAM -> light.getCurrentLowBeamLightState({ done(it?.let { v -> ComponentValue.Mode(v.name) }) }, failed)
             ComponentFeature.HIGH_BEAM -> light.getCurrentHighBeamLightState({ done(it?.let { v -> ComponentValue.Mode(v.name) }) }, failed)
+            ComponentFeature.ODOMETER -> odometer.getCurrentDistanceDriven({ done(it?.let { v -> ComponentValue.Decimal(v) }) }, failed)
         }
     }
     override fun subscribe(feature: ComponentFeature, updated: (ComponentValue?) -> Unit, failed: (Exception) -> Unit) {
@@ -116,6 +123,13 @@ internal class SdkComponentSession(private val context: Context) : ComponentSess
                 }; lightListeners[feature] = listener
                 if (feature == ComponentFeature.LOW_BEAM) light.registerLowBeamLightState(listener) else light.registerHighBeamLightState(listener)
             }
+            ComponentFeature.ODOMETER -> {
+                check(distanceListener == null)
+                val listener = object : DistanceDrivenListener {
+                    override fun onDistanceDrivenUpdated(value: Float?) = updated(value?.let { ComponentValue.Decimal(it) })
+                    override fun onFailed(e: Exception) = failed(e)
+                }; distanceListener = listener; odometer.registerDistanceDriven(listener)
+            }
         }
     }
     override fun unsubscribe(feature: ComponentFeature) {
@@ -130,6 +144,7 @@ internal class SdkComponentSession(private val context: Context) : ComponentSess
                 if (feature == ComponentFeature.LOW_BEAM) light.unregisterLowBeamLightState(it) else light.unregisterHighBeamLightState(it)
                 lightListeners.remove(feature)
             }
+            ComponentFeature.ODOMETER -> distanceListener?.let { odometer.unregisterDistanceDriven(it); distanceListener = null }
         }
     }
     override fun release() = vehicle.release()
