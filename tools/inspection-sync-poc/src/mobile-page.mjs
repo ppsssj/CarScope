@@ -25,7 +25,7 @@ export const MOBILE_HEADERS = Object.freeze({
   'Permissions-Policy': 'camera=(self), microphone=(), geolocation=()',
   'Content-Security-Policy': "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' blob:; media-src 'self' blob:; connect-src 'self'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'",
 });
-export async function serveMobilePage(req, res, { tls = false, webxrGuide = false, partDetection = false, partAnalysis = null } = {}) {
+export async function serveMobilePage(req, res, { tls = false, webxrGuide = false, partDetection = false, partAnalysis = null, partAnalysisDraft = false } = {}) {
   const headers = { ...MOBILE_HEADERS, ...(tls ? { 'Strict-Transport-Security': 'max-age=31536000' } : {}),
     ...(webxrGuide ? { 'Permissions-Policy': MOBILE_HEADERS['Permissions-Policy'] + WEBXR_PERMISSION } : {}) };
   const url = new URL(req.url, 'http://localhost');
@@ -36,7 +36,7 @@ export async function serveMobilePage(req, res, { tls = false, webxrGuide = fals
     body = (await readFile(new URL('../../mobile-ar-poc/public/index.html', import.meta.url), 'utf8')).replace('src="/app-entry.mjs"', 'src="/public/mobile-dev-entry.mjs"');
     if (webxrGuide) body = markWebXrGuidePage(body);
     if (partDetection) body = markPartDetectionPage(body);
-    if (partAnalysis) body = markPartAnalysisPage(body, partAnalysis);
+    if (partAnalysis) body = markPartAnalysisPage(body, partAnalysis, { draft: partAnalysisDraft === true });
     type = 'text/html; charset=utf-8';
   } else if (url.pathname === '/handoff.json') { body = '{"configured":false,"url":null}'; type = 'application/json'; }
   else if (webxrGuide && guideFiles.has(url.pathname)) {

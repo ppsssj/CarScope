@@ -242,12 +242,16 @@ export function visionExperimentGate(root = TOOL_ROOT) {
   const cli = entry.slice(entry.indexOf(MAIN_MARKER));
   if (base.includes(VISION_EXPERIMENT_ENTRY) || base.some(f => /vision-budget|vision-providers/.test(f))) problems.push('default imports experiment');
   if (graph.some(f => /^(test|preflight)\/|washer-eval|\/review\/|\/scripts\//.test(f))) problems.push('experiment imports test/evaluation code');
-  const allowed = ['CARSCOPE_DB_SCHEMA', 'CARSCOPE_VISION_APPROVAL', 'OPENAI_API_KEY', 'OPENAI_VISION_MODEL', 'CARSCOPE_VISION_DAILY_CALL_LIMIT', 'CARSCOPE_VISION_MONTHLY_CALL_LIMIT', 'CARSCOPE_ROBOFLOW_APPROVAL', 'ROBOFLOW_API_KEY'];
+  const allowed = ['CARSCOPE_DB_SCHEMA', 'CARSCOPE_VISION_APPROVAL', 'OPENAI_API_KEY', 'OPENAI_VISION_MODEL', 'CARSCOPE_VISION_DAILY_CALL_LIMIT', 'CARSCOPE_VISION_MONTHLY_CALL_LIMIT', 'CARSCOPE_ROBOFLOW_APPROVAL', 'ROBOFLOW_API_KEY',
+    // P13-G: draft analysis profiles need their own exact operator approval, checked below.
+    'CARSCOPE_VISION_DRAFT_PROFILES'];
   for (const f of graph.filter(f => !base.includes(f))) {
     const reads = environmentReads(readFileSync(resolve(root, f), 'utf8'), { isEntry: f === VISION_EXPERIMENT_ENTRY });
     if (reads.dynamic || reads.names.some(n => !allowed.includes(n))) problems.push(f + ' unexpected environment');
   }
   if (!/visionEnvironment\(\)/.test(cli) || !/PostgreSQLVisionBudget/.test(cli) || !/experimentVisionProvider/.test(cli) || !/experimentDetectionProvider/.test(cli) || !/partDetection: detector \? \{ provider: detector, admission: budget \} : null/.test(cli) || /approvedDetectionProvider|LocalTest|createMock/.test(cli)) problems.push('unsafe experiment bootstrap');
+  // P13-G: drafts are off unless the exact operator value is set, and only the experiment CLI passes that decision.
+  if (!/env\.CARSCOPE_VISION_DRAFT_PROFILES === 'OPERATOR_APPROVED'/.test(entry) || !/allowDraftProfiles: draftProfilesApproved\(process\.env\)/.test(cli) || !/allowDraftProfiles = false/.test(entry)) problems.push('draft profile approval missing');
   const providers = readFileSync(resolve(root, 'src/vision-providers.mjs'), 'utf8');
   if (!/detectionEnvironment\(env\)\.enabled/.test(providers) || !/CARSCOPE_ROBOFLOW_APPROVAL !== 'OPERATOR_APPROVED'/.test(providers)) problems.push('detector approval missing');
   if (!/partDetection = null/.test(entry) || !/new ProductionSessionCreationAuthorizer/.test(entry)) problems.push('default authority/detection changed');

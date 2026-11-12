@@ -9,13 +9,17 @@ const W = 'washer-fluid-cap';
 const ok = (fields = {}) => ({ ...structuredClone(MOCK_SCENARIOS['no-visible-issue']), ...fields });
 const refused = (value, reason, partId = W) => { const r = validateAnalysisResult(partId, value); assert.equal(r.ok, false, JSON.stringify(value)); if (reason) assert.equal(r.reason, reason); };
 
-test('profiles follow the detection table: one experimental, three drafts, the two unsupported stay unsupported, none verified', () => {
+test('profiles follow the detection table: six bonnet experimental, eleven exterior drafts, none verified', () => {
   assert.deepEqual(Object.keys(ANALYSIS_PROFILES).sort(), Object.keys(PART_DETECTION).sort());
-  // P13-D: all six bonnet parts are offered for analysis, as an experiment. Detection support is a separate table and is unchanged.
+  // P13-D: the six bonnet parts are offered for analysis, as an experiment. P13-G: the eleven exterior parts are DRAFT, offered only where a
+  // host's operator approved drafts. Detection support is a separate table: four bonnet classes, nothing for any other part.
+  const BONNET = ['washer-fluid-cap', 'coolant-reservoir', 'lcw-coolant-reservoir', 'brake-fluid-reservoir', 'battery-12v', 'fuse-box'];
   const status = Object.fromEntries(Object.values(ANALYSIS_PROFILES).map(p => [p.partId, p.status]));
-  assert.deepEqual(status, Object.fromEntries(Object.keys(PART_DETECTION).map(id => [id, 'EXPERIMENTAL'])));
-  assert.deepEqual(Object.keys(ANALYSIS_PROFILES).filter(offersAnalysis).sort(), Object.keys(PART_DETECTION).sort());
-  assert.deepEqual(Object.fromEntries(Object.values(PART_DETECTION).map(e => [e.partId, e.status])), { 'washer-fluid-cap': 'EXPERIMENTAL', 'coolant-reservoir': 'EXPERIMENTAL', 'lcw-coolant-reservoir': 'UNSUPPORTED', 'brake-fluid-reservoir': 'EXPERIMENTAL', 'battery-12v': 'UNSUPPORTED', 'fuse-box': 'EXPERIMENTAL' }, 'detection statuses are not touched');
+  assert.deepEqual(status, Object.fromEntries(Object.keys(PART_DETECTION).map(id => [id, BONNET.includes(id) ? 'EXPERIMENTAL' : 'DRAFT'])));
+  assert.deepEqual(Object.keys(ANALYSIS_PROFILES).filter(id => offersAnalysis(id)).sort(), [...BONNET].sort());
+  assert.deepEqual(Object.keys(ANALYSIS_PROFILES).filter(id => offersAnalysis(id, { allowDraft: true })).sort(), Object.keys(PART_DETECTION).sort());
+  assert.deepEqual(Object.fromEntries(Object.values(PART_DETECTION).map(e => [e.partId, e.status])),
+    Object.fromEntries(Object.keys(PART_DETECTION).map(id => [id, ['washer-fluid-cap', 'coolant-reservoir', 'brake-fluid-reservoir', 'fuse-box'].includes(id) ? 'EXPERIMENTAL' : 'UNSUPPORTED'])));
   for (const p of Object.values(ANALYSIS_PROFILES)) {
     assert.ok(!Object.values(p).includes('VERIFIED'));
     assert.ok(p.reason.length > 20, p.partId);
@@ -23,9 +27,12 @@ test('profiles follow the detection table: one experimental, three drafts, the t
     const detects = PART_DETECTION[p.partId].status !== DETECTION_STATUS.UNSUPPORTED;
     assert.deepEqual(ANALYSIS_SUPPORT[p.partId].regionModes, detects ? ['AI_CANDIDATE', 'MANUAL'] : ['MANUAL'], p.partId);
     assert.equal(ANALYSIS_SUPPORT[p.partId].limited, !detects, p.partId);
+    const draft = p.status === PROFILE_STATUS.DRAFT;
     assert.equal(regionAllowed(p.partId, 'AI_CANDIDATE'), detects, p.partId);
-    assert.equal(regionAllowed(p.partId, 'MANUAL'), true, p.partId);
-    assert.equal(ANALYSIS_SUPPORT[p.partId].evidence, p.partId === W ? 'REAL_SMOKE_4_CALLS_NO_ACCURACY' : 'MOCK_ONLY');
+    assert.equal(regionAllowed(p.partId, 'MANUAL'), !draft, `${p.partId}: a draft region is refused without the host's approval`);
+    assert.equal(regionAllowed(p.partId, 'MANUAL', { allowDraft: true }), true, p.partId);
+    assert.equal(regionAllowed(p.partId, 'AI_CANDIDATE', { allowDraft: true }), detects, `${p.partId}: approval never admits a detector region for a part with no class`);
+    assert.equal(ANALYSIS_SUPPORT[p.partId].evidence, p.partId === W ? 'REAL_SMOKE_4_CALLS_NO_ACCURACY' : draft ? 'DRAFT_MOCK_ONLY' : 'MOCK_ONLY');
     if (p.status !== PROFILE_STATUS.UNSUPPORTED) {
       assert.ok(p.identify && p.check.length && p.never.length && p.issues.length, p.partId);
       for (const code of p.issues) assert.ok(ISSUE_LABELS[code], code);

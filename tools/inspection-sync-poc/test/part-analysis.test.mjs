@@ -12,6 +12,7 @@ import { ReceiverClient } from '../bin/receiver.mjs';
 import { SyncClient } from '../public/sync-client.mjs';
 import { partAnalysisGate, runStaticGates } from '../preflight/static-gates.mjs';
 import { DEFAULT_RATES } from '../src/rate-limit.mjs';
+import { draftProfilesApproved } from '../src/render-vision-experiment.mjs';
 import { serveMobilePage } from '../src/mobile-page.mjs';
 
 const jpeg = (width = 640, height = 480, pad = 64) => {
@@ -22,9 +23,9 @@ const W = 'washer-fluid-cap';
 const wide = { limit: 1000, windowMs: 60_000 };
 const detector = { detect: async () => ({ imageWidth: 640, imageHeight: 480, predictions: [] }) };
 
-async function service(t, { provider = createMockVisionProvider(), rates = { ...DEFAULT_RATES, analyze: wide, 'analyze-session': wide }, limits, log = [] } = {}) {
+async function service(t, { provider = createMockVisionProvider(), rates = { ...DEFAULT_RATES, analyze: wide, 'analyze-session': wide }, limits, log = [], allowDraft } = {}) {
   let now = Date.now();
-  const s = await startSyncServer({ port: 0, authorizer: new LocalTestSessionCreationAuthorizer(), now: () => now, rates, log: line => log.push(line), partDetection: { provider: detector }, partAnalysis: { provider, limits } });
+  const s = await startSyncServer({ port: 0, authorizer: new LocalTestSessionCreationAuthorizer(), now: () => now, rates, log: line => log.push(line), partDetection: { provider: detector }, partAnalysis: { provider, limits, ...(allowDraft === undefined ? {} : { allowDraft }) } });
   t.after(() => s.stop());
   const session = async (task = 'washer-fluid') => {
     now += 61_000;
@@ -232,4 +233,64 @@ test('P13-D: every bonnet part is analysed under its own inspection; parts witho
   provider.scenario = input => ({ partId: input.partId, partMatch: 'LIKELY_MATCH', assessment: 'NO_VISIBLE_ISSUE_DETECTED', observations: ['전압이 12.6V입니다.'], suspectedIssues: [], limitations: [], retakeRequired: false, retakeInstructions: [], requiresUserConfirmation: true });
   const claim = await post('battery-12v', await session('battery-12v'), jpeg(), { 'X-CarScope-Region-Source': 'MANUAL' });
   assert.equal(claim.status, 502); assert.equal(await code(claim), 'PART_ANALYSIS_INVALID_RESPONSE');
+});
+
+// ---- P13-G: the eleven exterior parts. DRAFT profiles: refused unless the host's operator approved drafts, then marked regions only.
+const EXTERIOR = ['tire.front-left', 'tire.front-right', 'tire.rear-left', 'tire.rear-right', 'wiper.front.left', 'wiper.front.right',
+  'light-low-beam-left-0', 'light-low-beam-right-0', 'light-high-beam-left-0', 'light-high-beam-right-0', 'ev-charge.port'];
+
+test("P13-G: without the host's draft approval every exterior part is refused before anything is read or sent", async (t) => {
+  for (const allowDraft of [undefined, false]) {
+    const { provider, session, post } = await service(t, { allowDraft });
+    for (const partId of EXTERIOR) {
+      const token = await session(partId);
+      const r = await post(partId, token, jpeg(), { 'X-CarScope-Region-Source': 'MANUAL', 'X-CarScope-Draft': 'enabled', 'X-CarScope-Profile-Status': 'EXPERIMENTAL' });
+      assert.equal(r.status, 404, `${partId} allowDraft=${allowDraft}`); assert.equal(await code(r), 'PART_ANALYSIS_UNSUPPORTED');
+    }
+    assert.equal(provider.calls.length, 0, 'no client header or state turns a draft on');
+    // The six bonnet parts are unaffected by the draft switch.
+    assert.equal((await post('battery-12v', await session('battery-12v'), jpeg(), { 'X-CarScope-Region-Source': 'MANUAL' })).status, 200);
+  }
+  await assert.rejects(() => startSyncServer({ port: 0, partAnalysis: { provider: createMockVisionProvider(), allowDraft: 'yes' } }), /PART_ANALYSIS_DRAFT_FLAG_INVALID/);
+});
+
+test('P13-G: with approval, each exterior part is analysed under its own inspection, from a marked region only, as a DRAFT', async (t) => {
+  const { s, provider, session, post } = await service(t, { allowDraft: true });
+  for (const partId of EXTERIOR) {
+    const token = await session(partId);
+    assert.equal((await post(partId, token, jpeg(), { 'X-CarScope-Region-Source': 'AI_CANDIDATE' })).status, 400, `${partId}: no detector region`);
+    assert.equal((await post(partId, token, jpeg(), { 'X-CarScope-Region-Source': 'MANUAL', 'X-CarScope-External-Processing': 'nope' })).status, 428, `${partId}: consent`);
+    const r = await post(partId, token, jpeg(), { 'X-CarScope-Region-Source': 'MANUAL' });
+    assert.equal(r.status, 200, partId);
+    const body = await r.json();
+    assert.equal(body.partId, partId); assert.equal(body.result.partId, partId); assert.equal(body.profileStatus, 'DRAFT');
+    assert.equal(body.analysis.regionSource, 'MANUAL'); assert.equal(body.analysis.promptVersion, 'p13-g-1'); assert.equal(body.analysis.provider, 'mock');
+    // This inspection's credential reaches no other part: not the other wheel, side or lamp, and not a bonnet part.
+    for (const other of [EXTERIOR.find(id => id !== partId), 'washer-fluid-cap']) assert.equal((await post(other, token, jpeg(), { 'X-CarScope-Region-Source': 'MANUAL' })).status, 403, `${partId} -> ${other}`);
+    // The detector route has nothing for an exterior part.
+    assert.equal((await fetch(`${s.url}/v1/part-detections/${partId}`, { method: 'POST', body: jpeg(), headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'image/jpeg', 'X-CarScope-External-Processing': 'external-ai-v1' } })).status, 404, `${partId} detection`);
+  }
+  assert.deepEqual([...new Set(provider.calls.map(c => c.partId))].sort(), [...EXTERIOR].sort());
+  assert.ok(provider.calls.every(c => c.regionSource === 'MANUAL' && c.promptVersion === 'p13-g-1'));
+  // A forbidden claim of the part is refused whole: tyre pressure, wiping, lighting, charging.
+  for (const [partId, text] of [['tire.rear-right', '공기압이 낮아 보입니다.'], ['wiper.front.left', '닦임 성능은 양호합니다.'], ['light-low-beam-right-0', '전조등이 점등되어 있습니다.'], ['ev-charge.port', '충전이 가능해 보입니다.']]) {
+    provider.scenario = input => ({ partId: input.partId, partMatch: 'LIKELY_MATCH', assessment: 'NO_VISIBLE_ISSUE_DETECTED', observations: [text], suspectedIssues: [], limitations: [], retakeRequired: false, retakeInstructions: [], requiresUserConfirmation: true });
+    const r = await post(partId, await session(partId), jpeg(), { 'X-CarScope-Region-Source': 'MANUAL' });
+    assert.equal(r.status, 502, `${partId}: ${text}`); assert.equal(await code(r), 'PART_ANALYSIS_INVALID_RESPONSE');
+  }
+});
+
+test('P13-G: only the host marks drafts on the page, and only an exact operator value approves them', async (t) => {
+  const html = '<body data-step="intro">';
+  assert.doesNotMatch(markPartAnalysisPage(html, 'mock'), /data-part-analysis-draft/);
+  assert.doesNotMatch(markPartAnalysisPage(html, 'mock', { draft: 'true' }), /data-part-analysis-draft/);
+  assert.match(markPartAnalysisPage(html, 'openai', { draft: true }), /data-part-analysis="enabled" data-part-analysis-service="openai" data-part-analysis-draft="enabled"/);
+  for (const value of [undefined, '', 'true', '1', 'operator_approved', 'OPERATOR_APPROVED ']) assert.equal(draftProfilesApproved({ CARSCOPE_VISION_DRAFT_PROFILES: value }), false, String(value));
+  assert.equal(draftProfilesApproved({ CARSCOPE_VISION_DRAFT_PROFILES: 'OPERATOR_APPROVED' }), true);
+  for (const allowDraft of [false, true]) {
+    const dev = await startMobileDevServer({ authorizer: new LocalTestSessionCreationAuthorizer(), partAnalysis: { provider: createMockVisionProvider(), allowDraft } });
+    t.after(() => dev.stop());
+    const page = await (await fetch(`${dev.url}/`)).text();
+    assert.equal(/data-part-analysis-draft="enabled"/.test(page), allowDraft, `dev page allowDraft=${allowDraft}`);
+  }
 });

@@ -29,18 +29,23 @@ export function parseTargetBox(header) {
   return w > 0 && h > 0 && l + w <= 1 + 1e-6 && t + h <= 1 + 1e-6 ? box : null;
 }
 
-export function createPartAnalysisRoute({ provider, limits = ANALYSIS_LIMITS, clock = () => new Date(), manualOnly = false, admission = null }) {
+/**
+ * allowDraft (P13-G): DRAFT profiles (never evaluated on real photos) are refused unless the host's operator approved them. Decided here,
+ * by the host's own configuration: nothing a page sends, and no client capability state, can turn it on.
+ */
+export function createPartAnalysisRoute({ provider, limits = ANALYSIS_LIMITS, clock = () => new Date(), manualOnly = false, admission = null, allowDraft = false }) {
+  if (typeof allowDraft !== 'boolean') throw new Error('PART_ANALYSIS_DRAFT_FLAG_INVALID');
   assertVisionProvider(provider);
   let inFlight = 0;
   const busy = new Set(); // phone credentials with an analysis under way: one at a time each
   return async function handle({ req, partId, token, service, limiter }) {
     if (req.headers['x-carscope-external-processing'] !== ANALYSIS_CONSENT) throw new SyncError(ANALYSIS_CODES.CONSENT, 428);
-    if (!offersAnalysis(partId)) throw new SyncError(ANALYSIS_CODES.UNSUPPORTED, 404);
+    if (!offersAnalysis(partId, { allowDraft })) throw new SyncError(ANALYSIS_CODES.UNSUPPORTED, 404);
     const targetInCrop = parseTargetBox(req.headers['x-carscope-target-box']);
     const regionSource = req.headers['x-carscope-region-source'];
     if (!targetInCrop || !Object.values(REGION_SOURCE).includes(regionSource)) throw new SyncError(ERRORS.BAD_REQUEST, 400);
     // P13-D: a part the detector does not support can only have been marked by the person. An AI_CANDIDATE claim for it is refused.
-    if (!regionAllowed(partId, regionSource) || manualOnly && regionSource !== REGION_SOURCE.MANUAL) throw new SyncError(ERRORS.BAD_REQUEST, 400);
+    if (!regionAllowed(partId, regionSource, { allowDraft }) || manualOnly && regionSource !== REGION_SOURCE.MANUAL) throw new SyncError(ERRORS.BAD_REQUEST, 400);
     const scope = await service.detectionScope(token);
     if (scope.taskId !== analysisTask(partId)) throw new SyncError(ERRORS.FORBIDDEN, 403);
     if (scope.sessionState !== 'CLAIMED') throw new SyncError(ERRORS.INVALID_STATE, 409);

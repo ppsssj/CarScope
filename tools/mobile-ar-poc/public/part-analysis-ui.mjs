@@ -29,8 +29,9 @@ const MATCH = Object.freeze({ [PART_MATCH.LIKELY_MATCH]: '선택한 부품으로
 // LOCAL_ONLY (P13-D): a part with no detector; the photo is on the phone and the region is marked by hand.
 const SHOWN = new Set(['CANDIDATES', 'NONE_FOUND', 'FAILED', 'LOCAL_ONLY']);
 /** P13-D: whether the page may offer analysis for this inspection task at all. Used before any dialog is built. */
-export const analysisOfferedForTask = taskId => { const entry = detectionForTask(taskId); return Boolean(entry && ANALYSIS_SUPPORT[entry.partId]?.offered); };
-const EVIDENCE_WORDS = Object.freeze({ REAL_SMOKE_4_CALLS_NO_ACCURACY: '실험 기능이에요. 실제 사진 2장으로 동작만 확인했고, 얼마나 맞는지는 아직 몰라요.', MOCK_ONLY: '실험 기능이에요. 실제 사진으로 확인하지 않았어요.' });
+export const analysisOfferedForTask = (taskId, { allowDraft = false } = {}) => { const entry = detectionForTask(taskId); return Boolean(entry && offersAnalysis(entry.partId, { allowDraft })); };
+const EVIDENCE_WORDS = Object.freeze({ REAL_SMOKE_4_CALLS_NO_ACCURACY: '실험 기능이에요. 실제 사진 2장으로 동작만 확인했고, 얼마나 맞는지는 아직 몰라요.', MOCK_ONLY: '실험 기능이에요. 실제 사진으로 확인하지 않았어요.',
+  DRAFT_MOCK_ONLY: '시험 단계의 실험 기능이에요. 실제 사진으로 정확도를 확인하지 않았어요. 결과는 참고만 하고 직접 확인해 주세요.' });
 
 function outline(ctx, box, width, height, label) {
   const unit = Math.max(2, Math.round(Math.max(width, height) / 320));
@@ -50,15 +51,15 @@ const group = (id, title) => { const box = el('div', 'part-analysis-group'); con
  * @param o.analyzer { analyze(partId, blob, { targetInCrop, regionSource, signal }) } -> { ok, result, analysis } | { ok:false, code }
  * @param o.serviceId provider id the host marked on the page; it names the outside service in the consent text
  */
-export function createPartAnalysis({ slot, entry, analyzer, serviceId, retake, close }) {
+export function createPartAnalysis({ slot, entry, analyzer, serviceId, retake, close, allowDraft = false }) {
   const service = Object.hasOwn(ANALYSIS_SERVICES, serviceId) ? ANALYSIS_SERVICES[serviceId] : null;
-  if (!offersAnalysis(entry?.partId) || typeof analyzer?.analyze !== 'function' || !service) return null;
+  if (!offersAnalysis(entry?.partId, { allowDraft }) || typeof analyzer?.analyze !== 'function' || !service) return null;
   const profile = analysisProfile(entry.partId);
   let state = initialAnalysis(), ctx = { phase: null, candidates: [], source: null, file: null }, crop = null, controller = null, sentAt = -Infinity;
 
   const section = el('section', 'part-analysis'); section.id = 'part-analysis'; section.setAttribute('aria-labelledby', 'part-analysis-title');
   const support = ANALYSIS_SUPPORT[entry.partId];
-  const title = el('h3', null, `부품 상태 AI 분석 · 실험 · ${profile.label}${support.limited ? ' · 직접 지정, 제한적 분석' : ''}`); title.id = 'part-analysis-title';
+  const title = el('h3', null, `부품 상태 AI 분석 · 실험 · ${profile.label}${support.limited ? ' · 직접 지정, 제한적 분석' : ''}${support.draft ? ' · 시험 단계' : ''}`); title.id = 'part-analysis-title';
   const lead = el('p', 'fine', support.limited
     ? '이 부품은 AI 위치 찾기가 없어서 직접 지정한 영역만 분석해요. 사진만으로 부품 종류를 확정하기 어려워 판단 불가가 자주 나올 수 있어요.'
     : '위치 찾기와 따로 진행해요. 분석할 영역을 고르면 주변까지 잘라서 먼저 보여 드려요.');
@@ -92,6 +93,8 @@ export function createPartAnalysis({ slot, entry, analyzer, serviceId, retake, c
   const headline = el('h4'); headline.id = 'part-analysis-headline'; headline.setAttribute('role', 'status');
   const note = el('p', 'card warn'); note.id = 'part-analysis-note';
   const match = el('p'); match.id = 'part-analysis-match';
+  // P13-G: which wheel, side or lamp function it is was the person's choice; the photo does not show it. Fixed words, never from the AI.
+  const position = el('p', 'fine', profile.positionNote ?? ''); position.id = 'part-analysis-position-note'; position.hidden = !profile.positionNote;
   const [obsBox, observations] = group('part-analysis-observations', 'AI가 사진에서 본 것');
   const [issueBox, issues] = group('part-analysis-issues', '의심되는 부분과 근거');
   const [limitBox, limitations] = group('part-analysis-limitations', '판단하지 못한 이유');
@@ -102,7 +105,7 @@ export function createPartAnalysis({ slot, entry, analyzer, serviceId, retake, c
   const continueButton = button('part-analysis-continue', '기존 점검 계속하기', 'primary-row');
   const retakeButton = button('part-analysis-retake', '다시 촬영하기');
   const other = button('part-analysis-other', '다른 영역으로 다시 분석');
-  result.append(headline, note, match, obsBox, issueBox, limitBox, retakeBox, reference, ackLabel, continueButton, retakeButton, other);
+  result.append(headline, note, match, position, obsBox, issueBox, limitBox, retakeBox, reference, ackLabel, continueButton, retakeButton, other);
 
   const failed = el('div'); failed.id = 'part-analysis-failed';
   const failText = el('p', 'card warn'); failText.id = 'part-analysis-error'; failText.setAttribute('role', 'status');

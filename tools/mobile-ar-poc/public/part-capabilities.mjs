@@ -4,9 +4,11 @@
 // they keep the model class, the prompt and the evidence. Whether this host's server offers the AI at all is a separate input (`host`),
 // which only the phone page has: its own server marks the page (data-part-detection / data-part-analysis). The vehicle never guesses it.
 
-export const SUPPORT = Object.freeze({ EXPERIMENTAL: 'EXPERIMENTAL', UNSUPPORTED: 'UNSUPPORTED' });
+// DRAFT (P13-G): written, schema- and MOCK-checked, never evaluated on real photos. Offered by no host unless that host's operator
+// separately approves draft profiles; the server enforces it, the page only reads the host's marker.
+export const SUPPORT = Object.freeze({ EXPERIMENTAL: 'EXPERIMENTAL', DRAFT: 'DRAFT', UNSUPPORTED: 'UNSUPPORTED' });
 const ai = (detection, analysis) => Object.freeze({ detection, analysis });
-const { EXPERIMENTAL: X, UNSUPPORTED: U } = SUPPORT;
+const { EXPERIMENTAL: X, DRAFT: D, UNSUPPORTED: U } = SUPPORT;
 /** Per part: may the hosted detector propose its place, may the vision service describe its look. Parts not listed have neither. */
 export const PART_AI_SUPPORT = Object.freeze({
   'washer-fluid-cap': ai(X, X),
@@ -16,12 +18,17 @@ export const PART_AI_SUPPORT = Object.freeze({
   // No detector class for these two (P12-F): the person marks the part on the photo, then only that region is analysed.
   'battery-12v': ai(U, X),
   'lcw-coolant-reservoir': ai(U, X),
+  // P13-G: the eleven exterior parts. No detector class exists for any of them (engine-bay-parts/1), so only a marked region is analysed.
+  ...Object.fromEntries(['tire.front-left', 'tire.front-right', 'tire.rear-left', 'tire.rear-right', 'wiper.front.left', 'wiper.front.right',
+    'light-low-beam-left-0', 'light-low-beam-right-0', 'light-high-beam-left-0', 'light-high-beam-right-0', 'ev-charge.port'].map(id => [id, ai(U, D)])),
 });
 export const aiSupport = partId => (Object.hasOwn(PART_AI_SUPPORT, partId) ? PART_AI_SUPPORT[partId] : ai(U, U));
 
 /** The phone task ids name a part by its task. Only two differ; the same pair is in the vehicle's result contract and Native bridge. */
 const TASK_PART = Object.freeze({ 'washer-fluid': 'washer-fluid-cap', 'brake-fluid': 'brake-fluid-reservoir' });
 export const partIdForTask = taskId => (Object.hasOwn(TASK_PART, taskId) ? TASK_PART[taskId] : taskId);
+/** Whether a part's analysis is a draft: offered only where the host approved drafts. */
+export const analysisStage = partId => { const a = aiSupport(partId).analysis; return a === U ? null : a; };
 
 /** What a part offers by itself, before any server is asked. */
 export const PLAN = Object.freeze({
@@ -53,9 +60,10 @@ function planOf(detects, analyses) {
  * @param taskId its phone task, or null for a part with no inspection (EV battery pack, charge flap)
  * @param host null on the vehicle. On the phone: { connected, detection, analysis } as this page's own server marked it.
  *   connected: the page has the vehicle's detector channel (a QR inspection). The same rule as offerPartDetection().
+ *   draftAnalysis: this host's operator approved DRAFT profiles (data-part-analysis-draft). Ignored unless analysis is on too.
  */
 export function partCapabilities(partId, { taskId = null, host = null } = {}) {
-  const s = aiSupport(partId), detects = s.detection === X, analyses = s.analysis === X;
+  const s = aiSupport(partId), detects = s.detection === X, draft = s.analysis === D, analyses = s.analysis === X || draft;
   const partPlan = taskId ? planOf(detects, analyses) : PLAN.INFO_ONLY;
   const supportsAi = partPlan !== PLAN.MANUAL_ONLY && partPlan !== PLAN.INFO_ONLY;
   let offered = PLAN.MANUAL_ONLY, aiState = supportsAi ? AI_STATE.UNKNOWN : AI_STATE.UNSUPPORTED;
@@ -63,7 +71,7 @@ export function partCapabilities(partId, { taskId = null, host = null } = {}) {
   else if (supportsAi && host) {
     // Mirrors offerPartDetection/mountPartDetection: detection where the server offers it and the part has a class,
     // otherwise a marked region where the server offers analysis and the part has a profile.
-    const detect = detects && host.detection === true, analyze = analyses && host.analysis === true;
+    const detect = detects && host.detection === true, analyze = analyses && host.analysis === true && (!draft || host.draftAnalysis === true);
     offered = !host.connected ? PLAN.MANUAL_ONLY : detect ? (analyze ? PLAN.DETECT_AND_ANALYZE : PLAN.DETECT_ONLY) : analyze ? PLAN.MARK_AND_ANALYZE : PLAN.MANUAL_ONLY;
     aiState = !host.connected ? AI_STATE.NOT_CONNECTED : offered === PLAN.MANUAL_ONLY ? AI_STATE.SERVER_DISABLED : AI_STATE.AVAILABLE;
   }
@@ -72,6 +80,7 @@ export function partCapabilities(partId, { taskId = null, host = null } = {}) {
     manualChecklist: Boolean(taskId), // the phone's own checklist: never depends on AI or on a server switch
     detection: s.detection, regionMarking: analyses ? X : U, analysis: s.analysis,
     partPlan, offered, ai: aiState, experimental: supportsAi,
+    stage: supportsAi ? (draft ? D : X) : null, // DRAFT: never evaluated, offered only with the host's separate approval
   });
 }
 
@@ -84,13 +93,16 @@ export const METHOD_LABELS = Object.freeze({
 });
 const AI_NOTE = Object.freeze({
   [AI_STATE.SERVER_DISABLED]: '이 부품은 AI 외관 분석(실험)을 지원하지만, 지금 연결된 서비스에서는 사용할 수 없어요.',
+  DRAFT_DISABLED: '이 부품의 AI 외관 분석은 시험 단계라 승인된 실험 서비스에서만 쓸 수 있어요. 지금 연결된 서비스에서는 사용할 수 없어요.',
   [AI_STATE.NOT_CONNECTED]: 'AI 외관 분석(실험)은 차량 화면의 QR로 연결한 점검에서만 쓸 수 있어요.',
   [AI_STATE.UNSUPPORTED]: '현재 AI 외관 분석은 지원하지 않습니다.',
   [AI_STATE.UNKNOWN]: '사용할 수 있는지는 스마트폰 화면에 표시돼요.',
 });
 /** One sentence about the AI of a part, for the state it is in. */
 export function aiNote(cap) {
+  if (cap.ai === AI_STATE.SERVER_DISABLED && cap.stage === SUPPORT.DRAFT) return AI_NOTE.DRAFT_DISABLED;
   if (cap.ai !== AI_STATE.AVAILABLE) return AI_NOTE[cap.ai];
+  if (cap.stage === SUPPORT.DRAFT) return '시험 단계예요. 자동으로 위치를 찾지 않아요. 사진에서 부품을 직접 지정하면 그 부분의 겉모습만 AI가 살펴봐요. 실제 사진으로 정확도를 확인하지 않았어요.';
   if (cap.offered === PLAN.MARK_AND_ANALYZE) return '자동으로 위치를 찾지 않아요. 사진에서 부품을 직접 지정하면 그 부분의 겉모습만 AI가 살펴봐요.';
   if (cap.offered === PLAN.DETECT_ONLY) return 'AI가 사진에서 부품 위치 후보만 표시해요. 상태 분석은 하지 않아요.';
   return 'AI가 사진에서 부품 후보를 찾고, 고른 부분의 겉모습만 살펴봐요.';
@@ -99,6 +111,7 @@ export function aiNote(cap) {
 export function partMethodSummary(cap) {
   if (cap.partPlan === PLAN.INFO_ONLY) return '따로 점검 기록이 없는 부품입니다. 그림 안내와 3D 형상만 제공합니다.';
   if (cap.partPlan === PLAN.MANUAL_ONLY) return '스마트폰에서 직접 점검할 수 있어요. 현재 AI 외관 분석은 지원하지 않습니다.';
+  if (cap.stage === SUPPORT.DRAFT) return '스마트폰에서 직접 점검할 수 있어요. 사진에서 부품을 직접 지정한 뒤 AI 외관 분석(시험 단계)은 승인된 실험 서비스에서만 제공되며, 사용할 수 있는지는 스마트폰 화면에 표시돼요.';
   const how = cap.partPlan === PLAN.MARK_AND_ANALYZE ? '사진에서 부품을 직접 지정한 뒤 AI 외관 분석(실험)' : cap.partPlan === PLAN.DETECT_ONLY ? 'AI 위치 찾기(실험)' : 'AI 위치 찾기와 외관 분석(실험)';
   return `스마트폰에서 직접 점검할 수 있어요. ${how}도 지원하지만, 사용할 수 있는지는 연결된 서비스에 따라 스마트폰 화면에 표시돼요.`;
 }

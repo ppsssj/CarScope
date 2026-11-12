@@ -7,6 +7,9 @@ import { aiSupport } from './part-capabilities.mjs';
 
 export const ANALYSIS_CONSENT = 'external-vision-v1';
 export const PROMPT_VERSION = 'p13-a-1';
+// P13-G: the exterior profiles are new prompt texts, so their answers carry their own version. The six bonnet prompts are unchanged (tested).
+export const EXTERIOR_PROMPT_VERSION = 'p13-g-1';
+const BONNET_SCENE = "in a car's bonnet area";
 export const ASSESSMENT = Object.freeze({
   NO_VISIBLE_ISSUE_DETECTED: 'NO_VISIBLE_ISSUE_DETECTED', SUSPECTED_ISSUE: 'SUSPECTED_ISSUE', INDETERMINATE: 'INDETERMINATE',
   WRONG_PART: 'WRONG_PART', UNSUPPORTED: 'UNSUPPORTED',
@@ -22,7 +25,7 @@ export const RESULT_LIMITS = Object.freeze({ textChars: 200, items: 5 });
 const MODEL_ASSESSMENTS = Object.freeze([ASSESSMENT.NO_VISIBLE_ISSUE_DETECTED, ASSESSMENT.SUSPECTED_ISSUE, ASSESSMENT.INDETERMINATE, ASSESSMENT.WRONG_PART]);
 
 // The status comes from part-capabilities.mjs; a profile keeps the prompt, the limits and the evidence.
-const profile = (partId, fields = {}) => Object.freeze({ partId, status: aiSupport(partId).analysis, label: fields.label ?? partId, crop: Object.freeze({ ...CROP_DEFAULTS, ...fields.crop }), identify: fields.identify ?? '', check: Object.freeze(fields.check ?? []), never: Object.freeze(fields.never ?? []), issues: Object.freeze(fields.issues ?? []), claims: fields.claims ?? null, reason: fields.reason ?? '' });
+const profile = (partId, fields = {}) => Object.freeze({ partId, status: aiSupport(partId).analysis, scene: fields.scene ?? BONNET_SCENE, promptVersion: fields.promptVersion ?? PROMPT_VERSION, positionNote: fields.positionNote ?? null, label: fields.label ?? partId, crop: Object.freeze({ ...CROP_DEFAULTS, ...fields.crop }), identify: fields.identify ?? '', check: Object.freeze(fields.check ?? []), never: Object.freeze(fields.never ?? []), issues: Object.freeze(fields.issues ?? []), claims: fields.claims ?? null, reason: fields.reason ?? '' });
 export const ANALYSIS_PROFILES = Object.freeze({
   'washer-fluid-cap': profile('washer-fluid-cap', {
     label: '워셔액 주입구',
@@ -87,6 +90,59 @@ export const ANALYSIS_PROFILES = Object.freeze({
     claims: /전도도[가는이은]?\s*(\d|낮|높|적정|정상)|농도[가는이은]?\s*(\d|적정|정상|충분)|성분[이은가는]?\s*(정상|적정)|교체하세요|교환하세요/,
     reason: 'P13-D: limited analysis from a marked region. Detection stays UNSUPPORTED: the model has no class for it (P12-F). MOCK tests only.',
   }),
+  // ---- P13-G: the eleven exterior parts, DRAFT. Written and checked against the contract and MOCK answers only; never evaluated on a real
+  // photo, so no host offers them unless its operator approved drafts. None has a detector: the person marks the region (ANALYSIS_SUPPORT).
+  // The photo cannot show which wheel, side or lamp function it is: the person chose that. A profile never confirms it from the picture.
+  ...Object.fromEntries(['front-left', 'front-right', 'rear-left', 'rear-right'].map(wheel => [`tire.${wheel}`, profile(`tire.${wheel}`, {
+    label: `${{ 'front-left': '앞 왼쪽', 'front-right': '앞 오른쪽', 'rear-left': '뒤 왼쪽', 'rear-right': '뒤 오른쪽' }[wheel]} 타이어`,
+    scene: 'on the outside of a car (a tyre on a wheel)', promptVersion: EXTERIOR_PROMPT_VERSION,
+    positionNote: '사진으로는 어느 바퀴인지 확인하지 않아요. 고른 바퀴가 맞는지 직접 확인해 주세요.',
+    crop: { margin: 0.3 },
+    identify: 'a car tyre: its visible sidewall and, where visible, its tread surface. The photo cannot show which wheel of the car this is; the person chose the wheel. Never confirm or deny the wheel position from the photo. If the region does not clearly show a tyre, set partMatch to UNCERTAIN. A person marked this region; no detector proposed it.',
+    check: ['clearly visible cracks in the sidewall rubber', 'clearly visible cuts, tears, bulges or other damage on the visible rubber', 'clearly visible foreign objects stuck in or on the visible surface, such as nails, screws or stones'],
+    never: ['tyre pressure or inflation, from the shape or anything else', 'tread depth in any number or unit, or whether the tread is within a legal or recommended wear limit', 'remaining life, age, replacement timing or whether a replacement is needed', 'whether the car is safe to drive', 'removing an object, touching the tyre, or driving to test it'],
+    issues: ['SIDEWALL_CRACK_SUSPECTED', 'TIRE_DAMAGE_SUSPECTED', 'FOREIGN_OBJECT_SUSPECTED'],
+    claims: /공기압|타이어\s*압력|\d+(\.\d+)?\s*(psi|kpa|bar|mm)(?![a-z])|트레드\s*(깊이)?[가는이은]?\s*(약\s*)?\d|마모\s*(한계|기준)[를을에]?\s*(넘|초과|미달|이내|안)|법적\s*(기준|한계)|수명[이은가는]?\s*(\d|충분|남|다\s*되)|교체(가)?\s*(필요\s*없|안\s*해도|시기)|주행\s*(가능|해도|하셔도)|빼\s*(주세요|내세요)|뽑아/i,
+    reason: 'P13-G: DRAFT. Exterior profile, marked region only (no detector class). MOCK and contract tests only; no real photo evaluated.',
+  })])),
+  ...Object.fromEntries(['left', 'right'].map(side => [`wiper.front.${side}`, profile(`wiper.front.${side}`, {
+    label: `전면 ${side === 'left' ? '왼쪽' : '오른쪽'} 와이퍼`,
+    scene: 'on the outside of a car (a windscreen wiper at rest)', promptVersion: EXTERIOR_PROMPT_VERSION,
+    positionNote: '사진으로는 왼쪽·오른쪽 와이퍼를 구별하지 않아요. 고른 쪽이 맞는지 직접 확인해 주세요.',
+    crop: { margin: 0.3 },
+    identify: 'a front windscreen wiper at rest: its rubber blade and the visible part of its arm. The photo cannot show which side of the car this is; the person chose the side. Never confirm or deny the side from the photo. If the region does not clearly show a wiper, set partMatch to UNCERTAIN. A person marked this region; no detector proposed it.',
+    check: ['clearly visible cracks, splits or tears of the rubber blade', 'clearly visible deformation of the blade', 'clearly visible debris on or around the blade', 'clearly visible bends or breaks of the wiper arm'],
+    never: ['how well it wipes, from streaks or anything else', 'whether the wiper or its motor works', 'remaining life, replacement timing or interval', 'asking the person to run the wipers, lift the arm or touch the blade'],
+    issues: ['BLADE_RUBBER_DAMAGE_SUSPECTED', 'BLADE_DEFORMATION_SUSPECTED', 'DEBRIS_SUSPECTED', 'ARM_DAMAGE_SUSPECTED'],
+    claims: /닦임\s*(성능|상태)?[이은가는]?\s*(정상|양호|좋|충분|문제\s*없|나쁘|불량)|(작동|동작)[이은가는]?\s*(정상|양호|불량|잘\s*(돼|됩)|안\s*(돼|됩))|모터|(교체|교환)\s*(시기|주기|필요\s*없|안\s*해도|하세요|해\s*주세요)|수명[이은가는]?\s*(\d|충분|남|다\s*되)|작동시켜|켜\s*(보세요|주세요)|들어\s*올려/,
+    reason: 'P13-G: DRAFT. Exterior profile, marked region only (no detector class). MOCK and contract tests only; no real photo evaluated.',
+  })])),
+  ...Object.fromEntries(['low', 'high'].flatMap(beam => ['left', 'right'].map(side => {
+    const id = `light-${beam}-beam-${side}-0`;
+    return [id, profile(id, {
+      label: `${side === 'left' ? '왼쪽' : '오른쪽'} ${beam === 'low' ? '하향등' : '상향등'}`,
+      scene: 'on the outside of a car (a headlamp, switched off)', promptVersion: EXTERIOR_PROMPT_VERSION,
+      positionNote: '사진으로는 왼쪽·오른쪽이나 상향등·하향등을 구별하지 않아요. 한 램프 안에 두 기능이 함께 있을 수 있어요. 고른 등이 맞는지 직접 확인해 주세요.',
+      crop: { margin: 0.3 },
+      identify: `a front headlamp lens and housing, seen from outside. The person chose the ${side} ${beam} beam. Many cars put the low and the high beam in one housing, so the photo usually cannot show which function a lamp area serves, nor which side of the car it is: never confirm or deny the beam function or the side. If the region does not clearly show a headlamp lens, set partMatch to UNCERTAIN and say in limitations that the person should check which lamp they photographed. A person marked this region; no detector proposed it.`,
+      check: ['clearly visible cracks or breaks of the outer lens', 'clearly visible dirt, stickers or other things covering the lens', 'clearly visible damage to the lamp housing', 'only if clearly visible through the lens, water drops or pooled moisture inside'],
+      never: ['whether the lamp lights up, or whether it is switched on in the photo', 'brightness, light output or beam aim', 'whether this area is the low or the high beam, or the left or the right lamp', 'whether the electrical system works', 'asking the person to switch the lamps on or to open, clean or dry the lamp'],
+      issues: ['LENS_CRACK_SUSPECTED', 'LENS_OBSTRUCTION_SUSPECTED', 'LAMP_HOUSING_DAMAGE_SUSPECTED', 'MOISTURE_SUSPECTED'],
+      claims: /(점등|불이\s*(들어|켜)|켜져\s*있|켜진\s*상태)|밝기[가는이은]?\s*(\d|충분|정상|적정|양호|약)|광량|광축|조사\s*각|(상향등|하향등)(입니다|이에요|이네요|으로\s*(보입|확인)|이\s*맞)|전기\s*(계통|장치)[이은가는]?\s*(정상|양호|문제\s*없)|켜\s*(보세요|주세요)|닦아|청소(하|해)/,
+      reason: 'P13-G: DRAFT. Exterior profile, marked region only (no detector class). MOCK and contract tests only; no real photo evaluated. Low and high beam often share a housing.',
+    })];
+  }))),
+  'ev-charge.port': profile('ev-charge.port', {
+    label: 'EV 충전구',
+    scene: 'on the outside of an electric car (the charging port area)', promptVersion: EXTERIOR_PROMPT_VERSION,
+    crop: { margin: 0.5 },
+    identify: 'the charging port of an electric car and its flap, seen from outside, with no cable plugged in. If the region does not clearly show a charging port or its flap, set partMatch to UNCERTAIN. A person marked this region; no detector proposed it.',
+    check: ['clearly visible damage around the port opening or its surround', 'clearly visible debris in or around the port, seen from outside', 'clearly visible damage to the flap', 'clearly visible dirt or contamination around the port'],
+    never: ['whether the car can charge', 'high-voltage safety, insulation or any electrical state', 'the condition of the pins or contacts inside', 'heat or burning from colour alone', 'asking the person to touch, clean, blow into or put anything into the port'],
+    issues: ['PORT_AREA_DAMAGE_SUSPECTED', 'DEBRIS_SUSPECTED', 'FLAP_DAMAGE_SUSPECTED', 'CONTAMINATION_SUSPECTED'],
+    claims: /충전(이|은|을)?\s*(가능|할\s*수\s*있|돼요|됩니다|문제\s*없)|절연|고전압[^.。!?]{0,12}(정상|안전|양호|문제\s*없)|(접점|단자|핀)[^.。!?]{0,8}(정상|양호|깨끗|문제\s*없)|(단자|접점|핀|충전구|내부)[를을]?\s*(닦|청소|만지|불어)|닦아\s*(주세요|보세요)|청소(하세요|해\s*주세요)/,
+    reason: 'P13-G: DRAFT. Exterior profile, marked region only (no detector class). MOCK and contract tests only; no real photo evaluated.',
+  }),
 });
 /** Korean names of the issue codes, for the page. Every code a profile allows has one (tested). */
 export const ISSUE_LABELS = Object.freeze({
@@ -94,9 +150,18 @@ export const ISSUE_LABELS = Object.freeze({
   LEVEL_BELOW_MIN_SUSPECTED: '액면이 MIN 아래로 보임', LEAK_TRACE_SUSPECTED: '누출 흔적 의심', RESERVOIR_DAMAGE_SUSPECTED: '리저버 손상 의심',
   COVER_MISSING_SUSPECTED: '덮개가 없어 보임', COVER_OPEN_SUSPECTED: '덮개가 열려 보임', COVER_OR_HOUSING_DAMAGE_SUSPECTED: '덮개·하우징 손상 의심',
   CASE_DAMAGE_SUSPECTED: '배터리 케이스 손상 의심', TERMINAL_CORROSION_SUSPECTED: '단자 부식 의심',
+  // P13-G
+  SIDEWALL_CRACK_SUSPECTED: '타이어 옆면 균열 의심', TIRE_DAMAGE_SUSPECTED: '타이어 외관 손상 의심', FOREIGN_OBJECT_SUSPECTED: '박힌 이물질 의심',
+  BLADE_RUBBER_DAMAGE_SUSPECTED: '와이퍼 고무 손상 의심', BLADE_DEFORMATION_SUSPECTED: '와이퍼 블레이드 변형 의심', DEBRIS_SUSPECTED: '이물질 의심', ARM_DAMAGE_SUSPECTED: '와이퍼 암 손상 의심',
+  LENS_CRACK_SUSPECTED: '렌즈 균열 의심', LENS_OBSTRUCTION_SUSPECTED: '렌즈 가림 의심', LAMP_HOUSING_DAMAGE_SUSPECTED: '램프 하우징 손상 의심', MOISTURE_SUSPECTED: '렌즈 안쪽 물기 의심',
+  PORT_AREA_DAMAGE_SUSPECTED: '충전구 주변 손상 의심', FLAP_DAMAGE_SUSPECTED: '충전구 덮개 손상 의심', CONTAMINATION_SUSPECTED: '충전구 주변 오염 의심',
 });
 export const analysisProfile = partId => (Object.hasOwn(ANALYSIS_PROFILES, partId) ? ANALYSIS_PROFILES[partId] : null);
-export const offersAnalysis = partId => analysisProfile(partId)?.status === PROFILE_STATUS.EXPERIMENTAL;
+/** EXPERIMENTAL profiles are offered wherever analysis is on. A DRAFT profile only where the host's operator approved drafts (allowDraft). */
+export const offersAnalysis = (partId, { allowDraft = false } = {}) => {
+  const status = analysisProfile(partId)?.status;
+  return status === PROFILE_STATUS.EXPERIMENTAL || allowDraft === true && status === PROFILE_STATUS.DRAFT;
+};
 /**
  * P13-D: how each part may reach an analysis. Kept apart from detection: offersDetection() says whether the hosted detector may propose a region,
  * offersAnalysis() whether the vision service may look at one. A part without detection is analysed only from a region the person marks.
@@ -106,16 +171,17 @@ export const offersAnalysis = partId => analysisProfile(partId)?.status === PROF
 export const ANALYSIS_SUPPORT = Object.freeze(Object.fromEntries(Object.values(ANALYSIS_PROFILES).map(p => {
   const detects = offersDetection(PART_DETECTION[p.partId]);
   return [p.partId, Object.freeze({
-    partId: p.partId, status: p.status, offered: p.status === PROFILE_STATUS.EXPERIMENTAL,
+    partId: p.partId, status: p.status, offered: p.status === PROFILE_STATUS.EXPERIMENTAL, draft: p.status === PROFILE_STATUS.DRAFT,
     regionModes: Object.freeze(detects ? ['AI_CANDIDATE', 'MANUAL'] : ['MANUAL']), limited: !detects,
-    evidence: p.partId === 'washer-fluid-cap' ? 'REAL_SMOKE_4_CALLS_NO_ACCURACY' : 'MOCK_ONLY',
+    evidence: p.partId === 'washer-fluid-cap' ? 'REAL_SMOKE_4_CALLS_NO_ACCURACY' : p.status === PROFILE_STATUS.DRAFT ? 'DRAFT_MOCK_ONLY' : 'MOCK_ONLY',
   })];
 })));
-export const regionAllowed = (partId, regionSource) => Boolean(ANALYSIS_SUPPORT[partId]?.offered && ANALYSIS_SUPPORT[partId].regionModes.includes(regionSource));
+export const regionAllowed = (partId, regionSource, { allowDraft = false } = {}) => Boolean(offersAnalysis(partId, { allowDraft }) && ANALYSIS_SUPPORT[partId].regionModes.includes(regionSource));
 
 // ---- What is sent to a provider. The same text and schema for every provider, so they can be compared.
+// The first rule names where the part is. For the six bonnet profiles it is word for word the P13-A text.
+const rulesFor = p => [`You look at one photo of one part ${p.scene}. A person chose the part and the region. You describe only what is visible.`, ...RULES];
 const RULES = [
-  'You look at one photo of one part in a car\'s bonnet area. A person chose the part and the region. You describe only what is visible.',
   'Never state that the car, the part or any system is normal, safe, fine or OK to drive. NO_VISIBLE_ISSUE_DETECTED only means you saw no sign of the listed issues in this photo.',
   'Judge nothing that is not visible in this photo. Do not guess about hidden areas.',
   'If you are not sure the photo shows the requested part, set partMatch to UNCERTAIN and assessment to INDETERMINATE. If it clearly shows a different part, set partMatch to NOT_MATCH and assessment to WRONG_PART.',
@@ -129,7 +195,7 @@ export function buildAnalysisPrompt(partId, { targetInCrop, regionSource }) {
   const p = analysisProfile(partId);
   if (!p || p.status === PROFILE_STATUS.UNSUPPORTED) throw new Error('PART_ANALYSIS_UNSUPPORTED');
   const instructions = [
-    ...RULES,
+    ...rulesFor(p),
     `Requested part (partId "${partId}"): ${p.identify}`,
     `Look for: ${p.check.join('; ')}.`,
     `Never judge: ${p.never.join('; ')}.`,
@@ -137,7 +203,7 @@ export function buildAnalysisPrompt(partId, { targetInCrop, regionSource }) {
   ].join('\n');
   const where = targetInCrop.map(n => n.toFixed(3)).join(', ');
   const userText = `${regionSource === REGION_SOURCE.MANUAL ? 'A person marked' : 'An object detector proposed, and a person chose,'} the region of the part. It is around the box [left, top, width, height] = [${where}] as fractions of this image, origin top left. The rest of the image is surrounding context. Analyse the requested part.`;
-  return { instructions, userText, schema: analysisJsonSchema(partId), promptVersion: PROMPT_VERSION };
+  return { instructions, userText, schema: analysisJsonSchema(partId), promptVersion: p.promptVersion };
 }
 
 const text = { type: 'string' };

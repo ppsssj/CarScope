@@ -30,6 +30,14 @@ export const PART_DETECTION = Object.freeze({
   'fuse-box': row('fuse-box', 'fuse-box', 'Fuse Box',
     'P12-F real model: only 3 labelled photos, 1 found, and a close-up was missed. Boxes on black lidded boxes that could not be judged. Too few to say. Mix-ups with other electrical parts not measured.',
     '다른 전장 부품일 수 있어요. 설명서의 배치도와 덮개 표시를 직접 확인해 주세요.'),
+  // P13-G: the eleven exterior parts. engine-bay-parts/1 is a bonnet model: no class exists for a tyre, wiper, lamp or charge port, and none
+  // is substituted. These rows only record that, and carry the task each analysis belongs to; the person marks the region themself.
+  ...Object.fromEntries([
+    ...['front-left', 'front-right', 'rear-left', 'rear-right'].map(w => `tire.${w}`),
+    'wiper.front.left', 'wiper.front.right',
+    ...['low', 'high'].flatMap(b => ['left', 'right'].map(side => `light-${b}-beam-${side}-0`)),
+    'ev-charge.port',
+  ].map(id => [id, row(id, id, null, 'P13-G: an exterior part. The detection model engine-bay-parts/1 has bonnet classes only; no class is mapped or substituted.')])),
 });
 export const detectionForTask = taskId => Object.values(PART_DETECTION).find(entry => entry.taskId === taskId) ?? null;
 /** Only a part with a mapped class offers the feature at all, so no button exists that cannot work. */

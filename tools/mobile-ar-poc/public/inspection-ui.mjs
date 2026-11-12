@@ -52,15 +52,17 @@ export function mountInspectionMethods(taskId,before,host,{checks=[],scope=null}
 // P13-A: the state analysis joins only where the host also marked the page for it and the detector can analyse.
 export function offerPartDetection(options){
   const body=document.body.dataset,detector=options.detector??null;
-  const host={connected:Boolean(detector),detection:body.partDetection==='enabled',analysis:body.partAnalysis==='enabled'&&typeof detector?.analyze==='function'};
+  const host={connected:Boolean(detector),detection:body.partDetection==='enabled',analysis:body.partAnalysis==='enabled'&&typeof detector?.analyze==='function',
+    // P13-G: only this page's own host marks drafts as approved; the server refuses a draft part on its own otherwise.
+    draftAnalysis:body.partAnalysisDraft==='enabled'};
   const methods=mountInspectionMethods(options.taskId,options.introBefore,host,{checks:options.checks,scope:options.scope});
   if(methods.cap.ai!==AI_STATE.AVAILABLE)return methods;
   Promise.all([import('./part-detection-ui.mjs'),host.analysis?import('./part-analysis-ui.mjs').catch(()=>null):null]).then(([{mountPartDetection},analysisUi])=>{
     const {checks,scope,...detection}=options;
     const mounted=mountPartDetection({...detection,introBefore:methods.slot,
       // P13-D: a part without a detector is offered only through the analysis, which says whether it may be analysed.
-      detectionEnabled:host.detection,analysisOffered:Boolean(analysisUi?.analysisOfferedForTask(options.taskId)),
-      analysis:analysisUi?context=>analysisUi.createPartAnalysis({...context,analyzer:detector,serviceId:body.partAnalysisService}):null});
+      detectionEnabled:host.detection,analysisOffered:Boolean(analysisUi?.analysisOfferedForTask(options.taskId,{allowDraft:host.draftAnalysis})),
+      analysis:analysisUi?context=>analysisUi.createPartAnalysis({...context,analyzer:detector,serviceId:body.partAnalysisService,allowDraft:host.draftAnalysis}):null});
     if(!mounted)methods.unavailable();
   }).catch(()=>methods.unavailable()); // the picture guide and the inspection are untouched
   return methods;
