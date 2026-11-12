@@ -109,10 +109,11 @@ internal class PleosComponentDataSource(
             ComponentFeature.SOC -> value is ComponentValue.Integer
             ComponentFeature.WIPER_FRONT -> value is ComponentValue.Mode && value.value in WIPER_STATES && value.value in (s.capabilities[f]?.values ?: emptySet())
             ComponentFeature.LOW_BEAM, ComponentFeature.HIGH_BEAM -> value is ComponentValue.Mode && value.value in LIGHT_STATES && value.value in (s.capabilities[f]?.values ?: emptySet())
+            ComponentFeature.ODOMETER -> validDistance(value) // NaN, infinity and negatives are never shown
         }
-        val status = when { at < 0 || at > 8_640_000_000_000_000L -> ComponentStatus.ERROR; value == null -> ComponentStatus.UNAVAILABLE; value == ComponentValue.Oil("ERROR") -> ComponentStatus.ERROR; !valid -> ComponentStatus.UNVERIFIED; f == ComponentFeature.SOC || f == ComponentFeature.WIPER_FRONT && value == ComponentValue.Mode("OTHER") -> ComponentStatus.UNVERIFIED; else -> ComponentStatus.SUPPORTED }
+        val status = when { at < 0 || at > 8_640_000_000_000_000L -> ComponentStatus.ERROR; value == null -> ComponentStatus.UNAVAILABLE; value == ComponentValue.Oil("ERROR") -> ComponentStatus.ERROR; !valid -> ComponentStatus.UNVERIFIED; f == ComponentFeature.SOC || f == ComponentFeature.ODOMETER || f == ComponentFeature.WIPER_FRONT && value == ComponentValue.Mode("OTHER") -> ComponentStatus.UNVERIFIED; else -> ComponentStatus.SUPPORTED }
         val observed = valid && status in setOf(ComponentStatus.SUPPORTED, ComponentStatus.UNVERIFIED)
-        change(f) { it.copy(availabilityStatus = status, value = if (observed) value else null, observedAt = if (observed) at else null, reason = if (f == ComponentFeature.SOC && observed) "INTEGER_UNIT_AND_RANGE_UNVERIFIED" else status.name) }
+        change(f) { it.copy(availabilityStatus = status, value = if (observed) value else null, observedAt = if (observed) at else null, reason = if (f == ComponentFeature.SOC && observed) "INTEGER_UNIT_AND_RANGE_UNVERIFIED" else if (f == ComponentFeature.ODOMETER && observed) "FLOAT_UNIT_AND_MEANING_UNVERIFIED" else if (f == ComponentFeature.ODOMETER && value != null && !valid) "INVALID_FLOAT" else status.name) }
     }
     private fun fail(f: ComponentFeature, error: Exception, capability: Boolean) {
         val status = when(error) { is ComponentEnvironmentUnsupported -> ComponentStatus.UNSUPPORTED; is SecurityException -> ComponentStatus.PERMISSION_DENIED; else -> ComponentStatus.ERROR }

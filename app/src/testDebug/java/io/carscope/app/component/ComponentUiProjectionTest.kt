@@ -11,8 +11,8 @@ import java.io.File
 class ComponentUiProjectionTest {
     private val id = "00000000-0000-4000-8000-000000000001"
     private fun sample() = ComponentSnapshot(ComponentFeature.entries.associateWith { f -> ComponentReading(f, ComponentStatus.SUPPORTED,
-        if (f == ComponentFeature.SOC) ComponentStatus.UNVERIFIED else ComponentStatus.SUPPORTED,
-        when (f) { ComponentFeature.WASHER, ComponentFeature.CHARGE_SWITCH, ComponentFeature.CHARGE_PORT -> ComponentValue.Flag(false); ComponentFeature.BRAKE -> ComponentValue.Oil("LOW"); ComponentFeature.SOC -> ComponentValue.Integer(73); ComponentFeature.WIPER_FRONT, ComponentFeature.LOW_BEAM, ComponentFeature.HIGH_BEAM -> ComponentValue.Mode("OFF") },
+        if (f == ComponentFeature.SOC || f == ComponentFeature.ODOMETER) ComponentStatus.UNVERIFIED else ComponentStatus.SUPPORTED,
+        when (f) { ComponentFeature.ODOMETER -> ComponentValue.Decimal(12345.6f); ComponentFeature.WASHER, ComponentFeature.CHARGE_SWITCH, ComponentFeature.CHARGE_PORT -> ComponentValue.Flag(false); ComponentFeature.BRAKE -> ComponentValue.Oil("LOW"); ComponentFeature.SOC -> ComponentValue.Integer(73); ComponentFeature.WIPER_FRONT, ComponentFeature.LOW_BEAM, ComponentFeature.HIGH_BEAM -> ComponentValue.Mode("OFF") },
         1000, "MOCK", "private diagnostic <script>") })
     @Test fun `public SDK access and enum declarations map without numeric ID guessing`() {
         assertTrue(componentCapability(CapabilityConfig(AccessType.READ), listOf(OilLevelState.LOW)).readable)

@@ -10,18 +10,25 @@ internal enum class ComponentFeature(val id: String, val partId: String, val dom
     CHARGE_PORT("ev-charge.port-open", "ev-charge.port", "EvBattery", true),
     WIPER_FRONT("wiper.front.state", "wiper.front", "Wiper", true),
     LOW_BEAM("light.low-beam", "light.low-beam", "Light", true),
-    HIGH_BEAM("light.high-beam", "light.high-beam", "Light", true)
+    HIGH_BEAM("light.high-beam", "light.high-beam", "Light", true),
+    // P14: vehicle level, not a 3D part. The raw Float's unit and meaning are UNVERIFIED: never converted, never used for service intervals.
+    ODOMETER("odometer.distance-driven", "vehicle.odometer", "Odometer", true)
 }
 // Wire v1 stays fixed at four; the new reading is exposed only on its independent channel.
 internal val COMPONENT_UI_V1 = listOf(ComponentFeature.WASHER, ComponentFeature.BRAKE, ComponentFeature.SOC, ComponentFeature.CHARGE_SWITCH)
 internal val VISIBILITY_UI_V1 = listOf(ComponentFeature.WIPER_FRONT, ComponentFeature.LOW_BEAM, ComponentFeature.HIGH_BEAM)
+/** P14: its own channel; the fixed v1 channels above are unchanged. */
+internal val ODOMETER_UI_V1 = listOf(ComponentFeature.ODOMETER)
 internal enum class ComponentStatus { UNVERIFIED, SUPPORTED, UNSUPPORTED, UNAVAILABLE, PERMISSION_DENIED, ERROR, STALE }
 internal sealed interface ComponentValue {
     data class Flag(val value: Boolean) : ComponentValue
     data class Oil(val value: String) : ComponentValue
     data class Integer(val value: Int) : ComponentValue
     data class Mode(val value: String) : ComponentValue
+    /** A raw SDK Float. Accepted only when finite and not negative; its unit is not established. */
+    data class Decimal(val value: Float) : ComponentValue
 }
+internal fun validDistance(value: ComponentValue?) = value is ComponentValue.Decimal && value.value.isFinite() && value.value >= 0f
 internal val OIL_STATES = setOf("LOW", "HIGH", "NORMAL", "ERROR", "CRITICALLY_LOW")
 internal val WIPER_STATES = setOf("OTHER", "OFF", "ON", "SERVICE")
 internal val LIGHT_STATES = setOf("OFF", "ON", "DAYTIME_RUNNING")

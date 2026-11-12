@@ -32,6 +32,7 @@ internal class DebugWebScreen(
     private val componentStatusJson: (() -> String)? = null,
     private val chargePortStatusJson: (() -> String)? = null,
     private val visibilityStatusJson: (() -> String)? = null,
+    private val odometerStatusJson: (() -> String)? = null,
     private val inspectionBridge: ((String) -> String)? = null,
     private val historyChannel: ((String) -> String)? = null,
 ) {
@@ -79,6 +80,11 @@ internal class DebugWebScreen(
                 }
                 val path = url.path.orEmpty().trimStart('/').ifEmpty { "index.html" }
                 if (path.contains("..")) return notFound()
+                if (path == "odometer-status.json") {
+                    if (!DebugWebOrigin.odometerStatusPath(url.toString(), host, request.method) || odometerStatusJson == null) return notFound()
+                    return try { ok("application/json", csp, odometerStatusJson.invoke().byteInputStream(Charsets.UTF_8)) }
+                    catch (_: Exception) { WebResourceResponse("text/plain", "utf-8", 503, "Unavailable", mapOf("Cache-Control" to "no-store", "Content-Security-Policy" to csp), "Unavailable".byteInputStream()) }
+                }
                 if (path == "visibility-status.json") {
                     if (!DebugWebOrigin.visibilityStatusPath(url.toString(), host, request.method) || visibilityStatusJson == null) return notFound()
                     return try { ok("application/json", csp, visibilityStatusJson.invoke().byteInputStream(Charsets.UTF_8)) }
