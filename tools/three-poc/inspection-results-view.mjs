@@ -2,6 +2,9 @@ import {projectInspectionResults} from './inspection-results.mjs';
 import {stateBadgeHtml,recordTimeHtml,progressHtml} from './inspection-state-view.mjs';
 import {sourceText,summaryHtml as tireSummaryHtml} from './tire-inspection-view.mjs';
 import {INSPECTION_AREAS} from './inspection-flow.mjs';
+import {partById} from './inspection-parts.mjs';
+// P11 (PR #121): the same capability table the phone reads. The vehicle never knows the phone's server, so it states support only.
+import {partCapabilities,partMethodSummary} from '../mobile-ar-poc/public/part-capabilities.mjs';
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
 export const RESPONSE_LABELS={damage:'외관 손상',debris:'이물질',wear:'불균일 마모',flapDamage:'충전구 덮개 손상',visibleDamage:'충전구 외관 손상',levelMarking:'외부 액면·표시',leakTrace:'누출 의심 흔적',exteriorDamage:'저장통·캡 외관',caseDamage:'케이스 손상',visibleCorrosion:'보이는 부식',coverDamage:'덮개 손상',visibleContamination:'외부 젖음·오염',heatDamage:'변형·변색',bladeDamage:'고무 손상',visibleDebris:'이물질',armDamage:'암 외관',lensDamage:'렌즈 손상',obstruction:'가림',visibleMoisture:'보이는 물기'};
 export const RESPONSE_ANSWERS={FOUND:'이상 징후 발견',NOT_FOUND:'발견하지 못함',UNABLE:'확인 불가'};
@@ -57,6 +60,11 @@ export function refreshResultRegions(root,{local,mobile,partId}){
   if(key&&!doc.contains(focused))root.querySelector(key)?.focus({preventScroll:true});
   root.scrollTop=scroll;
 }
+/** What a part supports on the phone, for this screen: from part-capabilities.mjs with no host, so never "available". */
+export function vehiclePartCapabilities(partId){const p=partById(partId);return partCapabilities(partId,{taskId:p?.taskId??null});}
+export function partMethodsHtml(partId){const cap=vehiclePartCapabilities(partId);return `<p class="note part-methods" data-ai-plan="${cap.partPlan}">${esc(partMethodSummary(cap))}</p>`;}
+/** A short tag for a part list row: only parts with an AI method get one, so the absence reads plainly. */
+export function aiTagHtml(partId){const cap=vehiclePartCapabilities(partId);return cap.experimental?`<span class="tag ai-tag" data-ai-plan="${cap.partPlan}">AI 실험</span>`:'';}
 const SCHEMA_V1_STATUS={OK:'정상으로 보고',NEEDS_REFILL:'보충 필요로 보고',UNSURE:'확인 불가'};
 const ACTIVE_RECEIVER=new Set(['AUTH_WAITING','AUTH_FAILED','CREATING','QR_READY','QR_EXPIRED','CONNECTED','RESULT_RECEIVED','AWAITING_CONFIRMATION']);
 export const receiverActive=receiver=>!!receiver&&ACTIVE_RECEIVER.has(receiver.phase);
@@ -113,7 +121,7 @@ export function partActionHtml(local,mobile,partId){
   const connected=mobile?.connection==='ADAPTER_CONNECTED',failure=mine&&r.failure?` ${FAILURE_TEXT[r.failure]??''}`:'';
   const raw=row.inspectionId?`<dl class="tire-status"><dt>inspectionId</dt><dd>${esc(row.inspectionId)}</dd><dt>taskId / partId</dt><dd>${esc(row.taskId)} / ${esc(row.partId)}</dd>${['confirmation','proofId','bindingId','syncSessionId','localSessionId','generation','receivedAt','acceptedAt'].map(k=>`<dt>${k}</dt><dd>${esc(row.proof[k])}</dd>`).join('')}<dt>digest</dt><dd>${esc(row.resultDigest)}</dd></dl><pre>${esc(JSON.stringify(row.original,null,2))}</pre>`:'';
   return `<section class="mobile-flow"${mine?` data-mobile-phase="${r.phase}"`:''}><h3>스마트폰으로 점검</h3>
-    ${mine?`<p role="status">${receiverText(r,mobile)}${failure}</p>`:other?'<p role="status">다른 부품의 스마트폰 점검이 진행 중입니다. 그 점검을 취소하면 시작할 수 있습니다.</p>':'<p class="note">스마트폰에서 안내를 보며 점검하고, 결과를 이 화면으로 보냅니다.</p>'}
+    ${mine?`<p role="status">${receiverText(r,mobile)}${failure}</p>`:other?'<p role="status">다른 부품의 스마트폰 점검이 진행 중입니다. 그 점검을 취소하면 시작할 수 있습니다.</p>':`<p class="note">스마트폰에서 안내를 보며 점검하고, 결과를 이 화면으로 보냅니다.</p>${partMethodsHtml(partId)}`}
     ${mine&&r.phase==='QR_READY'?`<div id="mobileQrSlot" class="mobile-qr-slot" role="img" aria-label="스마트폰 점검 초대 QR 표시 영역"></div><p class="note">${r.inviteExpiresAt?`${clockText(r.inviteExpiresAt)}까지 스캔할 수 있습니다. `:''}QR을 다른 사람과 공유하지 마세요.</p>`:''}
     <div class="mobile-actions">${active||other?'':`<button type="button" class="primary" data-action="request-mobile" data-task="${row.taskId}"${connected?'':' disabled'}>스마트폰으로 점검하기</button>`}
     ${(mine||other)&&r.retryAvailable?'<button type="button" class="secondary" data-action="mobile-refresh">다시 확인</button>':''}

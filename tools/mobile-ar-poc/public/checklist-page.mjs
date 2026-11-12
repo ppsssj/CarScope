@@ -69,6 +69,6 @@ export function startChecklistPage({handoff,onComplete=()=>{},onRestart=()=>{},p
   $('manual-start').onclick=()=>run(()=>dispatch({type:'START',camera:false}));$('locate-manual').onclick=()=>run(()=>dispatch({type:'TO_CHECK',manual:true}));$('back').onclick=()=>run(()=>dispatch({type:'BACK'}));
   $('cancel').onclick=()=>{cancelAdvance();camera.stop('확인하는 동안 카메라를 껐어요.');$('cancel-confirm').hidden=false;$('cancel-no').focus();};$('cancel-no').onclick=()=>{$('cancel-confirm').hidden=true;$('cancel').focus();};$('cancel-yes').onclick=()=>dispatch({type:'CANCEL'});
   $('handoff-status').textContent=handoff.source==='qr-sync'?'':'이 휴대폰에만 기록돼요';addEventListener('hashchange',()=>location.reload());
-  offerPartDetection({taskId:task.id,detector:partDetector,introBefore:$('step-intro').querySelector('details.part-guide'),locationAfter:document.querySelector('details.part-location'),onOpen:()=>camera.stop('사진을 고르는 동안 카메라를 껐어요.')});
+  offerPartDetection({taskId:task.id,detector:partDetector,checks:task.checks.map(c=>c.label),scope:copy.scope?copy.scope(task):null,introBefore:$('step-intro').querySelector('details.part-guide'),locationAfter:document.querySelector('details.part-location'),onOpen:()=>camera.stop('사진을 고르는 동안 카메라를 껐어요.')});
   render();window.__checklistInspection={get state(){return state;},get mark(){return camera.mark;}};window[task.hook]=window.__checklistInspection;return {get state(){return state;}};
 }

@@ -39,6 +39,8 @@ const fixtureHtml = `<!doctype html><html lang="ko"><meta charset="utf-8"><div i
 const server = http.createServer(async (req, res) => {
   try {
     if (req.url === '/') { res.setHeader('Content-Type', 'text/html; charset=utf-8'); res.end(fixtureHtml); return; }
+    // P11: the one shared file the results view imports, mapped as serve.mjs maps it.
+    if (req.url === '/mobile-ar-poc/public/part-capabilities.mjs') { res.setHeader('Content-Type', 'text/javascript'); res.end(await readFile(new URL('../../mobile-ar-poc/public/part-capabilities.mjs', import.meta.url))); return; }
     const rel = decodeURIComponent(req.url.slice(1)), base = new URL('../', import.meta.url), file = new URL(rel, base);
     if (!file.href.startsWith(base.href) || !file.pathname.endsWith('.mjs')) throw Error('Denied');
     res.setHeader('Content-Type', 'text/javascript'); res.end(await readFile(file));

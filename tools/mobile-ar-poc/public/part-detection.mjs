@@ -1,6 +1,7 @@
 // P12-E: which bonnet part may ask the hosted model for a candidate, and what counts as one. Pure data and rules, shared by the page and the server.
 // A class name alone proves nothing, so each row keeps why it has its status. The evidence is in docs/p12-e-bonnet-part-detection.md.
 // Nothing here is VERIFIED: P12-F's 26 photos have labels no person reviewed. See docs/p12-f-real-part-detection.md.
+import { aiSupport } from './part-capabilities.mjs';
 export const DETECTION_STATUS = Object.freeze({ UNSUPPORTED: 'UNSUPPORTED', EXPERIMENTAL: 'EXPERIMENTAL', VERIFIED: 'VERIFIED' });
 export const DETECTION_MODEL_ID = 'engine-bay-parts/1';
 export const DETECTION_CONSENT = 'external-ai-v1';
@@ -10,22 +11,23 @@ export const DETECTION_COORDINATES = 'normalized-top-left-xywh';
 export const MIN_CANDIDATE_SCORE = 0.4;
 export const MAX_CANDIDATES = 3;
 
-const row = (partId, taskId, status, modelClass, reason, caution = null) => Object.freeze({ partId, taskId, status, modelClass, reason, caution });
+// The status comes from part-capabilities.mjs, the one table both screens read; this row keeps the class and the evidence.
+const row = (partId, taskId, modelClass, reason, caution = null) => Object.freeze({ partId, taskId, status: aiSupport(partId).detection, modelClass, reason, caution });
 export const PART_DETECTION = Object.freeze({
-  'washer-fluid-cap': row('washer-fluid-cap', 'washer-fluid', DETECTION_STATUS.EXPERIMENTAL, 'Windshield Wiper Fluid',
+  'washer-fluid-cap': row('washer-fluid-cap', 'washer-fluid', 'Windshield Wiper Fluid',
     'P12-F real model, 16 photos, unreviewed labels, score 0.4: 6 of 14 caps found, 0 counted false. Boxes sit on the cap. A radiator cap was also marked on a photo not scored for this part.',
     '캡의 앞유리·분사 모양 표시를 직접 확인해 주세요. 색이나 AI 표시만으로 정하지 마세요.'),
-  'coolant-reservoir': row('coolant-reservoir', 'coolant-reservoir', DETECTION_STATUS.EXPERIMENTAL, 'Engine Coolant Reservoir',
+  'coolant-reservoir': row('coolant-reservoir', 'coolant-reservoir', 'Engine Coolant Reservoir',
     'P12-F real model, 15 photos, unreviewed labels, score 0.4: 4 of 13 tanks found, 2 false. Weakest of the four. Boxes hold the whole tank. No low-conductivity class exists, so that tank may be marked as this.',
     '일반 냉각수인지 저전도 냉각수인지 AI가 구별하지 못해요. 설명서의 표기를 직접 확인해 주세요.'),
-  'lcw-coolant-reservoir': row('lcw-coolant-reservoir', 'lcw-coolant-reservoir', DETECTION_STATUS.UNSUPPORTED, null,
+  'lcw-coolant-reservoir': row('lcw-coolant-reservoir', 'lcw-coolant-reservoir', null,
     'The model has no low-conductivity class. Nothing shows that Inverter or Secondary Coolant Reservoir mean this part, and some cars do not have it.'),
-  'brake-fluid-reservoir': row('brake-fluid-reservoir', 'brake-fluid', DETECTION_STATUS.EXPERIMENTAL, 'Brake Fluid',
+  'brake-fluid-reservoir': row('brake-fluid-reservoir', 'brake-fluid', 'Brake Fluid',
     'P12-F real model, 18 photos, unreviewed labels, score 0.4: 7 of 17 found, 1 false, on the part beside it. Close-ups were missed. Clutch and power steering tanks barely appear in the photos.',
     '다른 액체 통과 헷갈릴 수 있어요. 설명서의 표기와 MIN·MAX 표시를 직접 확인해 주세요.'),
-  'battery-12v': row('battery-12v', 'battery-12v', DETECTION_STATUS.UNSUPPORTED, null,
+  'battery-12v': row('battery-12v', 'battery-12v', null,
     'P12-F: Battery found 6 of 14 and put no box on 12 marked high voltage regions, but only 3 of 9 on electrified cars and no photo shows a high voltage battery. Nothing shows the class means 12V, and that mix-up matters most here.'),
-  'fuse-box': row('fuse-box', 'fuse-box', DETECTION_STATUS.EXPERIMENTAL, 'Fuse Box',
+  'fuse-box': row('fuse-box', 'fuse-box', 'Fuse Box',
     'P12-F real model: only 3 labelled photos, 1 found, and a close-up was missed. Boxes on black lidded boxes that could not be judged. Too few to say. Mix-ups with other electrical parts not measured.',
     '다른 전장 부품일 수 있어요. 설명서의 배치도와 덮개 표시를 직접 확인해 주세요.'),
 });

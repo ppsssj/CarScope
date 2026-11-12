@@ -3,6 +3,7 @@
 // Nothing here is a vehicle safety verdict. NO_VISIBLE_ISSUE_DETECTED means "nothing seen in this photo", not "the part is fine".
 import { CROP_DEFAULTS } from './context-crop.mjs';
 import { offersDetection, PART_DETECTION } from './part-detection.mjs';
+import { aiSupport } from './part-capabilities.mjs';
 
 export const ANALYSIS_CONSENT = 'external-vision-v1';
 export const PROMPT_VERSION = 'p13-a-1';
@@ -20,9 +21,10 @@ export const RESULT_LIMITS = Object.freeze({ textChars: 200, items: 5 });
 // UNSUPPORTED is the server's answer for a part with no profile. A model may not choose it.
 const MODEL_ASSESSMENTS = Object.freeze([ASSESSMENT.NO_VISIBLE_ISSUE_DETECTED, ASSESSMENT.SUSPECTED_ISSUE, ASSESSMENT.INDETERMINATE, ASSESSMENT.WRONG_PART]);
 
-const profile = (partId, status, fields = {}) => Object.freeze({ partId, status, label: fields.label ?? partId, crop: Object.freeze({ ...CROP_DEFAULTS, ...fields.crop }), identify: fields.identify ?? '', check: Object.freeze(fields.check ?? []), never: Object.freeze(fields.never ?? []), issues: Object.freeze(fields.issues ?? []), claims: fields.claims ?? null, reason: fields.reason ?? '' });
+// The status comes from part-capabilities.mjs; a profile keeps the prompt, the limits and the evidence.
+const profile = (partId, fields = {}) => Object.freeze({ partId, status: aiSupport(partId).analysis, label: fields.label ?? partId, crop: Object.freeze({ ...CROP_DEFAULTS, ...fields.crop }), identify: fields.identify ?? '', check: Object.freeze(fields.check ?? []), never: Object.freeze(fields.never ?? []), issues: Object.freeze(fields.issues ?? []), claims: fields.claims ?? null, reason: fields.reason ?? '' });
 export const ANALYSIS_PROFILES = Object.freeze({
-  'washer-fluid-cap': profile('washer-fluid-cap', PROFILE_STATUS.EXPERIMENTAL, {
+  'washer-fluid-cap': profile('washer-fluid-cap', {
     label: '워셔액 주입구',
     // A cap is small: P12-F boxes were about 1.6 times the cap. More surroundings than the default, so the neck and the area around it show.
     crop: { margin: 0.8, minShortSideFraction: 0.35 },
@@ -35,7 +37,7 @@ export const ANALYSIS_PROFILES = Object.freeze({
   // P13-D: the other five bonnet parts. EXPERIMENTAL for analysis means "offered, labelled as an experiment, never evaluated on real photos".
   // It says nothing about detection: battery-12v and lcw-coolant-reservoir stay UNSUPPORTED in PART_DETECTION and are analysed from a region
   // the person marks (ANALYSIS_SUPPORT below).
-  'coolant-reservoir': profile('coolant-reservoir', PROFILE_STATUS.EXPERIMENTAL, {
+  'coolant-reservoir': profile('coolant-reservoir', {
     label: '냉각수 리저버',
     crop: { margin: 0.4 },
     identify: 'the engine (normal) coolant expansion reservoir. Electrified cars may also have a separate low-conductivity coolant reservoir that looks similar. If no printed label or marking shows which reservoir this is, and a low-conductivity reservoir could exist on this car, set partMatch to UNCERTAIN.',
@@ -45,7 +47,7 @@ export const ANALYSIS_PROFILES = Object.freeze({
     claims: /(냉각\s*(계통|시스템|성능))[이은가는]?\s*(정상|양호|문제\s*없)|농도[가는이은]?\s*(\d|적정|정상|충분)/,
     reason: 'P13-D: offered as an experiment. MOCK tests only, no real photo evaluated. Normal and low-conductivity coolant can be confused (P12-F).',
   }),
-  'brake-fluid-reservoir': profile('brake-fluid-reservoir', PROFILE_STATUS.EXPERIMENTAL, {
+  'brake-fluid-reservoir': profile('brake-fluid-reservoir', {
     label: '브레이크액 리저버',
     crop: { margin: 0.5 },
     identify: 'the brake fluid reservoir, usually translucent with MIN and MAX marks and a cap with a brake symbol. Do not confuse it with clutch or power steering reservoirs.',
@@ -55,7 +57,7 @@ export const ANALYSIS_PROFILES = Object.freeze({
     claims: /제동\s*(성능|력|장치)[이은가는]?\s*(정상|양호|충분|문제\s*없)|수분\s*함량[이은]?\s*\d|(브레이크액|오일)\s*(품질|상태)[이은가는]?\s*(정상|양호|좋)/,
     reason: 'P13-D: offered as an experiment. MOCK tests only, no real photo evaluated. Brake related: judged conservatively.',
   }),
-  'fuse-box': profile('fuse-box', PROFILE_STATUS.EXPERIMENTAL, {
+  'fuse-box': profile('fuse-box', {
     label: '퓨즈박스',
     crop: { margin: 0.3 },
     identify: 'the fuse box housing in the bonnet area, usually a black box with a lid, sometimes with a fuse layout printed on the lid. Other electrical boxes look similar: without such a marking, set partMatch to UNCERTAIN.',
@@ -65,7 +67,7 @@ export const ANALYSIS_PROFILES = Object.freeze({
     claims: /퓨즈[가는이은]?\s*(정상|모두\s*정상|끊어지지\s*않)|전기\s*(계통|장치)[이은가는]?\s*(정상|양호|문제\s*없)/,
     reason: 'P13-D: offered as an experiment. MOCK tests only, no real photo evaluated. Only 3 labelled photos in P12-F.',
   }),
-  'battery-12v': profile('battery-12v', PROFILE_STATUS.EXPERIMENTAL, {
+  'battery-12v': profile('battery-12v', {
     label: '12V 보조 배터리',
     crop: { margin: 0.25, minShortSideFraction: 0.35 },
     identify: 'the 12V auxiliary (low-voltage) battery. Electrified cars also have high-voltage parts, with orange cables and high-voltage warning labels: these are never the 12V battery. If a label or the terminals do not show it is the 12V battery, set partMatch to UNCERTAIN. A person marked this region; no detector proposed it.',
@@ -75,7 +77,7 @@ export const ANALYSIS_PROFILES = Object.freeze({
     claims: /전압[은이가는]?\s*(약\s*)?\d|\d+(\.\d+)?\s*V(?![A-Za-z])\s*(로|으로|입니다|이에요|정도)|충전\s*(상태|량|율)[은이가는]?\s*(\d|충분|양호|정상|낮|높)|수명[이은가는]?\s*(\d|충분|남아|다\s*되)|탈거|단자를\s*(풀|조이|조여|만지|닦)|점프\s*(시동|스타트)/,
     reason: 'P13-D: limited analysis from a marked region. Detection stays UNSUPPORTED (P12-F). MOCK tests only. A mix-up with high-voltage parts matters most here.',
   }),
-  'lcw-coolant-reservoir': profile('lcw-coolant-reservoir', PROFILE_STATUS.EXPERIMENTAL, {
+  'lcw-coolant-reservoir': profile('lcw-coolant-reservoir', {
     label: '저전도 냉각수 리저버',
     crop: { margin: 0.4 },
     identify: 'the low-conductivity coolant reservoir of an electrified car. Identify it only from a printed label or marking that says so; never from colour, shape or position. Without such a label, set partMatch to UNCERTAIN. A person marked this region; no detector proposed it.',

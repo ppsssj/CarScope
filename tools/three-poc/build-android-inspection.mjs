@@ -25,6 +25,9 @@ cpSync(join(HERE, 'charge-port-model.mjs'), join(OUT, 'charge-port-model.mjs'));
 cpSync(join(HERE, 'visibility-status.mjs'), join(OUT, 'visibility-status.mjs'));
 for(const file of ['inspection-parts.mjs','part-labels.mjs','inspection-toast.mjs','android-native-inspection-adapter.mjs','native-bridge-diagnostics.mjs','mobile-result-contract.mjs','native-inspection-results.mjs','inspection-results.mjs','inspection-results-view.mjs','inspection-history-contract.mjs','inspection-history-store.mjs','inspection-history-view.mjs','inspection-history-client.mjs','native-history-provider.mjs'])cpSync(join(HERE,file),join(OUT,file));
 for(const file of ['visibility-parts.mjs','visibility-targets.mjs'])cpSync(join(HERE,file),join(OUT,file));
+// P11: the phone's part capability table at the same relative path the results view imports (../mobile-ar-poc/public/).
+mkdirSync(join(OUT,'mobile-ar-poc','public'),{recursive:true});
+cpSync(join(HERE,'..','mobile-ar-poc','public','part-capabilities.mjs'),join(OUT,'mobile-ar-poc','public','part-capabilities.mjs'));
 
 // Page: the P3-A4 document plus one script tag for the Android shell.
 const source = readFileSync(join(HERE, "inspect.html"), "utf8");

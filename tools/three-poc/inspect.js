@@ -21,7 +21,7 @@ import {targetForPart,targetForTask} from './mobile-result-contract.mjs';
 import {partById,partLabel} from './inspection-parts.mjs';
 import {createNativeInspectionResults} from './native-inspection-results.mjs';
 import {projectInspectionResults} from './inspection-results.mjs';
-import {partResultHtml,partActionHtml,refreshResultRegions,areaResultText,qrSlotReport,QR_SLOT_NONE} from './inspection-results-view.mjs';
+import {partResultHtml,partActionHtml,refreshResultRegions,areaResultText,qrSlotReport,QR_SLOT_NONE,partMethodsHtml,aiTagHtml} from './inspection-results-view.mjs';
 import {createToast,createMobileRequestNotifier} from './inspection-toast.mjs';
 import {createInspectionHistoryStore} from './inspection-history-store.mjs';
 import {EMPTY_HISTORY_FILTERS} from './inspection-history-contract.mjs';
@@ -389,7 +389,7 @@ const sessionRows = () => projectInspectionResults(userInspection, mobileResults
 // P10 PR #2: one row rule for every part list. A part with a result shows its result badge; a part without one says it
 // only shows the shape. Cyan stays the selection role (aria-pressed), never a status.
 const item = (x, action) => ['available', 'preview'].includes(x.status)||targetForPart(x.id)
-  ? `<li><button type="button" class="item available ${x.status === 'preview' ? 'preview' : ''}" aria-pressed="${state.component === x.id}" data-action="${x.status==='planned'?'result-detail':action}" data-id="${x.id}">${esc(x.label)}${targetForPart(x.id)?stateBadgeHtml(sessionRows().find(r=>r.partId===x.id)):'<span class="tag">형상 보기</span>'}${x.status==='planned'?'<small>3D 형상 없음 · 결과만 확인</small>':''}</button></li>`
+  ? `<li><button type="button" class="item available ${x.status === 'preview' ? 'preview' : ''}" aria-pressed="${state.component === x.id}" data-action="${x.status==='planned'?'result-detail':action}" data-id="${x.id}">${esc(x.label)}${aiTagHtml(x.id)}${targetForPart(x.id)?stateBadgeHtml(sessionRows().find(r=>r.partId===x.id)):'<span class="tag">형상 보기</span>'}${x.status==='planned'?'<small>3D 형상 없음 · 결과만 확인</small>':''}</button></li>`
   : `<li><div class="item" aria-disabled="true">${esc(x.label)}<span class="tag">준비 중</span></div></li>`;
 const areaAvailable = (id) => id === 'ev-charge' ? M.chargeInfo.status === 'AVAILABLE' : id === 'wipers' ? M.wiperInfo.status === 'AVAILABLE' : id === 'lights' ? M.lights.size === 4 : true;
 /** Overview card of one area: the same size and border for all, results counted from the 17-part projection. */
@@ -453,13 +453,13 @@ function panelContents() {
     case S.CHARGE_PORT_PREVIEW:
       return detailScreen({eyebrow:'EV 충전구',title:esc(partLabel(state.component)),part:state.component,
         note:modelNote(state.component,'차량 오른쪽 뒤의 충전구를 추정한 형상입니다. 실제 위치·치수와 일치하는지 검증하지 않았고, 열림 상태를 나타내지 않습니다.'),
-        intro:state.component==='ev-charge.flap'?`<p>충전구 덮개는 따로 기록하지 않고 ${esc(partLabel('ev-charge.port'))} 점검의 덮개 손상 항목에 포함됩니다.</p>`:'',
+        intro:state.component==='ev-charge.flap'?`<p>충전구 덮개는 따로 기록하지 않고 ${esc(partLabel('ev-charge.port'))} 점검의 덮개 손상 항목에 포함됩니다.</p>${partMethodsHtml('ev-charge.flap')}`:'',
         list:listHtml('충전구 부품',areaOf(state).components.map(c=>item(c,'charge-part')).join('')),
         sdk:sdkHtml('chargePortStatusContent',chargePortStatusHtml()+'<p class="note">SDK true/false는 보고값이며 형상을 열거나 회전시키지 않습니다.</p>')});
     case S.EV_BATTERY_PREVIEW:
       return detailScreen({eyebrow:'EV 배터리',title:esc(partLabel(EV_BATTERY_ID)),
         note:modelNote(EV_BATTERY_ID,'두 차축 사이 차체 아래의 외함을 나타낸 개략 형상입니다. 치수와 배치는 검증하지 않았습니다.'),
-        intro:'<p>12V 보조 배터리와 다른 부품입니다. 이 부위는 점검 결과를 기록하지 않고 형상만 보여 줍니다.</p><p class="note">아래쪽이 보이도록 바닥 표시를 숨겼습니다. 차량 아래로 들어가거나 배터리를 열지 마세요.</p>',
+        intro:'<p>12V 보조 배터리와 다른 부품입니다. 이 부위는 점검 결과를 기록하지 않고 형상만 보여 줍니다.</p>'+partMethodsHtml(EV_BATTERY_ID)+'<p class="note">아래쪽이 보이도록 바닥 표시를 숨겼습니다. 차량 아래로 들어가거나 배터리를 열지 마세요.</p>',
         sdk:sdkHtml('componentStatusContent',componentStatusHtml(state.component))+'<p class="note">충전 상태 값은 단위·범위를 검증하지 않은 원시 값이며 충전 진행이나 안전 판정이 아닙니다.</p>'});
     case S.INSPECTION_SUMMARY: return productSummaryHtml(userInspection,mobileResults.snapshot);
     case S.TIRE_SUMMARY:

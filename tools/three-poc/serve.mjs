@@ -17,6 +17,8 @@ const ROOTS = [
   ["/car.glb", join(HERE, "..", "anatomy-car", "build", "geometry", "car.glb")],
   // P2-A6: the converted third-party IONIQ 5 GLB lives outside the repo; served only when configured.
   ["/ioniq5-asset/parts.mjs", join(HERE, "..", "ioniq5-asset", "parts.mjs")],
+  // P11: the phone's part capability table, read by the results view at its repository path (pure data, no imports).
+  ["/mobile-ar-poc/public/part-capabilities.mjs", join(HERE, "..", "mobile-ar-poc", "public", "part-capabilities.mjs")],
   ...(process.env.CARSCOPE_IONIQ5_GLB ? [["/external/ioniq5.glb", resolve(process.env.CARSCOPE_IONIQ5_GLB)]] : []),
   // P2-A7: model-derived SVG output, also outside the repo.
   ...(process.env.CARSCOPE_IONIQ5_SVG_DIR ? [["/external/ioniq5-svg/", resolve(process.env.CARSCOPE_IONIQ5_SVG_DIR)]] : []),

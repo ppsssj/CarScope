@@ -13,6 +13,7 @@ test('Android debug package follows the new inspection builder and every relativ
   cpSync(join(repo,'tools/ioniq5-asset'),join(fixtureTools,'ioniq5-asset'),{recursive:true});
   mkdirSync(join(fixtureTools,'mobile-ar-poc/public'),{recursive:true});
   cpSync(join(repo,'tools/mobile-ar-poc/public/handoff.mjs'),join(fixtureTools,'mobile-ar-poc/public/handoff.mjs'));
+  cpSync(join(repo,'tools/mobile-ar-poc/public/part-capabilities.mjs'),join(fixtureTools,'mobile-ar-poc/public/part-capabilities.mjs'));
   const r=spawnSync(process.execPath,['tools/three-poc/build-android-inspection.mjs'],{cwd:fixture,encoding:'utf8',env:{...process.env,CARSCOPE_QR_AR_BASE_URL:''}});
   assert.equal(r.status,0,r.stderr);
   const out=join(fixture,'app/src/debug/assets/inspection');
@@ -33,6 +34,10 @@ test('Android debug package follows the new inspection builder and every relativ
   for(const name of readdirSync(join(out,'ioniq5-asset'))) assert.equal(readFileSync(join(out,'ioniq5-asset',name),'utf8'),readFileSync(join(repo,'tools/ioniq5-asset',name),'utf8'),name);
   assert.equal(readFileSync(join(out,'inspect.js'),'utf8'),readFileSync(join(repo,'tools/three-poc/inspect.js'),'utf8'));
   assert.ok(!walk(out).some(f=>f.endsWith('.glb')));
+  // P11: the phone's capability table, unchanged, at the path the results view imports. Nothing else of the phone page is packaged.
+  assert.equal(readFileSync(join(out,'mobile-ar-poc/public/part-capabilities.mjs'),'utf8'),readFileSync(join(repo,'tools/mobile-ar-poc/public/part-capabilities.mjs'),'utf8'));
+  assert.deepEqual(readdirSync(join(out,'mobile-ar-poc/public')),['part-capabilities.mjs']);
+  for(const spec of readFileSync(join(out,'inspection-results-view.mjs'),'utf8').matchAll(/from\s*'(\.{1,2}\/[^']+)'/g))assert.ok(existsSync(join(out,new URL(spec[1],'https://carscope-inspection.invalid/inspection-results-view.mjs').pathname)),`packaged import ${spec[1]} resolves as the WebView resolves it`);
   for(const name of ['android-native-inspection-adapter.mjs','native-bridge-diagnostics.mjs','mobile-result-contract.mjs','native-inspection-results.mjs','inspection-results.mjs','inspection-results-view.mjs'])assert.equal(readFileSync(join(out,name),'utf8'),readFileSync(join(repo,'tools/three-poc',name),'utf8'));
   assert.ok(!walk(out).some(f=>/fixture|test[\\/]/.test(f.slice(out.length))),'synthetic receiver authorities never enter Android assets');
   assert.ok(readFileSync(join(out,'inspect.js'),'utf8').includes('createNativeInspectionResults({adapter:createAndroidNativeInspectionAdapter()})'),'production composition uses the fixed Android adapter only');

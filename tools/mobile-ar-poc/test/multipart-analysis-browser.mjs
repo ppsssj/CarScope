@@ -89,7 +89,9 @@ try {
       const before = await inspectionState(page);
       await page.waitForFunction(() => window.__partDetection);
       assert.equal(await page.evaluate(() => window.__partDetection.manualOnly), false, part.partId);
-      assert.equal(await page.locator('#part-detect-open').innerText(), 'AI로 부품 위치 찾기 · 실험');
+      assert.equal(await page.locator('#part-detect-open').innerText(), 'AI로 외관 살펴보기 · 실험');
+      assert.deepEqual(await page.evaluate(() => [document.getElementById('inspection-methods').dataset.aiState, document.getElementById('inspection-methods').dataset.plan]), ['AVAILABLE', 'DETECT_AND_ANALYZE'], part.partId);
+      assert.ok(await page.evaluate(() => document.getElementById('inspection-methods').contains(document.getElementById('part-detect-open'))), 'the AI entry sits in the methods card');
       await page.locator('#part-detect-open').click(); await waitD(page, 'CONSENT');
       await page.locator('#part-detect-agree').check();
       await page.locator('#part-detect-library-input').setInputFiles(PICTURE);
@@ -125,7 +127,9 @@ try {
       const before = await inspectionState(page);
       await page.waitForFunction(() => window.__partDetection);
       assert.equal(await page.evaluate(() => window.__partDetection.manualOnly), true, part.partId);
-      assert.equal(await page.locator('#part-detect-open').innerText(), 'AI로 부품 상태 보기 · 실험');
+      assert.equal(await page.locator('#part-detect-open').innerText(), '사진에서 부품 직접 지정하기');
+      assert.deepEqual(await page.evaluate(() => [document.getElementById('inspection-methods').dataset.aiState, document.getElementById('inspection-methods').dataset.plan]), ['AVAILABLE', 'MARK_AND_ANALYZE'], part.partId);
+      assert.match(await page.locator('#inspection-methods-ai-note').innerText(), /자동으로 위치를 찾지 않아요/);
       await page.locator('#part-detect-open').click(); await waitD(page, 'CONSENT');
       assert.equal(await page.locator('#part-detect-consent #part-detect-agree').count(), 0, 'no detector consent is asked: the checkbox is not even shown');
       assert.match(await page.locator('#part-detect-consent').innerText(), /어디에도 보내지 않아요/);
