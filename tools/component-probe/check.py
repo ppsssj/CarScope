@@ -115,10 +115,13 @@ def boundary():
                 assert 'assets/inspection/ev-charge-status.mjs' in archive.namelist()
                 assert 'assets/inspection/visibility-status.mjs' in archive.namelist()
                 assert 'assets/inspection/odometer-status.mjs' in archive.namelist()
+                assert 'assets/inspection/external-vehicle-data.mjs' in archive.namelist()  # P14-B: MOCK-only block, never turned on by the shell
             else:
                 assert b'visibility-status.json' not in dex
                 assert b'odometer-status.json' not in dex
                 assert not any('odometer-status' in n for n in archive.namelist())
+                assert not any('external-vehicle-data' in n for n in archive.namelist())
+                assert b'kr-ccapi.hyundai.com' not in dex and b'api.pleos.ai' not in dex
                 assert not any('visibility-status' in n for n in archive.namelist())
                 assert b'ev-charge-status.json' not in dex
                 assert not any('ev-charge-status' in n for n in archive.namelist())

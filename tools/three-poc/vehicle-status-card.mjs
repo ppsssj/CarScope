@@ -5,6 +5,8 @@
 // Each source keeps its own status, time and origin. None replaces another, and a disagreement is shown, never resolved.
 // Raw values, capability codes and uncertain diagnostics stay in the existing developer panel.
 import { partMethodSummary, PLAN } from '../mobile-ar-poc/public/part-capabilities.mjs';
+// P14-B: an optional fourth block, EXTERNAL_REST (or MOCK), only when the page was given external data. Default: absent.
+import { externalVehicleDataHtml } from './external-vehicle-data.mjs';
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 const clock = at => { const d = new Date(at); return Number.isNaN(d.getTime()) ? null : d.toLocaleTimeString('ko-KR'); };
 
@@ -86,8 +88,9 @@ const USER_SOURCE = Object.freeze({ MOBILE: '스마트폰 점검', USER_REPORTED
  * @param sdk      { component, charge, visibility } store states ({ connectionStatus, readings }) and tire: tireStatus.forTire(id) or null
  * @param cap      vehiclePartCapabilities(partId) (no host: support only, never "available")
  * @param row      the part's row of projectInspectionResults, or null for a part with no inspection
+ * @param external validated external-vehicle-data projection, or null (default: no external block at all)
  */
-export function vehicleStatusCardHtml(partId, { sdk, cap, row }) {
+export function vehicleStatusCardHtml(partId, { sdk, cap, row, external = null }) {
   const plan = SDK_FOR_PART[partId];
   let sdkHtml, sdkRows = [], connection = null;
   if (!plan) sdkHtml = '<p>이 부품은 차량 SDK 데이터를 연동하지 않았어요. 직접 점검 결과로 대신하지 않아요.</p>';
@@ -109,6 +112,7 @@ export function vehicleStatusCardHtml(partId, { sdk, cap, row }) {
   return `<section class="vehicle-status-card" aria-label="부품 상태 한눈에 보기" data-part="${esc(partId)}">
     <h3>부품 상태 한눈에 보기</h3>
     <div class="vehicle-status-source" data-source="PLEOS"><h4>차량 SDK 데이터</h4>${sdkHtml}</div>
+    ${externalVehicleDataHtml(partId, external)}
     <div class="vehicle-status-source" data-source="AI_EXPERIMENT"><h4>AI 외관 분석 · 실험</h4>${aiHtml}</div>
     <div class="vehicle-status-source" data-source="${row?.source === 'MOBILE' ? 'MOBILE' : 'USER_REPORTED'}"><h4>직접 점검</h4>${userHtml}</div>
     ${conflict ? `<p class="result-error" role="status" data-conflict="true">${conflict}</p>` : ''}
@@ -117,12 +121,13 @@ export function vehicleStatusCardHtml(partId, { sdk, cap, row }) {
 }
 
 /** The vehicle-level Odometer, for the summary. The raw Float stays in the developer details; nothing is converted or scheduled. */
-export function odometerCardHtml(reading, connectionStatus) {
+export function odometerCardHtml(reading, connectionStatus, external = null) {
   const w = sdkRowWords({ ...reading, featureId: 'odometer.distance-driven' }, connectionStatus);
   const reported = reading.value !== null && ['UNVERIFIED', 'STALE'].includes(reading.availabilityStatus) && connectionStatus === 'ATTACHED';
   const text = reported ? `${reading.availabilityStatus === 'STALE' ? '오래된 보고예요(5초 넘게 새 보고 없음). ' : ''}차량이 주행거리 값을 보고했어요. 단위와 의미를 확인하지 않아 숫자로 보여 주지 않고, 정비 주기도 계산하지 않아요.` : w.text;
   return `<section class="vehicle-status-card" aria-label="차량 정보" data-part="vehicle.odometer"><h3>차량 정보</h3>
     <ul class="vehicle-status-list"><li data-sdk-feature="odometer.distance-driven" data-sdk-state="${reported ? reading.availabilityStatus : w.state}"><strong>주행거리</strong> ${esc(text)}${w.at ? ` <small>마지막 관측 ${esc(w.at)}</small>` : ''}${w.source ? ` <small>출처 ${esc(w.source)}</small>` : ''}</li></ul>
+    ${externalVehicleDataHtml('vehicle.odometer', external)}
     <details class="dev-info"><summary>개발자 정보</summary><dl class="tire-status"><dt>Capability</dt><dd>${esc(reading.capabilityStatus)}</dd><dt>Availability</dt><dd>${esc(reading.availabilityStatus)}</dd><dt>SDK 원시 Float</dt><dd>${reading.value === null ? '없음' : esc(reading.value)} · 단위 미확인</dd><dt>관측 시각(ms)</dt><dd>${reading.observedAt ?? '없음'}</dd></dl></details>
   </section>`;
 }

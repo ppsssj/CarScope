@@ -1,0 +1,14 @@
+{
+  "name": "carscope-vehicle-data-api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "P14-B external connected-car data adapters (Hyundai Developers, Pleos Vehicle Data API). Server-side library only, DISABLED by default, MOCK-tested; no entrypoint and no route.",
+  "engines": {
+    "node": ">=22.16.0"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.mjs",
+    "check": "node --check src/model.mjs && node --check src/strict-json.mjs && node --check src/http.mjs && node --check src/credentials.mjs && node --check src/normalizer.mjs && node --check src/providers/hyundai-developers.mjs && node --check src/providers/pleos-vehicle-data.mjs && node --check src/availability.mjs && node --check src/service.mjs && node --check src/projection.mjs && node --check src/fixture.mjs"
+  }
+}
