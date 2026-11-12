@@ -164,17 +164,22 @@ try {
   pass('six QR tasks: capture/manual region, local crop, explicit OpenAI consent, result acknowledgement; no Roboflow; existing submit/Accept/history preserved');
 
   { // P13-G: the eleven exterior parts. Without the operator's draft approval the experiment refuses them; with it, the same QR flow.
-    assert.equal((await fetch(host.url + '/healthz').then(r => r.json())).draftProfiles, 'OFF');
-    const tire = await host.api('/v1/sessions', { method:'POST', token:host.credential, body:{ taskId:'tire.front-left' } }); assert.equal(tire.status, 201);
-    const claim = await fetch(host.url + '/v1/claim', { method:'POST', headers:{ Authorization:'Bearer ' + tire.data.inviteToken } }).then(r => r.json());
-    const refused = await fetch(host.url + '/v1/part-analyses/tire.front-left', { method:'POST', body:Buffer.from([0xff, 0xd8, 0xff, 0xd9]), headers:{ Authorization:'Bearer ' + claim.submitToken, 'Content-Type':'image/jpeg',
+    // A fresh host: the six analyses above used this client's real per-minute analysis rate (6), which is kept as it is.
+    const plain = await service();
+    assert.equal((await fetch(plain.url + '/healthz').then(r => r.json())).draftProfiles, 'OFF');
+    const tire = await plain.api('/v1/sessions', { method:'POST', token:plain.credential, body:{ taskId:'tire.front-left' } }); assert.equal(tire.status, 201);
+    const claim = await fetch(plain.url + '/v1/claim', { method:'POST', headers:{ Authorization:'Bearer ' + tire.data.inviteToken } }).then(r => r.json());
+    const refused = await fetch(plain.url + '/v1/part-analyses/tire.front-left', { method:'POST', body:Buffer.from([0xff, 0xd8, 0xff, 0xd9]), headers:{ Authorization:'Bearer ' + claim.submitToken, 'Content-Type':'image/jpeg',
       'X-CarScope-External-Processing':'external-vision-v1', 'X-CarScope-Target-Box':'0.300000,0.300000,0.400000,0.400000', 'X-CarScope-Region-Source':'MANUAL' } });
     assert.equal(refused.status, 404, 'a draft is refused without the operator approval, whatever the phone sends');
-    const draftHost = await service({ allowDraftProfiles: true });
-    assert.equal((await fetch(draftHost.url + '/healthz').then(r => r.json())).draftProfiles, 'OPERATOR_APPROVED');
+    assert.equal(plain.mock.calls.length, 0);
     const EXTERIOR = ['tire.front-left', 'tire.front-right', 'tire.rear-left', 'tire.rear-right', 'wiper.front.left', 'wiper.front.right',
       'light-low-beam-left-0', 'light-low-beam-right-0', 'light-high-beam-left-0', 'light-high-beam-right-0', 'ev-charge.port'];
-    for (const part of EXTERIOR) {
+    // Six analyses per client per minute is the deployed rate: each approved host takes at most six parts.
+    for (const group of [EXTERIOR.slice(0, 6), EXTERIOR.slice(6)]) {
+    const draftHost = await service({ allowDraftProfiles: true });
+    assert.equal((await fetch(draftHost.url + '/healthz').then(r => r.json())).draftProfiles, 'OPERATOR_APPROVED');
+    for (const part of group) {
       const { page, context, log, session } = await phone(draftHost, part), before = await state(page), calls = draftHost.mock.calls.length;
       await crop(page); assert.equal(draftHost.mock.calls.length, calls, `${part}: the crop stays on the phone before consent`);
       await send(page); await waitAnalysis(page, 'RESULT');
@@ -189,7 +194,8 @@ try {
       assert.equal((await draftHost.api('/v1/sessions/' + session.sessionId, { token:session.receiverToken })).data.sessionState, 'CLAIMED', `${part}: nothing submitted`);
       assert.deepEqual(log.errors, []); await context.close();
     }
-    assert.equal(Number((await draftHost.pool.query("SELECT coalesce(max(calls),0) AS n FROM cs_vision_calls WHERE provider = 'openai'")).rows[0].n), EXTERIOR.length, 'each analysis counted once in the durable budget');
+    assert.equal(Number((await draftHost.pool.query("SELECT coalesce(max(calls),0) AS n FROM cs_vision_calls WHERE provider = 'openai'")).rows[0].n), group.length, 'each analysis counted once in the durable budget');
+    }
     pass('P13-G: the experiment refuses the 11 exterior drafts without the operator approval; with it, each runs QR claim, local crop, consent, the real adapter (MOCK outbound, exterior prompt, store:false), MANUAL region only, budget counted, nothing submitted');
   }
 

@@ -22,6 +22,8 @@ export const ROUTES = Object.freeze({
   '/mobile-ar-poc/public/context-crop.mjs': path.join(mobile, 'context-crop.mjs'),
   // P13-D: part-analysis.mjs reads the detection table to tell detected parts from hand-marked ones.
   '/mobile-ar-poc/public/part-detection.mjs': path.join(mobile, 'part-detection.mjs'),
+  // P11/P13-G: both read their status from the one capability table (pure data, no imports).
+  '/mobile-ar-poc/public/part-capabilities.mjs': path.join(mobile, 'part-capabilities.mjs'),
 });
 const MAX_BODY = 64 * 1024;
 

@@ -95,6 +95,10 @@ DRAFT를 EXPERIMENTAL로 올리려면 아래 「실제 사진 정확도 평가 �
 | 점검 방법 카드: 승인 없음/승인/AI 꺼짐/탐지만/QR 없음 | PASS | `inspection-methods-browser.mjs` |
 | QR v2 + PostgreSQL + 실험 진입점 + 실제 OpenAI 어댑터(MOCK outbound) 11개 | **로컬 NOT_RUN** (Docker 데몬 꺼짐) | `vision-render-browser.mjs`에 추가함. CI "Real QR and PostgreSQL with MOCK Roboflow + OpenAI"가 실행한다 |
 
+CI 1차 실행에서 두 job이 실패했고, 둘 다 고쳤다:
+- **PostgreSQL E2E:** 새로 넣은 검사가 앞선 보닛 6회 분석과 같은 호스트를 써서, 실제 배포 한도(클라이언트당 분당 6회)에 걸려 404 대신 429가 나왔다. 한도는 바꾸지 않았다. 거부 검사는 새 호스트에서 하고, 승인 호스트 두 개에 6개·5개씩 나눴다.
+- **Vision PoC CI의 washer truth 페이지:** PR #121부터 `part-detection.mjs`/`part-analysis.mjs`가 `part-capabilities.mjs`를 import하는데, 이 검수 페이지 서버의 허용 목록에 그 파일이 없어 페이지가 뜨지 않았다(404). #121에서는 경로 필터 때문에 이 job이 돌지 않아 드러나지 않았고, 이번 PR이 `vision-poc`를 건드리며 실행됐다. 허용 목록에 공유 파일 하나를 추가했다.
+
 MOCK 분석 성공은 실제 OpenAI 분석 성공이 아니다. 실제 OpenAI·Roboflow 호출은 0회이다.
 
 ## 실제 사진 정확도 평가 계획 (미실행)
