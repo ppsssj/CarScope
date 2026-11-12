@@ -21,7 +21,10 @@ import {targetForPart,targetForTask} from './mobile-result-contract.mjs';
 import {partById,partLabel} from './inspection-parts.mjs';
 import {createNativeInspectionResults} from './native-inspection-results.mjs';
 import {projectInspectionResults} from './inspection-results.mjs';
-import {partResultHtml,partActionHtml,refreshResultRegions,areaResultText,qrSlotReport,QR_SLOT_NONE,partMethodsHtml,aiTagHtml} from './inspection-results-view.mjs';
+import {partResultHtml,partActionHtml,refreshResultRegions,areaResultText,qrSlotReport,QR_SLOT_NONE,partMethodsHtml,aiTagHtml,vehiclePartCapabilities} from './inspection-results-view.mjs';
+// P14: read-only status card per part and the vehicle-level Odometer, projected from the existing Native caches.
+import { vehicleStatusCardHtml, odometerCardHtml } from './vehicle-status-card.mjs';
+import { odometerStatus, odometerReading, enableOdometerStatus } from './odometer-status.mjs';
 import {createToast,createMobileRequestNotifier} from './inspection-toast.mjs';
 import {createInspectionHistoryStore} from './inspection-history-store.mjs';
 import {EMPTY_HISTORY_FILTERS} from './inspection-history-contract.mjs';
@@ -433,6 +436,7 @@ function panelContents() {
       const target=targetForPart(state.component),available=!!targetMeshes(state.component)?.length;
       return `<div class="eyebrow">점검 결과</div><h2>${esc(target.label)}</h2>
         <section class="source-zone" data-source-zone="SESSION"><span class="zone-tag">이번 점검 · 이 화면</span><div id="mobilePartResults">${partResultHtml(userInspection,mobileResults.snapshot,state.component)}</div></section>
+        ${vehicleCardRegion(state.component)}
         ${available?modelNote(state.component,'3D 위치와 형상은 참조 모델 기준이며 실제 차량과 일치하는지 검증하지 않았습니다.'):'<p class="model-note"><span class="badge">3D 형상 없음</span> 이 부품은 3D 형상이 없거나 위치를 검증하지 못해 결과만 확인합니다. 대신할 형상을 만들지 않습니다.</p>'}
         ${target.area==='lights'?`<p>${LIGHT_SCOPE_TEXT}</p>`:''}
         <div id="mobilePartAction">${partActionHtml(userInspection,mobileResults.snapshot,state.component)}</div>
@@ -453,15 +457,15 @@ function panelContents() {
     case S.CHARGE_PORT_PREVIEW:
       return detailScreen({eyebrow:'EV 충전구',title:esc(partLabel(state.component)),part:state.component,
         note:modelNote(state.component,'차량 오른쪽 뒤의 충전구를 추정한 형상입니다. 실제 위치·치수와 일치하는지 검증하지 않았고, 열림 상태를 나타내지 않습니다.'),
-        intro:state.component==='ev-charge.flap'?`<p>충전구 덮개는 따로 기록하지 않고 ${esc(partLabel('ev-charge.port'))} 점검의 덮개 손상 항목에 포함됩니다.</p>${partMethodsHtml('ev-charge.flap')}`:'',
+        intro:state.component==='ev-charge.flap'?`<p>충전구 덮개는 따로 기록하지 않고 ${esc(partLabel('ev-charge.port'))} 점검의 덮개 손상 항목에 포함됩니다.</p>${partMethodsHtml('ev-charge.flap')}${vehicleCardRegion('ev-charge.flap')}`:'',
         list:listHtml('충전구 부품',areaOf(state).components.map(c=>item(c,'charge-part')).join('')),
         sdk:sdkHtml('chargePortStatusContent',chargePortStatusHtml()+'<p class="note">SDK true/false는 보고값이며 형상을 열거나 회전시키지 않습니다.</p>')});
     case S.EV_BATTERY_PREVIEW:
       return detailScreen({eyebrow:'EV 배터리',title:esc(partLabel(EV_BATTERY_ID)),
         note:modelNote(EV_BATTERY_ID,'두 차축 사이 차체 아래의 외함을 나타낸 개략 형상입니다. 치수와 배치는 검증하지 않았습니다.'),
-        intro:'<p>12V 보조 배터리와 다른 부품입니다. 이 부위는 점검 결과를 기록하지 않고 형상만 보여 줍니다.</p>'+partMethodsHtml(EV_BATTERY_ID)+'<p class="note">아래쪽이 보이도록 바닥 표시를 숨겼습니다. 차량 아래로 들어가거나 배터리를 열지 마세요.</p>',
+        intro:'<p>12V 보조 배터리와 다른 부품입니다. 이 부위는 점검 결과를 기록하지 않고 형상만 보여 줍니다.</p>'+partMethodsHtml(EV_BATTERY_ID)+vehicleCardRegion(EV_BATTERY_ID)+'<p class="note">아래쪽이 보이도록 바닥 표시를 숨겼습니다. 차량 아래로 들어가거나 배터리를 열지 마세요.</p>',
         sdk:sdkHtml('componentStatusContent',componentStatusHtml(state.component))+'<p class="note">충전 상태 값은 단위·범위를 검증하지 않은 원시 값이며 충전 진행이나 안전 판정이 아닙니다.</p>'});
-    case S.INSPECTION_SUMMARY: return productSummaryHtml(userInspection,mobileResults.snapshot);
+    case S.INSPECTION_SUMMARY: return productSummaryHtml(userInspection,mobileResults.snapshot)+`<div id="odometerCard">${odometerCardHtml(odometerReading(),odometerStatus.state.connectionStatus)}</div>`;
     case S.TIRE_SUMMARY:
       return `<div class="eyebrow">타이어</div><h2>네 타이어 요약</h2><div id="tireSummary">${summaryHtml(userInspection,mobileResults.snapshot)}</div>${actionsHtml()}`;
     case S.TIRE_SELECTION:
@@ -523,7 +527,21 @@ function resultSdkBody(){
   if(['washer-fluid-cap','brake-fluid-reservoir'].includes(task.partId))return componentStatusHtml(task.partId);
   return '<p class="note">이 부품의 SDK 관측 전달은 미지원입니다. 모바일 보고로 대체하지 않습니다.</p>';
 }
-function refreshResultSdk(){const region=$('resultSdkContent');if(region)region.innerHTML=resultSdkBody();}
+function refreshResultSdk(){const region=$('resultSdkContent');if(region)region.innerHTML=resultSdkBody();refreshVehicleCards();}
+// P14: one card per shown part. Built from caches only: no SDK call, no getter, and no Three.js work on a store update.
+function vehicleCardHtml(partId){
+  const row=projectInspectionResults(userInspection,mobileResults.snapshot).find(r=>r.partId===partId)??null;
+  const tire=partId.startsWith('tire.')?tireStatus.forTire(partId):null;
+  return vehicleStatusCardHtml(partId,{sdk:{component:componentStatus.state,charge:chargePortStatus.state,visibility:visibilityStatus.state,tire},cap:vehiclePartCapabilities(partId),row});
+}
+const vehicleCardRegion=partId=>`<div id="vehicleStatusCard" data-part="${partId}">${vehicleCardHtml(partId)}</div>`;
+const lastCard=new WeakMap();
+function refreshVehicleCards(){
+  const card=$('vehicleStatusCard');
+  if(card?.dataset.part){const html=vehicleCardHtml(card.dataset.part);if(lastCard.get(card)!==html){card.innerHTML=html;lastCard.set(card,html);}}
+  const odo=$('odometerCard');
+  if(odo){const html=odometerCardHtml(odometerReading(),odometerStatus.state.connectionStatus);if(lastCard.get(odo)!==html){const open=odo.querySelector('details')?.open;odo.innerHTML=html;if(open)odo.querySelector('details').open=true;lastCard.set(odo,html);}}
+}
 const historySessionRow=record=>{const partId=record?.partId??targetForTask(inspectionHistory.snapshot.filters.taskId)?.partId;return partId?projectInspectionResults(userInspection,mobileResults.snapshot).find(r=>r.partId===partId):null;};
 function refreshHistory(){
   const region=$('historyResults');if(!region||!isHistoryState(state))return;
@@ -576,6 +594,8 @@ chargePortStatus.subscribe(() => { refreshResultSdk();const region = $('chargePo
 if (params.get('chargeStatus') === 'fixture') enableChargePortStatus();
 visibilityStatus.subscribe(()=>{refreshResultSdk();const region=$('visibilityStatusContent');if(region)region.innerHTML=visibilityStatusHtml(visibilityFeaturesForPart(state.component));});
 if(params.get('visibilityStatus')==='fixture')enableVisibilityStatus();
+odometerStatus.subscribe(refreshVehicleCards);
+if(params.get('odometerStatus')==='fixture')enableOdometerStatus();
 
 $("panel").addEventListener("click", (e) => {
   const b = e.target.closest("[data-action]");
@@ -767,7 +787,7 @@ function syncInspectionMap() {
   }
 }
 // Local and mobile changes end here, so the 3D colors, card, summary and badges come from the same records at the same moment.
-function syncResultSurfaces(){syncInspectionMap();if(window.__inspectReady)refreshResultRegions($('panel'),{local:userInspection,mobile:mobileResults.snapshot,partId:state.component});syncQrSlot();syncLabels();}
+function syncResultSurfaces(){syncInspectionMap();if(window.__inspectReady)refreshResultRegions($('panel'),{local:userInspection,mobile:mobileResults.snapshot,partId:state.component});refreshVehicleCards();syncQrSlot();syncLabels();}
 mobileResults.subscribe(()=>{syncResultSurfaces();if(window.__inspectReady&&isHistoryState(state))refreshHistory();});
 inspectionHistory.subscribe(refreshHistory);
 // Access can change while the screen is away, so paused or hidden pages keep no records (same fixed signals as SDK status).

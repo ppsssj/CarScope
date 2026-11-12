@@ -177,6 +177,14 @@
   .source-zone{margin-top:16px;border:1px solid var(--line);border-left:4px solid var(--zone,var(--line));border-radius:10px;padding:12px;overflow-wrap:anywhere}
   .source-zone[data-source-zone="SESSION"]{--zone:#7fd1b9}
   .source-zone[data-source-zone="HISTORY"]{--zone:#b79cf0}
+  /* P14: one read-only card per part. Each source keeps its own block; a disagreement is a separate notice. */
+  .vehicle-status-card{margin-top:16px;padding:12px 14px;background:var(--surface-2);border:1px solid var(--line);border-radius:10px;overflow-wrap:anywhere}
+  #panel .vehicle-status-card h3{margin:0 0 8px}
+  .vehicle-status-source{border-top:1px solid var(--line);padding:8px 0 2px}
+  .vehicle-status-source h4{margin:0 0 4px;font-size:13px;color:var(--muted);font-weight:600}
+  .vehicle-status-list{list-style:none;padding:0!important;margin:0!important}
+  #panel .vehicle-status-list li{margin:4px 0;font-size:14px}
+  .vehicle-status-list small{color:var(--faint);margin-left:4px;white-space:nowrap}
   .source-zone[data-source-zone="SDK"]{--zone:var(--warn)}
   .source-zone .part-results{margin-top:6px;padding:0;border:0;background:none}
   .source-zone.dev-info{padding-top:0}

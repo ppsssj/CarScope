@@ -42,7 +42,7 @@ class ComponentUiProjectionTest {
         val source = PleosComponentDataSource({ sdk }, worker, { 1000 })
         val owner = ComponentOwner(source); val first = ComponentUiChannel(owner); val second = ComponentUiChannel(owner)
         first.start(); worker.drain(); assertEquals(1, sdk.initialized)
-        repeat(50) { first.readJson(); first.readChargePortJson(); first.readVisibilityJson() }; assertEquals(8, sdk.capabilities.size); assertTrue(sdk.getters.isEmpty())
+        repeat(50) { first.readJson(); first.readChargePortJson(); first.readVisibilityJson(); first.readOdometerJson() }; assertEquals(ComponentFeature.entries.size, sdk.capabilities.size); assertTrue(sdk.getters.isEmpty())
         val a = JsonParser.parseString(first.readJson()).asJsonObject
         second.start(); first.stop(); worker.drain()
         assertEquals("ATTACHED", JsonParser.parseString(second.readJson()).asJsonObject["connectionStatus"].asString)

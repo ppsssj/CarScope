@@ -48,6 +48,8 @@ const componentFixture = process.env.CARSCOPE_COMPONENT_UI_FIXTURE ? resolve(pro
 const chargeFixture = process.env.CARSCOPE_CHARGE_UI_FIXTURE ? resolve(process.env.CARSCOPE_CHARGE_UI_FIXTURE) : null;
 const visibilityFixture=process.env.CARSCOPE_VISIBILITY_UI_FIXTURE?resolve(process.env.CARSCOPE_VISIBILITY_UI_FIXTURE):null;
 const tireFixture = process.env.CARSCOPE_TIRE_UI_FIXTURE ? resolve(process.env.CARSCOPE_TIRE_UI_FIXTURE) : null;
+// P14: explicit local synthetic Odometer packet; MOCK only, like the others.
+const odometerFixture = process.env.CARSCOPE_ODOMETER_UI_FIXTURE ? resolve(process.env.CARSCOPE_ODOMETER_UI_FIXTURE) : null;
 const TYPES ={ ".html": "text/html", ".js": "text/javascript", ".mjs": "text/javascript", ".glb": "model/gltf-binary", ".json": "application/json", ".svg": "image/svg+xml" };
 const port = Number(process.env.PORT ?? 8095);
 createServer(async (req, res) => {
@@ -55,6 +57,11 @@ createServer(async (req, res) => {
   if (url === '/component-status.json' && componentFixture && req.method === 'GET' && !new URL(req.url, 'http://x').search) {
     try { const body = await readFile(componentFixture); const packet = JSON.parse(body); if (!Array.isArray(packet.readings) || packet.readings.some(r => r.source !== 'MOCK')) throw Error('Fixture must be MOCK'); res.writeHead(200, { 'content-type': 'application/json', 'cache-control': 'no-store' }); return res.end(body); }
     catch { res.writeHead(503); return res.end('Unavailable'); }
+  }
+  if (url === '/odometer-status.json' && odometerFixture && req.method === 'GET') {
+    try { const packet = JSON.parse(await readFile(odometerFixture, 'utf8')); if (!Array.isArray(packet.readings) || packet.readings.some(r => r.source !== 'MOCK')) throw Error('Fixture must be MOCK');
+      res.writeHead(200, { 'content-type': 'application/json', 'cache-control': 'no-store' }); return res.end(JSON.stringify(packet)); }
+    catch { res.writeHead(503, { 'cache-control': 'no-store' }); return res.end(); }
   }
   if (url === '/tire-status.json' && tireFixture && req.method === 'GET') {
     try {
