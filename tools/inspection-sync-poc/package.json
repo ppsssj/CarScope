@@ -22,7 +22,7 @@
     "test:ar01": "node test/run-ar01.mjs",
     "verify:local": "node test/verify-local.mjs",
     "serve:mobile-dev": "node src/mobile-dev-server.mjs",
-    "test:mobile-browser": "node test/mobile-browser.mjs",
+    "test:mobile-browser": "node ../mobile-ar-poc/test/react-browser.mjs",
     "serve:https": "node src/https-mobile-service.mjs",
     "test:service-tls": "node --test test/auth-contract.test.mjs test/https-service.test.mjs",
     "test:postgres": "node --test test/postgres-store.test.mjs",
@@ -37,7 +37,8 @@
     "test:pg-matrix": "node test/run-pg-matrix.mjs",
     "test:mutations": "node test/run-pg-matrix.mjs --only 17 -- test/run-mutations.mjs",
     "test:recovery": "node --test --test-concurrency=1 test/db-recovery.test.mjs test/db-recovery-postgres.test.mjs",
-    "check:preflight": "node --check bin/deployment-preflight.mjs && node --check bin/db-recovery.mjs && node --check preflight/report.mjs && node --check preflight/static-gates.mjs && node --check preflight/database.mjs && node --check preflight/compat.mjs && node --check preflight/probe.mjs && node --check preflight/render-gates.mjs && node --check preflight/recovery.mjs && node --check preflight/recovery-seed.mjs && node --check test/run-pg-matrix.mjs && node --check test/run-mutations.mjs && node --check preflight/run-decoder-probe.mjs"
+    "check:preflight": "node --check bin/deployment-preflight.mjs && node --check bin/db-recovery.mjs && node --check preflight/report.mjs && node --check preflight/static-gates.mjs && node --check preflight/database.mjs && node --check preflight/compat.mjs && node --check preflight/probe.mjs && node --check preflight/render-gates.mjs && node --check preflight/recovery.mjs && node --check preflight/recovery-seed.mjs && node --check test/run-pg-matrix.mjs && node --check test/run-mutations.mjs && node --check preflight/run-decoder-probe.mjs",
+    "test:mobile-browser:legacy": "node test/mobile-browser.mjs"
   },
   "dependencies": {
     "pg": "8.23.1"

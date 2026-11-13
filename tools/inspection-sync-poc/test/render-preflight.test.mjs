@@ -32,7 +32,7 @@ test('Render preflight has HTTPS-origin guards, mobile surface, and a hard defau
   assert.equal(JSON.parse(response.body).sessionCreation, 'DENIED');
   response = await request(port, '/');
   assert.equal(response.status, 200);
-  assert.match(response.body, /mobile-dev-entry\.mjs/);
+  assert.match(response.body, /react-assets/);
   assert.match(response.headers['content-security-policy'], /connect-src 'self'/);
   assert.equal(response.headers['strict-transport-security'], 'max-age=31536000');
   response = await request(port, '/v1/sessions/00000000-0000-4000-8000-000000000000');

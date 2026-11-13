@@ -11,11 +11,11 @@ test('static staging preserves exact public code and only emits expected files w
   const outputDirectory = await mkdtemp(path.join(evidence, 'run-'));
   const result = await buildStaging({ origin: 'https://carscope-test.vercel.app/', outputDirectory, revision: 'synthetic-revision' });
   assert.equal(result.url, 'https://carscope-test.vercel.app/#v=1&task=washer-fluid');
-  assert.deepEqual((await readdir(outputDirectory)).sort(), [...PUBLIC_FILES, 'handoff.json', 'qr.svg', 'build-info.json'].sort());
+  assert.deepEqual((await readdir(outputDirectory)).sort(), [...PUBLIC_FILES, 'handoff.json', 'qr.svg', 'build-info.json', 'react-assets'].sort());
   assert.ok(!(await readdir(outputDirectory)).some((name) => /sync|dev/.test(name)), 'development sync modules never enter static output');
   assert.ok(!(await readFile(path.join(outputDirectory, 'app-entry.mjs'), 'utf8')).includes('SyncClient'));
-  assert.match(await readFile(path.join(outputDirectory, 'index.html'), 'utf8'), /src="\/app-entry.mjs"/);
-  for (const name of PUBLIC_FILES) {
+  assert.match(await readFile(path.join(outputDirectory, 'index.html'), 'utf8'), /src="\/react-assets\/index-[^" ]+\.js"/);
+  for (const name of PUBLIC_FILES.filter(n=>!['index.html','part-info.html'].includes(n))) {
     assert.deepEqual(await readFile(path.join(outputDirectory, name)), await readFile(new URL(`../public/${name}`, import.meta.url)));
   }
   assert.deepEqual(JSON.parse(await readFile(path.join(outputDirectory, 'handoff.json'), 'utf8')), { configured: true, url: result.url });

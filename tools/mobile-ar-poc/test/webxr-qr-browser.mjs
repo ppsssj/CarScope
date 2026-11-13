@@ -47,9 +47,9 @@ async function pair(host, { taskId = 'washer-fluid', fake = {} } = {}) {
   page.on('requestfailed', request => { pending.delete(where(request.url())); failed.push(`${where(request.url())} ${request.failure()?.errorText}`); });
   page.on('response', response => { if (response.status() >= 400) bad.push(`${where(response.url())} ${response.status()}`); });
   const started = Date.now();
-  await page.goto(host.url + '/' + session.fragment);
+  await page.goto(host.url + (host===on?'/webxr-guide.html':'/') + session.fragment);
   try {
-    await page.waitForFunction(() => window.__selfInspection || window.__checklistInspection);
+    if(host===on)await page.waitForFunction(() => window.__selfInspection || window.__checklistInspection);else await page.locator('h1').waitFor();
   } catch (error) {
     const seen = await page.evaluate(() => ({ ready: document.readyState, step: document.body?.dataset.step, checklist: document.body?.dataset.checklist, flow: document.body?.dataset.flow, resources: performance.getEntriesByType('resource').length })).catch(failure => failure.name);
     throw new Error(`${error.message}\nstart diagnostics after ${Date.now() - started}ms: ${JSON.stringify({ taskId, seen, pending: [...pending], failed, bad, requested: log.requests.length, problems: log.problems })}`);
@@ -310,7 +310,7 @@ try {
       const flow = await pair(on, { taskId }), { page, log } = flow;
       await page.waitForTimeout(100);
       assert.equal(await page.locator('#xr-entry-open').count(), 0, taskId);
-      assert.equal(log.requests.some(r => /webxr|three/.test(r.url)), false, taskId);
+      assert.equal(log.requests.some(r => /webxr\/|three/.test(r.url)), false, taskId);
       await claim(flow);
       assert.equal(await page.locator('#manual-start').isVisible(), true, taskId);
       await finish(flow, taskId);
@@ -320,11 +320,11 @@ try {
     const page = await bad.newPage();
     const requests = [];
     page.on('request', request => requests.push(request.url()));
-    await page.goto(on.url + '/#v=2&task=washer-fluid&invite=bad');
+    await page.goto(on.url + '/webxr-guide.html#v=2&task=washer-fluid&invite=bad');
     await page.waitForFunction(() => window.__selfInspection);
     await page.waitForTimeout(100);
     assert.equal(await page.locator('#xr-entry').count(), 0);
-    assert.equal(requests.some(url => /webxr|three/.test(url)), false);
+    assert.equal(requests.some(url => /webxr\/|three/.test(url)), false);
     await bad.close();
     pass('with the experiment on, QR v2 for other parts and an invalid QR get no WebXR');
   }
@@ -335,11 +335,16 @@ try {
     assert.equal(await page.locator('#xr-entry').count(), 0);
     assert.equal(await page.evaluate(() => document.body.dataset.webxrGuide), undefined);
     assert.equal(log.requests.some(r => /webxr|three/.test(r.url)), false);
-    await claim(flow);
-    await page.locator('#manual-start').click();
-    await complete(page);
-    await page.locator('#sync-send').click();
-    await waitSync(page, 'SENT');
+    await page.getByText('차량과 연결됐어요', {exact:true}).waitFor();
+    await page.locator('.safety-card input').check();
+    await page.getByRole('button',{name:'직접 점검 시작',exact:true}).click();
+    for(const box of await page.locator('.observation-card input').all())await box.check();
+    await page.getByRole('button',{name:'관찰 결과 선택하기',exact:true}).click();
+    await page.getByRole('button',{name:'보충이 필요해요',exact:true}).click();
+    await page.getByRole('button',{name:'선택한 결과 확인하기',exact:true}).click();
+    await page.getByRole('button',{name:'직접 확인한 결과로 확정',exact:true}).click();
+    await page.getByRole('button',{name:'차량으로 결과 보내기',exact:true}).click();
+    await page.locator('[data-sync-state="SENT"]').waitFor();
     assert.equal((await receiver.view()).sessionState, 'RESULT_SUBMITTED');
     await finish(flow, 'off');
     pass('with the experiment off, the QR v2 host offers no WebXR and the flow still completes');

@@ -34,6 +34,7 @@ jobs:
         with:
           node-version: '22.16.0'
       - run: npm ci --ignore-scripts
+      - run: npm run build
       - run: npm run check
       - run: npm test
       - name: Chrome, WebGL, Three.js and real sync HTTP with a fake XR runtime (no device, no real tracking, no Render)
@@ -68,7 +69,9 @@ jobs:
       - name: The Build Command the experiment needs, as documented in docs/p11-xr-webxr-render-entry.md
         run: |
           npm install --prefix tools/inspection-sync-poc --ignore-scripts --no-audit --no-fund --package-lock=false
-          npm ci --prefix tools/mobile-ar-poc --omit=dev --ignore-scripts --no-audit --no-fund
+          npm ci --prefix tools/mobile-ar-poc --ignore-scripts --no-audit --no-fund
+          npm run build --prefix tools/mobile-ar-poc
+          npm prune --prefix tools/mobile-ar-poc --omit=dev --ignore-scripts --no-audit --no-fund
           node --check tools/inspection-sync-poc/src/render-webxr-experiment.mjs
       - name: That build holds three.js and no test tool
         run: |

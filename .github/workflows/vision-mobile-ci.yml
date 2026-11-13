@@ -40,6 +40,8 @@ jobs:
         working-directory: tools/inspection-sync-poc
       - run: npm ci --ignore-scripts --no-audit --no-fund
         working-directory: tools/mobile-ar-poc
+      - run: npm run build
+        working-directory: tools/mobile-ar-poc
       - run: npm run test:vision
         working-directory: tools/inspection-sync-poc
       - run: npm test

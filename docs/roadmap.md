@@ -237,3 +237,6 @@ Render 배포 전 검사를 읽기 전용 CLI와 격리 PostgreSQL 통합 테스
 현재 **진입 보류**. P1-B T1~T10은 집 PC에서 PASS했지만, 도어 상태를 사용자에게 보여 주기 전에 [STALE 정책](stale-policy-review.md)을 결정하고 오류 경로 런타임 검증을 마치는 것을 권장합니다. 시스템 오류를 우회하려고 도어 값을 조작하거나 Mock으로 성공을 대체하지 않습니다. 나머지 도어·Anatomy·시각화 복잡도 확장은 그 뒤에 판단합니다.
 
 Anatomy 자산의 라이선스·부품 매핑·sanitize·실제 SVG 호환성/성능을 평가합니다. 전체 Anatomy 통합, 차량 제어, 배포·서명·심사는 별도 범위입니다. 각 단계에서 검증하지 못한 항목은 BLOCKED 또는 NOT_RUN으로 유지합니다.
+## P17 — React 19 + Astryx 모바일 점검 전면 개편
+
+17개 점검 작업, 읽기 전용 부품 안내, QR 인증·결과 DTO를 유지하며 React 제품 UI와 Vite 빌드를 도입한다. 카메라·실험 AI·사용자 확인·전송·차량 수신을 구분한다. 로컬 합성 브라우저 및 회귀 검증과 실제 스마트폰·AI·차량·배포 검증은 별도로 보고한다. [구현 및 잔여 검증](p17-mobile-react-astryx.md), [증거 인덱스](evidence/p17-react-astryx/README.md).

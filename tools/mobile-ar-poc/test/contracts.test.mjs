@@ -109,7 +109,9 @@ test('HTTP allowlist, methods, QR configuration and security headers', async t =
   const root = `http://127.0.0.1:${server.address().port}`;
   const home = await fetch(root);
   assert.equal(home.status, 200);
-  assert.match(await home.text(), /실물 식별 정확도 미검증/);
+  const html=await home.text();
+  assert.match(html, /id="root"/);
+  assert.match(html, /react-assets\/index-[^" ]+\.js/);
   assert.match(home.headers.get('content-security-policy'), /frame-ancestors 'none'/);
   assert.equal(home.headers.get('cache-control'), 'no-store');
   const config = await (await fetch(`${root}/handoff.json`)).json();

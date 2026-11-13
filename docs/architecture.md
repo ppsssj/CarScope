@@ -69,3 +69,6 @@ Mock은 Activity 생성/시나리오 버튼에서 읽은 snapshot을 저장합�
 자체 SVG를 메모리 HTML에 포함하여 HTTPS 형식의 예약된 `.invalid` base URL과 `loadDataWithBaseURL`로 로드합니다. 이 주소에서 서버 콘텐츠를 받는 구조가 아닙니다. JavaScript, DOM storage, file/content 접근, network loads를 끄고 CSP와 navigation 차단을 사용합니다. WebView 제공자가 없거나 초기화/주 프레임 로딩이 실패하면 텍스트 상태를 유지합니다. 로드 완료 콜백은 SVG가 그려졌다는 증거로 취급하지 않습니다.
 
 관측 시각으로 잘못 표시하던 UI 시각 문구는 화면 갱신 시각(UTC)으로 수정했습니다. 주행 제한, 화면 크기·고대비·rotary 포커스, WebView renderer process 사망 및 기기별 callback 순서는 아직 실행 검증하지 않았습니다.
+## P17 모바일 React 경계
+
+모바일 점검의 제품 UI는 React 19 + TypeScript + Astryx가 렌더링한다. 기존 순수 reducer·DTO·QR 파서·인증 및 전송 클라이언트는 재사용하고, Android/Pleos와 사용자 보고의 경계를 유지한다. Vite manifest의 명시된 자산만 기존 Node/TLS 서버가 제공한다. 실험 DOM 렌더러는 별도 Lab 문서에 격리한다. [설계·호스팅·검증 범위](p17-mobile-react-astryx.md).

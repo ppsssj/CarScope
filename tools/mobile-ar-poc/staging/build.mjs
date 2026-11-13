@@ -6,6 +6,7 @@ import { handoffURL, isLoopbackHost } from '../public/handoff.mjs';
 import {MOBILE_ASSETS,MOBILE_MODULES,MOBILE_PAGES} from '../public-modules.mjs';
 import {WEBXR_GUIDE_FILES, markWebXrGuidePage} from '../webxr-modules.mjs';
 import {webxrGuideEnabled} from '../webxr-flag.mjs';
+import {copyReactBuild} from '../react-build.mjs';
 
 export const PUBLIC_FILES = ['index.html','style.css','page-start-guard.js','app-entry.mjs',...MOBILE_MODULES,...MOBILE_ASSETS,...MOBILE_PAGES,'favicon.svg'];
 
@@ -19,7 +20,9 @@ export async function buildStaging({ origin, outputDirectory, revision = 'UNRECO
   const output = path.resolve(outputDirectory);
   await mkdir(output, { recursive: true });
   for (const name of PUBLIC_FILES) await copyFile(new URL(`../public/${name}`, import.meta.url), path.join(output, name));
+  await copyReactBuild(output);
   if (webxrGuide) {
+    await writeFile(path.join(output, 'webxr-guide.html'), markWebXrGuidePage(await readFile(new URL('../public/index.html',import.meta.url),'utf8')));
     await mkdir(path.join(output, 'webxr'), { recursive: true });
     for (const [served, source] of WEBXR_GUIDE_FILES) await copyFile(new URL(`../${source}`, import.meta.url), path.join(output, 'webxr', served));
     await writeFile(path.join(output, 'index.html'), markWebXrGuidePage(await readFile(path.join(output, 'index.html'), 'utf8')));

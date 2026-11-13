@@ -76,7 +76,7 @@ async function phone(host, task) {
   page.on('pageerror', e => log.errors.push(e.message));
   page.on('request', r => log.requests.push({ url:r.url(), method:r.method(), headers:r.headers() }));
   page.on('response', r => { if (r.status() >= 400) log.failedResponses.push({ status:r.status(), path:new URL(r.url()).pathname }); });
-  await page.goto(host.url + '/' + buildInviteFragment(task, session.inviteToken));
+  await page.goto(host.url + '/vision-lab.html' + buildInviteFragment(task, session.inviteToken));
   await page.waitForFunction(() => window.__selfInspection || window.__checklistInspection);
   await page.waitForFunction(() => document.getElementById('sync-claim').disabled && document.body.textContent.includes('연결됐어요'));
   await page.waitForFunction(() => window.__partDetection);

@@ -273,7 +273,7 @@ test('off by default: no route, no mark, no file, whichever host', async (t) => 
   const csp = (await fetch(off.url)).headers.get('content-security-policy');
   const page = await fetch(on.url);
   assert.equal(page.headers.get('content-security-policy'), csp, 'the CSP is the same');
-  assert.match(await page.text(), /<body data-step="intro" data-part-detection="enabled">/);
+  assert.match(await page.text(), /<body data-step="intro" data-part-detection="enabled"[^>]*>/);
   for (const name of PART_DETECTION_FILES) assert.equal((await fetch(`${on.url}/mobile-ar-poc/public/${name}`)).status, 200, name);
   assert.throws(() => markPartDetectionPage('<body>'), /MARKER_MISSING/);
   assert.throws(() => createPartDetectionRoute({ provider: {} }), /PROVIDER_REQUIRED/);

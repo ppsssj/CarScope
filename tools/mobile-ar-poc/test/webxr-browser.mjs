@@ -69,9 +69,9 @@ const openPage = async ({ viewport = { width: 390, height: 844 }, fake, url = '/
   page.on('requestfailed', request => { pending.delete(request.url()); failed.push(`${request.url()} ${request.failure()?.errorText}`); });
   page.on('response', response => { if (response.status() >= 400) bad.push(`${response.url()} ${response.status()}`); });
   const started = Date.now();
-  await page.goto(host + url);
+  await page.goto(host + (host===root?url.replace(/^\//,'/webxr-guide.html'):url));
   try {
-    await page.waitForFunction(() => window.__selfInspection || window.__checklistInspection);
+    if(host===root)await page.waitForFunction(() => window.__selfInspection || window.__checklistInspection);else await page.locator('h1').waitFor();
   } catch (error) {
     const seen = await page.evaluate(() => ({ ready: document.readyState, step: document.body?.dataset.step, resources: performance.getEntriesByType('resource').length })).catch(failure => failure.name);
     throw new Error(`${error.message}\nstart diagnostics after ${Date.now() - started}ms: ${JSON.stringify({ url, seen, pending: [...pending], failed, bad, requested: requests.length, problems })}`);
@@ -637,7 +637,7 @@ try {
       const { page, requests } = session;
       assert.equal(await page.locator('#xr-entry-open').count(), 0, task.id);
       assert.equal(await page.evaluate(() => Boolean(window.__webXrGuide)), false, task.id);
-      assert.equal(requests.some(r => r.url.includes('webxr') || r.url.includes('three')), false, task.id);
+      assert.equal(requests.some(r => r.url.includes('webxr/') || r.url.includes('three')), false, task.id);
       assert.equal(await page.locator('#manual-start').count(), 1, task.id);
       await close(session, task.id);
     }

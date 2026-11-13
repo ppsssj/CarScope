@@ -13,7 +13,7 @@ export const WEBXR_GUIDE_FILES = Object.freeze([
 ].map(Object.freeze));
 export const WEBXR_PERMISSION = ', xr-spatial-tracking=(self)';
 
-const BODY_OFF = '<body data-step="intro">', BODY_ON = '<body data-step="intro" data-webxr-guide="enabled">';
+const BODY_OFF = '<body data-step="intro"', BODY_ON = '<body data-step="intro" data-webxr-guide="enabled"';
 /** The page learns about the experiment only from its own host. No URL, storage or client switch can turn it on. */
 export function markWebXrGuidePage(html) {
   if (!html.includes(BODY_OFF)) throw new Error('WEBXR_GUIDE_PAGE_MARKER_MISSING');
