@@ -105,7 +105,7 @@ async function openSession(port, registration, taskId = 'washer-fluid') {
 }
 
 let browser;
-async function openPhone(session, fake = {}) {
+async function openPhone(session, fake = {}, lab=false) {
   const context = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true, deviceScaleFactor: 2 });
   await context.addInitScript(`${fakeSource}\nwindow.__env = installFakeXr(createFakeXr(${JSON.stringify(fake)}));`);
   const page = await context.newPage();
@@ -117,15 +117,20 @@ async function openPhone(session, fake = {}) {
   page.on('response', async response => {
     if (response.url().endsWith('/v1/claim') && response.ok()) { const body = await response.json().catch(() => null); if (body?.submitToken) log.secrets.push(body.submitToken); }
   });
-  await page.goto(`${edgeUrl}/${session.fragment}`);
-  await page.waitForFunction(() => window.__selfInspection);
-  await page.waitForFunction(() => document.querySelector('#sync-claim').disabled && document.body.textContent.includes('연결됐어요'));
+  await page.goto(`${edgeUrl}/${lab?'webxr-guide.html':''}${session.fragment}`);
+  if(lab){
+    await page.waitForFunction(() => window.__selfInspection);
+    await page.waitForFunction(() => document.querySelector('#sync-claim').disabled && document.body.textContent.includes('연결됐어요'));
+  }else{
+    await page.waitForFunction(()=>document.body.dataset.ready==='true');
+    await page.getByText('차량과 연결됐어요',{exact:true}).waitFor();
+  }
   return { context, page, log };
 }
 const posted = (log, suffix) => log.requests.filter(r => r.method === 'POST' && r.url.endsWith(suffix)).length;
 const waitPhase = (page, name) => page.waitForFunction(value => window.__webXrGuide?.state?.phase === value, name);
 const settle = (page, n = 3) => page.evaluate(async steps => { for (let i = 0; i < steps; i++) { window.__env.step(); await new Promise(resolve => setTimeout(resolve)); } }, n);
-const waitSync = (page, state) => page.waitForFunction(s => document.getElementById('done-sync').dataset.syncState === s, state);
+const waitSync = (page, state) => page.waitForFunction(s => (document.getElementById('done-sync')??document.querySelector('[data-sync-state]'))?.dataset.syncState === s, state);
 const shot = (page, name) => page.screenshot({ path: path.join(output, `${name}.png`) });
 async function noLeak({ page, log }) {
   const html = await page.content(), address = page.url();
@@ -163,10 +168,11 @@ try {
     await phone.page.waitForTimeout(150);
     assert.equal(await phone.page.locator('#xr-entry').count(), 0, 'nothing is offered on an AR-capable phone');
     assert.equal(phone.log.requests.some(r => /webxr|three/.test(r.url)), false);
-    assert.equal(await phone.page.locator('#primary').textContent(), '카메라로 점검 시작');
-    await phone.page.locator('#manual-start').click();
-    await answerAll(phone.page);
-    await phone.page.locator('#sync-send').click();
+    await phone.page.locator('.safety-card input').check();
+    await phone.page.getByRole('button',{name:'직접 점검 시작',exact:true}).click();
+    for(const c of await phone.page.locator('.observation-card input').all())await c.check();
+    for(const name of ['관찰 결과 선택하기','보충이 필요해요','선택한 결과 확인하기','직접 확인한 결과로 확정'])await phone.page.getByRole('button',{name,exact:true}).click();
+    await phone.page.getByRole('button',{name:'차량으로 결과 보내기',exact:true}).click();
     await waitSync(phone.page, 'SENT');
     await finish(phone, 'default command');
     await service.stop();
@@ -191,7 +197,7 @@ try {
     assert.match((await direct(service.port, '/mobile-ar-poc/public/guide-washer-fluid-cap-area.svg')).headers['content-type'], /^image\/svg\+xml/, 'the part guide picture is served on the Render path');
 
     const session = await openSession(service.port, registration);
-    const phone = await openPhone(session);
+    const phone = await openPhone(session,{},true);
     const { page, log } = phone;
     await page.evaluate(() => { window.__sameDocument = true; });
     await page.waitForFunction(() => window.__webXrGuide?.capability);
@@ -256,7 +262,7 @@ try {
     const urls = [];
     page.on('request', request => urls.push(request.url()));
     await page.goto(`${edgeUrl}/${session.fragment}`);
-    await page.waitForFunction(() => window.__checklistInspection);
+    await page.waitForFunction(() => document.body.dataset.ready==='true');
     await page.waitForTimeout(150);
     assert.equal(await page.locator('#xr-entry-open').count(), 0);
     assert.equal(urls.some(url => /webxr|three/.test(url)), false, 'other parts load nothing of it');

@@ -135,7 +135,7 @@ test('mobile dev boundary: default creation denied, strict same-origin CSP, stat
   assert.equal(invalidHost, 403);
   assert.equal((await fetch(s.url + '/v1/sessions', { method: 'POST', headers: { Origin: 'https://untrusted.example' } })).status, 403);
   const page = await fetch(s.url); assert.match(page.headers.get('content-security-policy'), /connect-src 'self'/);
-  assert.match(await page.text(), /mobile-dev-entry/);
+  assert.match(await page.text(), /data-sync-host="enabled"/);
   assert.equal((await fetch(s.url + '/?sync=1')).status, 400);
   // Built staging output is checked by the original AR-01 staging suite (with its existing qrcode dependency).
   // Keep this core sync gate dependency-free, as required by the existing Geometry CI invocation.
@@ -159,7 +159,7 @@ test('WebXR guide: QR v2 host serves it only when told to, and no variable can t
   assert.match(onPage.headers.get('permissions-policy'), /, xr-spatial-tracking=\(self\)$/);
   assert.equal(onPage.headers.get('content-security-policy'), MOBILE_HEADERS['Content-Security-Policy']);
   const html = await onPage.text();
-  assert.match(html, /data-webxr-guide="enabled"/); assert.match(html, /mobile-dev-entry/);
+  assert.match(html, /data-webxr-guide="enabled"/); assert.match(html, /data-sync-host="enabled"/);
   // three.module.min.js is left out: this gate stays dependency-free, and the browser suite loads the real file.
   for (const name of ['webxr-guide.mjs', 'webxr-controller.mjs', 'webxr-state.mjs', 'webxr-capability.mjs', 'webxr-view.mjs', 'webxr.css']) {
     assert.equal((await fetch(`${on.url}/mobile-ar-poc/public/webxr/${name}`)).status, 200, name);

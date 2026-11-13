@@ -7,6 +7,7 @@ import { handoffURL } from './public/handoff.mjs';
 import {MOBILE_ASSETS,MOBILE_MODULES,MOBILE_PAGES} from './public-modules.mjs';
 import {WEBXR_GUIDE_FILES, WEBXR_PERMISSION, markWebXrGuidePage} from './webxr-modules.mjs';
 import {webxrGuideEnabled} from './webxr-flag.mjs';
+import {readReactPage,readReactAsset} from './react-build.mjs';
 
 const publicRoot = new URL('./public/', import.meta.url);
 const files = new Map([
@@ -38,6 +39,15 @@ export function createHandler(baseURL, { webxrGuide = false } = {}) {
         body = JSON.stringify({ url: target, configured: Boolean(target) }); type = 'application/json';
       } else if (path === '/qr.svg' && target) {
         body = await QRCode.toString(target, { type: 'svg', errorCorrectionLevel: 'M', margin: 4, width: 320 }); type = 'image/svg+xml';
+      } else if (path === '/webxr-guide.html' && webxrGuide) {
+        body=markWebXrGuidePage(await readFile(new URL('index.html',publicRoot),'utf8'));type='text/html; charset=utf-8';
+      } else if (path === '/' || path === '/part-info.html') {
+        body = await readReactPage(); type = 'text/html; charset=utf-8';
+        if (webxrGuide) body = markWebXrGuidePage(body);
+      } else if (path.startsWith('/react-assets/')) {
+        const asset = await readReactAsset(path);
+        if (!asset) { res.writeHead(404, headers); res.end(); return; }
+        body = asset.body; type = asset.type;
       } else if (files.has(path)) {
         const [name, mime] = files.get(path);
         body = await readFile(new URL(name, publicRoot)); type = mime;

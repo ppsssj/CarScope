@@ -3,6 +3,7 @@ import { access, readFile } from 'node:fs/promises';
 import {MOBILE_ASSETS,MOBILE_MODULES as mobileFiles,MOBILE_PAGES} from '../../mobile-ar-poc/public-modules.mjs';
 import {WEBXR_GUIDE_FILES, WEBXR_PERMISSION, markWebXrGuidePage} from '../../mobile-ar-poc/webxr-modules.mjs';
 import {PART_ANALYSIS_FILES, PART_DETECTION_FILES, markPartAnalysisPage, markPartDetectionPage} from '../../mobile-ar-poc/part-detection-modules.mjs';
+import {readReactPage,readReactAsset} from '../../mobile-ar-poc/react-build.mjs';
 // Experimental guide, off unless an entry passes webxrGuide. On Render only render-webxr-experiment.mjs does: see WEBXR_EXPERIMENT_ENTRY_ONLY.
 const guideFiles = new Map(WEBXR_GUIDE_FILES.map(([name, source, type]) => [`/mobile-ar-poc/public/webxr/${name}`, [new URL(`../../mobile-ar-poc/${source}`, import.meta.url), type]]));
 /** A deployment with the guide on but three.js not installed would offer a button that can only fail, so it does not start. */
@@ -32,12 +33,30 @@ export async function serveMobilePage(req, res, { tls = false, webxrGuide = fals
   if (!['GET', 'HEAD'].includes(req.method)) { res.writeHead(405, headers); res.end(); return; }
   if (url.search) { res.writeHead(400, headers); res.end(); return; }
   let body, type = 'text/javascript; charset=utf-8';
-  if (url.pathname === '/') {
-    body = (await readFile(new URL('../../mobile-ar-poc/public/index.html', import.meta.url), 'utf8')).replace('src="/app-entry.mjs"', 'src="/public/mobile-dev-entry.mjs"');
+  if (url.pathname === '/webxr-guide.html' && webxrGuide) {
+    // Isolated experimental renderer owns this document, never React's DOM. No v2 invite is carried across.
+    body=markWebXrGuidePage(await readFile(new URL('../../mobile-ar-poc/public/index.html',import.meta.url),'utf8')).replace('src="/app-entry.mjs"','src="/public/mobile-dev-entry.mjs"');type='text/html; charset=utf-8';
+  } else if (url.pathname === '/vision-lab.html' && (partDetection || partAnalysis)) {
+    // Historical experiment regression surface, gated exactly like the AI routes.
+    // Product entry '/' is React. This separate document cannot mutate React DOM.
+    body=(await readFile(new URL('../../mobile-ar-poc/public/index.html',import.meta.url),'utf8')).replace('src="/app-entry.mjs"','src="/public/mobile-dev-entry.mjs"');
+    if(partDetection)body=markPartDetectionPage(body);
+    if(partAnalysis)body=markPartAnalysisPage(body,partAnalysis,{draft:partAnalysisDraft===true});
+    type='text/html; charset=utf-8';
+  } else if (['/part-info.html','/mobile-ar-poc/public/part-info.html'].includes(url.pathname)) {
+    body=await readReactPage();type='text/html; charset=utf-8';
+  } else if (url.pathname === '/') {
+    body = await readReactPage({sync:true});
     if (webxrGuide) body = markWebXrGuidePage(body);
     if (partDetection) body = markPartDetectionPage(body);
     if (partAnalysis) body = markPartAnalysisPage(body, partAnalysis, { draft: partAnalysisDraft === true });
     type = 'text/html; charset=utf-8';
+  } else if (url.pathname.startsWith('/react-assets/')) {
+    const asset = await readReactAsset(url.pathname);
+    if (!asset) { res.writeHead(404, headers); res.end(); return; }
+    body=asset.body;type=asset.type;
+  } else if (url.pathname.startsWith('/guide-') && MOBILE_ASSETS.includes(url.pathname.slice(1))) {
+    body=await readFile(new URL(`../../mobile-ar-poc/public/${url.pathname.slice(1)}`,import.meta.url));type='image/svg+xml';
   } else if (url.pathname === '/handoff.json') { body = '{"configured":false,"url":null}'; type = 'application/json'; }
   else if (webxrGuide && guideFiles.has(url.pathname)) {
     const [source, mime] = guideFiles.get(url.pathname);

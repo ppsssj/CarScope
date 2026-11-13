@@ -10,9 +10,9 @@ export function httpsOrigin(value) {
   return url.origin;
 }
 
-function get(origin, path, ca) {
+function get(origin, path, ca, method='GET') {
   return new Promise((resolve) => {
-    const req = https.get(origin + path, { ...(ca ? { ca } : {}), headers: { Accept: 'application/json, text/html, text/javascript' } }, (res) => {
+    const req = https.request(origin + path, { method, ...(ca ? { ca } : {}), headers: { Accept: 'application/json, text/html, text/javascript' } }, (res) => {
       const chunks = []; let size = 0;
       res.on('data', (chunk) => { size += chunk.length; if (size > 256 * 1024) req.destroy(); else chunks.push(chunk); });
       res.on('error', () => resolve({ failure: true }));
@@ -21,6 +21,7 @@ function get(origin, path, ca) {
     const deadline = setTimeout(() => req.destroy(), 5000);
     req.on('close', () => clearTimeout(deadline));
     req.on('error', () => resolve({ failure: true }));
+    req.end();
   });
 }
 
@@ -35,11 +36,14 @@ export async function probeHost({ apiOrigin, mobileRoot, ca }) {
   };
   const apiStatus = await checkApi(api), mobileApi = await checkApi(mobile);
   const page = await get(mobile, '/', ca);
-  const entry = await get(mobile, '/public/mobile-dev-entry.mjs', ca);
+  const reactEntry=/src="(\/react-assets\/[A-Za-z0-9_.-]+\.js)"/.exec(page.text??'')?.[1];
+  // A bundled entry can be larger than the probe's 256KiB text limit. HEAD checks
+  // the real allowlisted resource without downloading executable code.
+  const entry = await get(mobile, reactEntry??'/public/mobile-dev-entry.mjs', ca, reactEntry?'HEAD':'GET');
   const surface = page.status === 200 && page.headers['content-type']?.startsWith('text/html') &&
     /connect-src 'self'(?:;|$)/.test(page.headers['content-security-policy'] ?? '') &&
-    page.text?.includes('src="/public/mobile-dev-entry.mjs"') && entry.status === 200 &&
-    entry.headers['content-type']?.includes('javascript') && entry.text?.includes('takeMobileHandoff');
+    (reactEntry? page.text?.includes('data-sync-host="enabled"')&&page.text?.includes('id="root"'):page.text?.includes('src="/public/mobile-dev-entry.mjs"')) && entry.status === 200 &&
+    entry.headers['content-type']?.includes('javascript') && (reactEntry?true:entry.text?.includes('takeMobileHandoff'));
   const hostPass = apiStatus === 'PASS' && mobileApi === 'PASS' && surface;
   return { at: new Date().toISOString(), scope: 'HOST_TLS_API_AND_MOBILE_SURFACE_ONLY',
     hostStatus: hostPass ? 'PASS' : 'FAIL', trust: ca ? 'EXPLICIT_HOST_CA_ONLY' : 'NODE_DEFAULT_TRUST',

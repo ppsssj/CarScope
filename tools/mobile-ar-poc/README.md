@@ -96,3 +96,6 @@ npm run test:browser
 3. 같은 차량/연속 영상이 튜닝과 평가 세트에 섞이지 않게 분리한다. 임계값 변경 전후와 모든 실패/오탐을 보존한다.
 4. 평가 세트의 IoU 기준, 후보 precision/recall, false positives/frame, 미탐, 처리 지연과 발열을 측정한다. 후보 위치 지표와 주입구 의미 식별 정확도를 구분한다. 작은 데이터로 제품 사용 가능성을 단정하지 않는다.
 5. 실기기에서 QR 스캔→신뢰한 HTTPS→후면 영상→회전/크기 변경→후보/실패→수동 안내→중지/백그라운드/복귀를 직접 검증한다. 모두 통과해도 주입구 자동 확정은 별도 검토 대상이다.
+# P17 React mobile entry
+
+The product entry is now React 19 + TypeScript + Astryx. Run `npm ci --ignore-scripts`, `npm run build`, then `npm run serve`. For QR/API development, build here first and start the existing `tools/inspection-sync-poc` mobile service. `npm run dev` is loopback Vite/HMR only. Use `npm run test:browser` for the React regression suite; old DOM scripts describe the historical lab UI. See [architecture, UX, serving and evidence](../../docs/p17-mobile-react-astryx.md).

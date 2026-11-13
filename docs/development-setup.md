@@ -170,3 +170,6 @@ git pull --ff-only origin main
 ```
 
 이후 예시: `feat/p2-anatomy-vehicle-model`, `feat/p3-inspection-scenarios`. 같은 브랜치에서 양쪽 PC가 동시에 다른 commit을 만들지 않습니다. `--ff-only` 실패 시 fetch 후 로그 관계와 변경을 검토하고 force/reset으로 해결하지 않습니다. G0에서는 PR·merge·CI workflow를 생성하지 않았으며 CI PASS를 주장하지 않습니다. P1-B가 검증되기 전 P2 제품 기능을 시작하지 않습니다.
+## P17 모바일 웹 빌드
+
+모바일 UI 실행 전 `tools/mobile-ar-poc`에서 `npm ci --ignore-scripts`와 `npm run build`를 실행한다. Node 모바일 서버와 QR 동기화/TLS 서버는 `build/react`를 공유한다. 소스만 복사하면 새 UI를 제공할 수 없다. HMR은 `npm run dev`, 동일 CSP의 제품 빌드 확인은 `npm run serve`를 사용한다. [자세한 명령과 배포 준비 범위](p17-mobile-react-astryx.md#build-and-serving).

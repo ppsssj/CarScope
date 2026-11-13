@@ -600,8 +600,8 @@ test('staging omits the guide by default and includes it only when requested', a
   try {
     const plain = path.join(dir, 'plain'), flagged = path.join(dir, 'flagged');
     await buildStaging({ origin: 'https://carscope-test.vercel.app/', outputDirectory: plain });
-    assert.deepEqual((await readdir(plain)).sort(), [...PUBLIC_FILES, 'handoff.json', 'qr.svg', 'build-info.json'].sort());
-    assert.equal(await readFile(path.join(plain, 'index.html'), 'utf8'), await readFile(new URL('../public/index.html', import.meta.url), 'utf8'), 'default page is copied byte for byte');
+    assert.deepEqual((await readdir(plain)).sort(), [...PUBLIC_FILES, 'handoff.json', 'qr.svg', 'build-info.json', 'react-assets'].sort());
+    assert.equal(await readFile(path.join(plain, 'index.html'), 'utf8'), await readFile(new URL('../build/react/index.html', import.meta.url), 'utf8'), 'built React page is copied byte for byte');
     await buildStaging({ origin: 'https://carscope-test.vercel.app/', outputDirectory: flagged, webxrGuide: true });
     assert.deepEqual((await readdir(path.join(flagged, 'webxr'))).sort(), WEBXR_GUIDE_FILES.map(([served]) => served).sort());
     assert.ok((await readFile(path.join(flagged, 'index.html'), 'utf8')).includes(MARK));

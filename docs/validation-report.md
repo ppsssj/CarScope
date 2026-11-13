@@ -491,3 +491,6 @@ refresh 중복 callback 결함을 수정하고 고정 시각/HTTP/deadline 진�
 실제 AVD는 NO_EXACT_CONNECTED_DEVICE로 BLOCKED, QR·폰 E2E는 NOT_RUN.
 Health는 UP/STATEFUL_DENY_DEFAULT/DENIED. Render/실제 DB 변경 및 실제 인증 요청 없음.
 [조사·재실행·승인 조건](p6-d5-avd-auth-runtime.md), [증거 인덱스](evidence/p6-d5/README.md).
+## P17 모바일 React 검증
+
+React/Astryx 전환의 새 실행 결과는 [P17 보고서](p17-mobile-react-astryx.md)와 [증거 인덱스](evidence/p17-react-astryx/README.md)를 기준으로 한다. 과거 DOM 화면·AVD·실차 실행 근거와 합산하지 않는다. 합성 카메라와 MOCK AI의 브라우저 통과는 LIVE 진단·실기기 결과가 아니다.
