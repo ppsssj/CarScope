@@ -3,16 +3,17 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "P15: Supabase Auth Google sign-in and per-user vehicle list (My Vehicles). Browser pages + SQL migration + server-side identity verifier. Not part of the Android app, Render or the 3D inspection page.",
+  "description": "P16: browser account and selected-vehicle inspection integration; no Android Auth or Render entrypoint.",
   "engines": {
     "node": ">=22.16.0"
   },
   "scripts": {
     "serve": "node serve.mjs",
-    "check": "node --check serve.mjs && node --check src/supabase-identity.mjs && node --check src/external-data-identity.mjs && node --check web/lib/public-config.mjs && node --check web/lib/auth-flow.mjs && node --check web/lib/account-session.mjs && node --check web/lib/vehicle-repository.mjs && node --check web/lib/account-runtime.mjs && node --check web/lib/account-copy.mjs && node --check web/login-page.mjs && node --check web/callback-page.mjs && node --check web/vehicles-page.mjs",
-    "test": "node --test test/auth-flow.test.mjs test/identity.test.mjs test/vehicle-repository.test.mjs test/server.test.mjs test/boundary.test.mjs",
+    "check": "node --check serve.mjs && node --check src/supabase-identity.mjs && node --check src/external-data-identity.mjs && node --check web/lib/public-config.mjs && node --check web/lib/auth-flow.mjs && node --check web/lib/account-session.mjs && node --check web/lib/vehicle-repository.mjs && node --check web/lib/account-runtime.mjs && node --check web/lib/account-copy.mjs && node --check web/login-page.mjs && node --check web/callback-page.mjs && node --check web/vehicles-page.mjs && node --check web/inspection-page.mjs && node --check web/lib/vehicle-selection.mjs && node --check web/lib/reference-model.mjs && node --check web/lib/inspection-link-policy.mjs && node --check test/browser-integration.mjs",
+    "test": "node --test test/auth-flow.test.mjs test/identity.test.mjs test/vehicle-repository.test.mjs test/server.test.mjs test/boundary.test.mjs test/integration.test.mjs",
     "test:rls": "node --test --test-concurrency=1 test/rls-supabase.test.mjs",
-    "test:browser": "node test/browser-account.mjs"
+    "test:browser": "node test/browser-account.mjs",
+    "test:integration-browser": "node test/browser-integration.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.119.0"

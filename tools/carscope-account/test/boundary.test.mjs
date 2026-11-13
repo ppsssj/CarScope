@@ -91,9 +91,9 @@ test('local Supabase config: secrets only by env() substitution, signing key in 
   const toml = read(`${PKG}/supabase/config.toml`);
   assert.match(toml, /secret = "env\(SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_SECRET\)"/);
   assert.doesNotMatch(toml, /secret = "(?!env\()[^"]+"/);
-  assert.match(toml, /\[auth\.external\.google\]\nenabled = false/);
+  assert.match(toml, /\[auth\.external\.google\]\r?\nenabled = false/);
   assert.match(toml, /signing_keys_path = "\.\/\.temp\/signing_keys\.json"/);
-  assert.match(read(`${PKG}/supabase/.gitignore`), /^\.temp$/m);
+  assert.match(read(`${PKG}/supabase/.gitignore`), /^\.temp\r?$/m);
 });
 
 test('git tracks no key file, env file or captured session from this package', () => {

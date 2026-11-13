@@ -66,6 +66,8 @@ test('B cannot see, update or delete A vehicles; A data is unchanged afterwards'
   assert.deepEqual((await b.repo.list()).vehicles, []);
   const byId = await b.db().from('vehicles').select(VEHICLE_COLUMNS).eq('id', vehicle.id);
   assert.deepEqual(byId.data, []);
+  assert.equal((await b.repo.get(vehicle.id)).error, ERRORS.NOT_FOUND);
+  assert.equal((await a.repo.get(vehicle.id)).vehicle.id, vehicle.id);
   assert.equal((await b.repo.update(vehicle.id, car({ model: 'hijacked' }))).error, ERRORS.NOT_FOUND);
   assert.equal((await b.repo.remove(vehicle.id)).error, ERRORS.NOT_FOUND);
   // Raw API calls, bypassing the repository's own validation.

@@ -31,8 +31,17 @@ jobs:
         with:
           node-version: '22.16.0'
       - run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Install the reviewed 3D runtime for same-origin integration tests
+        run: npm ci --ignore-scripts --no-audit --no-fund --prefix ../three-poc
       - run: npm run check
       - run: npm test
+      - name: Install browser for integration tests
+        run: npx playwright install --with-deps chromium
+      - name: Account to inspection browser flow (MOCK Auth and Data API, no Google)
+        run: npm run test:integration-browser
+        env:
+          CARSCOPE_BROWSER_CHANNEL: chromium
+          CARSCOPE_EVIDENCE_DIR: ${{ runner.temp }}/p16-integration
 
   rls-local-stack:
     name: RLS through the Data API of a local Supabase stack (LOCAL_PASS)

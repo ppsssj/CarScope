@@ -1,5 +1,9 @@
 # 로드맵 및 진입 조건
 
+## P16 — 내 차량과 3D 점검 연결
+
+P15 세션/RLS를 재사용해 내 차량 카드 → UUID 재검증 → 참조 3D 점검 → 내 차량 복귀를 연결한다. 차량 선택은 소유권 증명이나 점검 기록 연결이 아니다. 계정 전환/로그아웃/삭제는 선택을 해제하고 체험 및 Android/QR 인증 경계는 유지한다. 구현·동일 origin 보안 결정은 [P16](p16-account-inspection-integration.md), 새 실행과 미검증 범위는 [증거](evidence/p16-integration/README.md)에 기록했다. 최종 제품의 모바일 AI→차량 앱 수신→사용자 지속 이력 E2E는 후속 과제다.
+
 ## P15 — Supabase Auth Google 로그인과 내 차량
 
 체험 모드(3D·QR·AVD)는 로그인 없이 그대로 두고, 별도 계정 화면에서 Google 로그인(Supabase Auth, PKCE + 1회용 nonce)과 사용자별 차량 등록·수정·삭제를 제공한다. 새 스키마 `carscope_account`에 RLS와 열 단위 권한을 두어 다른 사용자 접근·소유자 변경·검증 상태 승격을 막는다. 모든 차량은 `SELF_REPORTED_UNVERIFIED`이고 Google 로그인은 외부 차량 데이터 권한을 주지 않는다. 흐름은 MOCK_PASS, RLS·화면은 로컬 Supabase 스택 LOCAL_PASS. **Google 실로그인 BLOCKED, 운영 마이그레이션·호스팅 NOT_RUN.** [설계·운영 절차](p15-supabase-auth-vehicles.md), [증거](evidence/p15-auth/README.md).
