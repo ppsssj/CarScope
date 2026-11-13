@@ -8,7 +8,7 @@ import { createHash, randomBytes, randomUUID, webcrypto } from 'node:crypto';
 const { subtle } = webcrypto;
 const b64u = (buf) => Buffer.from(buf).toString('base64url');
 
-export async function startMockGoTrue({ googleEnabled = true, accessTtlS = 3600 } = {}) {
+export async function startMockGoTrue({ googleEnabled = true, accessTtlS = 3600, corsOrigin = null } = {}) {
   const pair = await subtle.generateKey({ name: 'ECDSA', namedCurve: 'P-256' }, true, ['sign', 'verify']);
   const kid = randomUUID();
   const publicJwk = { ...(await subtle.exportKey('jwk', pair.publicKey)), kid, alg: 'ES256', use: 'sig', key_ops: ['verify'] };
@@ -53,6 +53,12 @@ export async function startMockGoTrue({ googleEnabled = true, accessTtlS = 3600 
   const body = (req) => new Promise((resolve) => { let d = ''; req.on('data', (c) => { d += c; }); req.on('end', () => { try { resolve(JSON.parse(d || '{}')); } catch { resolve({}); } }); });
 
   const server = createServer(async (req, res) => {
+    if (corsOrigin) {
+      res.setHeader('access-control-allow-origin', corsOrigin);
+      res.setHeader('access-control-allow-headers', 'apikey,authorization,content-type,x-client-info,x-supabase-api-version');
+      res.setHeader('access-control-allow-methods', 'GET,POST,OPTIONS');
+      if (req.method === 'OPTIONS') { res.writeHead(204); return res.end(); }
+    }
     const url = new URL(req.url, origin);
     state.calls.push(`${req.method} ${url.pathname}${url.searchParams.get('grant_type') ? '?grant_type=' + url.searchParams.get('grant_type') : ''}`);
     if (state.outage) return err(res, 503, 'unexpected_failure', 'Service unavailable');

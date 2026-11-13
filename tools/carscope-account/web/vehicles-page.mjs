@@ -5,6 +5,8 @@ import { createAccountSession, STATUS } from './lib/account-session.mjs';
 import { createVehicleRepository, ensureProfile, ERRORS } from './lib/vehicle-repository.mjs';
 import { createBrowserClient, googleProviderStatus, loadPublicConfig } from './lib/account-runtime.mjs';
 import { CONNECTION_COPY, DATA_MESSAGES, FIELD_LABELS, VERIFICATION_LABEL, signinMessage } from './lib/account-copy.mjs';
+import { inspectHref, SELECTION_CHANNEL } from './lib/vehicle-selection.mjs';
+import { referenceNotice } from './lib/reference-model.mjs';
 
 const $ = (id) => document.getElementById(id);
 const status = $('status');
@@ -12,7 +14,7 @@ const say = (text, warn = false) => { status.textContent = text ?? ''; status.cl
 const el = (tag, props = {}, ...children) => { const n = document.createElement(tag); Object.assign(n, props); n.append(...children); return n; };
 
 const config = await loadPublicConfig();
-if (config.trialUrl) for (const id of ['trial', 'trialTop']) { $(id).href = config.trialUrl; $(id).hidden = false; }
+for (const id of ['trial', 'trialTop']) { $(id).href = config.trialUrl ?? '/inspect/inspect.html'; $(id).hidden = false; }
 
 function show(view) {
   document.body.dataset.account = view;
@@ -27,6 +29,7 @@ if (!config.configured) {
   const client = createBrowserClient(config);
   const session = createAccountSession({ client });
   const repo = createVehicleRepository({ client, session });
+  const changes = typeof BroadcastChannel === 'function' ? new BroadcastChannel(SELECTION_CHANNEL) : null;
   const flow = createAuthFlow({ client, flowStorage: sessionStorage, origin: location.origin, userAgent: navigator.userAgent, providerStatus: () => googleProviderStatus(config) });
   const form = $('form');
   let vehicles = [];
@@ -59,10 +62,13 @@ if (!config.configured) {
       el('dt', { textContent: CONNECTION_COPY.inspection }), el('dd', { textContent: CONNECTION_COPY.inspectionNote }));
     const edit = el('button', { className: 'secondary', type: 'button', textContent: '수정' });
     const del = el('button', { className: 'danger', type: 'button', textContent: '삭제' });
+    const start = el('a', { className: 'primary', href: inspectHref(v.id), textContent: '3D 점검 시작' });
     const card = el('li', { className: 'vehicle' },
       el('div', { className: 'title', textContent: title }), el('div', { className: 'sub', textContent: sub }),
       el('span', { className: 'tag', textContent: VERIFICATION_LABEL[v.verification] }), facts,
-      el('div', { className: 'row-actions' }, edit, del));
+      el('p', { className: 'sub', textContent: referenceNotice(v).text }),
+      el('p', { className: 'sub', textContent: '점검 결과는 이 차량의 저장 기록에 자동 연결되지 않습니다.' }),
+      el('div', { className: 'row-actions' }, start, edit, del));
     card.dataset.vehicleId = v.id;
     edit.addEventListener('click', () => openForm(v));
     del.addEventListener('click', () => {
@@ -75,7 +81,7 @@ if (!config.configured) {
       yes.addEventListener('click', async () => {
         yes.disabled = true;
         const r = await repo.remove(v.id);
-        if (r.ok || r.error === ERRORS.NOT_FOUND) { vehicles = vehicles.filter((x) => x.id !== v.id); renderList(); say(r.ok ? '차량을 삭제했습니다.' : DATA_MESSAGES.NOT_FOUND, !r.ok); }
+        if (r.ok || r.error === ERRORS.NOT_FOUND) { changes?.postMessage({ removedId: v.id }); vehicles = vehicles.filter((x) => x.id !== v.id); renderList(); say(r.ok ? '차량을 삭제했습니다.' : DATA_MESSAGES.NOT_FOUND, !r.ok); }
         else { yes.disabled = false; dataError(r.error); }
       });
     });

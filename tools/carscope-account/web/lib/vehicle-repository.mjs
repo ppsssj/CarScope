@@ -123,7 +123,14 @@ export function createVehicleRepository({ client, session }) {
     return r.data?.length === 1 ? { ok: true } : { ok: false, error: ERRORS.NOT_FOUND };
   }
 
-  return Object.freeze({ list, create, update, remove });
+  async function get(id) {
+    if (typeof id !== 'string' || !/^[0-9a-f-]{36}$/.test(id)) return { ok: false, error: ERRORS.NOT_FOUND };
+    const r = await guarded(() => table().select(VEHICLE_COLUMNS).eq('id', id).maybeSingle());
+    if (!r.ok) return r;
+    return r.data ? { ok: true, vehicle: toVehicle(r.data) } : { ok: false, error: ERRORS.NOT_FOUND };
+  }
+
+  return Object.freeze({ list, create, update, remove, get });
 }
 
 /** Creates the caller's profile row on first sign-in. Display name and avatar come from the confirmed user. */

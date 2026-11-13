@@ -9,6 +9,7 @@
 // Secret keys are never read: the server does not look at SUPABASE_SECRET_KEY / SUPABASE_SERVICE_ROLE_KEY at all.
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
 import { dirname, join, normalize, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { validatePublicConfig } from './web/lib/public-config.mjs';
@@ -44,11 +45,38 @@ export function createAccountServer({ env = process.env } = {}) {
     ? { supabaseUrl: config.supabaseUrl, publishableKey: config.publishableKey, trialUrl: config.trialUrl }
     : { trialUrl: config.trialUrl });
 
+  let threeHandler;
   const server = createServer(async (req, res) => {
     const send = (code, type, body, extra = {}) => { res.writeHead(code, { ...headers, 'content-type': type, 'cache-control': 'no-store', ...extra }); res.end(body); };
     if (req.method !== 'GET' && req.method !== 'HEAD') return send(405, 'text/plain', 'Method not allowed', { allow: 'GET, HEAD' });
     let path;
     try { path = decodeURIComponent(new URL(req.url, 'http://127.0.0.1').pathname); } catch { return send(400, 'text/plain', 'Bad request'); }
+    if (path.startsWith('/inspect/') || path === '/mobile-ar-poc/public/part-capabilities.mjs') {
+      // The account origin trusts only reviewed runtime resources, not the Lab server's directory tree.
+      // No client-selected model URL is accepted on this origin.
+      const parsed = new URL(req.url, 'http://127.0.0.1');
+      if (parsed.searchParams.has('model')) return send(400, 'text/plain', 'Model override unavailable');
+      if (path === '/inspect/inspect.html') {
+        const source = (await readFile(join(HERE, '..', 'three-poc', 'inspect.html'), 'utf8')).replace(/\r\n?/g, '\n');
+        const importmap = source.match(/<script type="importmap">([\s\S]*?)<\/script>/)[1];
+        const hash = createHash('sha256').update(importmap).digest('base64');
+        const csp = ["default-src 'none'", `script-src 'self' 'sha256-${hash}'`,
+          "style-src 'self' 'unsafe-inline'", `connect-src 'self'${config.configured ? ' ' + config.supabaseUrl : ''}`,
+          "img-src 'self' data: blob:", "worker-src 'none'", "base-uri 'none'", "form-action 'none'", "frame-ancestors 'none'"].join('; ');
+        const html = source.replace('</head>', '<link rel="stylesheet" href="/account/inspection.css"></head>')
+          .replace('<body data-state="IDLE">', '<body data-state="IDLE"><section id="accountInspection" aria-label="선택한 차량"></section>')
+          .replace('</body>', '<script src="/account/vendor/supabase.js"></script><script type="module" src="/account/inspection-page.mjs"></script></body>');
+        return send(200, TYPES['.html'], html, { 'content-security-policy': csp });
+      }
+      try {
+        threeHandler ??= import('../three-poc/serve.mjs').then(m => m.createThreePocHandler({ env, publicOnly: true }));
+        const handler = await threeHandler;
+        for (const [name, value] of Object.entries(headers)) res.setHeader(name, value);
+        res.setHeader('cache-control', 'no-store');
+        if (path.startsWith('/inspect/')) req.url = req.url.slice('/inspect'.length);
+        return await handler(req, res);
+      } catch { return send(503, 'text/plain', 'Inspection resources unavailable'); }
+    }
     if (path === '/' || path === '/account') return send(302, 'text/plain', '', { location: '/account/' });
     if (path === '/account/config.json') return send(200, 'application/json', configBody);
     if (path === '/account/vendor/supabase.js') {

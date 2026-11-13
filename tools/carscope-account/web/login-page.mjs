@@ -18,7 +18,7 @@ if (params.has('signin')) history.replaceState(null, '', location.pathname);
 if (outcome) say(outcome, params.get('signin') !== 'USER_SIGNED_OUT');
 
 const config = await loadPublicConfig();
-if (config.trialUrl) for (const id of ['trial', 'trialTop']) { $(id).href = config.trialUrl; $(id).hidden = false; }
+for (const id of ['trial', 'trialTop']) { $(id).href = config.trialUrl ?? '/inspect/inspect.html'; $(id).hidden = false; }
 
 if (!config.configured) {
   say(signinMessage(config.reason), true);
