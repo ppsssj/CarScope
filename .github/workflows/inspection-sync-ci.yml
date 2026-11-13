@@ -65,3 +65,9 @@ jobs:
         working-directory: tools/mobile-ar-poc
         env:
           POC_EVIDENCE_DIR: C:/CarScope-External/p17/ci/hosting
+      - name: All allowlisted asset types decode under existing CSP and nosniff
+        if: runner.os == 'Windows'
+        run: npm run test:browser:assets
+        working-directory: tools/mobile-ar-poc
+        env:
+          POC_EVIDENCE_DIR: C:/CarScope-External/p18/ci/assets

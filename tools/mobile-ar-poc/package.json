@@ -48,7 +48,8 @@
     "test:browser:charge:legacy": "node test/charge-browser.mjs",
     "test:browser:brake:legacy": "node test/brake-browser.mjs",
     "test:browser:ar:legacy": "node test/mobile-ar-browser.mjs",
-    "test:browser:hosting": "node test/react-hosting-browser.mjs"
+    "test:browser:hosting": "node test/react-hosting-browser.mjs",
+    "test:browser:assets": "node test/react-assets-browser.mjs"
   },
   "dependencies": {
     "@astryxdesign/core": "0.7.15",
