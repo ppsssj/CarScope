@@ -33,6 +33,8 @@ jobs:
           node-version: '22.16.0'
       - run: npm install --ignore-scripts --no-audit --no-fund --package-lock=false
       - run: npm run check:preflight
+      - name: Build React mobile for the full regression ingress tests
+        run: npm ci --prefix ../mobile-ar-poc --ignore-scripts --no-audit --no-fund && npm run build --prefix ../mobile-ar-poc
       - run: node --test test/supabase-preflight.test.mjs
       - name: Matrix on disposable servers
         run: npm run test:pg-matrix
@@ -56,6 +58,8 @@ jobs:
         with:
           node-version: '22.16.0'
       - run: npm install --ignore-scripts --no-audit --no-fund --package-lock=false
+      - name: Build the real mobile artifact before copying mutation fixtures
+        run: npm ci --prefix ../mobile-ar-poc --ignore-scripts --no-audit --no-fund && npm run build --prefix ../mobile-ar-poc
       - run: npm run test:mutations
         env:
           PG_MATRIX_BIND: 0.0.0.0
