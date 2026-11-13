@@ -115,6 +115,8 @@ The existing feature-specific browser command names now run the unified React su
 | Real phone / actual AI / Android runtime / deployed HTTPS | NOT_RUN | No LIVE claim; no deployments or production database writes |
 | GitHub CI | Reported on PR | Local results above are separate from remote job conclusions |
 
+The first remote run exposed a missing frontend build prerequisite in PostgreSQL ingress CI (500 instead of HTML). The PostgreSQL and geometry jobs now build the actual mobile artifact before HTTP assertions; assertions were retained. Remote PostgreSQL-backed MOCK Vision already passed that first run. Final conclusions are tracked against the latest PR SHA, not inherited from an older run.
+
 The Vite build emits benign `use client` bundler warnings from Astryx/StyleX dependencies in this client-only app. Browser checks show no React/runtime/CSP console errors. Measured build sizes: initial entry about 497 kB (160 kB gzip), shared Astryx chunk 123 kB (39 kB gzip), CSS 320 kB (51 kB gzip), lazy photo workspace 37 kB (14 kB gzip). These are artifact sizes, not smartphone performance measurements.
 
 ## Release limits
