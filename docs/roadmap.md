@@ -1,5 +1,9 @@
 # 로드맵 및 진입 조건
 
+## P15 — Supabase Auth Google 로그인과 내 차량
+
+체험 모드(3D·QR·AVD)는 로그인 없이 그대로 두고, 별도 계정 화면에서 Google 로그인(Supabase Auth, PKCE + 1회용 nonce)과 사용자별 차량 등록·수정·삭제를 제공한다. 새 스키마 `carscope_account`에 RLS와 열 단위 권한을 두어 다른 사용자 접근·소유자 변경·검증 상태 승격을 막는다. 모든 차량은 `SELF_REPORTED_UNVERIFIED`이고 Google 로그인은 외부 차량 데이터 권한을 주지 않는다. 흐름은 MOCK_PASS, RLS·화면은 로컬 Supabase 스택 LOCAL_PASS. **Google 실로그인 BLOCKED, 운영 마이그레이션·호스팅 NOT_RUN.** [설계·운영 절차](p15-supabase-auth-vehicles.md), [증거](evidence/p15-auth/README.md).
+
 ## P13-F — Roboflow + GPT 실험 모바일 연결
 
 별도 Vision CLI에서만 계정/권리/처리/비용 확인을 뜻하는 명시적 Roboflow 승인으로 4부품 탐지를 연결한다. 2부품은 수동 전용이며 6부품 모두 수동 지정 + GPT를 지원한다. Debug 앱의 명시적 빌드 Origin과 별도 enrollment로 같은 QR 인증을 사용한다. 기존 운영 진입점과 기본 거부는 유지한다. 실제 API·Render·휴대폰은 자격/계정/사진 확인 전 NOT_RUN이며 MOCK을 실제 성공으로 집계하지 않는다. [설정·1+1 실행](p13-f-live-vision-e2e.md), [증거](evidence/p13-f/README.md).
