@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<title>CarScope 내 차량</title>
+<link rel="stylesheet" href="/account/account.css">
+<script src="/account/vendor/supabase.js" defer></script>
+<script type="module" src="/account/vehicles-page.mjs"></script>
+</head>
+<body data-account="RESTORING">
+<header class="topbar">
+  <a class="brand" href="/account/">CarScope</a><span class="spacer"></span>
+  <a class="quiet" id="trialTop" hidden>3D 점검으로</a>
+  <button class="secondary" id="signOut" type="button" hidden>로그아웃</button>
+</header>
+<main>
+  <div class="status" id="status" role="status" aria-live="polite"></div>
+
+  <section class="card" id="restoring"><p>로그인 상태를 확인하고 있습니다.</p></section>
+
+  <section class="card" id="signedOut" hidden aria-labelledby="signedOutTitle">
+    <div class="eyebrow">내 차량</div>
+    <h1 id="signedOutTitle">로그인이 필요합니다</h1>
+    <p>내 차량은 로그인한 사람에게만 보입니다. 3D 차량 탐색과 스마트폰 QR 점검은 로그인 없이 쓸 수 있습니다.</p>
+    <div class="actions"><a class="primary" id="toLogin" href="/account/">로그인 화면으로</a><a class="secondary" id="trial" hidden>로그인 없이 체험하기</a></div>
+  </section>
+
+  <section class="card" id="unavailable" hidden>
+    <h1>인증 서버에 연결할 수 없습니다</h1>
+    <p>로그인이 확인되기 전에는 차량 정보를 보여 드리지 않습니다.</p>
+    <div class="actions"><button class="primary" id="retry" type="button">다시 확인</button></div>
+  </section>
+
+  <div id="signedIn" hidden>
+    <section class="card" aria-labelledby="meTitle">
+      <h2 id="meTitle" class="eyebrow">내 프로필</h2>
+      <div class="me"><img id="avatar" alt="" referrerpolicy="no-referrer" hidden><div class="who"><div class="name" id="name"></div><div class="mail" id="email"></div></div></div>
+      <dl class="facts"><dt>현대자동차 계정 연결: 사용할 수 없음(준비 중)</dt><dd id="hyundaiNote"></dd></dl>
+      <div class="row-actions"><button class="secondary" id="switchAccount" type="button">다른 Google 계정으로 로그인</button></div>
+    </section>
+
+    <section class="card" aria-labelledby="listTitle">
+      <h1 id="listTitle">내 차량</h1>
+      <p>직접 입력한 차량 정보입니다. 소유가 확인된 차량이 아닙니다.</p>
+      <div class="row-actions"><button class="primary" id="add" type="button">차량 추가</button></div>
+      <form class="vehicle-form" id="form" hidden novalidate>
+        <h2 id="formTitle">차량 추가</h2>
+        <label>제조사<input name="manufacturer" maxlength="40" required autocomplete="off" list="makers"><span class="field-error" data-error="manufacturer"></span></label>
+        <datalist id="makers"><option value="현대"><option value="기아"><option value="제네시스"></datalist>
+        <label>모델명<input name="model" maxlength="60" required autocomplete="off"><span class="field-error" data-error="model"></span></label>
+        <label>연식 (선택)<input name="model_year" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="예: 2024"><span class="field-error" data-error="model_year"></span></label>
+        <label>별칭 (선택)<input name="nickname" maxlength="40" autocomplete="off"><span class="field-error" data-error="nickname"></span></label>
+        <p class="note">차량 번호, 차대번호(VIN), 위치는 입력하지 않습니다. 등록해도 소유가 확인된 것으로 표시되지 않습니다.</p>
+        <div class="row-actions"><button class="primary" type="submit" id="save">저장</button><button class="secondary" type="button" id="cancel">취소</button></div>
+      </form>
+      <ul class="vehicles" id="vehicles" aria-live="polite"></ul>
+      <p class="empty" id="empty" hidden>등록한 차량이 없습니다.</p>
+    </section>
+  </div>
+</main>
+</body>
+</html>

@@ -1,0 +1,77 @@
+name: Account (Supabase Auth, My Vehicles) CI
+# P15. Two jobs, neither reaches a hosted Supabase project, Google, Render or a device:
+#  - unit: real supabase-js against a mock Auth server (MOCK_PASS), JWT verifier, input rules, local server, boundaries.
+#  - rls-local-stack: `supabase start` on the runner (local GoTrue + PostgREST + PostgreSQL 17 from the CLI's images)
+#    applies the migration, then two signed-up local users exercise RLS through the Data API (LOCAL_PASS).
+#    A pass here says nothing about the hosted project's settings, Google OAuth or the operator's migration run.
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  unit:
+    name: Auth flow (MOCK), JWT verifier, input rules, server, boundaries
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: tools/carscope-account
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '22.16.0'
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - run: npm run check
+      - run: npm test
+
+  rls-local-stack:
+    name: RLS through the Data API of a local Supabase stack (LOCAL_PASS)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    defaults:
+      run:
+        working-directory: tools/carscope-account
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '22.16.0'
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Supabase CLI 3.1.0 (local stack only; never linked to a project)
+        run: npm install --no-save --no-audit --no-fund --prefix "$RUNNER_TEMP/sbcli" supabase@3.1.0
+      - name: Per-run ES256 signing key in the ignored .temp folder
+        run: |
+          mkdir -p supabase/.temp
+          (cd "$RUNNER_TEMP" && "$RUNNER_TEMP/sbcli/node_modules/.bin/supabase" gen signing-key --algorithm ES256 > "$RUNNER_TEMP/key.json" 2>/dev/null)
+          node -e "const k=JSON.parse(require('fs').readFileSync(process.argv[1],'utf8'));require('fs').writeFileSync('supabase/.temp/signing_keys.json',JSON.stringify(Array.isArray(k)?k:[k]))" "$RUNNER_TEMP/key.json"
+          rm "$RUNNER_TEMP/key.json"
+      - name: Start the local stack (applies supabase/migrations)
+        run: |
+          "$RUNNER_TEMP/sbcli/node_modules/.bin/supabase" start -x realtime,storage-api,imgproxy,studio,postgres-meta,mailpit,logflare,vector,supavisor,edge-runtime > /dev/null
+          "$RUNNER_TEMP/sbcli/node_modules/.bin/supabase" status -o json > "$RUNNER_TEMP/status.json" 2>/dev/null
+          node -e "const s=JSON.parse(require('fs').readFileSync(process.argv[1],'utf8'));require('fs').appendFileSync(process.env.GITHUB_ENV,'CARSCOPE_LOCAL_SUPABASE_URL='+s.API_URL+'\nCARSCOPE_LOCAL_SUPABASE_PUBLISHABLE_KEY='+s.PUBLISHABLE_KEY+'\nCARSCOPE_LOCAL_SUPABASE_DB_URL='+s.DB_URL+'\n')" "$RUNNER_TEMP/status.json"
+          rm "$RUNNER_TEMP/status.json"
+      - name: RLS and privilege tests (fails if the stack is missing)
+        run: npm run test:rls
+        env:
+          CARSCOPE_RLS_REQUIRED: '1'
+      - name: Operator verification SQL on the same stack (every row must be t)
+        run: |
+          docker exec -i supabase_db_carscope-account psql -U postgres -v ON_ERROR_STOP=1 -At -F ' ' < supabase/operator/verify-account-schema.sql | tee "$RUNNER_TEMP/verify.txt"
+          ! grep -E ' f$' "$RUNNER_TEMP/verify.txt"
+          test "$(grep -cE ' t$' "$RUNNER_TEMP/verify.txt")" -eq 10
+      - name: Stop
+        if: always()
+        run: '"$RUNNER_TEMP/sbcli/node_modules/.bin/supabase" stop --no-backup || true'
