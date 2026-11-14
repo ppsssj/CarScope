@@ -70,15 +70,18 @@ def boundary():
         assert (activity in activities) == (variant == 'debug')
         assert (tire_permissions <= permissions) if variant == 'debug' else not (tire_permissions & permissions)
         if variant == 'release':
-            assert permissions == {'pleos.car.permission.CAR_DOORS', 'ai.pleos.playground.service.vehicle.VEHICLE_BINDING'}
+            # Release submission: verified read-only permissions only; tire permissions stay out (docs/release-submission.md).
+            assert permissions == {'pleos.car.permission.CAR_DOORS', 'ai.pleos.playground.service.vehicle.VEHICLE_BINDING', 'pleos.car.permission.CAR_ENERGY', 'pleos.car.permission.CAR_WINDOWS', 'pleos.car.permission.CAR_LIGHTS', 'pleos.car.permission.CAR_DRIVE'}
     artifacts = [ROOT/'app/build/outputs/apk/debug/app-debug.apk', ROOT/'app/build/outputs/apk/release/app-release-unsigned.apk', ROOT/'app/build/outputs/bundle/release/app-release.aab']
     for file in artifacts:
         with zipfile.ZipFile(file) as z:
             dex = b''.join(z.read(n) for n in z.namelist() if n.endswith('.dex'))
         debug = file.name == 'app-debug.apk'
-        for marker in (b'Lio/carscope/app/tire/TireProbeActivity;', b'Lio/carscope/app/tire/SdkTireSession;', b'Lio/carscope/app/tire/PleosTireDataSource;', b'Lio/carscope/app/tire/TireProbeOwner;', b'Lio/carscope/app/tire/TireSessionDiagnostics;', b'Lio/carscope/app/tire/TireProcessOwner;', b'Lio/carscope/app/tire/TireUiChannel;', b'Lio/carscope/app/tire/TireUiProjection;', b'Lio/carscope/app/lab/DebugWebOrigin;'):
-            assert (marker in dex) == debug, (file.name, marker)
-    print('PASS: Tire probe, controller, SDK transport and new permissions debug-only; release permissions unchanged')
+        assert (b'Lio/carscope/app/tire/TireProbeActivity;' in dex) == debug, file.name
+        # The status-only tire channel is shared with the Release inspection screen; without CAR_SAFETY it reports PERMISSION_DENIED.
+        for marker in (b'Lio/carscope/app/tire/SdkTireSession;', b'Lio/carscope/app/tire/PleosTireDataSource;', b'Lio/carscope/app/tire/TireProbeOwner;', b'Lio/carscope/app/tire/TireSessionDiagnostics;', b'Lio/carscope/app/tire/TireProcessOwner;', b'Lio/carscope/app/tire/TireUiChannel;', b'Lio/carscope/app/tire/TireUiProjection;', b'Lio/carscope/app/lab/DebugWebOrigin;'):
+            assert marker in dex, (file.name, marker)
+    print('PASS: Tire probe and CAR_SAFETY/PRIVATE_CAR_SAFETY debug-only; status channel shared; release permissions are the verified read-only set')
 
 
 def health(serial, out):

@@ -33,6 +33,17 @@ class NativeInspectionBridgeTest {
                 receivedAt = 105_000, acceptedAt = 106_000, explicitlyAccepted = true)
         }
     }
+    @Test fun `only a Release bridge marks its request answer as an unsupported build, and it still never carries a credential`() {
+        fun ask(bridge: NativeInspectionBridge): String {
+            assertTrue(bridge.handle("""{"op":"open","localSessionId":"s","generation":1}""").contains("ok"))
+            return bridge.handle("""{"op":"request","localSessionId":"s","generation":1,"taskId":"washer-fluid","partId":"washer-fluid-cap"}""")
+        }
+        val releaseRequests = mutableListOf<NativeInspectionRequest>()
+        assertEquals(mapOf("ok" to true, "buildUnsupported" to true),
+            gson.fromJson(ask(NativeInspectionBridge({ 0L }, releaseRequests::add, {}, buildUnsupported = true)), Map::class.java))
+        assertEquals("washer-fluid", releaseRequests.single().taskId)
+        assertEquals(mapOf("ok" to true), gson.fromJson(ask(NativeInspectionBridge({ 0L }, {}, {})), Map::class.java))
+    }
     @Test fun `a panel slot carries its viewport size and nothing else`() {
         val got = mutableListOf<NativePanelCommand>()
         val bridge = NativeInspectionBridge({ 0L }, {}, {}, panelCommand = { got += it })

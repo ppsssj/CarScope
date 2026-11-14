@@ -84,7 +84,7 @@ test('the phone uses the same name for every result part',()=>{
 });
 
 test('Native uses the same name for every result part',()=>{
-  const contract=read('../../../app/src/debug/java/io/carscope/app/sync/SyncReceiverContract.kt'),checklist=read('../../../app/src/debug/java/io/carscope/app/sync/SyncChecklistInspection.kt');
+  const contract=read('../../../app/src/inspection/java/io/carscope/app/sync/SyncReceiverContract.kt'),checklist=read('../../../app/src/inspection/java/io/carscope/app/sync/SyncChecklistInspection.kt');
   const direct=[...(/val labels = listOf\(([^)]*)\)/.exec(contract)?.[1].matchAll(/"([^"]+)"/g)??[])].map(m=>m[1]);
   const native=new Map(['washer-fluid','tire.front-left','tire.front-right','tire.rear-left','tire.rear-right','ev-charge.port'].map((task,i)=>[task,direct[i]]));
   for(const m of checklist.matchAll(/"([a-z0-9.-]+)" to SyncChecklistProfile\("([^"]+)"/g))native.set(m[1],m[2]);

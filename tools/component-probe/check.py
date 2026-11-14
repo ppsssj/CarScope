@@ -97,42 +97,35 @@ def boundary():
     for variant in ('debug', 'release'):
         manifest = ROOT / f'app/build/intermediates/merged_manifest/{variant}/process{variant.title()}MainManifest/AndroidManifest.xml'
         permissions = {n.get(ns + 'name') for n in ET.parse(manifest).getroot().iter('uses-permission')}
-        assert ('pleos.car.permission.CAR_ENERGY' in permissions) == (variant == 'debug')
-        for permission in ('CAR_WINDOWS', 'CAR_LIGHTS', 'CAR_DRIVE'):
-            assert ('pleos.car.permission.' + permission in permissions) == (variant == 'debug')
+        # Read-only permissions whose features were received on the AVD (docs/pleos-avd-sdk-e2e.md), in both build types.
+        for permission in ('CAR_ENERGY', 'CAR_WINDOWS', 'CAR_LIGHTS', 'CAR_DRIVE'):
+            assert 'pleos.car.permission.' + permission in permissions, (variant, permission)
         assert not any(p.startswith('pleos.car.permission.CONTROL_') for p in permissions)
         if variant == 'release':
-            assert permissions == {'pleos.car.permission.CAR_DOORS', 'ai.pleos.playground.service.vehicle.VEHICLE_BINDING'}
+            # CAR_SAFETY (washer/brake fluid) is not delivered on the AVD and stays out of Release: the card shows PERMISSION_DENIED.
+            assert permissions == {'pleos.car.permission.CAR_DOORS', 'ai.pleos.playground.service.vehicle.VEHICLE_BINDING', 'pleos.car.permission.CAR_ENERGY', 'pleos.car.permission.CAR_WINDOWS', 'pleos.car.permission.CAR_LIGHTS', 'pleos.car.permission.CAR_DRIVE'}
     artifacts = [('app/build/outputs/apk/debug/app-debug.apk', True), ('app/build/outputs/apk/release/app-release-unsigned.apk', False), ('app/build/outputs/bundle/release/app-release.aab', False)]
     for path, debug in artifacts:
         with zipfile.ZipFile(ROOT / path) as archive:
             dex = b''.join(archive.read(n) for n in archive.namelist() if n.endswith('.dex'))
             for name in ('SdkComponentSession', 'PleosComponentDataSource', 'ComponentUiChannel', 'ComponentOwner', 'ComponentUiProjection'):
-                assert (f'Lio/carscope/app/component/{name};'.encode() in dex) == debug, (path, name)
+                assert f'Lio/carscope/app/component/{name};'.encode() in dex, (path, name)
             assert b'Lio/carscope/app/component/ComponentFakeSession;' not in dex
-            if debug:
-                assert 'assets/inspection/component-status.mjs' in archive.namelist()
-                assert 'assets/inspection/ev-charge-status.mjs' in archive.namelist()
-                assert 'assets/inspection/visibility-status.mjs' in archive.namelist()
-                assert 'assets/inspection/odometer-status.mjs' in archive.namelist()
-                assert 'assets/inspection/external-vehicle-data.mjs' in archive.namelist()  # P14-B: MOCK-only block, never turned on by the shell
-            else:
-                assert b'visibility-status.json' not in dex
-                assert b'odometer-status.json' not in dex
-                assert not any('odometer-status' in n for n in archive.namelist())
-                assert not any('external-vehicle-data' in n for n in archive.namelist())
-                assert b'kr-ccapi.hyundai.com' not in dex and b'api.pleos.ai' not in dex
-                assert not any('visibility-status' in n for n in archive.namelist())
-                assert b'ev-charge-status.json' not in dex
-                assert not any('ev-charge-status' in n for n in archive.namelist())
-                assert not any('component-status' in n or '/component/' in n for n in archive.namelist())
-                assert b'Lio/carscope/app/component/' not in dex
+            assert b'kr-ccapi.hyundai.com' not in dex and b'api.pleos.ai' not in dex
+            prefix = 'base/assets/inspection/' if path.endswith('.aab') else 'assets/inspection/'
+            # Release carries the same page (CI builds the page before Gradle; see identity-probe-ci.yml).
+            assert prefix + 'index.html' in archive.namelist(), path
+            assert prefix + 'component-status.mjs' in archive.namelist()
+            assert prefix + 'ev-charge-status.mjs' in archive.namelist()
+            assert prefix + 'visibility-status.mjs' in archive.namelist()
+            assert prefix + 'odometer-status.mjs' in archive.namelist()
+            assert prefix + 'external-vehicle-data.mjs' in archive.namelist()  # P14-B: MOCK-only block, never turned on by the shell
     for cls, count in [('component.OdometerDataTest', 6), ('lab.OdometerWebTest', 1), ('component.PleosComponentDataSourceTest', 14), ('component.ComponentUiProjectionTest', 4), ('lab.ComponentWebBoundaryTest', 2), ('component.ChargePortDataTest', 4), ('lab.ChargePortWebTest', 2), ('component.VisibilityDataTest', 7), ('lab.VisibilityWebTest', 3)]:
         suite = ET.parse(ROOT / f'app/build/test-results/testDebugUnitTest/TEST-io.carscope.app.{cls}.xml').getroot()
         assert int(suite.get('tests')) >= count
         assert all(int(suite.get(k, 0)) == 0 for k in ('failures', 'errors', 'skipped'))
         print(f'PASS: {cls}: {suite.get("tests")} synthetic JVM/Robolectric tests')
-    print('PASS: component code/assets and CAR_ENERGY/CAR_DRIVE Debug-only; Release permissions unchanged; no control permission')
+    print('PASS: component code/assets shared by Debug and Release; verified read-only permissions only; no CAR_SAFETY in Release; no control permission')
 
 
 if __name__ == '__main__':

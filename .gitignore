@@ -18,6 +18,9 @@ captures/
 *.p12
 *.pfx
 *.apk
+# Contest submission (docs/release-submission.md): only this signed Release APK is tracked.
+!apk/
+!apk/박성진_차보담_release.apk
 *.aab
 *.aar
 *.jar

@@ -139,7 +139,9 @@
 
   #toast{position:fixed;left:var(--free-center,50%);top:72px;transform:translateX(-50%);background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:8px 16px;font-size:14px;color:var(--text);opacity:0;transition:opacity .25s;pointer-events:none;white-space:nowrap}
   #toast.on{opacity:1}
-  .disclaimer{position:fixed;left:22px;bottom:14px;right:22px;font-size:11px;color:var(--faint);pointer-events:none}
+  .disclaimer{position:fixed;left:22px;bottom:20px;right:22px;font-size:11px;color:var(--faint);pointer-events:none}
+  /* Model attribution (CC BY 4.0): one line under the disclaimer, below the zoom buttons, hints and part panel. */
+  .credit{position:fixed;left:22px;right:22px;bottom:4px;margin:0;font-size:10px;line-height:1.3;color:var(--faint);pointer-events:none}
   #status{position:fixed;inset:0;display:grid;place-items:center;color:var(--muted);pointer-events:none}
 
   #dev{position:fixed;left:18px;top:72px;width:300px;background:#000c;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font:11px/1.5 ui-monospace,Consolas,monospace;color:#b9c0c8;white-space:pre-wrap}
@@ -236,6 +238,7 @@
 <div id="toast" role="status"></div>
 <div id="exitConfirm" hidden><div class="dialog" role="alertdialog" aria-modal="true" aria-labelledby="exitConfirmTitle"></div></div>
 <p class="disclaimer">커뮤니티 3D 자산 기반 참조 모델입니다. 실제 OEM 형상·치수가 아니며 부품 위치와 개방 동작은 추정·시뮬레이션입니다.</p>
+<p id="modelCredit" class="credit">3D 모델: “Hyundai Ioniq 5” © 2022 andikapratamaw, CC BY 4.0 (creativecommons.org/licenses/by/4.0) · 수정본: OpenX Assets © 2026 Dogan Ulus, MPL-2.0 AND CC-BY-4.0 · CarScope 변환·추정 부품 추가 · Hyundai 공식 자료 아님</p>
 <div id="dev" hidden></div>
 <script type="module" src="./inspect.js"></script>
 </body>

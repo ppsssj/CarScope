@@ -11,7 +11,9 @@ import { REPO_ROOT, TOOL_ROOT, serverClockGate } from './static-gates.mjs';
 import { SessionService } from '../src/sessions.mjs';
 import { MemorySessionStore } from '../src/session-store.mjs';
 
-export const DECODER_PATH = 'app/src/debug/java/io/carscope/app/sync/SyncHttpDecoder.kt';
+export const DECODER_PATH = 'app/src/inspection/java/io/carscope/app/sync/SyncHttpDecoder.kt';
+/** Where the decoder lived at LEGACY_DECODER_REV (before the Release submission shared it). */
+export const LEGACY_DECODER_PATH = 'app/src/debug/java/io/carscope/app/sync/SyncHttpDecoder.kt';
 /** Last main commit with the exact six-key decoder: the parent side of PR #76. */
 export const LEGACY_DECODER_REV = '2435087';
 const LEGACY_SNAPSHOT = 'preflight/legacy-decoder-created-2435087.kt.txt';
@@ -45,7 +47,7 @@ export const currentDecoderSource = () => readFileSync(resolve(REPO_ROOT, DECODE
 export function legacySnapshotGate(root = REPO_ROOT) {
   let historic;
   try {
-    historic = execFileSync('git', ['show', `${LEGACY_DECODER_REV}:${DECODER_PATH}`], { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
+    historic = execFileSync('git', ['show', `${LEGACY_DECODER_REV}:${LEGACY_DECODER_PATH}`], { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
   } catch {
     return check('LEGACY_DECODER_SNAPSHOT', 'NOT_RUN', `git history for ${LEGACY_DECODER_REV} is unavailable (shallow clone?)`);
   }

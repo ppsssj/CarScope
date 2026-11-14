@@ -17,7 +17,9 @@ internal class NativeInspectionBridge(
     private val reopenNative: (NativeInspectionRequest) -> Unit = {},
     /** Lifecycle and anomaly lines only: sanitized stages and counters, never a session ID, task or body. */
     private val diag: (String) -> Unit = {},
-    private val panelCommand: (NativePanelCommand) -> Unit = {}
+    private val panelCommand: (NativePanelCommand) -> Unit = {},
+    /** Release only: the build carries no phone sync, and every accepted request reply says so. Debug keeps false. */
+    private val buildUnsupported: Boolean = false
 ) {
     private val gson = Gson()
     private var active = true
@@ -87,7 +89,7 @@ internal class NativeInspectionBridge(
                             require(pendingTask == null && entries.size < 100)
                             pendingTask = task; armed = false; notice = null; requestNative(request)
                         }
-                        gson.toJson(mapOf("ok" to true))
+                        gson.toJson(if (buildUnsupported) mapOf("ok" to true, "buildUnsupported" to true) else mapOf("ok" to true))
                     }
                     "poll" -> { keys(); poll() }
                     "verify" -> {
