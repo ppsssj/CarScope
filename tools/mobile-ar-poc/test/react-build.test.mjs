@@ -4,10 +4,36 @@ import http from "node:http";
 import { mkdtemp, readFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { reactAssets, readReactAsset, readReactPage } from "../react-build.mjs";
+import { reactAssets, reactAssetContentType, readReactAsset, readReactPage } from "../react-build.mjs";
 import { buildStaging } from "../staging/build.mjs";
 import { createHandler } from "../server.mjs";
 import { startMobileDevServer } from "../../inspection-sync-poc/src/mobile-dev-server.mjs";
+const expectedTypes = Object.freeze({
+  ".js": "text/javascript; charset=utf-8",
+  ".css": "text/css; charset=utf-8",
+  ".svg": "image/svg+xml",
+  ".png": "image/png",
+  ".webp": "image/webp",
+  ".woff2": "font/woff2",
+});
+
+test("MIME mapping covers every allowlisted extension and rejects invalid asset paths", () => {
+  for (const [extension, expected] of Object.entries(expectedTypes)) {
+    assert.equal(reactAssetContentType(`react-assets/sample-a1${extension}`), expected);
+  }
+  for (const invalid of [
+    "react-assets/sample.json",
+    "react-assets/sample.js.map",
+    "react-assets/../secret.js",
+    "react-assets/subdir/sample.js",
+    "react-assets/..js",
+    "other/sample.png",
+    "react-assets/sample.html",
+  ]) {
+    assert.equal(reactAssetContentType(invalid), null, invalid);
+  }
+});
+
 test("every manifest chunk has the right MIME and bytes on both hosts; traversal and unlisted bundles stay denied", async (t) => {
   const local = http.createServer(createHandler());
   await new Promise((r) => local.listen(0, "127.0.0.1", r));
@@ -25,9 +51,10 @@ test("every manifest chunk has the right MIME and bytes on both hosts; traversal
     for (const file of assets) {
       const r = await fetch(origin + "/" + file);
       assert.equal(r.status, 200, file);
-      assert.match(
+      assert.equal(
         r.headers.get("content-type"),
-        file.endsWith(".css") ? /^text\/css/ : /^text\/javascript/,
+        expectedTypes[path.extname(file)],
+        `wrong MIME: ${file}`,
       );
       assert.equal(r.headers.get("content-security-policy"), csp);
       assert.deepEqual(
@@ -37,6 +64,10 @@ test("every manifest chunk has the right MIME and bytes on both hosts; traversal
     }
     for (const file of [
       "/react-assets/not-in-manifest.js",
+      "/react-assets/not-in-manifest.svg",
+      "/react-assets/not-in-manifest.png",
+      "/react-assets/not-in-manifest.webp",
+      "/react-assets/not-in-manifest.woff2",
       "/react-assets/%2e%2e/package.json",
       "/react-assets/manifest.json",
       "/.vite/manifest.json",
