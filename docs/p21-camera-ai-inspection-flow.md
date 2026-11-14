@@ -157,6 +157,8 @@ P21 브라우저 시나리오(합성 카메라, 고정 탐지기, MOCK 분석, �
 npm install --prefix tools/inspection-sync-poc --omit=dev --ignore-scripts --no-audit --no-fund --package-lock=false && npm ci --prefix tools/mobile-ar-poc --include=dev --ignore-scripts --no-audit --no-fund && npm run build --prefix tools/mobile-ar-poc
 ```
 
+로컬 검증(배포 아님): 커밋 `git archive`를 깨끗한 폴더에 풀고 `NODE_ENV=production`으로 실행했다. 두 번째·세 번째 단계는 dev 의존성을 설치해 Vite 빌드를 마쳤다. 그 결과물에서 Vision 옵션의 `/`가 200, React 번들, 탐지·분석 마커를 주고 진입 스크립트에 P21 흐름이 있었다. 첫 단계(`npm install --prefix tools/inspection-sync-poc …`, P13-F와 같고 바꾸지 않음)는 이 Windows의 npm 10.9.2에서 `--prefix` 형식만 루트 `package.json`을 찾다 실패했다. 해당 폴더 안에서 실행하면 성공한다. 같은 `--prefix` 형식은 Ubuntu CI(`webxr-poc-ci.yml`)에서 이미 실행되고 Render도 Linux이므로 로컬 환경 차이로 기록한다.
+
 적용 후 확인:
 1. 배포 로그에 Vite `✓ built`.
 2. `node tools/inspection-sync-poc/bin/deployment-preflight.mjs probe --origin <Vision origin>` 결과가 `vision: EXPERIMENT`, 탐지 승인 시 `detection: EXPERIMENT`. 유료 호출 없음.
