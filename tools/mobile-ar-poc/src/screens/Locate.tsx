@@ -1,8 +1,16 @@
-import { lazy, Suspense, useEffect } from "react";
+import { lazy, Suspense, useEffect, useMemo } from "react";
 import { Button } from "@astryxdesign/core/Button";
 import { CameraView, useCamera, type CameraStatus } from "../Camera";
 import { Dock, Heading, Section, Rows, Bullets, TextAction } from "../ui/kit";
 import type { StepProps } from "./types";
+import { aiOffer } from "../ai/offer";
+import { useCameraAi } from "../ai/useCameraAi";
+import { CAI } from "../../public/camera-ai-flow.mjs";
+import {
+  CameraAiStage,
+  aiHeading,
+  cameraAiActions,
+} from "../ai/CameraAiPanel";
 
 const PhotoAnalysis = lazy(() =>
   import("../PhotoAnalysis").then((m) => ({ default: m.PhotoAnalysis })),
@@ -22,6 +30,16 @@ export function Locate(p: StepProps) {
   const { task, taskId, washer, profile, event, copy, guide, paused } = p;
   const camera = useCamera(p.event, taskId);
   const { status, mark } = camera;
+  // P21: the camera AI assist runs only where the capability table, the QR v2 connection and this server allow it.
+  const offer = useMemo(() => aiOffer(taskId), [taskId]);
+  const aiMode = offer.plan !== null;
+  const ai = useCameraAi({ camera, offer, paused });
+  const aiHead = aiMode ? aiHeading(ai, offer) : null;
+  const stillShown =
+    aiMode &&
+    !!ai.still &&
+    ai.state.phase !== CAI.IDLE &&
+    ai.state.phase !== CAI.CAMERA_READY;
   // The exit dialog stops the camera, like leaving the page.
   useEffect(() => {
     if (paused && (status === "live" || status === "requesting")) camera.stop();
@@ -50,13 +68,15 @@ export function Locate(p: StepProps) {
         headingRef={p.headingRef}
         eyebrow="2단계 · 위치 찾기"
         title={
-          status === "live" && mark
+          aiHead?.title ??
+          (status === "live" && mark
             ? "표시한 곳이 맞는지 직접 확인해 주세요"
-            : TITLE[status](task.label)
+            : TITLE[status](task.label))
         }
-        body={body}
+        body={aiHead?.body ?? body}
       />
-      <CameraView camera={camera} label={task.label} />
+      <CameraView camera={camera} label={task.label} hidden={stillShown} />
+      {aiMode && <CameraAiStage ai={ai} offer={offer} />}
       {washer && (
         <TextAction
           label="부품을 확인할 수 없음"
@@ -78,68 +98,122 @@ export function Locate(p: StepProps) {
           <p className="cb-caption">{task.position}</p>
         </Section>
       )}
-      <Section
-        id="photo-title"
-        title="사진으로 한 번 더 살펴보기"
-        className="cb-photo-section"
-      >
-        <Suspense fallback={<p role="status">사진 보조를 준비하고 있어요.</p>}>
-          {!paused && <PhotoAnalysis taskId={taskId} />}
-        </Suspense>
-      </Section>
+      {aiMode ? (
+        // The camera flow is the main path; a saved photo stays available as an alternative.
+        <details className="cb-disclosure cb-photo-section">
+          <summary>갤러리 사진으로 대신 살펴보기</summary>
+          <Suspense fallback={<p role="status">사진 보조를 준비하고 있어요.</p>}>
+            {!paused && <PhotoAnalysis taskId={taskId} />}
+          </Suspense>
+        </details>
+      ) : (
+        <Section
+          id="photo-title"
+          title="사진으로 한 번 더 살펴보기"
+          className="cb-photo-section"
+        >
+          <Suspense fallback={<p role="status">사진 보조를 준비하고 있어요.</p>}>
+            {!paused && <PhotoAnalysis taskId={taskId} />}
+          </Suspense>
+        </Section>
+      )}
       <Section id="locate-safety" title="살펴보는 동안" tone="quiet">
         <Bullets items={[...copy.points, ...(copy.stop ? [copy.stop] : [])]} />
       </Section>
-      <Dock>
-        {status === "live" ? (
-          <Button
-            label="위치 확인 후 관찰하기"
-            variant="primary"
-            size="lg"
-            width="100%"
-            onClick={() => event({ type: "TO_CHECK" })}
-          />
-        ) : status === "idle" || status === "requesting" ? (
-          <Button
-            label="카메라 켜기"
-            variant="primary"
-            size="lg"
-            width="100%"
-            isLoading={status === "requesting"}
-            onClick={() => void camera.start()}
-          />
-        ) : (
-          <Button
-            label="카메라 없이 계속하기"
-            variant="primary"
-            size="lg"
-            width="100%"
-            onClick={manual}
-          />
-        )}
-        {(status === "live" ||
-          status === "idle" ||
-          status === "requesting") && (
-          // Stays enabled while the permission prompt is open: leaving must
-          // never wait on the browser (the session discards a late stream).
-          <Button
-            label="카메라 없이 계속하기"
-            variant="ghost"
-            size="lg"
-            width="100%"
-            onClick={manual}
-          />
-        )}
-        {(status === "denied" || status === "failed") && (
-          <Button
-            label={status === "denied" ? "권한 다시 요청하기" : "다시 시도하기"}
-            variant="ghost"
-            size="lg"
-            width="100%"
-            onClick={() => void camera.start()}
-          />
-        )}
-      </Dock>
+      {aiMode ? (
+        <AiDock
+          actions={cameraAiActions(ai, offer, status, {
+            toCheck: () =>
+              event(camera.live ? { type: "TO_CHECK" } : { type: "TO_CHECK", manual: true }),
+            startCamera: () => void camera.start(),
+            manual,
+          })}
+        />
+      ) : (
+        <Dock>
+          {status === "live" ? (
+            <Button
+              label="위치 확인 후 관찰하기"
+              variant="primary"
+              size="lg"
+              width="100%"
+              onClick={() => event({ type: "TO_CHECK" })}
+            />
+          ) : status === "idle" || status === "requesting" ? (
+            <Button
+              label="카메라 켜기"
+              variant="primary"
+              size="lg"
+              width="100%"
+              isLoading={status === "requesting"}
+              onClick={() => void camera.start()}
+            />
+          ) : (
+            <Button
+              label="카메라 없이 계속하기"
+              variant="primary"
+              size="lg"
+              width="100%"
+              onClick={manual}
+            />
+          )}
+          {(status === "live" ||
+            status === "idle" ||
+            status === "requesting") && (
+            // Stays enabled while the permission prompt is open: leaving must
+            // never wait on the browser (the session discards a late stream).
+            <Button
+              label="카메라 없이 계속하기"
+              variant="ghost"
+              size="lg"
+              width="100%"
+              onClick={manual}
+            />
+          )}
+          {(status === "denied" || status === "failed") && (
+            <Button
+              label={status === "denied" ? "권한 다시 요청하기" : "다시 시도하기"}
+              variant="ghost"
+              size="lg"
+              width="100%"
+              onClick={() => void camera.start()}
+            />
+          )}
+        </Dock>
+      )}
     </>
+  );
+}
+
+function AiDock({
+  actions,
+}: {
+  actions: ReturnType<typeof cameraAiActions>;
+}) {
+  const { primary, secondary, hint } = actions;
+  return (
+    <Dock>
+      {primary && (
+        <Button
+          label={primary.label}
+          variant="primary"
+          size="lg"
+          width="100%"
+          isLoading={primary.loading}
+          isDisabled={primary.disabled}
+          onClick={primary.onClick}
+        />
+      )}
+      {secondary && (
+        <Button
+          label={secondary.label}
+          variant="ghost"
+          size="lg"
+          width="100%"
+          onClick={secondary.onClick}
+        />
+      )}
+      {hint && <p className="cb-dock-hint">{hint}</p>}
+    </Dock>
   );
 }

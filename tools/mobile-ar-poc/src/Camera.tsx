@@ -9,6 +9,7 @@ import {
   videoPointToStage,
   drawMarker,
 } from "../public/marker.mjs";
+import { captureProblem, scaledSize } from "../public/camera-ai-flow.mjs";
 import type { FlowEvent } from "./domain";
 
 /** View status of the CameraSession (presentation only, not a domain state). */
@@ -32,6 +33,8 @@ export function useCamera(dispatch: (e: FlowEvent) => void, taskId: string) {
     [candidateCount, setCandidateCount] = useState(0);
   const detects = taskId === "washer-fluid";
   const live = status === "live";
+  const liveNow = useRef(false);
+  liveNow.current = live;
 
   useEffect(() => {
     const cam = new CameraSession(video.current, navigator.mediaDevices, () => {
@@ -157,6 +160,25 @@ export function useCamera(dispatch: (e: FlowEvent) => void, taskId: string) {
     setMark(null);
     setMessage("카메라를 껐어요. 다시 켤 수 있어요.");
   }
+  /**
+   * P21: one still frame of the live picture, at most `maxSide` on its long side, as an upright canvas (video frames
+   * are already orientation-corrected by the browser; a canvas carries no EXIF). Refused unless the picture is live
+   * right now, so a capture can never come from a camera that was just stopped.
+   */
+  function captureFrame(
+    maxSide: number,
+  ): { canvas: HTMLCanvasElement } | { error: string } {
+    const v = video.current;
+    if (!liveNow.current || !v || !v.srcObject) return { error: "CAMERA_OFF" };
+    const problem = captureProblem(v.videoWidth, v.videoHeight);
+    if (problem) return { error: problem };
+    const size = scaledSize(v.videoWidth, v.videoHeight, maxSide);
+    const c = document.createElement("canvas");
+    c.width = size.width;
+    c.height = size.height;
+    c.getContext("2d")!.drawImage(v, 0, 0, c.width, c.height);
+    return { canvas: c };
+  }
   function place(point: { x: number; y: number } | null) {
     setMark(point);
     if (point) dispatch({ type: "NOTE_AIDS", locationMarked: true });
@@ -183,6 +205,7 @@ export function useCamera(dispatch: (e: FlowEvent) => void, taskId: string) {
     start,
     stop,
     place,
+    captureFrame,
   };
 }
 export type CameraControl = ReturnType<typeof useCamera>;
@@ -197,16 +220,19 @@ export function CameraView({
   camera,
   label,
   inlineStart = false,
+  hidden = false,
 }: {
   camera: CameraControl;
   label: string;
   inlineStart?: boolean;
+  /** Kept mounted (the session owns this <video>) but not shown, e.g. while a captured still is on screen. */
+  hidden?: boolean;
 }) {
   const { video, overlay, status, live, mark } = camera;
   const blocked =
     status === "denied" || status === "unsupported" || status === "failed";
   return (
-    <section className="cb-camera" aria-label="카메라 보조">
+    <section className="cb-camera" aria-label="카메라 보조" hidden={hidden}>
       <div
         className="cb-viewfinder"
         data-picture={live ? "on" : blocked ? "blocked" : "off"}
