@@ -71,3 +71,13 @@ jobs:
         working-directory: tools/mobile-ar-poc
         env:
           POC_EVIDENCE_DIR: C:/CarScope-External/p18/ci/assets
+      - name: Build isolated design lab (product build remains separate)
+        if: runner.os == 'Windows'
+        run: npm run build:design-lab
+        working-directory: tools/mobile-ar-poc
+      - name: Three concepts, three viewports, mock journeys and accessibility
+        if: runner.os == 'Windows'
+        run: npm run test:browser:design-lab
+        working-directory: tools/mobile-ar-poc
+        env:
+          POC_EVIDENCE_DIR: C:/CarScope-External/p18/ci/design-lab
