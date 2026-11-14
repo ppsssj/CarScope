@@ -1,27 +1,30 @@
-# CarScope
+# 차보담 (CarScope)
 
-**Interactive 3D vehicle inspection, from the car to your phone camera.**
+**차량에서 시작하는 스마트 점검.** 차량 화면의 3D 모델에서 부품을 찾아 이해하고, 스마트폰으로 이어서 직접 점검한 뒤 결과를 다시 차량에서 확인합니다.
 
-<p align="center">
-  <img src="docs/visuals/readme/hero-vehicle.webp" width="860" alt="CarScope 차량 점검 UI 홈 화면: 다크 배경 중앙의 IONIQ 5 참조 모델과 차량 점검 버튼">
-</p>
-<p align="center"><sub>P3-A4 차량 점검 UI 홈 화면 (<code>tools/three-poc/inspect.html</code>, 로컬 Chrome 실제 캡처). 차량 모델: “Hyundai Ioniq 5” © 2022 andikapratamaw, <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>. OpenX Assets 수정본을 CarScope에서 변환·렌더링했습니다. <a href="#model-references--attribution">출처 자세히</a></sub></p>
+## Demo
 
-CarScope는 3D 차량에서 부위를 선택하고, 네 타이어의 육안 응답을 기록·확정한 뒤 요약을 검토하는 차량 점검 프로토타입입니다. 워셔액은 기존 안내와 QR 스마트폰 점검으로 이어집니다. 사용자 기록과 Android Automotive OS(AAOS)/Pleos SDK의 **읽기 전용 상태 관측**을 구분합니다.
+https://github.com/user-attachments/assets/62d618ce-9da3-4f5a-98bb-f3327678c64b
 
-Debug 점검 화면은 워셔액 경고·브레이크액 레벨과 EV 배터리 SoC·충전 스위치를 [Native 캐시의 제한된 상태 계약](docs/contracts/vehicle-component-ui-v1.md)으로 표시합니다. [EV 하부 보기](docs/p4-b2-ev-status-ui.md)는 기존 추정 외함 모델을 사용하며 API 출처와 형상 신뢰도를 구분합니다. 실차 지원·권한·수신과 SoC 단위·범위는 미검증이고, 충전 스위치는 충전 진행 상태를 뜻하지 않습니다.
+<sub>왼쪽: 차량용 앱(Pleos AVD), 오른쪽: 스마트폰 모바일 웹. 111초, 원본 1920×1080을 GitHub 첨부 용량(10MB) 안으로 재인코딩한 영상입니다(길이·프레임 수·해상도 동일). **이 영상은 Debug 빌드와 운영자가 승인한 Pleos AVD에서 촬영했습니다.** 아래 제출용 Release APK에는 영상 속 QR 스마트폰 연동이 포함되어 있지 않습니다([차이](#debug-빌드와-release-apk의-차이)). Pleos AVD 시뮬레이션이며, 모바일 점검 결과는 사용자 보고로 차량 안전 판정이 아닙니다.</sub>
 
-> **현재 범위:** 같은 3D 점검 UI를 브라우저, Android **Debug InspectionActivity**, 그리고 공모전 제출용 **Release InspectionActivity**에 패키징합니다. Release는 3D 점검과 AVD에서 검증된 읽기 전용 차량 상태를 포함하고, 스마트폰 QR 연동은 포함하지 않습니다(아래 [공모전 제출](#공모전-제출--release-apk)). 보닛/서비스 부품은 추정·시뮬레이션이고 QR-AR은 실제 주입구를 의미적으로 인식하지 않습니다.
+## 핵심 사용자 흐름
 
-## 공모전 제출 · Release APK
+1. **차량에서 내 차 살펴보기:** 3D IONIQ 5 참조 모델을 돌려 보고 **차량 점검**을 누릅니다. 보닛·타이어·EV 배터리·충전구·와이퍼·전조등 중 하나를 고릅니다.
+2. **부품 이해하기:** 보닛을 고르면 보닛이 열리고 워셔액·냉각수·브레이크액·12V 배터리·퓨즈박스가 보입니다. 부품을 고르면 강조·근접 카메라와 함께 점검 방법, 주의사항, 정비 설명서 출처가 나옵니다.
+3. **차량 상태 함께 보기:** Pleos Vehicle SDK가 보고한 읽기 전용 상태(EV 충전량·충전 스위치·충전구, 와이퍼, 전조등, 주행거리)를 출처·관측 시각과 함께 부품 카드에 표시합니다. 값이 없거나 권한이 없거나 오래된 경우는 각각 다르게 표시합니다.
+4. **스마트폰으로 이어서 점검 (Debug + 운영자 승인 AVD):** "스마트폰으로 점검하기" → QR 스캔 → 모바일 웹에서 안전 확인, 부품 위치 찾기(카메라·AI 실험), 질문에 답하기 → 결과 전송.
+5. **결과 확인:** 차량 화면이 결과를 받아 해당 부품과 전체 점검 요약에 반영합니다. 결과는 사용자 보고(`USER_REPORTED`)이며 정상·안전 판정이 아닙니다.
 
-**2026 현대자동차그룹 차량용 앱 개발 공모전** 제출물입니다. 앱 이름은 **차보담**이고, 저장소와 패키지 이름은 호환성 때문에 CarScope를 유지합니다.
+## Release APK 다운로드·설치
+
+**2026 현대자동차그룹 차량용 앱 개발 공모전** 제출물입니다. 앱 이름은 **차보담**이고, 저장소·패키지 이름은 호환성 때문에 CarScope를 유지합니다.
 
 | 항목 | 내용 |
 | --- | --- |
-| APK 위치 | [`apk/박성진_차보담_release.apk`](apk/박성진_차보담_release.apk) ([직접 다운로드](https://github.com/ppsssj/CarScope/raw/main/apk/%EB%B0%95%EC%84%B1%EC%A7%84_%EC%B0%A8%EB%B3%B4%EB%8B%B4_release.apk)) |
+| APK | [`apk/박성진_차보담_release.apk`](apk/박성진_차보담_release.apk) · [직접 다운로드](https://github.com/ppsssj/CarScope/raw/main/apk/%EB%B0%95%EC%84%B1%EC%A7%84_%EC%B0%A8%EB%B3%B4%EB%8B%B4_release.apk) |
 | SHA-256 | `bdd9b022b6f7c8ee3b20061e65c8d27193414e80ec8f20a5bedde56fb7198d59` |
-| 크기 | 9398309 bytes |
+| 크기 | 9,398,309 bytes |
 | 패키지 / 버전 | `io.carscope.app` / `1.0.0` (versionCode 2), Release 서명(APK Signature Scheme v3), debuggable 아님 |
 | 서명 인증서 SHA-256 | `ce8926f6528e56b5506a4c6c72bc0b0b7eea07803d52a14ead3f1b5f8e3700db` |
 | 테스트 환경 | Pleos Connect 에뮬레이터 **v2.1.0** 시스템 이미지(`system-images;android-34;pleos_car_emulator;x86_64`, Android 14 / API 34), 기기 프로필 `Pleos_Connect_v2_0`, Vehicle Service 2.3.22, Android Emulator 37.2.13, Windows 10, Android user 10 |
@@ -31,7 +34,7 @@ Debug 점검 화면은 워셔액 경고·브레이크액 레벨과 EV 배터리 
 ### 설치
 
 1. Pleos Connect v2.1.0 AVD를 Cold Boot로 부팅합니다([설치 안내](docs/development-setup.md#7-pleos-avd)).
-2. 같은 패키지(`io.carscope.app`)의 다른 서명 빌드(Debug 등)가 설치돼 있으면 설치가 거부됩니다. 이때는 별도 AVD를 쓰거나 기존 앱을 직접 확인한 뒤 정리하세요.
+2. 같은 패키지(`io.carscope.app`)의 다른 서명 빌드(Debug 등)가 설치돼 있으면 설치가 거부됩니다. 별도 AVD를 쓰거나, 기존 앱 데이터를 확인한 뒤 직접 정리하세요.
 3. 설치합니다.
 
 ```powershell
@@ -48,21 +51,26 @@ adb install 박성진_차보담_release.apk
 adb shell am start --user 10 -n io.carscope.app/.lab.InspectionActivity
 ```
 
-(Android 사용자 번호는 `adb shell am get-current-user`로 확인합니다.) **차량 점검**을 누른 뒤 3D 모델의 부위나 오른쪽 목록을 선택합니다. 보닛을 고르면 보닛이 열리고 전방 부품이 나타납니다. 부품을 고르면 점검 방법, 주의사항, 차량 SDK 상태 카드가 보입니다. 화면 왼쪽 아래 `+`/`−`로 확대·축소합니다. 런처의 다른 아이콘(이름 없음/CarScope P0)은 기존 도어 상태 SVG 화면(`MainActivity`)입니다.
+(Android 사용자 번호는 `adb shell am get-current-user`로 확인합니다.) **차량 점검**을 누른 뒤 3D 모델의 부위나 오른쪽 목록을 선택합니다. 화면 왼쪽 아래 `+`/`−`로 확대·축소합니다. 런처의 다른 아이콘(CarScope P0)은 기존 도어 상태 SVG 화면(`MainActivity`)입니다.
 
-### 시연 영상과 Release의 차이
+## Debug 빌드와 Release APK의 차이
 
-| 기능 | 시연 영상 (Debug + 운영자 승인 AVD) | 제출 Release APK |
+| 기능 | Debug 빌드 + 운영자 승인 AVD (시연 영상) | 제출 Release APK |
 | --- | --- | --- |
-| 3D 차량 점검, 보닛 개방, 부품 선택·상세, 전체 요약 | 지원 | **지원** (AVD 실행 확인) |
-| 차량 SDK 상태: EV 충전량·충전 스위치·충전구, 와이퍼, 전조등, 주행거리 | 지원 | **지원** (AVD 값 수신 확인) |
-| 타이어 공기압, 워셔액·브레이크액 경고 | AVD 미제공 | 권한 제외 → `PERMISSION_DENIED` 표시 |
-| 스마트폰 QR 연동, 모바일 점검 결과 수신 | 지원 | **미포함 (BLOCKED)**: 기기별 운영자 등록 증명이 필요한 인증 구조라, 보안 제한을 풀지 않고는 심사자 기기에서 발급할 수 없습니다. 앱은 이를 화면에 그대로 안내합니다 |
+| 3D 차량 점검, 보닛 개방, 부품 선택·상세, 전체 요약 | 지원 | **지원** · 별도 AVD에서 설치·실행 확인 |
+| 차량 SDK 상태: EV 충전량·충전 스위치·충전구, 와이퍼, 전조등, 주행거리 | 지원 · [AVD SDK→카드 E2E](docs/pleos-avd-sdk-e2e.md) | **지원** · AVD에서 값 수신 확인 |
+| 타이어 공기압, 워셔액·브레이크액 경고 | AVD가 값을 제공하지 않음 | 권한 제외 → `PERMISSION_DENIED` 표시 |
+| **스마트폰 QR 연동, 모바일 결과 수신** | **지원** · 실제 스마트폰과 QR → 점검 → 결과 수신 E2E를 운영자 승인 AVD에서 실행(시연 영상, 사용자 실행) | **포함하지 않음 (BLOCKED)** · 앱이 "이 배포용(Release) 앱에는 스마트폰 점검 연동이 없습니다"라고 안내 |
 | 과거 점검 기록 조회 | 서버 연동 실험 | "조회 경로 미연결"로 표시 |
 
-자세한 분석, 권한 정책 변경 이유, 검증 결과, 빌드 재현은 [Release 제출 문서](docs/release-submission.md)에 있습니다. 실차에서는 검증하지 않았습니다. 상태 표시는 AVD 결과이며 차량의 정상·안전 판정이 아닙니다.
+QR 발급에는 운영자가 기기마다 발급하는 등록 증명이 필요합니다([인증 설계](docs/p6-d3-avd-simulator-auth.md), [진단 도구](docs/p22-avd-qr-auth-diagnostics.md)). Release 앱에는 이 증명을 넣을 안전한 경로가 없어서 인증을 우회하지 않고 연동을 뺐습니다. 권한 정책 변경 이유, 검증 결과, 빌드 재현은 [Release 제출 문서](docs/release-submission.md)에 있습니다. 실차에서는 검증하지 않았습니다.
 
-[차량 점검 UI](tools/three-poc/INSPECTION_UI.md) · [제품 흐름·보존 정책 설계](docs/p4-a1-inspection-product-flow.md) · [QR-AR 검증](tools/mobile-ar-poc/HTTPS_STAGING.md) · [Android/Pleos 연동](docs/pleos-sdk-integration.md) · [개발 로드맵](docs/roadmap.md)
+[차량 점검 UI](tools/three-poc/INSPECTION_UI.md) · [제품 흐름·보존 정책 설계](docs/p4-a1-inspection-product-flow.md) · [모바일 웹 차보담](docs/p20-chabodam-mobile-ui.md) · [카메라 AI 점검](docs/p21-camera-ai-inspection-flow.md) · [Android/Pleos 연동](docs/pleos-sdk-integration.md) · [개발 로드맵](docs/roadmap.md)
+
+<p align="center">
+  <img src="docs/visuals/readme/hero-vehicle.webp" width="860" alt="CarScope 차량 점검 UI 홈 화면: 다크 배경 중앙의 IONIQ 5 참조 모델과 차량 점검 버튼">
+</p>
+<p align="center"><sub>P3-A4 차량 점검 UI 홈 화면 (<code>tools/three-poc/inspect.html</code>, 로컬 Chrome 실제 캡처). 차량 모델: “Hyundai Ioniq 5” © 2022 andikapratamaw, <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>. OpenX Assets 수정본을 CarScope에서 변환·렌더링했습니다. <a href="#model-references--attribution">출처 자세히</a></sub></p>
 
 ## Product Gallery
 
@@ -91,7 +99,7 @@ adb shell am start --user 10 -n io.carscope.app/.lab.InspectionActivity
 
 | 기능 | 구현 범위 | 상태 |
 | --- | --- | --- |
-| **Interactive 3D Vehicle Inspection** | 홈 → 부위 선택 → 상세 → 전체 요약 → 종료. 모델 회전·확대/축소, 취소·뒤로 가기·중복 입력 처리 | 브라우저 / Android Debug 패키징 |
+| **Interactive 3D Vehicle Inspection** | 홈 → 부위 선택 → 상세 → 전체 요약 → 종료. 모델 회전·확대/축소, 취소·뒤로 가기·중복 입력 처리 | 브라우저 / Android Debug·Release |
 | **Hood Opening Animation** | 보닛 선택 시 카메라가 전방으로 이동하고 보닛이 0→60° 열림. 전방 구획 Shell·프렁크(닫힘) 노출. 중간 취소 시 현재 각도에서 닫힘 | 시뮬레이션 축 A 기준 · 실제 힌지 미검증 |
 | **Component Highlight & Navigation** | 워셔액 캡 강조·라벨·근접 카메라, 냉각수/브레이크액/12V/퓨즈박스 preview, 네 타이어 Raycast·고무 강조 | 기존 검증 형상 재사용 · 저전도 냉각수 준비 중 |
 | **Four-tire Self Inspection** | 타이어별 3응답, 명시 확정, 수정·재확정, 이전/다음, 부분/전체 요약 | USER_REPORTED · 정상/안전 판정 아님 |
@@ -143,39 +151,44 @@ P2-A6 엔지니어링 PoC 캡처이며 현재 차량 점검 UI 화면이 아닙�
 ## Architecture
 
 ```mermaid
-flowchart TB
-  subgraph Browser["Browser · 3D Inspection UI (tools/three-poc)"]
-    UI["inspect.html · state machine"]
-    GEO["IONIQ 5 external GLB + estimated service geometry"]
-    UI --> GEO
-    UI --> QR["QR handoff contract<br/>task = washer-fluid"]
-  end
-  subgraph Mobile["Mobile browser · QR-AR PoC (tools/mobile-ar-poc)"]
-    QR --> CAM["Camera + 2D blue-region detector"]
-    CAM --> GUIDE["Candidate overlay / manual guide"]
-  end
-  subgraph Android["Android AAOS / Pleos (app, vehicle-core)"]
+flowchart LR
+  subgraph Car["차량용 앱 · Android AAOS / Pleos (app)"]
     direction TB
-    SDK["Mock / Pleos VehicleDataSource"] --> SNAP["VehicleSnapshot"]
-    SNAP --> MAP["VehicleDiagramMapper"]
-    MAP --> SVG["VehicleSvgRenderer"]
-    SVG --> WV["Android WebView · SVG"]
-    DEBUG["Debug InspectionActivity · same inspection assets"]
-    TIRE["Pleos Tire cache · status-only projection"] --> DEBUG
-    DEBUG --> NATIVE["Native washer receiver · separate results"]
+    PAGE["3D 점검 페이지<br/>Three.js · IONIQ 5 GLB · 상태 머신"]
+    HOST["InspectionActivity · WebView 호스트<br/>고정 origin · CSP · 외부 탐색 차단"]
+    SDK["Pleos Vehicle SDK 2.3.2<br/>읽기 전용 상태 캐시"]
+    BRIDGE["Native 브리지<br/>토큰 없는 결과 계약"]
+    SDK --> HOST
+    HOST --> PAGE
+    PAGE <--> BRIDGE
   end
-  UI -->|"Debug asset packaging"| DEBUG
+  subgraph Debug["Debug 빌드 전용"]
+    RECV["수신·QR 생성<br/>운영자 승인 AVD 등록"]
+  end
+  subgraph Server["점검 세션 서버 (Node · PostgreSQL)"]
+    API["세션·초대·결과 API<br/>기본 거부 · AVD 시뮬레이션 승인"]
+  end
+  subgraph Phone["스마트폰 모바일 웹 차보담 (React · Vite)"]
+    MOB["안전 확인 · 카메라 위치 찾기<br/>AI 실험(탐지·외관 분석) · 질문 응답"]
+  end
+  BRIDGE --> RECV
+  RECV <-->|"HTTPS"| API
+  RECV -.->|"QR"| MOB
+  MOB <-->|"HTTPS"| API
+  CORE["vehicle-core (순수 Kotlin)<br/>도어 상태 → SVG"] --> HOST
 ```
 
-브라우저와 Debug WebView는 같은 점검 자산/상태 머신을 사용합니다. Debug의 Native 버튼이 별도 수신 Activity를 엽니다. JS가 Native Sync를 제어하거나 모바일 결과를 타이어 기록으로 병합하지 않습니다. Release 기본 SVG와 Debug 3D의 포함 범위는 구분하며 실제 Tire SDK 수신·WebView 수명주기 성공은 패키징/CI만으로 주장하지 않습니다.
+차량용 앱의 3D 페이지는 브라우저(`tools/three-poc`)와 같은 자산·상태 머신을 씁니다. Pleos 상태는 Native 캐시에서 읽기 전용으로만 들어오고, 출처·관측 시각·`UNSUPPORTED`/`PERMISSION_DENIED`/`STALE`을 보존합니다. 스마트폰 결과는 서버 세션과 Native 검증을 거쳐 차량 기록과 구분된 상태로 반영됩니다. **Release APK에는 점선 오른쪽의 수신·QR·서버 연결이 없습니다**(Debug 빌드 전용, `INTERNET` 권한도 Debug에만 있음).
 
 | 영역 | 주요 기술 및 역할 |
 | --- | --- |
-| 3D 프런트엔드 | JavaScript, Three.js, glTF/GLB, Raycaster, 상태 머신 |
-| 모바일 보조 | HTTPS, Web Camera API, Canvas, 2D 색상 후보 탐지, QR |
-| Android / 차량 데이터 | Kotlin, Android WebView, Pleos Vehicle SDK 2.3.2 |
+| 차량용 앱 | Kotlin, Android WebView, Pleos Vehicle SDK 2.3.2 (읽기 전용), AAOS / Pleos Connect AVD |
+| 3D 프런트엔드 | JavaScript, Three.js, glTF/GLB, Raycaster, 상태 머신, 추정 서비스 부품 Geometry |
+| 모바일 웹 | React 19, Vite, TypeScript, Astryx, Web Camera API, Canvas, QR |
+| AI 실험 (모바일) | Roboflow 부품 탐지, OpenAI 외관 분석. 각 항목별 사용자 동의, 결과는 참고 정보 |
+| 서버 | Node.js, PostgreSQL(Supabase), HTTPS(Render). 운영자 승인 AVD 등록, 기본 거부 |
 | Core | 순수 Kotlin JVM `vehicle-core` · 상태 매핑·SVG 렌더 |
-| 품질 검증 | Node 테스트, 브라우저 자동화, Geometry 회귀, GitHub Actions |
+| 품질 검증 | JVM/Robolectric, Node 테스트, Playwright 브라우저 자동화, Geometry 회귀, Debug/Release 경계 검사, GitHub Actions |
 
 ## Getting Started
 
