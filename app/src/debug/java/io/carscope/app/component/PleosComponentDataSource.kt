@@ -25,6 +25,23 @@ internal class ComponentWorker : ComponentDispatcher {
     override fun after(ms: Long, action: () -> Unit): () -> Unit { val f = worker.schedule(action, ms, TimeUnit.MILLISECONDS); return { f.cancel(false); Unit } }
     override fun close() { worker.shutdown() }
 }
+private val SDK_ERROR_CODE = Regex("[A-Z][A-Z0-9_]{2,63}")
+/**
+ * Debug log detail for a failed SDK call. The SDK's own exception class is obfuscated, so its fully qualified name is kept
+ * (the simple name alone is `a`). A message shaped like an SDK error code (ERROR_NOT_SUPPORTED_PROPERTY) is shown as is;
+ * any other text is withheld with its length, and a permission failure's text is never shown. Diagnostics only: the
+ * detail never changes a status (no UNSUPPORTED is inferred from it).
+ */
+internal fun componentFailureDetail(error: Exception): String {
+    val message = error.message
+    val detail = when {
+        error is SecurityException -> "message=WITHHELD"
+        message == null -> "message=NONE"
+        SDK_ERROR_CODE.matches(message) -> "sdkError=$message"
+        else -> "message=WITHHELD(length=${message.length})"
+    }
+    return "type=${error.javaClass.simpleName} class=${error.javaClass.name} $detail"
+}
 internal data class ComponentDiagnostics(val phase: String = "IDLE", val pending: Int = 0, val timedOut: Int = 0, val cleanupFailures: Int = 0)
 
 internal class PleosComponentDataSource(
@@ -117,7 +134,7 @@ internal class PleosComponentDataSource(
     }
     private fun fail(f: ComponentFeature, error: Exception, capability: Boolean) {
         val status = when(error) { is ComponentEnvironmentUnsupported -> ComponentStatus.UNSUPPORTED; is SecurityException -> ComponentStatus.PERMISSION_DENIED; else -> ComponentStatus.ERROR }
-        log("failed ${f.id} status=$status type=${error.javaClass.simpleName}")
+        log("failed ${f.id} status=$status ${componentFailureDetail(error)}")
         change(f) { it.copy(capabilityStatus = if (capability) status else it.capabilityStatus, availabilityStatus = status, value = null, observedAt = null, reason = status.name) }
     }
     private fun reset(f: ComponentFeature, status: ComponentStatus, reason: String) = change(f) { ComponentReading(f, status, status, reason = reason) }

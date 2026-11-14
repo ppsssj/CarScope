@@ -55,6 +55,38 @@ class PleosComponentDataSourceTest {
         sdk.events.getValue(ComponentFeature.WASHER).first(ComponentValue.Flag(false)); worker.drain()
         assertEquals(count, messages.size)
     }
+    /** The SDK's failure exception (obfuscated `a` in Vehicle 2.3.2) carries an error-code message. */
+    private class SdkFailure(message: String?) : Exception(message)
+
+    @Test fun `a failed SDK call logs its error code but never infers a status or prints free text`() {
+        val worker = ComponentTestWorker(); val sdk = ComponentFakeSession(); val messages = mutableListOf<String>()
+        val source = PleosComponentDataSource({ sdk }, worker, { 1000L }, messages::add)
+        source.start(); worker.drain()
+        sdk.capabilities.getValue(ComponentFeature.WASHER).second(SdkFailure("ERROR_NOT_SUPPORTED_PROPERTY"))
+        sdk.capabilities.getValue(ComponentFeature.BRAKE).second(SdkFailure("token=abc123 user@example.com"))
+        sdk.capabilities.getValue(ComponentFeature.SOC).second(SdkFailure(null))
+        sdk.capabilities.getValue(ComponentFeature.CHARGE_SWITCH).second(SecurityException("PERMISSION_MARKER"))
+        worker.drain()
+
+        val washer = messages.single { it.startsWith("failed safety.washer-fluid-warning") }
+        assertTrue(washer, washer.contains("status=ERROR"))
+        assertTrue(washer, washer.contains("type=SdkFailure class=${SdkFailure::class.java.name} sdkError=ERROR_NOT_SUPPORTED_PROPERTY"))
+        val brake = messages.single { it.startsWith("failed safety.brake-fluid-level") }
+        assertTrue(brake, brake.endsWith("message=WITHHELD(length=29)"))
+        assertTrue(messages.single { it.startsWith("failed ev-battery.soc") }.endsWith("message=NONE"))
+        val permission = messages.single { it.startsWith("failed ev-battery.charge-switch") }
+        assertTrue(permission, permission.contains("status=PERMISSION_DENIED") && permission.endsWith("message=WITHHELD"))
+        assertFalse(messages.any { it.contains("abc123") || it.contains("example.com") || it.contains("PERMISSION_MARKER") })
+
+        // The status contract is unchanged: an "unsupported" error code is still ERROR, never UNSUPPORTED.
+        val readings = source.readSnapshot().readings
+        for (f in listOf(ComponentFeature.WASHER, ComponentFeature.BRAKE, ComponentFeature.SOC)) {
+            assertEquals(ComponentStatus.ERROR, readings.getValue(f).capabilityStatus)
+            assertEquals("ERROR", readings.getValue(f).reason)
+            assertNull(readings.getValue(f).value)
+        }
+        assertEquals(ComponentStatus.PERMISSION_DENIED, readings.getValue(ComponentFeature.CHARGE_SWITCH).capabilityStatus)
+    }
     private class Fixture {
         val worker = ComponentTestWorker(); var at = 1000L; val sessions = mutableListOf<ComponentFakeSession>()
         val source = PleosComponentDataSource({ ComponentFakeSession().also(sessions::add) }, worker, { at })
