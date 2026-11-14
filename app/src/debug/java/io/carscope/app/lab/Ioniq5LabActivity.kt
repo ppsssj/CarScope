@@ -15,7 +15,7 @@ class Ioniq5LabActivity : Activity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        screen = DebugWebScreen(this, TAG, HOST, ROOT, mapOf("model.glb" to File(filesDir, DebugWebScreen.MODEL_PATH)))
+        screen = DebugWebScreen(this, TAG, HOST, ROOT, mapOf("model.glb" to File(filesDir, DebugModelFile.MODEL_PATH)))
         setContentView(screen.create(intent.getStringExtra("query").orEmpty()))
     }
 

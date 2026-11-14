@@ -101,7 +101,7 @@ open class InspectionActivity : SyncReceiverActivity() {
             { command -> bridgeHandler.post { if (!bridgeStopped) panelCommand(command) } })
         tireStatus = TireUiChannel(TireProcessOwner.get(applicationContext))
         componentStatus = ComponentUiChannel(ComponentProcessOwner.get(applicationContext))
-        screen = DebugWebScreen(this, TAG, HOST, ROOT, mapOf("external/ioniq5.glb" to File(filesDir, DebugWebScreen.MODEL_PATH)), tireStatus::readJson, componentStatus::readJson, componentStatus::readChargePortJson, componentStatus::readVisibilityJson, componentStatus::readOdometerJson, bridge::handle, newAvdHistoryChannel()::handle)
+        screen = DebugWebScreen(this, TAG, HOST, ROOT, mapOf("external/ioniq5.glb" to File(filesDir, DebugModelFile.MODEL_PATH)), tireStatus::readJson, componentStatus::readJson, componentStatus::readChargePortJson, componentStatus::readVisibilityJson, componentStatus::readOdometerJson, bridge::handle, newAvdHistoryChannel()::handle)
         inspectionPanel = screen.create(intent.getStringExtra("query").orEmpty())
         webFocusability = inspectionPanel.descendantFocusability
         // A resized WebView changes the scale: place the QR again after this layout pass (the page reports its new slot too).

@@ -55,8 +55,11 @@ def build_contract():
     assert activity in names(manifests["debug"], "activity")
     assert activity not in names(manifests["release"], "activity")
     assert "android.car" not in names(manifests["release"], "uses-library")
+    # Release submission (docs/release-submission.md): only the read-only permissions verified on the AVD are added.
     assert names(manifests["release"], "uses-permission") == {
-        "pleos.car.permission.CAR_DOORS", "ai.pleos.playground.service.vehicle.VEHICLE_BINDING"}
+        "pleos.car.permission.CAR_DOORS", "ai.pleos.playground.service.vehicle.VEHICLE_BINDING",
+        "pleos.car.permission.CAR_ENERGY", "pleos.car.permission.CAR_WINDOWS",
+        "pleos.car.permission.CAR_LIGHTS", "pleos.car.permission.CAR_DRIVE"}
     for variant, apk in (("debug", "app-debug.apk"), ("release", "app-release-unsigned.apk")):
         with zipfile.ZipFile(ROOT / f"app/build/outputs/apk/{variant}/{apk}") as archive:
             dex = b"".join(archive.read(n) for n in archive.namelist() if n.endswith(".dex"))
@@ -89,12 +92,18 @@ def visual_asset_boundary(manifests, names):
             assert len(parts) == 1 and parts[0].endswith(BUNDLED_PARTS), (path.name, parts)
             assert hashlib.sha256(archive.read(parts[0])).hexdigest() == expected, f"{path.name}: bundled drawing changed"
             if release:
-                assert not [n for n in archive.namelist() if n.lower().endswith((".glb", ".gltf", ".blend", ".svg"))], path.name
+                # The only model a Release build may carry is the submission GLB, byte-identical to the converted file.
+                models = [n for n in archive.namelist() if n.lower().endswith((".glb", ".gltf", ".blend", ".svg"))]
+                assert models in ([], [RELEASE_GLB[path.suffix]]), (path.name, models)
+                for model in models:
+                    assert hashlib.sha256(archive.read(model)).hexdigest() == RELEASE_GLB_SHA256, f"{path.name}: GLB changed"
             for name in archive.namelist():
                 data = archive.read(name)
                 for marker in DERIVED_MARKERS:
-                    # P3-A5.1: the debug WebGL lab page shows the CC BY credit line; that is attribution, not model data.
-                    if not release and name.startswith(LAB_ASSETS) and marker == ATTRIBUTION_MARKER:
+                    # The CC BY credit line (debug WebGL lab page, the inspection page and the GLB's own asset metadata)
+                    # is attribution, not model-derived drawing data.
+                    if marker == ATTRIBUTION_MARKER and (not release and name.startswith(LAB_ASSETS)
+                                                         or name in INSPECTION_CREDIT or name == RELEASE_GLB.get(path.suffix)):
                         continue
                     assert marker not in data, f"{path.name}:{name} contains model-derived drawing data"
                 if release and name.endswith(".dex"):
@@ -109,23 +118,31 @@ def visual_asset_boundary(manifests, names):
 
 LAB_ASSETS = "assets/ioniq5-lab/"
 ATTRIBUTION_MARKER = b"andikapratamaw"
+INSPECTION_CREDIT = ("assets/inspection/index.html", "base/assets/inspection/index.html")
+RELEASE_GLB = {".apk": "assets/inspection/external/ioniq5.glb", ".aab": "base/assets/inspection/external/ioniq5.glb"}
+RELEASE_GLB_SHA256 = "cfe0d754b5aaf8daeff7b498b0f786d7b2fb94323850f214678a3b68d00139e1"
 
 
 def lab_boundary(manifests, names, archives):
-    """P3-A5.1: the WebGL lab screens and their assets exist only in debug builds; the GLB is never packaged."""
-    for activity in ("io.carscope.app.lab.WebGlLabActivity", "io.carscope.app.lab.Ioniq5LabActivity", "io.carscope.app.lab.InspectionActivity"):
+    """P3-A5.1: the WebGL lab screens and their assets exist only in debug builds. The Release submission carries the
+    inspection screen and its page only (docs/release-submission.md); the labs, their hosts and the debug model path never."""
+    for activity in ("io.carscope.app.lab.WebGlLabActivity", "io.carscope.app.lab.Ioniq5LabActivity"):
         assert activity in names(manifests["debug"], "activity"), activity
         assert activity not in names(manifests["release"], "activity"), activity
+    inspection = "io.carscope.app.lab.InspectionActivity"
+    assert inspection in names(manifests["debug"], "activity") and inspection in names(manifests["release"], "activity")
     for path in archives:
         if "release" not in path.name:
             continue
         with zipfile.ZipFile(path) as archive:
             listed = archive.namelist()
-            assert not [n for n in listed if "webgl-lab/" in n or "ioniq5-lab/" in n or n.startswith(("assets/inspection/", "base/assets/inspection/"))], f"{path.name}: lab assets in release"
+            assert not [n for n in listed if "webgl-lab/" in n or "ioniq5-lab/" in n], f"{path.name}: lab assets in release"
             dex = b"".join(archive.read(n) for n in listed if n.endswith(".dex"))
-            for marker in (b"Lio/carscope/app/lab/", b"debug-3d-assets", b"carscope-ioniq5-lab.invalid", b"carscope-lab.invalid", b"carscope-inspection.invalid"):
+            for marker in (b"Lio/carscope/app/lab/WebGlLabActivity;", b"Lio/carscope/app/lab/Ioniq5LabActivity;", b"Lio/carscope/app/lab/DebugModelFile;",
+                           b"Lio/carscope/app/lab/InlineQrPlacement;", b"debug-3d-assets", b"carscope-ioniq5-lab.invalid", b"carscope-lab.invalid"):
                 assert marker not in dex, f"{path.name}: {marker!r} in release DEX"
-    print("PASS: WebGL lab and inspection activities debug-only; release APK/AAB carry no lab assets, classes, hosts or model path")
+            assert b"Lio/carscope/app/lab/InspectionActivity;" in dex, path.name
+    print("PASS: WebGL labs debug-only; release carries the inspection screen without lab assets, classes, hosts or the debug model path")
 
 
 def capture(adb, serial, output):

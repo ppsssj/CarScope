@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Release (contest submission): the 3D inspection screen with read-only Pleos status. See docs/release-submission.md.
+     Read-only permissions limited to the features verified on the Pleos AVD (docs/pleos-avd-sdk-e2e.md):
+     CAR_ENERGY (EV SoC, charge switch, charge port), CAR_WINDOWS (front wiper), CAR_LIGHTS (low/high beam), CAR_DRIVE (odometer).
+     Not requested: CAR_SAFETY / PRIVATE_CAR_SAFETY (tire, washer and brake fluid: not delivered on the AVD, the card shows the
+     permission state), android.car CAR_INFO (identity probe), INTERNET (no phone sync in Release). No control permission. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="pleos.car.permission.CAR_ENERGY" />
+    <uses-permission android:name="pleos.car.permission.CAR_WINDOWS" />
+    <uses-permission android:name="pleos.car.permission.CAR_LIGHTS" />
+    <uses-permission android:name="pleos.car.permission.CAR_DRIVE" />
+    <application>
+        <activity
+            android:name=".lab.InspectionActivity"
+            android:exported="true"
+            android:label="@string/inspection_label">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>

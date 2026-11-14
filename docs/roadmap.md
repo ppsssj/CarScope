@@ -1,5 +1,9 @@
 # 로드맵 및 진입 조건
 
+## 공모전 제출 — Release APK (2026-11-15)
+
+Release 빌드에 3D 점검 화면(`InspectionActivity`)과 AVD에서 값 수신이 확인된 읽기 전용 상태(CAR_ENERGY·CAR_WINDOWS·CAR_LIGHTS·CAR_DRIVE)를 정식으로 넣었다. GLB는 제출 APK에만 저작자 표시와 함께 동봉한다. 네트워크 동기화·등록·QR 생성은 Debug 전용으로 남겼다. Release의 QR 연동은 기기별 운영자 등록이 필요한 구조라 **BLOCKED**이며, 앱은 이를 `BUILD_UNSUPPORTED`로 안내한다. 별도 검증 AVD에서 설치·실행을 확인했고, 실차는 미검증이다. [Release 제출](release-submission.md). 후속 과제(승인 필요): 심사·배포용 기기 등록 절차 설계.
+
 ## P16 — 내 차량과 3D 점검 연결
 
 P15 세션/RLS를 재사용해 내 차량 카드 → UUID 재검증 → 참조 3D 점검 → 내 차량 복귀를 연결한다. 차량 선택은 소유권 증명이나 점검 기록 연결이 아니다. 계정 전환/로그아웃/삭제는 선택을 해제하고 체험 및 Android/QR 인증 경계는 유지한다. 구현·동일 origin 보안 결정은 [P16](p16-account-inspection-integration.md), 새 실행과 미검증 범위는 [증거](evidence/p16-integration/README.md)에 기록했다. 최종 제품의 모바일 AI→차량 앱 수신→사용자 지속 이력 E2E는 후속 과제다.

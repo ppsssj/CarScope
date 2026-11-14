@@ -13,7 +13,8 @@ const proofKeys=['version','proofId','sessionState','confirmation','bindingId','
 const REQUEST_TIMEOUT_MS=8000;
 const REQUEST_NOTICES=new Set(['NATIVE_NOT_CONNECTED','REQUEST_REJECTED','REQUEST_FAILED']);
 const CONFIRMATIONS=new Set(['NATIVE_EXPLICIT','AVD_SIMULATION_AUTO']);
-const RECEIVER_PHASES=new Set(['NOT_CONFIGURED','AUTH_WAITING','AUTH_FAILED','CREATING','QR_READY','QR_EXPIRED','CONNECTED','RESULT_RECEIVED','AWAITING_CONFIRMATION','COMPLETED','CANCELLED','EXPIRED','FAILED','CLOSED']);
+// BUILD_UNSUPPORTED: the Release build carries no phone sync (no network, enrollment or QR code); never a retryable state.
+const RECEIVER_PHASES=new Set(['BUILD_UNSUPPORTED','NOT_CONFIGURED','AUTH_WAITING','AUTH_FAILED','CREATING','QR_READY','QR_EXPIRED','CONNECTED','RESULT_RECEIVED','AWAITING_CONFIRMATION','COMPLETED','CANCELLED','EXPIRED','FAILED','CLOSED']);
 const receiverKeys=new Set(['taskId','phase','failure','retryAvailable','canCancel','inviteExpiresAt']);
 // Native omits null fields. An unknown field or value is dropped whole: this page shows status and never holds a QR.
 function receiverStatus(raw){
@@ -94,6 +95,8 @@ export function createNativeInspectionResults({adapter=null,now=()=>performance.
         const refused=error=>answered(error?.nativeRejected===true?'REJECTED':'FAILED',error?.nativeRejected===true?'REQUEST_REJECTED':'REQUEST_FAILED');
         try{Promise.resolve(adapter.requestTask(copy({localSessionId:session,generation:epochId,taskId,partId:t.partId}))).then(reply=>{
           if(reply?.ok!==true){answered('FAILED','REQUEST_FAILED');return;}
+          // The Release build has no phone sync: Native says so once, instead of a "QR is coming" answer.
+          if(reply.buildUnsupported===true){answered('BUILD_UNSUPPORTED');return;}
           // The bridge also answers ok when it only reopens its panel for a request that may already have a session.
           answered([...bindings.values()].some(b=>b.taskId===taskId&&live(b))?'ACCEPTED_ACTIVE_BINDING':'ACCEPTED');
         },refused);}catch(error){refused(error);}

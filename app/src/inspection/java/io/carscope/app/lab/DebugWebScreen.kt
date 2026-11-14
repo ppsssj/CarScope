@@ -16,10 +16,11 @@ import java.io.IOException
 import java.io.InputStream
 
 /**
- * Debug-only WebView host shared by the 3D screens (P3-A5.1 lab, P3-A5.2 inspection). Same origin model as
+ * WebView host shared by the 3D screens (Debug P3-A5.1 lab, P3-A5.2 inspection, and the Release inspection screen). Same origin model as
  * [WebGlLabActivity]: JavaScript on this screen only, a private `https://<host>/` origin whose requests are answered
  * from the debug assets under [root], CSP on every response, every other request 404 and no navigation.
- * [files] maps exactly one path each to an app-private file (the third-party GLB is never bundled).
+ * [files] maps exactly one path each to an app-private file (Debug). The Release screen passes none and serves the
+ * bundled GLB from its assets.
  * The page finishes the screen by navigating to `./close`; the Pleos home consumes Back on a task root.
  */
 internal class DebugWebScreen(
@@ -202,12 +203,12 @@ internal class DebugWebScreen(
         "css" -> "text/css"
         "json" -> "application/json"
         "svg" -> "image/svg+xml"
+        // Release bundles the GLB as an asset; Debug serves it from app-private storage through [files].
+        "glb" -> "model/gltf-binary"
         else -> "text/plain"
     }
 
     companion object {
         const val MAX_FILE_BYTES = 32L * 1024 * 1024
-        /** App-private file filled by tools/three-poc/push-android-lab-model.mjs (run-as, debuggable builds only). */
-        const val MODEL_PATH = "debug-3d-assets/ioniq5.glb"
     }
 }
