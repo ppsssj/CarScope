@@ -48,7 +48,12 @@
     "test:browser:charge:legacy": "node test/charge-browser.mjs",
     "test:browser:brake:legacy": "node test/brake-browser.mjs",
     "test:browser:ar:legacy": "node test/mobile-ar-browser.mjs",
-    "test:browser:hosting": "node test/react-hosting-browser.mjs"
+    "test:browser:hosting": "node test/react-hosting-browser.mjs",
+    "test:browser:assets": "node test/react-assets-browser.mjs",
+    "build:design-lab": "tsc --noEmit && vite build --config vite.design-lab.config.ts",
+    "serve:design-lab": "node design-lab-server.mjs",
+    "test:browser:design-lab": "node test/design-lab-browser.mjs",
+    "test:design-lab:model": "node --experimental-strip-types --test test/design-lab-model.test.mjs"
   },
   "dependencies": {
     "@astryxdesign/core": "0.7.15",

@@ -3,9 +3,18 @@ import { readFile, copyFile, mkdir } from "node:fs/promises";
 import path from "node:path";
 const root = new URL("./build/react/", import.meta.url);
 const safe = /^react-assets\/[A-Za-z0-9_.-]+\.(js|css|svg|png|webp|woff2)$/;
-export async function reactAssets() {
+const contentTypes = Object.freeze({
+  ".js": "text/javascript; charset=utf-8",
+  ".css": "text/css; charset=utf-8",
+  ".svg": "image/svg+xml",
+  ".png": "image/png",
+  ".webp": "image/webp",
+  ".woff2": "font/woff2",
+});
+// A fixture root is an internal test seam, never obtained from an HTTP request.
+export async function reactAssets(buildRoot = root) {
   const manifest = JSON.parse(
-    await readFile(new URL(".vite/manifest.json", root), "utf8"),
+    await readFile(new URL(".vite/manifest.json", buildRoot), "utf8"),
   );
   const names = new Set();
   for (const entry of Object.values(manifest))
@@ -29,14 +38,12 @@ export async function readReactPage({ sync = false } = {}) {
       )
     : html;
 }
-export async function readReactAsset(requestPath) {
+export async function readReactAsset(requestPath, buildRoot = root) {
   const name = requestPath.slice(1);
-  if (!(await reactAssets()).has(name)) return null;
+  if (!(await reactAssets(buildRoot)).has(name)) return null;
   return {
-    body: await readFile(new URL(name, root)),
-    type: name.endsWith(".css")
-      ? "text/css; charset=utf-8"
-      : "text/javascript; charset=utf-8",
+    body: await readFile(new URL(name, buildRoot)),
+    type: contentTypes[path.posix.extname(name)],
   };
 }
 export async function copyReactBuild(output) {
@@ -44,5 +51,8 @@ export async function copyReactBuild(output) {
   for (const name of await reactAssets())
     await copyFile(new URL(name, root), path.join(output, name));
   await copyFile(new URL("index.html", root), path.join(output, "index.html"));
-  await copyFile(new URL("index.html", root), path.join(output, "part-info.html"));
+  await copyFile(
+    new URL("index.html", root),
+    path.join(output, "part-info.html"),
+  );
 }
