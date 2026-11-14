@@ -168,9 +168,9 @@ try {
     await phone.page.waitForTimeout(150);
     assert.equal(await phone.page.locator('#xr-entry').count(), 0, 'nothing is offered on an AR-capable phone');
     assert.equal(phone.log.requests.some(r => /webxr|three/.test(r.url)), false);
-    await phone.page.locator('.safety-card input').check();
+    await phone.page.locator('.cb-safety input').check();
     await phone.page.getByRole('button',{name:'직접 점검 시작',exact:true}).click();
-    for(const c of await phone.page.locator('.observation-card input').all())await c.check();
+    for(const c of await phone.page.locator('.cb-observation input').all())await c.check();
     for(const name of ['관찰 결과 선택하기','보충이 필요해요','선택한 결과 확인하기','직접 확인한 결과로 확정'])await phone.page.getByRole('button',{name,exact:true}).click();
     await phone.page.getByRole('button',{name:'차량으로 결과 보내기',exact:true}).click();
     await waitSync(phone.page, 'SENT');

@@ -58,8 +58,14 @@ test("lab host refuses production-like environments", () => {
 });
 
 test("product sources never import the lab", async () => {
-  for (const f of ["App.tsx", "main.tsx", "Camera.tsx", "Guide.tsx", "InfoApp.tsx", "PhotoAnalysis.tsx"])
-    assert.doesNotMatch(await readFile(new URL(`../src/${f}`, import.meta.url), "utf8"), /toss-lab/, f);
+  // Every product source (P20 split App into screens/ui/design), not a fixed list.
+  const src = new URL("../src/", import.meta.url);
+  const files = (await readdir(src, { recursive: true })).filter(
+    (f) => /\.(tsx?|css)$/.test(f) && !f.replaceAll("\\", "/").startsWith("toss-lab/"),
+  );
+  assert.ok(files.length >= 15, files.join());
+  for (const f of files)
+    assert.doesNotMatch(await readFile(new URL(f.replaceAll("\\", "/"), src), "utf8"), /toss-lab|tl-finder|모의 화면/, f);
   const cfg = await readFile(new URL("../vite.config.ts", import.meta.url), "utf8");
   assert.doesNotMatch(cfg, /toss-lab/);
 });

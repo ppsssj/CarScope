@@ -4,42 +4,36 @@
  * brand blue is used. Sizes are rem so the OS/browser text-size setting
  * scales the whole screen (TDS typography: do not hard-code px sizes).
  */
+/* P20: values come from the shared 차보담 tokens; the lab keeps its aliases. */
+@import "../design/tokens.css";
 :root {
-  --tl-n0: #ffffff;
-  --tl-n50: #f7f8fa;
-  --tl-n100: #f1f3f5;
-  --tl-n200: #e4e7eb;
-  --tl-n400: #aeb5bd;
-  --tl-n600: #636e7a;
-  --tl-n700: #4a5562;
-  --tl-n900: #181c21;
-  --tl-action: #1c5fd4; /* white text 5.77:1 — not Toss blue #3182f6 (3.71:1) */
-  --tl-action-pressed: #174fb3;
-  --tl-action-weak: #e9f1fd;
-  --tl-action-ink: #1a56bf;
-  --tl-mark: #ffcf3d;
-  --tl-scene: #1f242a;
-  /* type ladder (size / line-height), rem at 16px root */
-  --tl-t2: 1.5rem; /* 24 / 33 — screen title */
-  --tl-t2-lh: 2.0625rem;
-  --tl-t4: 1.125rem; /* 18 / 27 — section heading */
-  --tl-t4-lh: 1.6875rem;
-  --tl-t5: 1.0625rem; /* 17 / 25.5 — body */
-  --tl-t5-lh: 1.59375rem;
-  --tl-t6: 0.9375rem; /* 15 / 22.5 — secondary */
-  --tl-t6-lh: 1.40625rem;
-  --tl-t7: 0.8125rem; /* 13 / 19.5 — caption */
-  --tl-t7-lh: 1.21875rem;
-  /* spacing: 4 · 8 · 12 · 16 · 20 · 24 · 32 · 40 */
-  --tl-gutter: 1.25rem; /* 20px side padding (ListRow small horizontal) */
-  --tl-ease: cubic-bezier(0.2, 0, 0, 1); /* local extension, not a TDS token */
-  font-family:
-    system-ui,
-    -apple-system,
-    "Apple SD Gothic Neo",
-    "Malgun Gothic",
-    "Noto Sans KR",
-    sans-serif;
+  --tl-n0: var(--cb-n0);
+  --tl-n50: var(--cb-n50);
+  --tl-n100: var(--cb-n100);
+  --tl-n200: var(--cb-n200);
+  --tl-n400: var(--cb-n400);
+  --tl-n600: var(--cb-n600);
+  --tl-n700: var(--cb-n700);
+  --tl-n900: var(--cb-n900);
+  --tl-action: var(--cb-action);
+  --tl-action-pressed: var(--cb-action-pressed);
+  --tl-action-weak: var(--cb-action-weak);
+  --tl-action-ink: var(--cb-action-ink);
+  --tl-mark: var(--cb-mark);
+  --tl-scene: var(--cb-scene);
+  --tl-t2: var(--cb-t2);
+  --tl-t2-lh: var(--cb-t2-lh);
+  --tl-t4: var(--cb-t4);
+  --tl-t4-lh: var(--cb-t4-lh);
+  --tl-t5: var(--cb-t5);
+  --tl-t5-lh: var(--cb-t5-lh);
+  --tl-t6: var(--cb-t6);
+  --tl-t6-lh: var(--cb-t6-lh);
+  --tl-t7: var(--cb-t7);
+  --tl-t7-lh: var(--cb-t7-lh);
+  --tl-gutter: var(--cb-gutter);
+  --tl-ease: var(--cb-ease);
+  font-family: var(--cb-font);
   color: var(--tl-n900);
   background: var(--tl-n0);
   font-synthesis: none;

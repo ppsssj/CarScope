@@ -82,3 +82,4 @@ Screenshots and report: see the [evidence index](evidence/p19-toss-design-lab/RE
 - The 6:5 viewfinder is a crop chosen so that the status line stays above the CTA on a 390×844 screen. The real camera aspect and the product's coordinate helpers (`containRect`, `tapToVideoPoint`) were not exercised.
 - The lab's "실험 도구" state links are review tooling. They are not a proposed product element.
 - Pending decision: whether to carry these principles into the product's camera step. That would be a separate, approved task.
+- Follow-up: [P20](p20-chabodam-mobile-ui.md) applied this design language to the whole product as 차보담. The tokens now live in `src/design/tokens.css`, and this lab aliases them. The lab itself is unchanged and still excluded from the product build.

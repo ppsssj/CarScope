@@ -1,0 +1,47 @@
+/*
+ * 차보담 design tokens — the single source for the P19 design language.
+ * Shared by the product (src/style.css) and the isolated P19 design lab,
+ * which aliases these. Derived from TDS
+ * *principles* verified in docs/p19-toss-design-lab.md; no Toss font, logo,
+ * icon or brand blue. Sizes are rem so the user's text-size setting scales
+ * everything.
+ */
+:root {
+  --cb-n0: #ffffff;
+  --cb-n50: #f7f8fa;
+  --cb-n100: #f1f3f5;
+  --cb-n200: #e4e7eb;
+  --cb-n400: #aeb5bd;
+  --cb-n600: #636e7a; /* lightest allowed text: ≥4.67:1 on n0/n50 */
+  --cb-n700: #4a5562;
+  --cb-n900: #181c21;
+  --cb-action: #1c5fd4; /* white text 5.77:1 (not Toss blue, 3.71:1) */
+  --cb-action-pressed: #174fb3;
+  --cb-action-weak: #e9f1fd;
+  --cb-action-ink: #1a56bf;
+  --cb-caution-weak: #fff4e5;
+  --cb-caution-ink: #8a4b00; /* 6.4:1 on caution-weak */
+  --cb-danger-weak: #fdecec;
+  --cb-danger-ink: #b42318; /* 5.9:1 on danger-weak */
+  --cb-success-weak: #e8f6ee;
+  --cb-success-ink: #17663a; /* 6.2:1 on success-weak */
+  --cb-mark: #ffcf3d;
+  --cb-scene: #1f242a;
+  /* type ladder (size / line-height) */
+  --cb-t2: 1.5rem; /* 24 / 33 — screen title */
+  --cb-t2-lh: 2.0625rem;
+  --cb-t4: 1.125rem; /* 18 / 27 — section heading */
+  --cb-t4-lh: 1.6875rem;
+  --cb-t5: 1.0625rem; /* 17 / 25.5 — body */
+  --cb-t5-lh: 1.59375rem;
+  --cb-t6: 0.9375rem; /* 15 / 22.5 — secondary */
+  --cb-t6-lh: 1.40625rem;
+  --cb-t7: 0.8125rem; /* 13 / 19.5 — caption */
+  --cb-t7-lh: 1.21875rem;
+  --cb-gutter: 1.25rem; /* 20px side padding */
+  --cb-column: 30rem; /* phone reading column */
+  --cb-ease: cubic-bezier(0.2, 0, 0, 1); /* local extension, not a TDS token */
+  --cb-font:
+    system-ui, -apple-system, "Apple SD Gothic Neo", "Malgun Gothic",
+    "Noto Sans KR", sans-serif;
+}

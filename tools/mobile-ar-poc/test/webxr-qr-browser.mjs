@@ -336,9 +336,9 @@ try {
     assert.equal(await page.evaluate(() => document.body.dataset.webxrGuide), undefined);
     assert.equal(log.requests.some(r => /webxr|three/.test(r.url)), false);
     await page.getByText('차량과 연결됐어요', {exact:true}).waitFor();
-    await page.locator('.safety-card input').check();
+    await page.locator('.cb-safety input').check();
     await page.getByRole('button',{name:'직접 점검 시작',exact:true}).click();
-    for(const box of await page.locator('.observation-card input').all())await box.check();
+    for(const box of await page.locator('.cb-observation input').all())await box.check();
     await page.getByRole('button',{name:'관찰 결과 선택하기',exact:true}).click();
     await page.getByRole('button',{name:'보충이 필요해요',exact:true}).click();
     await page.getByRole('button',{name:'선택한 결과 확인하기',exact:true}).click();

@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@astryxdesign/core/Button";
 import { CheckboxInput } from "@astryxdesign/core/CheckboxInput";
-import { Badge } from "@astryxdesign/core/Badge";
 import {
   detectionForTask,
   offersDetection,
@@ -41,13 +40,13 @@ const titles: Record<string, string> = {
   WRONG_PART: "선택한 부품이 아닌 것 같아요",
 };
 const errors: Record<string, string> = {
-  BUDGET_EXHAUSTED: "AI 사용 한도에 도달했습니다.",
-  RATE_LIMITED: "요청이 많습니다. 잠시 후 다시 시도하세요.",
-  NOT_CONNECTED: "차량 연결을 확인할 수 없습니다. 새 QR이 필요할 수 있습니다.",
-  INVALID_RESPONSE: "AI 응답이 데이터 계약과 맞지 않아 표시하지 않았습니다.",
-  TOO_LARGE: "사진은 15MB 이하로 선택하세요.",
+  BUDGET_EXHAUSTED: "AI 사용 한도에 도달했어요. 직접 점검은 계속할 수 있어요.",
+  RATE_LIMITED: "요청이 많아요. 잠시 후 다시 시도해 주세요.",
+  NOT_CONNECTED: "차량 연결을 확인할 수 없어요. 새 QR이 필요할 수 있어요.",
+  INVALID_RESPONSE: "AI 응답이 약속된 형식과 맞지 않아 보여 주지 않았어요.",
+  TOO_LARGE: "사진은 15MB 이하로 골라 주세요.",
   UNREADABLE:
-    "읽을 수 없는 사진입니다. JPEG, PNG, WebP 사진을 다시 선택하세요.",
+    "읽을 수 없는 사진이에요. JPEG, PNG, WebP 사진을 다시 골라 주세요.",
 };
 export function PhotoAnalysis({ taskId }: { taskId: string }) {
   const entry = detectionForTask(taskId),
@@ -100,7 +99,7 @@ export function PhotoAnalysis({ taskId }: { taskId: string }) {
       const ctx = c.getContext("2d")!;
       ctx.drawImage(photo, 0, 0);
       candidates.forEach(({ box }, i) => {
-        ctx.strokeStyle = "#0a766b";
+        ctx.strokeStyle = "#1c5fd4";
         ctx.lineWidth = 5;
         ctx.strokeRect(
           box[0] * c.width,
@@ -108,7 +107,7 @@ export function PhotoAnalysis({ taskId }: { taskId: string }) {
           box[2] * c.width,
           box[3] * c.height,
         );
-        ctx.fillStyle = "#073b37";
+        ctx.fillStyle = "#174fb3";
         ctx.font = "bold 30px sans-serif";
         ctx.fillText(
           String(i + 1),
@@ -127,9 +126,9 @@ export function PhotoAnalysis({ taskId }: { taskId: string }) {
   }, [crop]);
   if (!canDetect && !canAnalyze)
     return (
-      <p className="fine">
-        이 연결에서는 AI 사진 보조가 제공되지 않습니다. 그림 안내와 수동 점검을
-        이용하세요.
+      <p className="cb-caption cb-photo-off">
+        이 연결에서는 AI 사진 보조를 쓸 수 없어요. 그림 안내를 보며 직접
+        점검해 주세요.
       </p>
     );
   function resetResult() {
@@ -212,13 +211,13 @@ export function PhotoAnalysis({ taskId }: { taskId: string }) {
       );
       if (!answer.candidates.length)
         setError(
-          "후보를 찾지 못했습니다. 사진에서 직접 위치를 지정하거나 수동 점검을 계속하세요.",
+          "후보를 찾지 못했어요. 사진에서 직접 위치를 지정하거나 직접 점검을 이어가 주세요.",
         );
     } catch (e) {
       if (g === generation.current)
         setError(
           errors[(e as Error).message] ??
-            "AI 위치 찾기에 실패했습니다. 사진을 다시 고르거나 직접 지정하세요.",
+            "AI 위치 찾기에 실패했어요. 사진을 다시 고르거나 직접 지정해 주세요.",
         );
     } finally {
       if (g === generation.current) {
@@ -241,7 +240,7 @@ export function PhotoAnalysis({ taskId }: { taskId: string }) {
       }
     } catch {
       if (g === generation.current)
-        setError("사진을 자르지 못했습니다. 다른 사진을 선택하세요.");
+        setError("사진을 자르지 못했어요. 다른 사진을 골라 주세요.");
     } finally {
       if (g === generation.current) setBusy(false);
     }
@@ -280,7 +279,7 @@ export function PhotoAnalysis({ taskId }: { taskId: string }) {
       if (g === generation.current)
         setError(
           errors[(e as Error).message] ??
-            "AI 분석에 실패했습니다. 다시 동의한 뒤 재시도하거나 직접 점검하세요.",
+            "AI 분석에 실패했어요. 다시 동의한 뒤 다시 시도하거나 직접 점검해 주세요.",
         );
     } finally {
       if (g === generation.current) {
@@ -290,43 +289,43 @@ export function PhotoAnalysis({ taskId }: { taskId: string }) {
     }
   }
   return (
-    <section className="photo-workspace">
-      <div className="section-label">
-        <h3>사진으로 관찰 돕기</h3>
-        <Badge label="AI 실험" variant="purple" />
-      </div>
-      <p>
-        사진에서 보이는 모습만 참고합니다. 정확도가 검증된 진단이 아니며, 아래
-        점검 응답은 직접 선택해야 합니다.
+    <div className="cb-photo">
+      <p className="cb-photo-intro">
+        <span className="cb-tag cb-tag-ai">AI 실험</span>
+        사진에 보이는 겉모습만 참고로 살펴봐요. 정확도가 검증된 진단이 아니에요.
+        점검 응답은 직접 골라 주세요.
       </p>
       {profile?.positionNote && (
-        <p className="notice">{profile.positionNote}</p>
+        <p className="cb-note">{profile.positionNote}</p>
       )}
-      <label className="file-input">
-        사진 촬영 또는 선택
-        <input
-          type="file"
-          accept="image/jpeg,image/png,image/webp"
-          onChange={(e) => {
-            void load(e.target.files?.[0]);
-            e.target.value = "";
-          }}
-        />
-      </label>
-      <p className="fine">
-        선택만으로는 전송되지 않습니다. 위치·촬영 메타데이터는 전송 이미지에서
-        제거합니다.
-      </p>
+      <div className="cb-photo-step">
+        <h3 className="cb-h3">1 · 사진 고르기</h3>
+        <label className="cb-file">
+          사진 찍기 또는 고르기
+          <input
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            onChange={(e) => {
+              void load(e.target.files?.[0]);
+              e.target.value = "";
+            }}
+          />
+        </label>
+        <p className="cb-caption">
+          고르기만 해서는 보내지 않아요. 보낼 때는 위치·촬영 정보를 지워요.
+        </p>
+      </div>
       {photo && (
-        <>
+        <div className="cb-photo-step">
+          <h3 className="cb-h3">2 · 부품 위치 정하기</h3>
           <canvas
             ref={canvas}
-            className="photo-canvas"
+            className="cb-photo-canvas"
             tabIndex={canAnalyze ? 0 : undefined}
             role={canAnalyze ? "button" : "img"}
             aria-label={
               canAnalyze
-                ? "사진에서 부품 위치 직접 지정. Enter는 중앙 선택"
+                ? "사진에서 부품 위치 직접 지정. Enter는 가운데 선택"
                 : "AI 위치 후보가 표시된 사진"
             }
             onKeyDown={(e) => {
@@ -347,17 +346,17 @@ export function PhotoAnalysis({ taskId }: { taskId: string }) {
             }}
           />
           {canAnalyze && (
-            <p className="fine">
-              부품 위치를 탭하세요. 키보드에서는 Enter로 중앙을 선택할 수
-              있습니다.
+            <p className="cb-caption">
+              사진에서 부품을 눌러 직접 지정해요. 키보드에서는 Enter로 가운데를
+              골라요.
             </p>
           )}
           {canDetect && (
-            <div className="consent">
-              <p>
-                AI 위치 찾기 · Roboflow에 축소한 사진 한 장을 보냅니다.
-                개인정보가 보이지 않는 사진을 고르세요. 다른 부품을 잘못 표시할
-                수 있습니다.
+            <div className="cb-consent">
+              <p className="cb-body-sm">
+                AI 위치 찾기 · 줄인 사진 한 장을 외부 서비스(Roboflow)에 보내요.
+                사람이나 번호판이 보이지 않는 사진을 골라 주세요. 다른 부품을
+                잘못 표시할 수 있어요.
               </p>
               <CheckboxInput
                 label="이 사진의 외부 위치 분석에 동의합니다"
@@ -366,42 +365,48 @@ export function PhotoAnalysis({ taskId }: { taskId: string }) {
               />
               <Button
                 label="AI 위치 후보 찾기"
+                variant="secondary"
+                width="100%"
                 isDisabled={!detectConsent || busy}
                 onClick={() => void detect()}
               />
             </div>
           )}
           {candidates.length > 0 && (
-            <>
-              <p>{provenance} · 확정되지 않은 위치 후보</p>
-              <div className="button-row">
+            <div className="cb-candidates">
+              <p className="cb-caption">
+                {provenance} · 확정되지 않은 위치 후보예요. 맞는 후보를 직접
+                골라 주세요.
+              </p>
+              <div className="cb-chip-row">
                 {candidates.map((c, i) => (
                   <Button
                     key={i}
                     label={`후보 ${i + 1} 선택`}
+                    variant="secondary"
                     isDisabled={busy || !canAnalyze}
                     onClick={() => void choose(c.box, "AI_CANDIDATE")}
                   />
                 ))}
               </div>
-            </>
+            </div>
           )}
-        </>
+        </div>
       )}
       {crop && (
-        <div className="consent">
-          <h4>이 영역만 분석합니다</h4>
+        <div className="cb-photo-step cb-consent">
+          <h3 className="cb-h3">3 · 이 부분만 분석해요</h3>
           <canvas
             ref={preview}
-            className="photo-canvas"
+            className="cb-photo-canvas"
             aria-label="분석에 보낼 잘라낸 사진"
           />
-          <p>
+          <p className="cb-body-sm">
             {regionSource === "MANUAL"
-              ? "사용자가 직접 지정한 영역"
-              : "AI 후보에서 사용자가 선택한 영역"}{" "}
-            · 주변 문맥을 포함한 잘라낸 사진 한 장을 {service}에 보냅니다. 원본
-            전체는 보내지 않습니다.
+              ? "내가 직접 지정한 부분이에요."
+              : "AI 후보에서 내가 고른 부분이에요."}{" "}
+            주변을 조금 포함해 자른 사진 한 장만 {service}에 보내요. 원본 전체는
+            보내지 않아요.
           </p>
           <CheckboxInput
             label="잘라낸 사진의 외부 AI 분석에 동의합니다"
@@ -411,16 +416,18 @@ export function PhotoAnalysis({ taskId }: { taskId: string }) {
           <Button
             label={result ? "다시 분석" : "사진 상태 분석"}
             variant="primary"
+            width="100%"
             isDisabled={!analysisConsent || busy}
             onClick={() => void analyze()}
           />
         </div>
       )}
       {busy && (
-        <div role="status">
-          <p>사진을 처리하고 있습니다…</p>
+        <div role="status" className="cb-busy">
+          <p className="cb-body-sm">사진을 처리하고 있어요.</p>
           <Button
             label="사진 처리 취소"
+            variant="ghost"
             onClick={() => {
               invalidate();
               setBusy(false);
@@ -431,37 +438,102 @@ export function PhotoAnalysis({ taskId }: { taskId: string }) {
         </div>
       )}
       {error && (
-        <p role="alert" className="notice">
+        <p role="alert" className="cb-note cb-note-danger">
           {error}
         </p>
       )}
       {result && (
-        <div className="ai-result">
-          <Badge label={provenance} variant="purple" />
-          <h4>{titles[result.assessment]}</h4>
-          <p>부품 정상·차량 안전·주행 가능 판정이 아닙니다.</p>
-          {[
-            ...result.observations,
-            ...result.suspectedIssues.map(
-              (s) => `${s.description} — ${s.evidence}`,
-            ),
-            ...result.limitations,
-            ...result.retakeInstructions,
-          ].map((s, i) => (
-            <p key={i}>{s}</p>
-          ))}
-          <CheckboxInput
-            label="AI의 한계를 이해했고, 실제 부품을 직접 확인하겠습니다"
-            value={ack}
-            onChange={setAck}
-          />
-          {ack && (
-            <p className="fine">
-              아래 사용자 점검을 이어가세요. AI 결과는 응답을 자동으로 바꾸지
-              않습니다.
-            </p>
-          )}
+        <AiResult
+          result={result}
+          provenance={provenance}
+          ack={ack}
+          setAck={setAck}
+        />
+      )}
+    </div>
+  );
+}
+
+/**
+ * The validated AI answer, most important first: the headline, what it
+ * suspects (with its evidence), what it saw, then its limits. Nothing here is
+ * invented: every line is a field of the validated response.
+ */
+function AiResult({
+  result,
+  provenance,
+  ack,
+  setAck,
+}: {
+  result: Analysis;
+  provenance: string;
+  ack: boolean;
+  setAck: (v: boolean) => void;
+}) {
+  return (
+    <section className="cb-ai-result" aria-labelledby="ai-result-title">
+      <p className="cb-ai-tags">
+        <span className="cb-tag cb-tag-ai">{provenance}</span>
+        <span className="cb-tag">참고 정보</span>
+      </p>
+      <h3 id="ai-result-title" className="cb-ai-title">
+        {titles[result.assessment]}
+      </h3>
+      <p className="cb-caption">
+        부품 정상·차량 안전·주행 가능 여부를 판정한 결과가 아니에요.
+      </p>
+      {result.suspectedIssues.length > 0 && (
+        <div className="cb-ai-block">
+          <h4>먼저 살펴볼 점</h4>
+          <ul>
+            {result.suspectedIssues.map((s, i) => (
+              <li key={i}>
+                <strong>{s.description}</strong>
+                <span>근거 · {s.evidence}</span>
+              </li>
+            ))}
+          </ul>
         </div>
+      )}
+      {result.observations.length > 0 && (
+        <div className="cb-ai-block">
+          <h4>사진에서 보인 것</h4>
+          <ul>
+            {result.observations.map((s, i) => (
+              <li key={i}>{s}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+      {result.limitations.length > 0 && (
+        <div className="cb-ai-block cb-ai-limits">
+          <h4>이 결과의 한계</h4>
+          <ul>
+            {result.limitations.map((s, i) => (
+              <li key={i}>{s}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+      {result.retakeInstructions.length > 0 && (
+        <div className="cb-ai-block">
+          <h4>다시 찍는다면</h4>
+          <ul>
+            {result.retakeInstructions.map((s, i) => (
+              <li key={i}>{s}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+      <CheckboxInput
+        label="AI의 한계를 이해했고, 실제 부품을 직접 확인하겠습니다"
+        value={ack}
+        onChange={setAck}
+      />
+      {ack && (
+        <p className="cb-caption">
+          점검 응답은 직접 골라 주세요. AI 결과는 응답을 바꾸지 않아요.
+        </p>
       )}
     </section>
   );
