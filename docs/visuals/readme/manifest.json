@@ -154,6 +154,185 @@
       ],
       "bytes": 62664,
       "edit": "Two existing captures; top 390x844 viewport crops, proportional resize, dark matte; WebP quality 90. No fabricated UI."
+    },
+    {
+      "file": "chabodam-01-vehicle-home.webp",
+      "set": "2026-11-15",
+      "sources": [
+        {
+          "path": "readme-demo/release/r1-home.png",
+          "sha256": "e8034c247021addd944a0f5459eee5742a41243dc9da32de7f02e4051b7c89c7",
+          "pixels": [
+            2560,
+            1440
+          ],
+          "note": "Release APK on CarScope_Release_Verify AVD, 2026-11-15",
+          "crop": [
+            854,
+            90,
+            2534,
+            1300
+          ]
+        }
+      ],
+      "pixels": [
+        1280,
+        922
+      ],
+      "bytes": 43616,
+      "edit": "crop to app pane, RGB, resize to 1280 wide, WebP quality 84; no UI change"
+    },
+    {
+      "file": "chabodam-02-hood-parts.webp",
+      "set": "2026-11-15",
+      "sources": [
+        {
+          "path": "readme-demo/release/r2-hood.png",
+          "sha256": "471893e2cee99eee7b6ff4bfc26aa63d9c389a024be3b1197fd625db203afad7",
+          "pixels": [
+            2560,
+            1440
+          ],
+          "note": "Release APK on CarScope_Release_Verify AVD, 2026-11-15",
+          "crop": [
+            854,
+            90,
+            2534,
+            1300
+          ]
+        }
+      ],
+      "pixels": [
+        1280,
+        922
+      ],
+      "bytes": 72288,
+      "edit": "crop to app pane, RGB, resize to 1280 wide, WebP quality 84; no UI change"
+    },
+    {
+      "file": "chabodam-03-sdk-status.webp",
+      "set": "2026-11-15",
+      "sources": [
+        {
+          "path": "release-verify/08-ev.png",
+          "sha256": "5ba60731eb66c17261052edf86d31d66ccf862fa547840e3dfffabd800897ca6",
+          "pixels": [
+            2560,
+            1440
+          ],
+          "note": "Release APK on CarScope_Release_Verify AVD, 2026-11-15; EV values from the AVD Vehicle Service",
+          "crop": [
+            854,
+            90,
+            2534,
+            1300
+          ]
+        }
+      ],
+      "pixels": [
+        1280,
+        922
+      ],
+      "bytes": 65052,
+      "edit": "crop to app pane, RGB, resize to 1280 wide, WebP quality 84; no UI change"
+    },
+    {
+      "file": "chabodam-04-mobile-flow.webp",
+      "set": "2026-11-15",
+      "sources": [
+        {
+          "path": "readme-demo/frames/phone-51.png",
+          "sha256": "9d2a00ae17fa041f05f0747d5c9cdd59c82aa3d3a8e08b9f8927a4c0c5233b29",
+          "pixels": [
+            440,
+            892
+          ],
+          "note": "frame 51.0 s of the demo video (sha256 f94190263f1df067acc6e6b42b5705e54951c907c909f777f86654b7765fca32), crop 440x892+1427+115"
+        },
+        {
+          "path": "readme-demo/frames/phone-66.png",
+          "sha256": "c1ad572f73a7a65ca635190636199dba6dc8354e609445db6a93c06653dad680",
+          "pixels": [
+            440,
+            892
+          ],
+          "note": "frame 66.0 s of the demo video (sha256 f94190263f1df067acc6e6b42b5705e54951c907c909f777f86654b7765fca32), crop 440x892+1427+115"
+        },
+        {
+          "path": "readme-demo/frames/phone-90.png",
+          "sha256": "579459fd093dfcf12306707f8b02d0d12972d0c1a2367b95c087b3d1a849c7b4",
+          "pixels": [
+            440,
+            892
+          ],
+          "note": "frame 90.0 s of the demo video (sha256 f94190263f1df067acc6e6b42b5705e54951c907c909f777f86654b7765fca32), crop 440x892+1427+115"
+        }
+      ],
+      "pixels": [
+        1280,
+        835
+      ],
+      "bytes": 81140,
+      "edit": "three frames placed side by side (24 px gap, background #0b1219), resize to 1280 wide, WebP quality 84; frames not edited"
+    },
+    {
+      "file": "chabodam-05-result-received.webp",
+      "set": "2026-11-15",
+      "sources": [
+        {
+          "path": "hmg-demo/shots/c-part-result.png",
+          "sha256": "7a796c082326b277a3bd8b16d8eb81ffc821108ef79c82363e945cf8e946dcbc",
+          "pixels": [
+            2560,
+            1440
+          ],
+          "note": "Debug APK, operator-approved AVD, real phone result, 2026-11-14 E2E recording",
+          "crop": [
+            854,
+            90,
+            2534,
+            1300
+          ]
+        }
+      ],
+      "pixels": [
+        1280,
+        922
+      ],
+      "bytes": 49696,
+      "edit": "crop to app pane, RGB, resize to 1280 wide, WebP quality 84; no UI change"
+    },
+    {
+      "file": "chabodam-06-summary.webp",
+      "set": "2026-11-15",
+      "sources": [
+        {
+          "path": "readme-demo/frames/summary-54.png",
+          "sha256": "43427552252394278a238bfd8e7071686d11055802a5d9c3b230c4d0851d32b9",
+          "pixels": [
+            1260,
+            908
+          ],
+          "note": "frame 54.0 s of hmg-demo/02_vehicle_result.mp4 (Debug, operator-approved AVD, 2026-11-14), crop 1260x908+640+68 by ffmpeg",
+          "video": {
+            "path": "hmg-demo/02_vehicle_result.mp4",
+            "sha256": "44fee3ee04258ef815361cff339242646f8450a19a51af4dd2274ce7b670ac35",
+            "at": 54.0
+          }
+        }
+      ],
+      "pixels": [
+        1260,
+        908
+      ],
+      "bytes": 42620,
+      "edit": "RGB, WebP quality 84; no resize, no UI change"
     }
-  ]
+  ],
+  "sets": {
+    "2026-11-15": {
+      "encoder": "Pillow 12.0.0, WebP quality 84 method 6, max width 1280, RGB, no EXIF/XMP/ICC",
+      "frames": "FFmpeg 8 (Gyan.FFmpeg) frame extraction; no filters other than crop"
+    }
+  }
 }
