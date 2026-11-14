@@ -60,6 +60,7 @@ jobs:
       - name: Verify public SDK component declarations and Debug-only cache boundary
         run: |
           python3 -B -m unittest discover -s tools/component-probe -p 'test_*.py' -v
+          node --test tools/component-probe/test/*.test.mjs
           python3 tools/component-probe/check.py sdk-audit
           python3 tools/component-probe/inventory.py --out "$RUNNER_TEMP/pleos-public-api-inventory.md"
           diff -u docs/contracts/pleos-public-api-inventory.md "$RUNNER_TEMP/pleos-public-api-inventory.md"
