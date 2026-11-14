@@ -157,15 +157,57 @@ class MobileRequestFlowActivityTest {
         return b["serverNow"].asLong to b["expiresAt"].asLong
     }
 
-    @Test fun `a refused grant creates nothing and retries only at the throttled interval while the panel is open`() {
+    // P22: a 401 repeated every 30 s while the panel was open (2026-11-14 AVD log). The same proof gets the same
+    // answer, so a refusal is not retried by itself; only a new request (or the service check) asks again.
+    @Test fun `a refused grant (401) creates nothing and is not retried until the person asks again`() {
         val h = host(); h.request()
+        h.a.exchange.failure = ProvisionFailure.UNAUTHORIZED
         h.a.exchange.callbacks.last()(null)
-        assertEquals(0, h.a.created); assertEquals(View.GONE, h.qr()); assertTrue(h.status(), h.status().contains("인증 실패"))
+        assertEquals(0, h.a.created); assertEquals(View.GONE, h.qr()); assertTrue(h.status(), h.status().contains("AVD 등록 거부"))
         assertFalse(h.root.findViewWithTag<Button>("create").isEnabled)
-        h.tick(5); assertEquals(1, h.a.exchange.callbacks.size)
-        h.a.clock += 30_000; h.tick(); assertEquals(2, h.a.exchange.callbacks.size)
+        assertEquals("AUTH_FAILED", h.receiver()!!["phase"].asString)
+        repeat(10) { h.a.clock += 60_000; h.tick() }
+        assertEquals("ten minutes later still one request", 1, h.a.exchange.callbacks.size)
+        assertTrue("the page offers its own retry", h.receiver()!!["retryAvailable"].asBoolean)
+        h.a.clock = 2100 // the fixed sample grant is valid only at its own issue time
+        h.rpc("control", """, "action":"refresh""""); shadowOf(Looper.getMainLooper()).idle()
+        assertEquals("the person's 다시 확인 asks again, once", 2, h.a.exchange.callbacks.size)
+        h.a.exchange.failure = null
         h.a.exchange.callbacks.last()(AvdSimulatorSamples.value())
         assertEquals(1, h.a.created)
+        h.b.stop().destroy()
+    }
+
+    @Test fun `a starting service is retried at 30, 60 and 120 seconds, shown as waiting, then stops`() {
+        val h = host(); h.request()
+        h.a.exchange.failure = ProvisionFailure.SERVER_UNAVAILABLE
+        h.a.exchange.callbacks.last()(null)
+        assertEquals("waiting, not a refusal", "AUTH_WAITING", h.receiver()!!["phase"].asString)
+        assertTrue(h.status(), h.status().contains("서버 준비 중"))
+        for ((gap, expected) in listOf(29_000L to 1, 1_000L to 2)) { h.a.clock += gap; h.tick(); assertEquals(expected, h.a.exchange.callbacks.size) }
+        h.a.exchange.callbacks.last()(null)
+        h.a.clock += 59_000; h.tick(); assertEquals(2, h.a.exchange.callbacks.size)
+        h.a.clock += 1_000; h.tick(); assertEquals(3, h.a.exchange.callbacks.size)
+        h.a.exchange.callbacks.last()(null)
+        h.a.clock += 120_000; h.tick(); assertEquals(4, h.a.exchange.callbacks.size)
+        h.a.exchange.callbacks.last()(null)
+        repeat(10) { h.a.clock += 60_000; h.tick() }
+        assertEquals("three automatic retries, then none", 4, h.a.exchange.callbacks.size)
+        assertEquals("AUTH_FAILED", h.receiver()!!["phase"].asString)
+        assertTrue(h.status(), h.status().contains("자동 재시도를 멈췄습니다"))
+        assertEquals(0, h.a.created)
+        h.b.stop().destroy()
+    }
+
+    @Test fun `a rate limited grant waits two minutes once and never loops`() {
+        val h = host(); h.request()
+        h.a.exchange.failure = ProvisionFailure.RATE_LIMITED
+        h.a.exchange.callbacks.last()(null)
+        h.a.clock += 119_000; h.tick(); assertEquals(1, h.a.exchange.callbacks.size)
+        h.a.clock += 1_000; h.tick(); assertEquals(2, h.a.exchange.callbacks.size)
+        h.a.exchange.callbacks.last()(null)
+        repeat(10) { h.a.clock += 60_000; h.tick() }
+        assertEquals(2, h.a.exchange.callbacks.size)
         h.b.stop().destroy()
     }
 

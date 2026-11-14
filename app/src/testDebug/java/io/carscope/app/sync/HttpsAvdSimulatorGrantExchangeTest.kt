@@ -182,7 +182,7 @@ class HttpsAvdSimulatorGrantExchangeTest {
         }
     }
 
-    private fun assertFailureLog(c: Connection, expected: String) {
+    private fun assertFailureLog(c: Connection, expected: String, failure: ProvisionFailure) {
         ShadowLog.clear()
         val queue = LinkedBlockingQueue<() -> Unit>()
         exchange(c, queue).use { exchange ->
@@ -191,26 +191,35 @@ class HttpsAvdSimulatorGrantExchangeTest {
             val logs = ShadowLog.getLogsForTag("CarScopeAvdAuth")
             assertEquals(listOf(expected), logs.map { it.msg })
             assertTrue(logs.all { it.throwable == null })
+            // P22: the screen's retry decision reads the same fixed category, never a server message.
+            assertEquals(failure, exchange.lastFailure)
         }
     }
 
     @Test fun `HTTP denials and rejected response headers log only their fixed category once`() {
-        for ((status, code) in listOf(401 to "PROVISION_HTTP_UNAUTHORIZED", 403 to "PROVISION_HTTP_FORBIDDEN",
-            429 to "PROVISION_HTTP_RATE_LIMITED", 302 to "PROVISION_HTTP_REJECTED", 503 to "PROVISION_HTTP_REJECTED")) {
-            assertFailureLog(Connection(status = status), code)
+        for ((status, code, failure) in listOf(
+            Triple(401, "PROVISION_HTTP_UNAUTHORIZED", ProvisionFailure.UNAUTHORIZED),
+            Triple(403, "PROVISION_HTTP_FORBIDDEN", ProvisionFailure.FORBIDDEN),
+            Triple(429, "PROVISION_HTTP_RATE_LIMITED", ProvisionFailure.RATE_LIMITED),
+            Triple(302, "PROVISION_HTTP_REJECTED", ProvisionFailure.REJECTED),
+            // P22: a starting or unavailable service is not an authentication result.
+            Triple(502, "PROVISION_SERVER_UNAVAILABLE", ProvisionFailure.SERVER_UNAVAILABLE),
+            Triple(503, "PROVISION_SERVER_UNAVAILABLE", ProvisionFailure.SERVER_UNAVAILABLE),
+            Triple(504, "PROVISION_SERVER_UNAVAILABLE", ProvisionFailure.SERVER_UNAVAILABLE))) {
+            assertFailureLog(Connection(status = status), code, failure)
         }
-        assertFailureLog(Connection(encoding = "gzip"), "PROVISION_RESPONSE_HEADERS_REJECTED")
-        assertFailureLog(Connection(declaredLength = SyncHttpDecoder.MAX_BYTES + 1L), "PROVISION_RESPONSE_HEADERS_REJECTED")
+        assertFailureLog(Connection(encoding = "gzip"), "PROVISION_RESPONSE_HEADERS_REJECTED", ProvisionFailure.RESPONSE_INVALID)
+        assertFailureLog(Connection(declaredLength = SyncHttpDecoder.MAX_BYTES + 1L), "PROVISION_RESPONSE_HEADERS_REJECTED", ProvisionFailure.RESPONSE_INVALID)
     }
 
     @Test fun `timeout TLS DNS and malformed JSON retain fixed diagnostics without exception details`() {
         val detail = "synthetic-sensitive-detail"
-        assertFailureLog(Connection(exception = SocketTimeoutException(detail)), "PROVISION_TIMEOUT")
-        assertFailureLog(Connection(exception = SSLException(detail)), "PROVISION_TLS_REJECTED")
-        assertFailureLog(Connection(exception = UnknownHostException(detail)), "PROVISION_DNS_FAILURE")
-        assertFailureLog(Connection(body = "{invalid-json"), "PROVISION_RESPONSE_INVALID_JSON")
-        assertFailureLog(Connection(body = "{}"), "PROVISION_RESPONSE_CONTRACT_REJECTED")
-        assertFailureLog(Connection(body = AvdSimulatorSamples.grant(2100)), "PROVISION_GRANT_EXPIRED")
+        assertFailureLog(Connection(exception = SocketTimeoutException(detail)), "PROVISION_TIMEOUT", ProvisionFailure.TIMEOUT)
+        assertFailureLog(Connection(exception = SSLException(detail)), "PROVISION_TLS_REJECTED", ProvisionFailure.TLS)
+        assertFailureLog(Connection(exception = UnknownHostException(detail)), "PROVISION_DNS_FAILURE", ProvisionFailure.NETWORK)
+        assertFailureLog(Connection(body = "{invalid-json"), "PROVISION_RESPONSE_INVALID_JSON", ProvisionFailure.RESPONSE_INVALID)
+        assertFailureLog(Connection(body = "{}"), "PROVISION_RESPONSE_CONTRACT_REJECTED", ProvisionFailure.RESPONSE_INVALID)
+        assertFailureLog(Connection(body = AvdSimulatorSamples.grant(2100)), "PROVISION_GRANT_EXPIRED", ProvisionFailure.CLOCK)
     }
 
     @Test fun `verified response flows through provider to creation authorization and strict request settings`() {

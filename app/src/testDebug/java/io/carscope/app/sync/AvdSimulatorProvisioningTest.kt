@@ -21,6 +21,9 @@ internal object AvdSimulatorSamples {
 internal class PendingAvdSimulatorExchange : AvdSimulatorGrantExchange {
     val callbacks = mutableListOf<(AvdSimulatorGrant?) -> Unit>()
     var cancelled = 0; var closes = 0
+    /** What the next failed callback reports, as the real exchange would set before calling back. */
+    var failure: ProvisionFailure? = null
+    override val lastFailure: ProvisionFailure? get() = failure
     override fun fetch(callback: (AvdSimulatorGrant?) -> Unit): SyncCancellation {
         callbacks.add(callback); return SyncCancellation { cancelled++ }
     }
@@ -28,6 +31,18 @@ internal class PendingAvdSimulatorExchange : AvdSimulatorGrantExchange {
 }
 
 class AvdSimulatorProvisioningTest {
+    @Test fun `P22 retry policy never repeats 401 or 403 and backs off a starting service three times`() {
+        for (f in listOf(ProvisionFailure.UNAUTHORIZED, ProvisionFailure.FORBIDDEN, ProvisionFailure.TLS,
+            ProvisionFailure.RESPONSE_INVALID, ProvisionFailure.CLOCK, ProvisionFailure.ENROLLMENT_EXPIRED, ProvisionFailure.REJECTED))
+            for (n in 1..5) assertNull("$f #$n", ProvisionRetryPolicy.nextDelayMs(f, n))
+        for (f in listOf(ProvisionFailure.SERVER_UNAVAILABLE, ProvisionFailure.TIMEOUT, ProvisionFailure.NETWORK)) {
+            assertEquals(listOf(30_000L, 60_000L, 120_000L, null), (1..4).map { ProvisionRetryPolicy.nextDelayMs(f, it) })
+            assertTrue(ProvisionRetryPolicy.transient(f))
+        }
+        assertEquals(listOf(120_000L, null), (1..2).map { ProvisionRetryPolicy.nextDelayMs(ProvisionFailure.RATE_LIMITED, it) })
+        assertFalse(ProvisionRetryPolicy.transient(ProvisionFailure.UNAUTHORIZED))
+    }
+
     @Test fun experimentOriginIsCompiledExactAndNeverAnArbitraryRuntimeHost() {
         val origin = "https://carscope-vision-test.onrender.com"
         assertTrue(AvdSimulatorPolicy.allowedOrigin(AvdSimulatorPolicy.API_ORIGIN, ""))

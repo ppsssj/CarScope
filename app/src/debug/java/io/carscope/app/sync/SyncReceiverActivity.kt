@@ -34,6 +34,10 @@ open class SyncReceiverActivity : Activity() {
     private enum class CreationAuthority { NOT_REQUESTED, CHECKING, GRANTED, DENIED }
     private var authority = CreationAuthority.NOT_REQUESTED
     private var authorityRequestedAt = 0L
+    // P22: the last simulator grant failure, how many in a row, and when (if ever) to try again by itself.
+    private var authorityFailure: ProvisionFailure? = null
+    private var authorityFailures = 0
+    private var authorityRetryAt: Long? = null
     private var mobileRoot: String? = null
     private var requestedTask: String? = null // A 3D request waiting for its short-lived creation grant.
     private var qrBitmap: Bitmap? = null
@@ -68,7 +72,7 @@ open class SyncReceiverActivity : Activity() {
         require(taskId in SyncTasks.all)
         requestedTask = taskId
         if (transport?.creationAuthorized() == true) createRequested()
-        else if (authority != CreationAuthority.CHECKING) refreshAuthority()
+        else if (authority != CreationAuthority.CHECKING) refreshAuthority(explicit = true)
     }
     private fun createRequested() {
         val taskId = requestedTask ?: return
@@ -78,11 +82,21 @@ open class SyncReceiverActivity : Activity() {
         requestedTask = null
         controller.create(root, taskId)
     }
-    private fun refreshAuthority() {
+    /** An explicit action (service check, a new part request, a fresh screen) starts the retry policy afresh. */
+    private fun refreshAuthority(explicit: Boolean = false) {
+        if (explicit) { authorityFailures = 0; authorityFailure = null; authorityRetryAt = null }
         if (provisioning != null || simulatorProvisioning != null) {
             authority = CreationAuthority.CHECKING; authorityRequestedAt = now()
             val done: (Boolean) -> Unit = { granted ->
                 authority = if (granted) CreationAuthority.GRANTED else CreationAuthority.DENIED
+                if (granted) { authorityFailures = 0; authorityFailure = null; authorityRetryAt = null }
+                else simulatorProvisioning?.let { source ->
+                    // Fixed categories only. Unknown means the request never ran (closed): no automatic retry.
+                    val failure = source.lastFailure() ?: ProvisionFailure.REJECTED
+                    authorityFailures = if (failure == authorityFailure) authorityFailures + 1 else 1
+                    authorityFailure = failure
+                    authorityRetryAt = ProvisionRetryPolicy.nextDelayMs(failure, authorityFailures)?.let { now() + it }
+                }
                 owner?.let { render(it.state) }
                 createRequested()
             }
@@ -100,12 +114,18 @@ open class SyncReceiverActivity : Activity() {
         owner == null -> "NOT_CONFIGURED"
         transport?.creationAuthorized() == true -> "GRANTED"
         authority == CreationAuthority.CHECKING -> "CHECKING"
+        // A starting or unreachable service with a retry scheduled is still "checking" to the page, not a refusal.
+        authority == CreationAuthority.DENIED && authorityRetryAt != null -> "CHECKING"
         authority == CreationAuthority.DENIED -> "DENIED"
         requestedTask != null && provisioning == null && simulatorProvisioning == null -> "NOT_CONFIGURED"
         else -> "CHECKING"
     }
     internal val usesAvdSimulator: Boolean get() = simulatorProvisioning != null
     internal fun retryReceiver() { owner?.retryPolling() }
+    /** P22: after a refused grant nothing retries by itself, so the page offers the person's own "다시 확인". */
+    internal val authorityRetryAvailable: Boolean get() =
+        simulatorProvisioning != null && authority == CreationAuthority.DENIED && authorityRetryAt == null && requestedTask != null
+    internal fun retryAuthority() { if (authorityRetryAvailable) refreshAuthority(explicit = true) }
     internal fun cancelReceiver() { owner?.cancel() }
     /** Whether a valid received result is confirmed without a tap. Off unless a subclass opts in. */
     internal open fun autoConfirmReceivedResult(): Boolean = false
@@ -173,6 +193,7 @@ open class SyncReceiverActivity : Activity() {
         super.onStart(); stopped = false; val current = ++generation
         val endpoint = endpoint()
         authority = CreationAuthority.NOT_REQUESTED; authorityRequestedAt = 0L; requestedTask = null; mobileRoot = endpoint?.mobileRoot
+        authorityFailure = null; authorityFailures = 0; authorityRetryAt = null
         if (endpoint == null) {
             connection.text = "연결 설정 미완료 · 검증된 HTTPS 서비스/모바일 주소가 필요합니다."
             listOf(probe, create, accept, cancel, retry).forEach { it.isEnabled = false }; return
@@ -195,7 +216,7 @@ open class SyncReceiverActivity : Activity() {
             else "HTTPS 주소 설정됨 · 연결/TLS 미확인 · 생성 인증 기본 거부"
         probe.isEnabled = true
         probe.setOnClickListener {
-            refreshAuthority()
+            refreshAuthority(explicit = true)
             probe.isEnabled = false; connection.text = "HTTPS 서비스 확인 중…"
             check = connectionTransport.checkConnection { reply ->
                 probe.isEnabled = true
@@ -214,11 +235,34 @@ open class SyncReceiverActivity : Activity() {
                 render(controller.state) // Re-evaluate credential expiry.
                 // Provisioning I/O only for an open 3D request panel, throttled below the server's 4 per minute.
                 if (creationPanelVisible() && controller.state.phase in CREATABLE && transport?.creationAuthorized() != true &&
-                    authority != CreationAuthority.CHECKING && now() - authorityRequestedAt >= AUTHORITY_RETRY_MS) refreshAuthority()
+                    authority != CreationAuthority.CHECKING && automaticRetryDue()) refreshAuthority()
                 createRequested()
                 handler.postDelayed(this, 1000)
             }
         }; handler.post(tick)
+    }
+    /**
+     * P22: the simulator follows ProvisionRetryPolicy (no automatic retry after 401/403; limited, growing gaps for a
+     * starting or unreachable service). A reviewed OEM provisioner keeps the original 30-second refresh.
+     */
+    private fun automaticRetryDue(): Boolean = when {
+        authority == CreationAuthority.NOT_REQUESTED -> now() - authorityRequestedAt >= AUTHORITY_RETRY_MS
+        simulatorProvisioning != null && authority == CreationAuthority.DENIED -> authorityRetryAt?.let { now() >= it } ?: false
+        else -> now() - authorityRequestedAt >= AUTHORITY_RETRY_MS
+    }
+    private fun deniedText(): String = when (authorityFailure) {
+        null -> "IDLE · 인증 실패 · 생성 권한 없음. AVD 등록과 서버 설정을 확인하세요."
+        ProvisionFailure.UNAUTHORIZED, ProvisionFailure.FORBIDDEN ->
+            "IDLE · AVD 등록 거부 · 같은 등록으로는 자동 재시도하지 않습니다. 운영자가 test-vision-qr.ps1로 등록 상태를 확인해야 합니다."
+        ProvisionFailure.ENROLLMENT_EXPIRED -> "IDLE · AVD 등록 만료 · 운영자의 새 등록이 필요합니다."
+        ProvisionFailure.CLOCK -> "IDLE · 기기와 서버의 시간이 맞지 않습니다 · 자동 시간 설정을 확인하세요."
+        ProvisionFailure.TLS -> "IDLE · 서버 인증서를 확인하지 못했습니다 · 자동 재시도하지 않습니다."
+        ProvisionFailure.RESPONSE_INVALID, ProvisionFailure.REJECTED -> "IDLE · 서버 응답을 받아들일 수 없습니다 · 자동 재시도하지 않습니다."
+        else -> if (authorityRetryAt != null) when (authorityFailure) {
+            ProvisionFailure.SERVER_UNAVAILABLE -> "IDLE · 서버 준비 중 · 잠시 뒤 다시 확인합니다 ($authorityFailures/${ProvisionRetryPolicy.TRANSIENT_ATTEMPTS})."
+            ProvisionFailure.RATE_LIMITED -> "IDLE · 요청이 많아 2분 뒤 한 번 다시 확인합니다."
+            else -> "IDLE · 서버 응답 없음 · 잠시 뒤 다시 확인합니다 ($authorityFailures/${ProvisionRetryPolicy.TRANSIENT_ATTEMPTS})."
+        } else "IDLE · 서버에 연결하지 못했습니다 · 자동 재시도를 멈췄습니다. '서비스 연결 확인'을 누르세요."
     }
     private fun render(state: SyncReceiverState) {
         if (stopped) return
@@ -227,7 +271,7 @@ open class SyncReceiverActivity : Activity() {
             ReceiverPhase.IDLE -> if (transport?.creationAuthorized() == true) "IDLE · '점검 요청 생성'을 눌러 QR을 만드세요."
                 else when (authority) {
                     CreationAuthority.CHECKING -> "IDLE · 인증 대기 · 세션 생성 권한을 확인하는 중입니다."
-                    CreationAuthority.DENIED -> "IDLE · 인증 실패 · 생성 권한 없음. AVD 등록과 서버 설정을 확인하세요."
+                    CreationAuthority.DENIED -> deniedText()
                     else -> "IDLE · 생성 권한 없음 또는 확인 중 · QR을 만들 수 없습니다."
                 }
             ReceiverPhase.CREATING -> "CREATING · QR 생성 중 · 서버에 점검 요청을 만드는 중"
