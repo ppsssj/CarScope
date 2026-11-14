@@ -12,32 +12,16 @@ import {
   ANALYSIS_SERVICES,
 } from "../public/part-analysis.mjs";
 import {
-  boxAroundPoint,
   cropWithContext,
   validateBox,
 } from "../public/context-crop.mjs";
 import { transport, type Candidate } from "./session";
-type Analysis = {
-  assessment: string;
-  observations: readonly string[];
-  suspectedIssues: readonly {
-    code: string;
-    description: string;
-    evidence: string;
-  }[];
-  limitations: readonly string[];
-  retakeInstructions: readonly string[];
-};
+import { AiResult, type Analysis } from "./ai/AiResult";
+import { RegionSelector, regionErrorText } from "./ai/RegionSelector";
 type Crop = {
   blob: Blob;
   plan: { targetInCrop: readonly number[] };
   canvas: HTMLCanvasElement;
-};
-const titles: Record<string, string> = {
-  NO_VISIBLE_ISSUE_DETECTED: "사진에서 이상 징후를 찾지 못했어요",
-  SUSPECTED_ISSUE: "사진에서 이상이 의심되는 부분이 있어요",
-  INDETERMINATE: "이 사진으로는 판단하기 어려워요",
-  WRONG_PART: "선택한 부품이 아닌 것 같아요",
 };
 const errors: Record<string, string> = {
   BUDGET_EXHAUSTED: "AI 사용 한도에 도달했어요. 직접 점검은 계속할 수 있어요.",
@@ -70,7 +54,10 @@ export function PhotoAnalysis({ taskId }: { taskId: string }) {
   const [photo, setPhoto] = useState<HTMLCanvasElement | null>(null),
     [candidates, setCandidates] = useState<Candidate[]>([]),
     [crop, setCrop] = useState<Crop | null>(null),
-    [regionSource, setRegionSource] = useState("MANUAL");
+    [regionSource, setRegionSource] = useState("MANUAL"),
+    // P21: a dragged region waiting for the person's "이 영역이 맞아요". No fixed-size tap box any more.
+    [pending, setPending] = useState<readonly number[] | null>(null),
+    [regionError, setRegionError] = useState("");
   const [detectConsent, setDetectConsent] = useState(false),
     [analysisConsent, setAnalysisConsent] = useState(false),
     [busy, setBusy] = useState(false),
@@ -78,8 +65,7 @@ export function PhotoAnalysis({ taskId }: { taskId: string }) {
     [result, setResult] = useState<Analysis | null>(null),
     [ack, setAck] = useState(false),
     [provenance, setProvenance] = useState("");
-  const canvas = useRef<HTMLCanvasElement>(null),
-    preview = useRef<HTMLCanvasElement>(null),
+  const preview = useRef<HTMLCanvasElement>(null),
     original = useRef<File | null>(null),
     generation = useRef(0),
     controller = useRef<AbortController | null>(null),
@@ -91,32 +77,6 @@ export function PhotoAnalysis({ taskId }: { taskId: string }) {
     lock.current = false;
   };
   useEffect(() => () => invalidate(), []);
-  useEffect(() => {
-    if (photo && canvas.current) {
-      const c = canvas.current;
-      c.width = photo.width;
-      c.height = photo.height;
-      const ctx = c.getContext("2d")!;
-      ctx.drawImage(photo, 0, 0);
-      candidates.forEach(({ box }, i) => {
-        ctx.strokeStyle = "#1c5fd4";
-        ctx.lineWidth = 5;
-        ctx.strokeRect(
-          box[0] * c.width,
-          box[1] * c.height,
-          box[2] * c.width,
-          box[3] * c.height,
-        );
-        ctx.fillStyle = "#174fb3";
-        ctx.font = "bold 30px sans-serif";
-        ctx.fillText(
-          String(i + 1),
-          box[0] * c.width + 6,
-          box[1] * c.height + 32,
-        );
-      });
-    }
-  }, [photo, candidates]);
   useEffect(() => {
     if (crop && preview.current) {
       preview.current.width = crop.canvas.width;
@@ -146,6 +106,8 @@ export function PhotoAnalysis({ taskId }: { taskId: string }) {
     setDetectConsent(false);
     setProvenance("");
     setCandidates([]);
+    setPending(null);
+    setRegionError("");
     setPhoto(null);
     setBusy(true);
     try {
@@ -318,38 +280,40 @@ export function PhotoAnalysis({ taskId }: { taskId: string }) {
       {photo && (
         <div className="cb-photo-step">
           <h3 className="cb-h3">2 · 부품 위치 정하기</h3>
-          <canvas
-            ref={canvas}
-            className="cb-photo-canvas"
-            tabIndex={canAnalyze ? 0 : undefined}
-            role={canAnalyze ? "button" : "img"}
-            aria-label={
-              canAnalyze
-                ? "사진에서 부품 위치 직접 지정. Enter는 가운데 선택"
-                : "AI 위치 후보가 표시된 사진"
-            }
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") {
-                e.preventDefault();
-                void choose(boxAroundPoint(photo, [0.5, 0.5]), "MANUAL");
-              }
-            }}
-            onClick={(e) => {
-              const r = e.currentTarget.getBoundingClientRect();
-              void choose(
-                boxAroundPoint(photo, [
-                  (e.clientX - r.left) / r.width,
-                  (e.clientY - r.top) / r.height,
-                ]),
-                "MANUAL",
-              );
+          <RegionSelector
+            source={photo}
+            label="고른 사진"
+            candidates={candidates}
+            region={canAnalyze ? pending : null}
+            selectable={canAnalyze && !busy}
+            onRegion={(box, error) => {
+              setPending(box);
+              setRegionError(regionErrorText(error));
             }}
           />
-          {canAnalyze && (
-            <p className="cb-caption">
-              사진에서 부품을 눌러 직접 지정해요. 키보드에서는 Enter로 가운데를
-              골라요.
+          {regionError && (
+            <p role="alert" className="cb-note cb-note-caution">
+              {regionError}
             </p>
+          )}
+          {canAnalyze && (
+            <div className="cb-chip-row">
+              <Button
+                label="이 영역이 맞아요"
+                variant="secondary"
+                isDisabled={!pending || busy}
+                onClick={() => pending && void choose([...pending], "MANUAL")}
+              />
+              <Button
+                label="다시 선택"
+                variant="ghost"
+                isDisabled={!pending || busy}
+                onClick={() => {
+                  setPending(null);
+                  setRegionError("");
+                }}
+              />
+            </div>
           )}
           {canDetect && (
             <div className="cb-consent">
@@ -451,90 +415,5 @@ export function PhotoAnalysis({ taskId }: { taskId: string }) {
         />
       )}
     </div>
-  );
-}
-
-/**
- * The validated AI answer, most important first: the headline, what it
- * suspects (with its evidence), what it saw, then its limits. Nothing here is
- * invented: every line is a field of the validated response.
- */
-function AiResult({
-  result,
-  provenance,
-  ack,
-  setAck,
-}: {
-  result: Analysis;
-  provenance: string;
-  ack: boolean;
-  setAck: (v: boolean) => void;
-}) {
-  return (
-    <section className="cb-ai-result" aria-labelledby="ai-result-title">
-      <p className="cb-ai-tags">
-        <span className="cb-tag cb-tag-ai">{provenance}</span>
-        <span className="cb-tag">참고 정보</span>
-      </p>
-      <h3 id="ai-result-title" className="cb-ai-title">
-        {titles[result.assessment]}
-      </h3>
-      <p className="cb-caption">
-        부품 정상·차량 안전·주행 가능 여부를 판정한 결과가 아니에요.
-      </p>
-      {result.suspectedIssues.length > 0 && (
-        <div className="cb-ai-block">
-          <h4>먼저 살펴볼 점</h4>
-          <ul>
-            {result.suspectedIssues.map((s, i) => (
-              <li key={i}>
-                <strong>{s.description}</strong>
-                <span>근거 · {s.evidence}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-      {result.observations.length > 0 && (
-        <div className="cb-ai-block">
-          <h4>사진에서 보인 것</h4>
-          <ul>
-            {result.observations.map((s, i) => (
-              <li key={i}>{s}</li>
-            ))}
-          </ul>
-        </div>
-      )}
-      {result.limitations.length > 0 && (
-        <div className="cb-ai-block cb-ai-limits">
-          <h4>이 결과의 한계</h4>
-          <ul>
-            {result.limitations.map((s, i) => (
-              <li key={i}>{s}</li>
-            ))}
-          </ul>
-        </div>
-      )}
-      {result.retakeInstructions.length > 0 && (
-        <div className="cb-ai-block">
-          <h4>다시 찍는다면</h4>
-          <ul>
-            {result.retakeInstructions.map((s, i) => (
-              <li key={i}>{s}</li>
-            ))}
-          </ul>
-        </div>
-      )}
-      <CheckboxInput
-        label="AI의 한계를 이해했고, 실제 부품을 직접 확인하겠습니다"
-        value={ack}
-        onChange={setAck}
-      />
-      {ack && (
-        <p className="cb-caption">
-          점검 응답은 직접 골라 주세요. AI 결과는 응답을 바꾸지 않아요.
-        </p>
-      )}
-    </section>
   );
 }

@@ -212,6 +212,17 @@ async function pair(taskId = "washer-fluid") {
   assert.equal(new URL(page.url()).hash, "");
   return { receiver, session };
 }
+// P21: with the camera AI offered, the saved-photo path sits in a disclosure.
+async function openPhotoFile() {
+  await page.getByText("갤러리 사진으로 대신 살펴보기", { exact: true }).click();
+  await page.locator("input[type=file]").waitFor();
+}
+// P21: a manual region is dragged (or made with the keyboard) and then confirmed; no fixed-size tap box.
+async function keyboardRegion() {
+  await page.locator(".cb-photo-section .cb-region-surface").first().focus();
+  await page.keyboard.press("Enter");
+  await button("이 영역이 맞아요").click();
+}
 async function syncState(value) {
   await page.locator(`[data-sync-state="${value}"]`).waitFor();
 }
@@ -549,7 +560,7 @@ try {
   paired = await pair();
   await safety();
   await button("카메라 보조로 시작").click();
-  await page.getByText("사진으로 한 번 더 살펴보기", { exact: true }).waitFor();
+  await openPhotoFile();
   const png = await page.evaluate(() => {
     const c = document.createElement("canvas");
     c.width = 640;
@@ -564,7 +575,7 @@ try {
     mimeType: "image/png",
     buffer: Buffer.from(png, "base64"),
   });
-  await page.locator(".cb-photo-canvas").first().waitFor();
+  await page.locator(".cb-photo-section .cb-region").first().waitFor();
   assert.equal(
     await button("AI 위치 후보 찾기").getAttribute("aria-disabled"),
     "true",
@@ -613,15 +624,14 @@ try {
   paired = await pair("battery-12v");
   await safety();
   await button("카메라 보조로 시작").click();
-  await page.getByText("사진으로 한 번 더 살펴보기", { exact: true }).waitFor();
+  await openPhotoFile();
   assert.equal(await button("AI 위치 후보 찾기").count(), 0);
   await page.locator("input[type=file]").setInputFiles({
     name: "synthetic.png",
     mimeType: "image/png",
     buffer: Buffer.from(png, "base64"),
   });
-  await page.locator(".cb-photo-canvas").first().focus();
-  await page.keyboard.press("Enter");
+  await keyboardRegion();
   await page
     .getByRole("checkbox", { name: "잘라낸 사진의 외부 AI 분석에 동의합니다" })
     .check();
@@ -659,14 +669,13 @@ try {
     await pair(taskId);
     await safety();
     await button("카메라 보조로 시작").click();
-    await page.locator("input[type=file]").waitFor();
+    await openPhotoFile();
     await page.locator("input[type=file]").setInputFiles({
       name: "synthetic.png",
       mimeType: "image/png",
       buffer: Buffer.from(png, "base64"),
     });
-    await page.locator(".cb-photo-canvas").first().focus();
-    await page.keyboard.press("Enter");
+    await keyboardRegion();
     await page
       .getByRole("checkbox", {
         name: "잘라낸 사진의 외부 AI 분석에 동의합니다",
@@ -684,7 +693,7 @@ try {
       mimeType: "image/png",
       buffer: Buffer.from(png, "base64"),
     });
-    await page.locator(".cb-photo-canvas").first().waitFor();
+    await page.locator(".cb-photo-section .cb-region").first().waitFor();
     assert.equal(await page.locator(".cb-ai-result").count(), 0);
     const consent = page.getByRole("checkbox", {
       name: "이 사진의 외부 위치 분석에 동의합니다",
