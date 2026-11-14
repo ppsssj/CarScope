@@ -19,12 +19,15 @@ class Boundary extends Component<{ children: ReactNode }, { failed: boolean }> {
   }
   render() {
     return this.state.failed ? (
-      <main className="invalid">
-        <h1>화면을 불러오지 못했어요.</h1>
-        <p>
-          카메라와 연결을 종료하고 새 점검을 시작하려면 페이지를 다시 여세요.
+      <main className="cb-app cb-main">
+        <h1 className="cb-title">화면을 불러오지 못했어요</h1>
+        <p className="cb-body">
+          카메라와 연결을 끝냈어요. 새 점검을 시작하려면 페이지를 다시 열어
+          주세요.
         </p>
-        <a href="/">처음으로</a>
+        <p className="cb-body">
+          <a href="/">처음으로</a>
+        </p>
       </main>
     ) : (
       this.props.children

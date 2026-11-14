@@ -1,0 +1,611 @@
+/*
+ * P19 design lab — CarScope-owned tokens derived from TDS *principles*
+ * (verified in docs/p19-toss-design-lab.md). No Toss font, logo, icon or
+ * brand blue is used. Sizes are rem so the OS/browser text-size setting
+ * scales the whole screen (TDS typography: do not hard-code px sizes).
+ */
+/* P20: values come from the shared 차보담 tokens; the lab keeps its aliases. */
+@import "../design/tokens.css";
+:root {
+  --tl-n0: var(--cb-n0);
+  --tl-n50: var(--cb-n50);
+  --tl-n100: var(--cb-n100);
+  --tl-n200: var(--cb-n200);
+  --tl-n400: var(--cb-n400);
+  --tl-n600: var(--cb-n600);
+  --tl-n700: var(--cb-n700);
+  --tl-n900: var(--cb-n900);
+  --tl-action: var(--cb-action);
+  --tl-action-pressed: var(--cb-action-pressed);
+  --tl-action-weak: var(--cb-action-weak);
+  --tl-action-ink: var(--cb-action-ink);
+  --tl-mark: var(--cb-mark);
+  --tl-scene: var(--cb-scene);
+  --tl-t2: var(--cb-t2);
+  --tl-t2-lh: var(--cb-t2-lh);
+  --tl-t4: var(--cb-t4);
+  --tl-t4-lh: var(--cb-t4-lh);
+  --tl-t5: var(--cb-t5);
+  --tl-t5-lh: var(--cb-t5-lh);
+  --tl-t6: var(--cb-t6);
+  --tl-t6-lh: var(--cb-t6-lh);
+  --tl-t7: var(--cb-t7);
+  --tl-t7-lh: var(--cb-t7-lh);
+  --tl-gutter: var(--cb-gutter);
+  --tl-ease: var(--cb-ease);
+  font-family: var(--cb-font);
+  color: var(--tl-n900);
+  background: var(--tl-n0);
+  font-synthesis: none;
+  -webkit-text-size-adjust: 100%;
+}
+[data-astryx-theme="neutral"] {
+  --font-family-body:
+    system-ui, -apple-system, "Apple SD Gothic Neo", "Malgun Gothic",
+    "Noto Sans KR", sans-serif;
+  --color-background-body: #ffffff;
+  --color-text-primary: #181c21;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  background: var(--tl-n0);
+}
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+.tl-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.tl-app {
+  max-width: 30rem;
+  margin: 0 auto;
+  min-height: 100dvh;
+  background: var(--tl-n0);
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+/* ── top bar ─────────────────────────────────────────────── */
+.tl-top {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  display: grid;
+  grid-template-columns: 3rem 1fr 3rem;
+  align-items: center;
+  min-height: 3.5rem;
+  padding: 0 0.5rem;
+  padding-top: env(safe-area-inset-top);
+  background: var(--tl-n0);
+}
+.tl-icon-btn {
+  display: grid;
+  place-items: center;
+  width: 3rem;
+  height: 3rem;
+  border: 0;
+  border-radius: 0.75rem;
+  background: transparent;
+  color: var(--tl-n900);
+  cursor: pointer;
+}
+.tl-top-title {
+  margin: 0;
+  text-align: center;
+  font-size: var(--tl-t5);
+  line-height: var(--tl-t5-lh);
+  font-weight: 600;
+}
+.tl-top-step {
+  margin: 0;
+  text-align: center;
+  font-size: var(--tl-t6);
+  font-weight: 600;
+  color: var(--tl-n600);
+  font-variant-numeric: tabular-nums;
+}
+.tl-progress {
+  height: 0.25rem;
+  margin: 0 var(--tl-gutter);
+  border-radius: 1rem;
+  background: var(--tl-n100);
+  overflow: hidden;
+}
+.tl-progress > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--tl-action);
+}
+
+/* ── content ─────────────────────────────────────────────── */
+.tl-main {
+  padding: 1rem var(--tl-gutter) 0;
+  /* room for the fixed CTA (2 buttons + fade) */
+  padding-bottom: calc(11.5rem + env(safe-area-inset-bottom));
+}
+.tl-mock-note {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 1.5rem;
+  padding: 0.625rem 0.75rem;
+  border-radius: 0.75rem;
+  background: var(--tl-n50);
+  color: var(--tl-n700);
+  font-size: var(--tl-t7);
+  line-height: var(--tl-t7-lh);
+}
+.tl-mock-note .astryx-badge {
+  flex: none;
+}
+.tl-eyebrow {
+  margin: 0 0 0.375rem;
+  color: var(--tl-action-ink);
+  font-size: var(--tl-t6);
+  line-height: var(--tl-t6-lh);
+  font-weight: 600;
+}
+.tl-title {
+  margin: 0;
+  font-size: var(--tl-t2);
+  line-height: var(--tl-t2-lh);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+.tl-body {
+  margin: 0.5rem 0 1.25rem;
+  color: var(--tl-n700);
+  font-size: var(--tl-t5);
+  line-height: var(--tl-t5-lh);
+}
+
+/* ── viewfinder ──────────────────────────────────────────── */
+.tl-finder {
+  position: relative;
+  aspect-ratio: 6 / 5;
+  width: 100%;
+  border-radius: 1.25rem;
+  overflow: hidden;
+  background: var(--tl-scene);
+  color: #fff;
+  isolation: isolate;
+}
+.tl-finder-tap {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  cursor: crosshair;
+  border-radius: inherit;
+}
+.tl-finder-controls {
+  position: absolute;
+  z-index: 2;
+  right: 0.75rem;
+  bottom: 0.75rem;
+  display: flex;
+  gap: 0.5rem;
+}
+.tl-finder-controls .tl-chip {
+  background: rgb(24 28 33 / 0.78);
+  color: #fff;
+}
+.tl-finder-controls .tl-chip:active {
+  background: rgb(24 28 33 / 0.92);
+}
+.tl-finder[data-picture="blocked"] {
+  aspect-ratio: auto;
+  min-height: 10rem;
+  background: var(--tl-n100);
+  color: var(--tl-n700);
+}
+.tl-scene {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.tl-finder-empty {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 0.75rem;
+  padding: 1.5rem;
+  text-align: center;
+  color: var(--tl-n400);
+}
+.tl-finder[data-picture="blocked"] .tl-finder-empty {
+  color: var(--tl-n600);
+}
+.tl-finder-empty p {
+  margin: 0;
+  font-size: var(--tl-t6);
+  line-height: var(--tl-t6-lh);
+  font-weight: 600;
+  color: inherit;
+}
+.tl-finder[data-picture="off"] .tl-finder-empty p {
+  color: #e4e7eb;
+}
+.tl-corners {
+  position: absolute;
+  inset: 19% 9% 23%;
+  pointer-events: none;
+  background:
+    linear-gradient(#fff, #fff) top left / 1.5rem 3px no-repeat,
+    linear-gradient(#fff, #fff) top left / 3px 1.5rem no-repeat,
+    linear-gradient(#fff, #fff) top right / 1.5rem 3px no-repeat,
+    linear-gradient(#fff, #fff) top right / 3px 1.5rem no-repeat,
+    linear-gradient(#fff, #fff) bottom left / 1.5rem 3px no-repeat,
+    linear-gradient(#fff, #fff) bottom left / 3px 1.5rem no-repeat,
+    linear-gradient(#fff, #fff) bottom right / 1.5rem 3px no-repeat,
+    linear-gradient(#fff, #fff) bottom right / 3px 1.5rem no-repeat;
+  opacity: 0.85;
+}
+.tl-candidate {
+  position: absolute;
+  border: 2px dashed rgb(255 255 255 / 0.9);
+  border-radius: 0.75rem;
+  pointer-events: none;
+}
+.tl-candidate > span {
+  position: absolute;
+  left: -2px;
+  bottom: calc(100% + 0.375rem);
+  white-space: nowrap;
+  padding: 0.125rem 0.5rem;
+  border-radius: 0.5rem;
+  background: rgb(24 28 33 / 0.82);
+  color: #fff;
+  font-size: var(--tl-t7);
+  line-height: var(--tl-t7-lh);
+  font-weight: 600;
+}
+.tl-mark {
+  position: absolute;
+  width: 2.75rem;
+  height: 2.75rem;
+  margin: -1.375rem 0 0 -1.375rem;
+  border: 3px solid var(--tl-mark);
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px rgb(24 28 33 / 0.6);
+  pointer-events: none;
+  animation: tl-pop 180ms var(--tl-ease);
+}
+.tl-mark::after {
+  content: "";
+  position: absolute;
+  inset: 50%;
+  width: 0.5rem;
+  height: 0.5rem;
+  margin: -0.25rem;
+  border-radius: 50%;
+  background: var(--tl-mark);
+}
+.tl-mark-label {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  padding: 0.125rem 0.5rem;
+  border-radius: 0.5rem;
+  background: var(--tl-mark);
+  color: var(--tl-n900);
+  font-size: var(--tl-t7);
+  line-height: var(--tl-t7-lh);
+  font-weight: 700;
+}
+.tl-finder-chip {
+  position: absolute;
+  top: 0.75rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.625rem;
+  border-radius: 1rem;
+  background: rgb(24 28 33 / 0.72);
+  color: #fff;
+  font-size: var(--tl-t7);
+  line-height: var(--tl-t7-lh);
+  font-weight: 600;
+  pointer-events: none;
+}
+.tl-finder-chip-start {
+  left: 0.75rem;
+}
+.tl-status {
+  margin: 0.75rem 0 0;
+  color: var(--tl-n700);
+  font-size: var(--tl-t6);
+  line-height: var(--tl-t6-lh);
+}
+.tl-chip {
+  min-height: 2.75rem;
+  padding: 0 0.875rem;
+  border: 0;
+  border-radius: 0.75rem;
+  background: var(--tl-n100);
+  color: var(--tl-n900);
+  font: inherit;
+  font-size: var(--tl-t6);
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 120ms var(--tl-ease), background-color 120ms;
+}
+.tl-chip:active {
+  transform: scale(0.97);
+  background: var(--tl-n200);
+}
+
+/* ── sections (ListRow-like) ─────────────────────────────── */
+.tl-section {
+  margin-top: 2rem;
+}
+.tl-h2 {
+  margin: 0 0 0.5rem;
+  font-size: var(--tl-t4);
+  line-height: var(--tl-t4-lh);
+  font-weight: 700;
+}
+.tl-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.tl-row {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  padding: 0.75rem 0; /* ListRow verticalPadding medium */
+}
+.tl-row-lead {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  background: var(--tl-action-weak);
+  color: var(--tl-action-ink);
+  font-weight: 700;
+  font-size: var(--tl-t6);
+  font-variant-numeric: tabular-nums;
+}
+.tl-row-text {
+  display: grid;
+  gap: 0.125rem;
+  padding-top: 0.125rem;
+}
+.tl-row-text strong {
+  font-size: var(--tl-t5);
+  line-height: var(--tl-t5-lh);
+  font-weight: 600;
+}
+.tl-row-text span {
+  color: var(--tl-n700);
+  font-size: var(--tl-t6);
+  line-height: var(--tl-t6-lh);
+}
+.tl-caption {
+  margin: 0.25rem 0 0;
+  color: var(--tl-n600);
+  font-size: var(--tl-t7);
+  line-height: var(--tl-t7-lh);
+}
+.tl-safety {
+  padding: 1.25rem;
+  border-radius: 1rem;
+  background: var(--tl-n50);
+}
+.tl-safety ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.625rem;
+}
+.tl-safety li {
+  position: relative;
+  padding-left: 1.125rem;
+  color: var(--tl-n700);
+  font-size: var(--tl-t6);
+  line-height: var(--tl-t6-lh);
+}
+.tl-safety li::before {
+  content: "";
+  position: absolute;
+  left: 0.125rem;
+  top: 0.55em;
+  width: 0.375rem;
+  height: 0.375rem;
+  border-radius: 50%;
+  background: var(--tl-n400);
+}
+.tl-steps {
+  list-style: decimal;
+  margin: 0;
+  padding-left: 1.25rem;
+  display: grid;
+  gap: 0.5rem;
+  color: var(--tl-n700);
+  font-size: var(--tl-t6);
+  line-height: var(--tl-t6-lh);
+}
+
+/* ── lab tools (clearly not product UI) ──────────────────── */
+.tl-lab {
+  margin-top: 2.5rem;
+  padding: 1rem;
+  border: 1px dashed var(--tl-n400);
+  border-radius: 1rem;
+}
+.tl-lab-title {
+  margin: 0;
+  font-size: var(--tl-t7);
+  line-height: var(--tl-t7-lh);
+  font-weight: 700;
+  color: var(--tl-n700);
+}
+.tl-lab-body {
+  margin: 0.125rem 0 0.75rem;
+  font-size: var(--tl-t7);
+  color: var(--tl-n600);
+}
+.tl-lab-states {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.tl-lab-states a {
+  display: inline-grid;
+  place-items: center;
+  min-height: 2.75rem;
+  padding: 0 0.875rem;
+  border-radius: 0.75rem;
+  background: var(--tl-n100);
+  color: var(--tl-n900);
+  font-size: var(--tl-t7);
+  font-weight: 600;
+  text-decoration: none;
+}
+.tl-lab-states a[aria-current="true"] {
+  background: var(--tl-n900);
+  color: #fff;
+}
+
+/* ── fixed bottom CTA (BottomCTA principle) ──────────────── */
+.tl-cta {
+  position: fixed;
+  z-index: 4;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 30rem;
+  display: grid;
+  gap: 0.25rem;
+  padding: 1.5rem var(--tl-gutter) calc(0.75rem + env(safe-area-inset-bottom));
+  background: linear-gradient(
+    to bottom,
+    rgb(255 255 255 / 0),
+    #fff 1.25rem
+  );
+}
+.tl-cta .astryx-button {
+  min-height: 3.5rem !important; /* 56px xlarge */
+  border-radius: 1rem !important;
+  font-size: var(--tl-t5) !important;
+  font-weight: 600 !important;
+  transition: transform 120ms var(--tl-ease);
+}
+.tl-cta .astryx-button[data-variant="primary"] {
+  background: var(--tl-action) !important;
+  color: #fff !important;
+}
+.tl-cta .astryx-button[data-variant="primary"]:active {
+  background: var(--tl-action-pressed) !important;
+}
+.tl-cta .astryx-button[data-variant="ghost"] {
+  min-height: 3rem !important;
+  color: var(--tl-n700) !important;
+}
+.tl-cta .astryx-button:active {
+  transform: scale(0.98);
+}
+/* Large text: wrap instead of Astryx's ellipsis, so no label is lost. */
+.tl-cta .astryx-button,
+.tl-cta .astryx-button * {
+  white-space: normal !important;
+  text-overflow: clip !important;
+  overflow: visible !important;
+}
+.tl-cta .astryx-button {
+  height: auto !important;
+  padding-block: 0.75rem !important;
+  line-height: 1.35 !important;
+  text-align: center;
+}
+/* Loading keeps the full fill (TDS: loading preserves the button); only a
+   truly disabled button is dimmed. */
+.tl-cta .astryx-button[aria-disabled="true"]:not([aria-busy="true"]) {
+  opacity: 0.45;
+  transform: none;
+}
+
+/* focus: visible ring on every custom control */
+.tl-icon-btn:focus-visible,
+.tl-chip:focus-visible,
+.tl-lab-states a:focus-visible,
+.tl-finder-tap:focus-visible {
+  outline: 3px solid var(--tl-action);
+  outline-offset: 2px;
+}
+.tl-finder-tap:focus-visible {
+  outline: 3px solid var(--tl-mark);
+  outline-offset: -3px;
+}
+
+/* ── toast (TDS Toast: polite, auto-dismiss 3000ms) ──────── */
+.tl-toast-region {
+  position: fixed;
+  z-index: 5;
+  left: 50%;
+  bottom: calc(9.5rem + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  width: calc(100% - 2 * var(--tl-gutter));
+  max-width: calc(30rem - 2 * var(--tl-gutter));
+  pointer-events: none;
+}
+.tl-toast {
+  margin: 0;
+  padding: 0.875rem 1rem;
+  border-radius: 1rem;
+  background: rgb(24 28 33 / 0.94);
+  color: #fff;
+  font-size: var(--tl-t6);
+  line-height: var(--tl-t6-lh);
+  animation: tl-rise 200ms var(--tl-ease);
+}
+
+@keyframes tl-pop {
+  from {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+}
+@keyframes tl-rise {
+  from {
+    transform: translateY(0.5rem);
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tl-mark,
+  .tl-toast {
+    animation: none;
+  }
+  .tl-chip,
+  .tl-cta .astryx-button {
+    transition: none;
+  }
+  .tl-chip:active,
+  .tl-cta .astryx-button:active {
+    transform: none;
+  }
+}

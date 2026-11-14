@@ -91,11 +91,11 @@ try {
     });
     await page.goto(origin + "/#v=1&task=washer-fluid");
     await page.waitForFunction(() => document.body.dataset.ready === "true");
-    await page.locator(".safety-card input").check();
+    await page.locator(".cb-safety input").check();
     await page
       .getByRole("button", { name: "직접 점검 시작", exact: true })
       .click();
-    for (const c of await page.locator(".observation-card input").all())
+    for (const c of await page.locator(".cb-observation input").all())
       await c.check();
     for (const label of [
       "관찰 결과 선택하기",
@@ -113,7 +113,7 @@ try {
     );
     assert.ok(
       await page
-        .locator(".guide img")
+        .locator(".cb-guide img")
         .first()
         .evaluate((i) => i.complete && i.naturalWidth > 0),
     );

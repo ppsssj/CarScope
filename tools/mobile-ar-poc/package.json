@@ -48,7 +48,11 @@
     "test:browser:charge:legacy": "node test/charge-browser.mjs",
     "test:browser:brake:legacy": "node test/brake-browser.mjs",
     "test:browser:ar:legacy": "node test/mobile-ar-browser.mjs",
-    "test:browser:hosting": "node test/react-hosting-browser.mjs"
+    "test:browser:hosting": "node test/react-hosting-browser.mjs",
+    "build:toss-lab": "tsc --noEmit && vite build --config vite.toss-lab.config.ts",
+    "serve:toss-lab": "node toss-lab-server.mjs",
+    "test:toss-lab:model": "node --experimental-strip-types --test test/toss-lab-model.test.mts",
+    "test:browser:toss-lab": "node test/toss-lab-browser.mjs"
   },
   "dependencies": {
     "@astryxdesign/core": "0.7.15",

@@ -150,7 +150,7 @@ async function open(
 }
 const button = (label) =>
   page.getByRole("button", {
-    name: label === "점검 나가기" ? "← 점검 나가기" : label,
+    name: label,
     exact: true,
   });
 const step = () => page.locator("body").getAttribute("data-step");
@@ -169,7 +169,7 @@ const cameraEnded = async () =>
     ),
   );
 async function safety() {
-  for (const c of await page.locator(".safety-card input[type=checkbox]").all())
+  for (const c of await page.locator(".cb-safety input[type=checkbox]").all())
     await c.check();
 }
 async function complete(taskId = "washer-fluid", { mixed = false } = {}) {
@@ -177,7 +177,7 @@ async function complete(taskId = "washer-fluid", { mixed = false } = {}) {
   await button("직접 점검 시작").click();
   if (taskId === "washer-fluid") {
     for (const c of await page
-      .locator(".observation-card input[type=checkbox]")
+      .locator(".cb-observation input[type=checkbox]")
       .all())
       await c.check();
     await button("관찰 결과 선택하기").click();
@@ -215,11 +215,20 @@ async function pair(taskId = "washer-fluid") {
 async function syncState(value) {
   await page.locator(`[data-sync-state="${value}"]`).waitFor();
 }
+// P20: the first screen as a user sees it, plus the whole page drawn by
+// growing the viewport (Playwright fullPage stitching paints fixed/sticky
+// bars in the middle of the image, which is not what a user sees).
 async function capture(name) {
-  await page.screenshot({
-    path: path.join(output, name + ".png"),
-    fullPage: true,
-  });
+  await page.screenshot({ path: path.join(output, name + ".png") });
+  const size = page.viewportSize();
+  const height = await page.evaluate(
+    () => document.documentElement.scrollHeight,
+  );
+  await page.setViewportSize({ width: size.width, height });
+  await page.waitForTimeout(120);
+  await page.screenshot({ path: path.join(output, name + "-full.png") });
+  await page.setViewportSize(size);
+  await page.waitForTimeout(120);
 }
 async function axe(name) {
   const result = await new AxeBuilder({ page })
@@ -239,25 +248,85 @@ async function axe(name) {
     name,
   );
 }
+// P20: one fill primary per screen, labels never truncated, and the fixed
+// bottom CTA never hides content (it turns inline when text is large).
+async function onePrimary(name) {
+  assert.equal(
+    await page
+      .locator('.cb-dock .astryx-button[data-variant="primary"]')
+      .count(),
+    1,
+    name + " has exactly one primary action",
+  );
+}
+async function scaleText(scale) {
+  // CSP blocks inline <style>; the CSSOM is how a user setting would apply.
+  await page.evaluate(
+    (s) =>
+      document.documentElement.style.setProperty("font-size", `${s * 100}%`),
+    scale,
+  );
+  await page.waitForTimeout(150);
+}
+async function dockFits(name) {
+  await noOverflow();
+  const cut = await page.$$eval(".cb-app .astryx-button", (els) =>
+    els
+      .flatMap((b) => [b, ...b.querySelectorAll("*")])
+      .filter((e) => e.scrollWidth > e.clientWidth + 1 && e.clientWidth > 0)
+      .map((e) => e.textContent.trim()),
+  );
+  assert.deepEqual(cut, [], name + " labels truncated");
+  const dock = await page.locator(".cb-dock").evaluate((d) => ({
+    layout: d.dataset.layout,
+    height: d.getBoundingClientRect().height,
+  }));
+  if (dock.layout === "fixed") {
+    assert.ok(dock.height <= innerHeightOf(page) * 0.3 + 1, name + " dock share");
+    await page.evaluate(() => scrollTo(0, document.documentElement.scrollHeight));
+    const [mainBottom, dockTop] = await page.evaluate(() => [
+      document.querySelector(".cb-main").getBoundingClientRect().bottom,
+      document.querySelector(".cb-dock").getBoundingClientRect().top,
+    ]);
+    assert.ok(mainBottom <= dockTop + 1, name + " content hidden by fixed CTA");
+    await page.evaluate(() => scrollTo(0, 0));
+  }
+  return dock.layout;
+}
+const innerHeightOf = (p) => p.viewportSize().height;
+async function tabTo(match, limit = 80) {
+  for (let i = 0; i < limit; i++) {
+    await page.keyboard.press("Tab");
+    const hit = await page.evaluate((m) => {
+      const e = document.activeElement;
+      const name = (e?.getAttribute("aria-label") ?? e?.textContent ?? "").trim();
+      return m.startsWith(".")
+        ? !!e?.matches(m)
+        : name === m;
+    }, match);
+    if (hit) return;
+  }
+  throw Error("keyboard could not reach " + match);
+}
 try {
   await open(staticUrl);
-  assert.equal(await page.locator(".part-card").count(), 17);
+  assert.equal(await page.locator(".cb-part").count(), 17);
   await noOverflow();
   await axe("catalog");
   // Force lazy illustrations into the screenshot and check every asset decoded.
-  for (const img of await page.locator(".part-art img").all())
+  for (const img of await page.locator(".cb-part-art img").all())
     await img.scrollIntoViewIfNeeded();
   await page.evaluate(() => scrollTo(0, 0));
   await capture("after-catalog");
   assert.ok(
     await page
-      .locator(".part-art img")
+      .locator(".cb-part-art img")
       .evaluateAll((images) =>
         images.every((i) => i.complete && i.naturalWidth > 0),
       ),
   );
   await button("타이어").click();
-  assert.equal(await page.locator(".part-card").count(), 4);
+  assert.equal(await page.locator(".cb-part").count(), 4);
   pass(
     "17-task catalog, category navigation, all schematic assets, no-login entry and accessibility",
   );
@@ -325,12 +394,12 @@ try {
     await button("카메라 켜기").click();
     if (camera === "normal") {
       await page
-        .getByText("선택한 부품을 화면 가운데 맞추세요.", { exact: false })
+        .getByText("부품을 화면 가운데에 맞춰 주세요.", { exact: false })
         .waitFor();
-      await button("가운데 위치 직접 지정").click();
-      await page.getByText("파란색 후보 1개", { exact: false }).waitFor();
+      await button("가운데에 표시").click();
+      await page.getByText("색 후보 1곳", { exact: false }).waitFor();
       assert.ok(
-        await page.locator(".camera-overlay").evaluate((c) =>
+        await page.locator(".cb-camera-overlay").evaluate((c) =>
           c
             .getContext("2d")
             .getImageData(0, 0, c.width, c.height)
@@ -345,7 +414,7 @@ try {
         .waitFor();
     if (camera === "unsupported")
       await page
-        .getByText("이 환경은 카메라를 지원하지 않습니다.", { exact: false })
+        .getByText("이 브라우저에서는 카메라를 쓸 수 없어요.", { exact: false })
         .waitFor();
     await button("카메라 없이 계속하기").click();
     if (camera === "delayed") await page.evaluate(() => window.releaseCamera());
@@ -360,7 +429,7 @@ try {
   await button("카메라 보조로 시작").click();
   await button("카메라 켜기").click();
   await page
-    .getByText("선택한 부품을 화면 가운데 맞추세요.", { exact: false })
+    .getByText("부품을 화면 가운데에 맞춰 주세요.", { exact: false })
     .waitFor();
   await button("점검 나가기").click();
   await page.getByRole("dialog").waitFor();
@@ -395,11 +464,23 @@ try {
   });
   await syncState("SENT");
   assert.equal(submissions - before, 1);
+  // Server receipt is not vehicle receipt.
+  assert.deepEqual(
+    await page
+      .locator(".cb-timeline li")
+      .evaluateAll((l) => l.map((e) => e.dataset.tone)),
+    ["done", "done", "done", "active"],
+  );
   assert.equal((await paired.receiver.view()).sessionState, "RESULT_SUBMITTED");
   await capture("after-server-receipt");
   const view = await paired.receiver.view();
   await paired.receiver.accept(view.resultDigest);
   await syncState("ACCEPTED");
+  assert.equal(
+    await page.locator(".cb-timeline li").nth(3).getAttribute("data-tone"),
+    "done",
+  );
+  await onePrimary("vehicle receipt");
   await capture("after-vehicle-receipt");
   await axe("vehicle-receipt");
   const invite = paired.session.fragment.split("invite=")[1];
@@ -417,6 +498,12 @@ try {
   await context.setOffline(true);
   await button("차량으로 결과 보내기").click();
   await syncState("FAILED_NETWORK");
+  assert.deepEqual(
+    await page
+      .locator(".cb-timeline li")
+      .evaluateAll((l) => l.map((e) => e.dataset.tone)),
+    ["done", "error", "waiting", "waiting"],
+  );
   await capture("after-network-error");
   await context.setOffline(false);
   await button("같은 결과 다시 보내기").click();
@@ -462,7 +549,7 @@ try {
   paired = await pair();
   await safety();
   await button("카메라 보조로 시작").click();
-  await page.getByText("사진으로 관찰 돕기", { exact: true }).waitFor();
+  await page.getByText("사진으로 한 번 더 살펴보기", { exact: true }).waitFor();
   const png = await page.evaluate(() => {
     const c = document.createElement("canvas");
     c.width = 640;
@@ -477,7 +564,7 @@ try {
     mimeType: "image/png",
     buffer: Buffer.from(png, "base64"),
   });
-  await page.locator(".photo-canvas").first().waitFor();
+  await page.locator(".cb-photo-canvas").first().waitFor();
   assert.equal(
     await button("AI 위치 후보 찾기").getAttribute("aria-disabled"),
     "true",
@@ -499,7 +586,7 @@ try {
     .getByRole("checkbox", { name: "잘라낸 사진의 외부 AI 분석에 동의합니다" })
     .check();
   await button("사진 상태 분석").click();
-  await page.locator(".ai-result").waitFor();
+  await page.locator(".cb-ai-result").waitFor();
   await page
     .getByRole("checkbox", {
       name: "AI의 한계를 이해했고, 실제 부품을 직접 확인하겠습니다",
@@ -509,14 +596,15 @@ try {
   assert.equal(await step(), "locate");
   assert.ok(
     await page
-      .locator(".ai-result")
+      .locator(".cb-ai-result")
       .innerText()
       .then((t) => t.includes("로컬 시험용 MOCK")),
   );
   await axe("AI-result");
-  await button("위치 확인 후 관찰하기").click();
+  // P20: with the camera off, the locate step continues via the manual path.
+  await button("카메라 없이 계속하기").click();
   assert.equal(
-    await page.locator(".observation-card input:checked").count(),
+    await page.locator(".cb-observation input:checked").count(),
     0,
   );
   pass(
@@ -525,14 +613,14 @@ try {
   paired = await pair("battery-12v");
   await safety();
   await button("카메라 보조로 시작").click();
-  await page.getByText("사진으로 관찰 돕기", { exact: true }).waitFor();
+  await page.getByText("사진으로 한 번 더 살펴보기", { exact: true }).waitFor();
   assert.equal(await button("AI 위치 후보 찾기").count(), 0);
   await page.locator("input[type=file]").setInputFiles({
     name: "synthetic.png",
     mimeType: "image/png",
     buffer: Buffer.from(png, "base64"),
   });
-  await page.locator(".photo-canvas").first().focus();
+  await page.locator(".cb-photo-canvas").first().focus();
   await page.keyboard.press("Enter");
   await page
     .getByRole("checkbox", { name: "잘라낸 사진의 외부 AI 분석에 동의합니다" })
@@ -548,7 +636,7 @@ try {
   );
   await button("사진 상태 분석").click();
   await page.getByRole("alert").waitFor();
-  assert.equal(await page.locator(".ai-result").count(), 0);
+  assert.equal(await page.locator(".cb-ai-result").count(), 0);
   assert.equal(
     await page
       .getByRole("checkbox", {
@@ -577,7 +665,7 @@ try {
       mimeType: "image/png",
       buffer: Buffer.from(png, "base64"),
     });
-    await page.locator(".photo-canvas").first().focus();
+    await page.locator(".cb-photo-canvas").first().focus();
     await page.keyboard.press("Enter");
     await page
       .getByRole("checkbox", {
@@ -585,9 +673,9 @@ try {
       })
       .check();
     await button("사진 상태 분석").click();
-    await page.locator(".ai-result").waitFor();
+    await page.locator(".cb-ai-result").waitFor();
     assert.match(
-      await page.locator(".ai-result").innerText(),
+      await page.locator(".cb-ai-result").innerText(),
       /로컬 시험용 MOCK/,
     );
     // New file must revoke both consents and the old AI result.
@@ -596,8 +684,8 @@ try {
       mimeType: "image/png",
       buffer: Buffer.from(png, "base64"),
     });
-    await page.locator(".photo-canvas").first().waitFor();
-    assert.equal(await page.locator(".ai-result").count(), 0);
+    await page.locator(".cb-photo-canvas").first().waitFor();
+    assert.equal(await page.locator(".cb-ai-result").count(), 0);
     const consent = page.getByRole("checkbox", {
       name: "이 사진의 외부 위치 분석에 동의합니다",
     });
@@ -617,6 +705,112 @@ try {
   pass(
     "failed initial JS download leaves an explicit network/retry fallback, never a fabricated inspection success",
   );
+  // ── P20 차보담 integration ──
+  await open(staticUrl);
+  assert.match(await page.title(), /차보담/);
+  assert.doesNotMatch(await page.locator("body").innerText(), /CarScope/);
+  assert.deepEqual(
+    (
+      await page
+        .locator(".cb-part:has(.cb-tag-ai)")
+        .evaluateAll((a) => a.map((e) => e.getAttribute("href")))
+    ).sort(),
+    [
+      "#task=battery-12v",
+      "#task=brake-fluid",
+      "#task=coolant-reservoir",
+      "#task=fuse-box",
+      "#task=lcw-coolant-reservoir",
+      "#v=1&task=washer-fluid",
+    ],
+  );
+  for (const row of await page.locator(".cb-part-text").all()) {
+    // Name, location and method are three separate, non-empty lines.
+    const lines = (await row.innerText()).split("\n").filter((l) => l.trim());
+    assert.ok(lines.length >= 3, lines.join(" | "));
+    assert.ok(lines.some((l) => /눈으로/.test(l)), lines.join(" | "));
+  }
+  pass(
+    "차보담 brand on every visible catalog string; 17 rows show location and method; AI tag only on the six evaluated bonnet parts",
+  );
+  for (const scale of [1.3, 2]) {
+    const tag = "text" + Math.round(scale * 100);
+    await open(staticUrl + "/#v=1&task=washer-fluid");
+    await scaleText(scale);
+    await onePrimary("intro");
+    const introLayout = await dockFits("intro " + tag);
+    await capture("p20-intro-" + tag);
+    await safety();
+    await button("카메라 보조로 시작").click();
+    await onePrimary("locate");
+    await dockFits("locate " + tag);
+    await capture("p20-locate-" + tag);
+    await button("카메라 없이 계속하기").click();
+    await dockFits("observation " + tag);
+    await axe("observation-" + tag);
+    await open(staticUrl + "/#task=brake-fluid", { width: 320 });
+    await scaleText(scale);
+    await complete("brake-fluid");
+    await onePrimary("done 320 " + tag);
+    await dockFits("done 320 " + tag);
+    // The skip link stays fully off-screen until focused, and a sticky bar
+    // never covers more than 12% of the screen.
+    assert.ok(
+      (await page.locator(".cb-skip").boundingBox()).y +
+        (await page.locator(".cb-skip").boundingBox()).height <=
+        0,
+      "skip link hidden " + tag,
+    );
+    const bar = await page.locator(".cb-taskbar").evaluate((b) => ({
+      layout: b.dataset.layout,
+      share: b.getBoundingClientRect().height / innerHeight,
+    }));
+    assert.ok(bar.layout === "static" || bar.share <= 0.12, JSON.stringify(bar));
+    await capture("p20-done-320-" + tag);
+    if (scale === 2) assert.equal(introLayout, "inline");
+    else assert.equal(introLayout, "fixed");
+  }
+  pass(
+    "130% and 200% text: no truncation or overflow; the fixed CTA never hides content and becomes inline at 200%; 320px journey completes at both sizes",
+  );
+  await open(staticUrl + "/#task=brake-fluid");
+  await tabTo(".cb-safety input[type=checkbox]");
+  await page.keyboard.press("Space");
+  await tabTo("직접 점검 시작");
+  await page.keyboard.press("Enter");
+  await page.locator("body[data-step=check]").waitFor();
+  const brakeChecks = getChecklistProfile("brake-fluid").checks.length;
+  for (let i = 0; i < brakeChecks; i++) {
+    await tabTo("발견하지 못함");
+    await page.keyboard.press("Space");
+    await tabTo(i < brakeChecks - 1 ? "다음 관찰" : "전체 응답 확인하기");
+    await page.keyboard.press("Enter");
+  }
+  await page.locator("body[data-step=review]").waitFor();
+  await tabTo("직접 확인한 결과로 확정");
+  await page.keyboard.press("Enter");
+  await page.locator("body[data-step=done]").waitFor();
+  pass("keyboard-only journey in tab order: safety, start, every answer, review and confirmation");
+  await open(staticUrl + "/#v=1&task=washer-fluid");
+  await axe("intro");
+  await safety();
+  await button("카메라 보조로 시작").click();
+  await button("카메라 켜기").click();
+  await page.getByText("부품을 화면 가운데에 맞춰 주세요.", { exact: false }).waitFor();
+  await page.locator(".cb-camera-overlay").focus();
+  await page.keyboard.press("Enter");
+  await page.getByText("직접 표시 1곳", { exact: false }).waitFor();
+  assert.match(await page.locator("h1").innerText(), /직접 확인/);
+  await axe("camera-live");
+  await capture("p20-camera-marked");
+  await open(staticUrl + "/#task=ev-charge.port", { width: 768 });
+  await capture("p20-intro-768");
+  await axe("intro-768");
+  await open(staticUrl, { width: 768 });
+  await capture("p20-catalog-768");
+  await open(staticUrl + "/#v=2&task=washer-fluid&invite=bad");
+  await axe("invalid-qr");
+  pass("keyboard marking on the live camera; axe on intro, live camera, tablet and invalid QR");
   assert.deepEqual(report.errors, []);
   pass("no runtime, React or CSP console errors across the new flows");
 } finally {

@@ -47,7 +47,7 @@ export function guideProblems(guide) {
   return problems;
 }
 
-const DRAWN = 'CarScope에서 직접 그린 설명용 그림';
+const DRAWN = '직접 그린 설명용 그림';
 export const guideSlug = partId => partId.replaceAll('.', '-');
 const drawing = (partId, part, alt, caption) => Object.freeze({
   file: `guide-${guideSlug(partId)}-${part}.svg`, kind: IMAGE_KIND.SCHEMATIC, alt, caption, imageSource: DRAWN, licenseStatus: LICENSE.CARSCOPE_ORIGINAL,
@@ -143,7 +143,7 @@ export const PART_GUIDES = Object.freeze(Object.fromEntries([
     safety: inspectionSafety('ev-charge.port'),
     overview: ['위에서 본 차 그림. 뒤쪽 오른쪽 옆의 작은 구역이 강조되어 있습니다. 충전구와 같은 자리입니다. 참고 차량의 예시이며 차종마다 다릅니다.', `찾아볼 곳 예시: 충전구와 같은 자리. ${CHARGE_NOTE}`],
     detail: ['차체 면에 있는 사각형 덮개 그림. 경첩 쪽과 플러그 기호가 표시되어 있습니다. 특정 차량의 형상이 아닙니다.', '찾아볼 모양: 차체와 이어진 닫힌 덮개.'] }),
-  guide({ partId: 'ev-battery.pack', taskId: null, title: '고전압 배터리 팩', role: '차를 움직이는 전기를 저장하는 큰 배터리예요. 직접 점검하는 부품이 아니어서 CarScope에도 점검 항목이 없어요.', area: '차 바닥 아래', applies: APPLIES.ANY_VEHICLE, manual: null,
+  guide({ partId: 'ev-battery.pack', taskId: null, title: '고전압 배터리 팩', role: '차를 움직이는 전기를 저장하는 큰 배터리예요. 직접 점검하는 부품이 아니어서 점검 항목이 없어요.', area: '차 바닥 아래', applies: APPLIES.ANY_VEHICLE, manual: null,
     features: ['전기차의 바닥 아래에 넓게 놓인 경우가 많아요. 위치와 모양은 차마다 달라요.', '주황색 케이블은 고전압 표시예요. 12V 보조 배터리와 다른 부품이에요.', '사용자가 눈으로 확인할 항목이 없어요. 이상이 걱정되면 제조사 서비스에 문의해 주세요.'],
     safety: Object.freeze(['차 아래로 들어가거나 차를 들어 올려 보려고 하지 마세요.', '배터리 팩과 주황색 고전압 케이블을 만지거나 열거나 분해하지 마세요.', '손상·연기·이상한 냄새가 있으면 가까이 가지 말고 물러나 제조사 서비스나 긴급 신고로 연락해 주세요.']),
     overview: ['옆에서 본 차 그림. 앞뒤 바퀴 사이의 바닥 아래 영역이 주황색 점선으로 강조되어 있습니다. 실제 크기나 위치가 아닙니다.', '찾아볼 곳이 아니라 알아 둘 곳이에요. 다가가지 마세요.'],
