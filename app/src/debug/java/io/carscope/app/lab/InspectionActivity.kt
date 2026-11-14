@@ -165,7 +165,8 @@ open class InspectionActivity : SyncReceiverActivity() {
                 slotCommand = command; inlineActive = command.slot != "NONE"
                 updateInlineQr()
             }
-            "refresh" -> retryReceiver()
+            // P22: "다시 확인" asks for a grant again after a refusal; otherwise it retries the result polling as before.
+            "refresh" -> if (authorityRetryAvailable) { retryAuthority(); publishPanelStatus() } else retryReceiver()
             "cancel" -> cancelReceiver()
             "admin" -> showReceiver(true)
         }
@@ -199,7 +200,7 @@ open class InspectionActivity : SyncReceiverActivity() {
         val state = receiverState
         bridge.receiverStatus(if (taskId == null) null else mapOf("taskId" to taskId,
             "phase" to panelPhase(state, creationAuthorityStatus), "failure" to state?.failure?.name,
-            "retryAvailable" to (state?.retryAvailable == true && state.busy.not()), "canCancel" to (state?.canCancel == true),
+            "retryAvailable" to ((state?.retryAvailable == true && state.busy.not()) || authorityRetryAvailable), "canCancel" to (state?.canCancel == true),
             "inviteExpiresAt" to state?.inviteExpiresAt))
     }
     private fun panelPhase(state: SyncReceiverState?, authority: String): String = when (state?.phase) {

@@ -44,7 +44,7 @@ jobs:
         # The ingress assertions serve the actual React product HTML.
         run: npm ci --prefix ../mobile-ar-poc --ignore-scripts --no-audit --no-fund && npm run build --prefix ../mobile-ar-poc
       - name: Verify PostgreSQL and HTTP contracts against actual PostgreSQL 16
-        run: node --test test/postgres-store.test.mjs && node --test test/avd-simulator.test.mjs && node --test test/avd-simulator-admin.test.mjs && node --test test/history-postgres.test.mjs && node --test test/history-auth-postgres.test.mjs && node --test test/avd-history-postgres.test.mjs && node --test test/avd-history-activation-postgres.test.mjs && node --test test/part-detection-postgres.test.mjs && node --test test/deployment-postgres.test.mjs && node bin/deployment-preflight.mjs database --url-env PG_TEST_URL
+        run: node --test test/postgres-store.test.mjs && node --test test/avd-simulator.test.mjs && node --test test/avd-simulator-admin.test.mjs && node --test test/avd-qr-e2e.test.mjs && node --test test/history-postgres.test.mjs && node --test test/history-auth-postgres.test.mjs && node --test test/avd-history-postgres.test.mjs && node --test test/avd-history-activation-postgres.test.mjs && node --test test/part-detection-postgres.test.mjs && node --test test/deployment-postgres.test.mjs && node bin/deployment-preflight.mjs database --url-env PG_TEST_URL
         env:
           PG_TEST_URL: postgresql://carscope_ci:local_test_only@127.0.0.1:5432/carscope_ci
       # Disposable stand-in for the remote branch: TLS with a self-signed certificate under a non-loopback name.

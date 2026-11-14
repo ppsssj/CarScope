@@ -47,7 +47,20 @@ $EnrollmentFile = 'avd-simulator-enrollment.json'
 if ($VisionOrigin) { $EnrollmentFile = 'avd-vision-enrollment.json' }
 $Tool = Split-Path -Parent $PSScriptRoot
 $Repository = Split-Path -Parent (Split-Path -Parent $Tool)
-$StateFile = Join-Path $StateDir ("registration-" + ($Serial -replace '[^A-Za-z0-9._-]', '_') + ".json")
+$SerialName = $Serial -replace '[^A-Za-z0-9._-]', '_'
+# P22: one state file per origin. The main service keeps its original name. A Vision registration gets its own,
+# so removing one origin's enrollment can never revoke the other's (the files on the device are separate too).
+$StateFile = Join-Path $StateDir ("registration-" + $SerialName + ".json")
+$LegacyStateFile = $null
+if ($VisionOrigin) {
+  $LegacyStateFile = $StateFile
+  $StateFile = Join-Path $StateDir ("registration-" + $SerialName + "-" + ([Uri]$VisionOrigin).Host + ".json")
+  # P22 root cause (2026-11-14): a Vision enrollment issued with the main schema default lands where the Vision
+  # service never looks, and every grant request is a 401. The schema must be named for a Vision issue or removal.
+  if ($Action -in @('Install', 'Remove') -and -not $PSBoundParameters.ContainsKey('Schema')) {
+    throw 'With -VisionOrigin, pass -Schema with the Vision service CARSCOPE_DB_SCHEMA (for example carscope_vision). Nothing was issued.'
+  }
+}
 
 function Get-AndroidUser {
   $value = & $Adb -s $Serial shell am get-current-user
@@ -106,7 +119,9 @@ function Initialize-Database {
     throw "Run 'npm install --ignore-scripts --no-audit --no-fund --package-lock=false' in $Tool first."
   }
   if (-not $env:PG_ADMIN_DATABASE_URL) {
-    $secure = Read-Host -AsSecureString 'carscope_app Session Pooler URL (hidden)'
+    $prompt = 'carscope_app Session Pooler URL (hidden)'
+    if ($VisionOrigin) { $prompt = 'Vision service DB URL: the same database and role the Vision service uses (hidden)' }
+    $secure = Read-Host -AsSecureString $prompt
     $pointer = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($secure)
     try { Set-OwnedVariable 'PG_ADMIN_DATABASE_URL' ([Runtime.InteropServices.Marshal]::PtrToStringBSTR($pointer)) }
     finally { [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($pointer) }
@@ -132,6 +147,9 @@ function Install-Endpoint([string]$User) {
 
 function Install-Simulator([string]$User) {
   if (Test-Path $StateFile) { throw "$StateFile exists. Run -Action Remove for the previous registration first." }
+  if ($LegacyStateFile -and (Test-Path $LegacyStateFile)) {
+    throw "$LegacyStateFile exists from before per-origin state files. Check which origin it belongs to (bin/avd-simulator-admin.mjs list against each DB), then move or remove it. Nothing was issued."
+  }
   Assert-SimulationMode
   Initialize-Database
 
@@ -163,10 +181,16 @@ function Install-Simulator([string]$User) {
   }
   Write-Output "Enrollment installed. registrationId=$($issued.registrationId) hours=$Hours (proof not printed, local copy deleted)."
   Write-Output "Next: open the CarScope inspection (debug) launcher entry on the AVD. The app asks for a grant only when a part is requested."
+  if ($VisionOrigin) {
+    Write-Output "Verify before opening the app: .	est-vision-qr.ps1 -Serial $Serial -VisionOrigin $VisionOrigin -Schema $Schema -CaPemFile <CA>"
+  }
   Write-Output "This is an AVD simulation. It does not verify a real vehicle or its owner."
 }
 
 function Remove-Simulator([string]$User) {
+  if ($LegacyStateFile -and -not (Test-Path $StateFile) -and (Test-Path $LegacyStateFile)) {
+    throw "Only the older per-serial $LegacyStateFile exists. It may belong to the other origin, so nothing is revoked automatically. Check it with bin/avd-simulator-admin.mjs list against the Vision DB first."
+  }
   if (Test-Path $StateFile) {
     Initialize-Database
     $registration = (Get-Content -Raw $StateFile | ConvertFrom-Json).registrationId

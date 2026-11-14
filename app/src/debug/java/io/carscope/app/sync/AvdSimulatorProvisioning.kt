@@ -97,7 +97,36 @@ internal class AvdSimulatorGrant(val credential: SessionCreationCredential, val 
 
 internal interface AvdSimulatorGrantExchange : AutoCloseable {
     fun fetch(callback: (AvdSimulatorGrant?) -> Unit): SyncCancellation
+    /** Category of the last failed fetch, set before its callback runs; null after a success. Never a server message. */
+    val lastFailure: ProvisionFailure? get() = null
     override fun close() {}
+}
+
+/** P22: why a grant request failed, in fixed categories. The server never says why it refused; the operator tool does. */
+internal enum class ProvisionFailure {
+    UNAUTHORIZED, FORBIDDEN, RATE_LIMITED, SERVER_UNAVAILABLE, REJECTED,
+    TIMEOUT, NETWORK, TLS, RESPONSE_INVALID, CLOCK, ENROLLMENT_EXPIRED
+}
+
+/**
+ * P22: what to do after a failed grant request. The same proof gets the same 401/403, so those are never retried
+ * automatically: each retry only spends the server's per-proof budget (4 per minute) and hides the cause. Only a
+ * service that is starting or unreachable is retried, three times with growing gaps; 429 waits once, longer.
+ * An explicit action (service check, a new part request, reopening the screen) always starts afresh.
+ */
+internal object ProvisionRetryPolicy {
+    const val TRANSIENT_ATTEMPTS = 3
+    const val FIRST_GAP_MS = 30_000L
+    const val RATE_LIMIT_GAP_MS = 120_000L
+    /** Milliseconds until the next automatic try after [consecutive] failures in a row (1 = the first), or null for none. */
+    fun nextDelayMs(failure: ProvisionFailure, consecutive: Int): Long? = when (failure) {
+        ProvisionFailure.SERVER_UNAVAILABLE, ProvisionFailure.TIMEOUT, ProvisionFailure.NETWORK ->
+            if (consecutive in 1..TRANSIENT_ATTEMPTS) FIRST_GAP_MS shl (consecutive - 1) else null
+        ProvisionFailure.RATE_LIMITED -> if (consecutive == 1) RATE_LIMIT_GAP_MS else null
+        else -> null
+    }
+    fun transient(failure: ProvisionFailure?) = failure == ProvisionFailure.SERVER_UNAVAILABLE ||
+        failure == ProvisionFailure.TIMEOUT || failure == ProvisionFailure.NETWORK || failure == ProvisionFailure.RATE_LIMITED
 }
 
 /** Main-thread callbacks, worker-only I/O; trust store, TLS hostname and redirect policies are unchanged. */
@@ -116,6 +145,8 @@ internal class HttpsAvdSimulatorGrantExchange(
     private val deadlines = Executors.newSingleThreadScheduledExecutor()
     private val closed = AtomicBoolean(false)
     private val calls = java.util.concurrent.ConcurrentHashMap.newKeySet<Call>()
+    @Volatile private var failure: ProvisionFailure? = null
+    override val lastFailure: ProvisionFailure? get() = failure
 
     init { require(AvdSimulatorPolicy.endpointAllowed(endpoint) && timeoutMs in 1..10000) }
 
@@ -149,6 +180,7 @@ internal class HttpsAvdSimulatorGrantExchange(
         val timer = try {
             deadlines.schedule({
                 if (call.completed.compareAndSet(false, true)) {
+                    failure = ProvisionFailure.TIMEOUT
                     Log.w(logTag, "PROVISION_TIMEOUT")
                     dispatcher.post { if (!closed.get() && !call.cancelled.get()) callback(null) }
                     call.connection?.disconnect()
@@ -210,18 +242,37 @@ internal class HttpsAvdSimulatorGrantExchange(
                                 pause(50)
                             }
                         }
+                        failure = null
                         Log.i(logTag, "PROVISION_GRANT_VERIFIED")
                     } else {
+                        if (!call.cancelled.get() && !closed.get()) failure = ProvisionFailure.ENROLLMENT_EXPIRED
                         Log.w(logTag, "PROVISION_ENROLLMENT_EXPIRED_OR_CANCELLED")
                     }
                 } catch (e: Exception) {
                     grant = null
                     // Deliberately omit exception messages, stack traces, request/response bodies and token values.
+                    failure = when (e) {
+                        is HttpRejected -> when (e.status) {
+                            401 -> ProvisionFailure.UNAUTHORIZED
+                            403 -> ProvisionFailure.FORBIDDEN
+                            429 -> ProvisionFailure.RATE_LIMITED
+                            502, 503, 504 -> ProvisionFailure.SERVER_UNAVAILABLE
+                            else -> ProvisionFailure.REJECTED
+                        }
+                        is HeadersRejected, is SyncHttpDecoder.Invalid -> ProvisionFailure.RESPONSE_INVALID
+                        is SocketTimeoutException -> ProvisionFailure.TIMEOUT
+                        is SSLException -> ProvisionFailure.TLS
+                        is AvdSimulatorPolicy.GrantNotYetValid, is AvdSimulatorPolicy.GrantExpired -> ProvisionFailure.CLOCK
+                        is IllegalArgumentException -> ProvisionFailure.RESPONSE_INVALID
+                        is InterruptedException -> failure
+                        else -> ProvisionFailure.NETWORK
+                    }
                     val category = when (e) {
                         is HttpRejected -> when (e.status) {
                             401 -> "PROVISION_HTTP_UNAUTHORIZED"
                             403 -> "PROVISION_HTTP_FORBIDDEN"
                             429 -> "PROVISION_HTTP_RATE_LIMITED"
+                            502, 503, 504 -> "PROVISION_SERVER_UNAVAILABLE"
                             else -> "PROVISION_HTTP_REJECTED"
                         }
                         is HeadersRejected -> "PROVISION_RESPONSE_HEADERS_REJECTED"
@@ -293,6 +344,8 @@ internal class RefreshingAvdSimulatorCredentialSource(
     @Synchronized fun invalidate() {
         generation++; pending?.cancel(); pending = null; value = null
     }
+    /** P22: the category of the last failed refresh, for the screen's retry decision. */
+    fun lastFailure(): ProvisionFailure? = exchange.lastFailure
     @Synchronized override fun close() {
         if (!closed) { closed = true; invalidate(); exchange.close() }
     }

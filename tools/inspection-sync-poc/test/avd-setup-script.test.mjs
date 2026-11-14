@@ -58,3 +58,33 @@ if(command.includes('head -c 1'))console.log('{');
     assert.ok(!write.command.includes('apiOrigin'), 'the value is not on a command line');
   } finally { rmSync(folder, { recursive: true, force: true }); }
 });
+
+// P22: the 2026-11-14 401 came from a Vision enrollment issued where the Vision service does not read.
+test('a Vision issue or removal needs the schema named, and keeps its own state file', windows, () => {
+  assert.match(source, /registration-" \+ \$SerialName \+ "-" \+ \(\[Uri\]\$VisionOrigin\)\.Host/);
+  const folder = mkdtempSync(join(tmpdir(), 'carscope-p22-'));
+  try {
+    const run = (args) => { try { execFileSync('powershell.exe', ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File', script, ...args], { encoding: 'utf8', stdio: 'pipe' }); return ''; } catch (e) { return e.stderr + e.stdout; } };
+    for (const action of ['Install', 'Remove'])
+      assert.match(run(['-Serial', 'emulator-5554', '-Action', action, '-VisionOrigin', 'https://carscope-vision-experiment.onrender.com', '-Adb', join(folder, 'missing-adb.cmd'), '-StateDir', folder]), /pass -Schema/i, action);
+  } finally { rmSync(folder, { recursive: true, force: true }); }
+});
+
+const diagnoseScript = fileURLToPath(new URL('../android/test-vision-qr.ps1', import.meta.url));
+const diagnoseSource = readFileSync(diagnoseScript, 'utf8');
+test('the QR diagnosis wrapper is ASCII, takes no secret argument and keeps live checks behind approvals', () => {
+  assert.ok(/^[\x00-\x7f]*$/.test(diagnoseSource));
+  const parameters = diagnoseSource.slice(diagnoseSource.indexOf('param('), diagnoseSource.indexOf('$ErrorActionPreference'));
+  assert.doesNotMatch(parameters, /proof|token|password|secret|\$Url|DatabaseUrl/i);
+  assert.match(diagnoseSource, /Read-Host -AsSecureString/);
+  assert.match(diagnoseSource, /if \(\$ApproveProvision\) \{ \$arguments \+= '--approve-provision' \}/);
+  assert.doesNotMatch(diagnoseSource, /Write-(Output|Host)[^\n]*PG_VISION_DATABASE_URL/);
+});
+test('the QR diagnosis wrapper parses and refuses a session test without provision', windows, () => {
+  const check = `$e=$null;$t=$null;[void][System.Management.Automation.Language.Parser]::ParseFile('${diagnoseScript.replaceAll("'", "''")}',[ref]$t,[ref]$e);$e.Count`;
+  assert.equal(execFileSync('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', check], { encoding: 'utf8' }).trim(), '0');
+  let out = '';
+  try { execFileSync('powershell.exe', ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File', diagnoseScript, '-Serial', 's', '-VisionOrigin', 'https://carscope-vision-experiment.onrender.com', '-Schema', 'carscope_vision', '-ApproveSession'], { encoding: 'utf8', stdio: 'pipe' }); }
+  catch (e) { out = e.stderr + e.stdout; }
+  assert.match(out, /needs -ApproveProvision/);
+});
