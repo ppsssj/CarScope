@@ -18,7 +18,7 @@ python -B tools/tire-probe/runtime/run.py --out=C:/CarScope-External/p3-i2/healt
 
 기본 호출은 읽기 전용이다. SDK 파일·PC 환경, `adb devices -l`, 정확한 AVD/boot/API34, CPU/load·메모리·저장 공간, SystemUI PID 안정성, 현재 WebView provider, 현재 Android user의 활성 Vehicle Service package/version을 수집한다. 대상이 없으면 guest 조회도 중단한다. BLOCKED는 exit 2이며 정상 실행 PASS가 아니다.
 
-Gate 예산: 3개 표본에서 1분 load/CPU ≤1, 5분 load/CPU ≤1.5, ADB echo ≤1s, service 조회 ≤2s, MemAvailable ≥512MiB, /data 여유 ≥256MiB, SystemUI PID 단일·불변 및 최근 fatal/ANR 없음. OEM 성능 보증값이 아니라 기존 Tire probe 예산을 확장한 보수적 실행 조건이다. 값 미수집/파싱 실패도 BLOCKED다.
+Gate 예산: 3개 표본에서 1분 load/CPU ≤1, 5분 load/CPU ≤1.5, ADB echo ≤1s, service 조회 ≤2s, MemAvailable ≥512MiB, /data 여유 ≥256MiB 및 최근 SystemUI fatal/ANR/death 없음. SystemUI는 user0과 현재 사용자별로 정확히 한 개씩(현재 user0이면 한 개), UID/패키지 소유권·PID·starttime이 표본 내/표본 간 유지되고 current user가 바뀌지 않아야 한다. 다중 사용자 오탐 수정과 한계는 [P3-I4 조사](p3-i4-android-runtime-validation.md)를 따른다. CPU 기준은 변경하지 않았다. OEM 성능 보증값이 아니라 기존 Tire probe 예산을 확장한 보수적 실행 조건이다. 값 미수집/파싱 실패도 BLOCKED다.
 
 PASS일 때만 로컬 Debug 자산과 필수 빌드를 수행한 뒤 설치·실행한다. 런타임 도구 자체가 빌드/다운로드/AVD 준비를 자동 수행하지 않는다.
 
